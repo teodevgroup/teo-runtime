@@ -3,10 +3,10 @@ pub mod decorator;
 pub use decorator::Decorator;
 
 #[derive(Debug)]
-pub struct Field {
+pub struct Member {
 
 }
 
-impl Field {
+impl Member {
 
 }

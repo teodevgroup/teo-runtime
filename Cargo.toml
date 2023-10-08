@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 teo-parser = { path = "../teo-parser" }
 teo-teon = { path = "../teo-teon" }
+maplit = "1.0.2"

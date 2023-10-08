@@ -1,3 +1,9 @@
-use std::collections::HashMap;
+use crate::arguments::Arguments;
+use crate::model::Model;
+use crate::result::Result;
 
-//pub type ModelDecorator = fn(args: HashMap<String, >, model: &mut Model);
+#[derive(Debug)]
+pub struct Decorator {
+    pub path: Vec<String>,
+    pub(crate) call: fn(Arguments, &mut Model) -> Result<()>
+}
