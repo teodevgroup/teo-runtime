@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Object {
     inner: Arc<ObjectInner>
 }

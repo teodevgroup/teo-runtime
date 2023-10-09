@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
+use crate::error::Error;
 use crate::object::Object;
+use crate::result::Result;
 
 pub struct Arguments {
     inner: HashMap<String, Object>
@@ -23,9 +25,15 @@ impl Arguments {
         self.inner.is_empty()
     }
 
-    pub fn has(&self, key: &str) -> bool {
-        self.inner.contains_key(key)
+    pub fn has(&self, key: impl AsRef<str>) -> bool {
+        self.inner.contains_key(key.as_ref())
     }
 
-    // pub fn get
+    pub fn get<'a, T: 'a>(&'a self, key: impl AsRef<str>) -> Result<T> where T: TryFrom<&'a Object, Error = Error> {
+        if let Some(object) = self.inner.get(key.as_ref()) {
+            object.try_into()
+        } else {
+            Err(Error::new(format!("argument '{}' is not present", key.as_ref())))
+        }
+    }
 }

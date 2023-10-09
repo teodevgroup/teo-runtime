@@ -10,6 +10,9 @@ pub struct Ctx {
     inner: Arc<CtxInner>,
 }
 
+unsafe impl Send for Ctx { }
+unsafe impl Sync for Ctx { }
+
 #[derive(Debug)]
 struct CtxInner {
     value: Object,

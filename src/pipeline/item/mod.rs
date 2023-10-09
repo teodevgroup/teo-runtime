@@ -15,13 +15,13 @@ pub struct Item {
 }
 
 pub trait Call: Send + Sync {
-    fn call(&self, args: &Arguments, ctx: Ctx) -> BoxFuture<'static, Result<Ctx>>;
+    fn call(&self, args: Arguments, ctx: Ctx) -> BoxFuture<'static, Result<Ctx>>;
 }
 
 impl<F, Fut> Call for F where
-        F: Fn(&Arguments, Ctx) -> Fut + Sync + Send,
+        F: Fn(Arguments, Ctx) -> Fut + Sync + Send,
         Fut: Future<Output = Result<Ctx>> + Send + 'static {
-    fn call(&self, args: &Arguments, ctx: Ctx) -> BoxFuture<'static, Result<Ctx>> {
+    fn call(&self, args: Arguments, ctx: Ctx) -> BoxFuture<'static, Result<Ctx>> {
         Box::pin(self(args, ctx))
     }
 }

@@ -1,5 +1,4 @@
 mod stdlib;
-pub mod value;
 pub mod object;
 pub mod namespace;
 pub mod model;
