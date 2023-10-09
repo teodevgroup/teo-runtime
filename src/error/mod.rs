@@ -28,3 +28,12 @@ impl Debug for Error {
         f.write_str(&self.message)
     }
 }
+
+impl std::error::Error for Error { }
+
+impl From<teo_teon::error::Error> for Error {
+
+    fn from(value: teo_teon::error::Error) -> Self {
+        Self { message: value.message }
+    }
+}

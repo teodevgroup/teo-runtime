@@ -2,6 +2,7 @@ use std::sync::Arc;
 use teo_teon::Value;
 use crate::error::Error;
 use crate::model;
+use crate::pipeline::pipeline::Pipeline;
 use crate::r#struct;
 use crate::result::Result;
 
@@ -15,6 +16,7 @@ pub enum ObjectInner {
     Teon(Value),
     ModelObject(model::Object),
     StructObject(r#struct::Object),
+    Pipeline(Pipeline),
 }
 
 impl Object {
@@ -27,13 +29,6 @@ impl Object {
         match self.inner.as_ref() {
             ObjectInner::Teon(v) => Some(v),
             _ => None,
-        }
-    }
-
-    pub fn as_teon_or_err(&self, msg: impl AsRef<str>) -> Result<&Value> {
-        match self.inner.as_ref() {
-            ObjectInner::Teon(v) => Ok(v),
-            _ => Err(Error::new(msg.as_ref())),
         }
     }
 
@@ -57,6 +52,62 @@ impl Object {
             ObjectInner::StructObject(v) => Some(v),
             _ => None,
         }
+    }
+
+    pub fn is_pipeline(&self) -> bool {
+        self.as_pipeline().is_some()
+    }
+
+    pub fn as_pipeline(&self) -> Option<&Pipeline> {
+        match self.inner.as_ref() {
+            ObjectInner::Pipeline(p) => Some(p),
+            _ => None,
+        }
+    }
+}
+
+impl From<Value> for Object {
+
+    fn from(value: Value) -> Self {
+        Object {
+            inner: Arc::new(ObjectInner::Teon(value)),
+        }
+    }
+}
+
+impl From<model::Object> for Object {
+
+    fn from(value: model::Object) -> Self {
+        Object {
+            inner: Arc::new(ObjectInner::ModelObject(value)),
+        }
+    }
+}
+
+impl From<r#struct::Object> for Object {
+
+    fn from(value: r#struct::Object) -> Self {
+        Object {
+            inner: Arc::new(ObjectInner::StructObject(value)),
+        }
+    }
+}
+
+impl From<Pipeline> for Object {
+
+    fn from(value: Pipeline) -> Self {
+        Object {
+            inner: Arc::new(ObjectInner::Pipeline(value)),
+        }
+    }
+}
+
+impl TryFrom<&Object> for Object {
+
+    type Error = Error;
+
+    fn try_from(value: &Object) -> std::result::Result<Self, Self::Error> {
+        Ok(value.clone())
     }
 }
 
@@ -129,6 +180,18 @@ impl<'a> TryFrom<&'a Object> for &'a str {
         match teon.try_into() {
             Ok(v) => Ok(v),
             Err(_) => Err(Error::new(format!("object is not &str: {:?}", value)))
+        }
+    }
+}
+
+impl<'a> TryFrom<&'a Object> for &'a Pipeline {
+
+    type Error = Error;
+
+    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
+        match value.as_pipeline() {
+            Some(p) => Ok(p),
+            None => Err(Error::new(format!("object is not pipeline: {:?}", value)))
         }
     }
 }

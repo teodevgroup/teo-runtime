@@ -7,12 +7,12 @@ use crate::result::ResultExt;
 
 pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &mut Namespace) {
     namespace.define_pipeline_item("add", |args: Arguments, ctx: Ctx| async move {
-        //let input = ctx.value().as_teon_or_err("add: input is not teon")?;
-        let arg: &Value = args.get("value").err_prefix("add")?;
-        let arg: &str = args.get("value").err_prefix("add")?;
-        Ok(ctx)
-        // ctx.resolve()
-        // let argument = self.argument.resolve(ctx.clone()).await?;
-        // Ok(ctx.with_value_result(ctx.get_value() + argument)?)
+        let input: &Value = ctx.value().try_into().err_prefix("add")?;
+        let arg_object = &ctx.resolve_pipeline(
+            args.get_object("value").err_prefix("add(value)")?,
+            "add(value)",
+        ).await?;
+        let arg: &Value = arg_object.try_into().err_prefix("add(value)")?;
+        Ok(Object::from((input + arg).err_prefix("add")?))
     })
 }

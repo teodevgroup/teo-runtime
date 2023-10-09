@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 pub mod header;
 
+#[derive(Clone)]
 pub struct Request {
     inner: Arc<dyn r#trait::Request>
 }

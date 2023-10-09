@@ -5,6 +5,7 @@ use crate::arguments::Arguments;
 use crate::pipeline::ctx::Ctx;
 use crate::result::Result;
 use futures_util::future::BoxFuture;
+use crate::object::Object;
 
 #[derive(Educe)]
 #[educe(Debug)]
@@ -15,13 +16,29 @@ pub struct Item {
 }
 
 pub trait Call: Send + Sync {
-    fn call(&self, args: Arguments, ctx: Ctx) -> BoxFuture<'static, Result<Ctx>>;
+    fn call(&self, args: Arguments, ctx: Ctx) -> BoxFuture<'static, Result<Object>>;
 }
 
 impl<F, Fut> Call for F where
         F: Fn(Arguments, Ctx) -> Fut + Sync + Send,
-        Fut: Future<Output = Result<Ctx>> + Send + 'static {
-    fn call(&self, args: Arguments, ctx: Ctx) -> BoxFuture<'static, Result<Ctx>> {
+        Fut: Future<Output = Result<Object>> + Send + 'static {
+    fn call(&self, args: Arguments, ctx: Ctx) -> BoxFuture<'static, Result<Object>> {
         Box::pin(self(args, ctx))
+    }
+}
+
+#[derive(Educe)]
+#[educe(Debug)]
+pub struct BoundedItem {
+    pub path: Vec<String>,
+    pub arguments: Arguments,
+    #[educe(Debug(ignore))]
+    pub(crate) call: Arc<dyn Call>,
+}
+
+impl BoundedItem {
+
+    pub(crate) async fn call(&self, args: Arguments, ctx: Ctx) -> Result<Object> {
+        self.call.call(args, ctx).await
     }
 }
