@@ -64,6 +64,22 @@ impl Object {
             _ => None,
         }
     }
+
+    pub fn try_into_err_prefix<'a, T: 'a, E>(&'a self, prefix: impl AsRef<str>) -> Result<T> where E: std::error::Error, T: TryFrom<&'a Object, Error = E> {
+        let result: std::result::Result<T, E> = self.try_into();
+        match result {
+            Ok(t) => Ok(t),
+            Err(e) => Err(Error::new(format!("{}: {e}", prefix.as_ref()))),
+        }
+    }
+
+    pub fn try_into_err_message<'a, T: 'a, E>(&'a self, message: impl AsRef<str>) -> Result<T> where E: std::error::Error, T: TryFrom<&'a Object, Error = E> {
+        let result: std::result::Result<T, E> = self.try_into();
+        match result {
+            Ok(t) => Ok(t),
+            Err(_) => Err(Error::new(message.as_ref())),
+        }
+    }
 }
 
 impl From<Value> for Object {
