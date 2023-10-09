@@ -13,4 +13,13 @@ indexmap = { version = "2.0.2", features = ["serde"] }
 serde = { version = "1.0.188", features = ["derive"] }
 serde_json = { version = "1.0", features = ["preserve_order"] }
 educe = "0.4.23"
-key-path = "0.1.11"
+key-path = "0.2.0"
+async-trait = "0.1.73"
+async-recursion = "1.0.5"
+uuid = { version = "1.4.1", features = ["v4", "fast-rng"] }
+cuid2 = "0.1.0"
+cuid = "=1.2.0"
+regex = "1.9.6"
+random-string = "1.0"
+futures = "0.3.28"
+futures-util = "0.3.28"

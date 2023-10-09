@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 use maplit::hashmap;
 use crate::{model, model::Model, r#enum};
 use crate::arguments::Arguments;
@@ -11,6 +12,7 @@ use crate::r#struct::Struct;
 use crate::utils::next_path;
 use crate::result::Result;
 use crate::pipeline;
+use crate::pipeline::item::Call;
 
 #[derive(Debug)]
 pub struct Namespace {
@@ -99,7 +101,7 @@ impl Namespace {
         self.enum_member_decorators.insert(name.to_owned(), r#enum::member::Decorator { path: next_path(&self.path, name), call });
     }
 
-    pub fn define_pipeline_item(&mut self, name: &str, call: for<'a> fn(&Arguments, pipeline::Ctx<'a>) -> Result<pipeline::Ctx<'a>>) {
-        self.pipeline_items.insert(name.to_owned(), pipeline::Item { path: next_path(&self.path, name), call });
+    pub fn define_pipeline_item<T>(&mut self, name: &str, call: T) where T: Call + 'static {
+        self.pipeline_items.insert(name.to_owned(), pipeline::Item { path: next_path(&self.path, name), call: Arc::new(call) });
     }
 }

@@ -6,21 +6,21 @@ use crate::request::Request;
 use crate::model;
 
 #[derive(Clone)]
-pub struct Ctx<'a> {
-    inner: Arc<CtxInner<'a>>,
+pub struct Ctx {
+    inner: Arc<CtxInner>,
 }
 
 #[derive(Debug)]
-struct CtxInner<'a> {
+struct CtxInner {
     value: Object,
     object: model::Object,
-    path: KeyPath<'a>,
+    path: KeyPath,
     //pub(crate) action: Action,
     //pub(crate) conn: Arc<dyn Connection>,
     request: Option<Request>,
 }
 
-impl<'a> Ctx<'a> {
+impl Ctx {
 
     pub fn value(&self) -> &Object {
         &self.inner.value
@@ -30,7 +30,7 @@ impl<'a> Ctx<'a> {
         &self.inner.object
     }
 
-    pub fn path(&self) -> &KeyPath<'a> {
+    pub fn path(&self) -> &KeyPath {
         &self.inner.path
     }
 
@@ -39,7 +39,7 @@ impl<'a> Ctx<'a> {
     }
 }
 
-impl<'a> Debug for Ctx<'a> {
+impl<'a> Debug for Ctx {
 
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         Debug::fmt(self.inner.as_ref(), f)
