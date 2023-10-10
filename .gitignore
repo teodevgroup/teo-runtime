@@ -1,6 +1,4 @@
 /target
 /Cargo.lock
-
-teo-runtime.code-workspace
-
 .idea
+teo-runtime.code-workspace
