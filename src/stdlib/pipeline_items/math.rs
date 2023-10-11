@@ -1,6 +1,7 @@
+use num_integer::Roots;
 use std::ops::Add;
 use bigdecimal::num_traits::{Pow, Float};
-use bigdecimal::BigDecimal;
+use bigdecimal::{BigDecimal, ToPrimitive};
 use teo_teon::Value;
 use crate::arguments::Arguments;
 use crate::error::Error;
@@ -134,18 +135,33 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &mut Namespace) {
         })
     });
 
-    // namespace.define_pipeline_item("sqrt", |args: Arguments, ctx: Ctx| async move {
-    //     let input: &Value = ctx.value().try_into_err_prefix("sqrt")?;
-    //     Ok(match input {
-    //         Value::Int(i)   => Object::from(i.sqrt()) ,
-    //         Value::Int64(i) => Object::from(i.sqrt()) ,
-    //         Value::Float32(f) => Object::from(f.sqrt()),
-    //         Value::Float(f) => Object::from(f.sqrt()),
-    //         Value::Decimal(d) => Object::from(d.sqrt()),
-    //         _ => Err(Error::new("sqrt: value cannot be sqrted"))?
-    //     })
-    // });
 
+    namespace.define_pipeline_item("sqrt", |args: Arguments, ctx: Ctx| async move {
+        let input: &Value = ctx.value().try_into_err_prefix("sqrt")?;
+        Ok(match input {
+            Value::Int(i)   => Object::from((*i as f64).sqrt() as i32),
+            Value::Int64(i) => Object::from((*i as f64).sqrt() as i64),
+            Value::Float32(f) => Object::from(f.sqrt()),
+            Value::Float(f) => Object::from(f.sqrt()),
+            // Value::Decimal(d) => Object::from(d.sqrt()),
+            _ => Err(Error::new("sqrt: invalid input"))?
+        })
+    });
+
+
+    namespace.define_pipeline_item("cbrt", |args: Arguments, ctx: Ctx| async move {
+        let input: &Value = ctx.value().try_into_err_prefix("cbrt")?;
+        Ok(match input {
+            Value::Int(i)   => Object::from((*i as f64).cbrt() as i32),
+            Value::Int64(i) => Object::from((*i as f64).cbrt() as i64),
+            Value::Float32(f) => Object::from(f.cbrt()),
+            Value::Float(f) => Object::from(f.cbrt()),
+            Value::Decimal(d) => Object::from(d.cbrt()),
+            _ => Err(Error::new("cbrt: invalid input"))?
+        })
+    });
+
+    
     namespace.define_pipeline_item("pow", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_into_err_prefix("pow")?;
         let arg_object = ctx.resolve_pipeline(
@@ -170,5 +186,20 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &mut Namespace) {
             _ => Err(Error::new("pow: invalid input"))?
         })
     });
+
+    namespace.define_pipeline_item("root", |args: Arguments, ctx: Ctx| async move {
+        let input: &Value = ctx.value().try_into_err_prefix("root")?;
+        let arg_object = ctx.resolve_pipeline(
+            args.get_object("value").err_prefix("root(value)")?,
+            "root(value)",
+        ).await?;
+        let arg: &Value = arg_object.try_into_err_prefix("root(value)")?;
+        Ok( match input {
+            Value::Int(i)     => Object::from(i.nth_root(arg.as_int().unwrap() as u32)),
+            Value::Int64(i)   => Object::from(i.nth_root(arg.as_int().unwrap() as u32)),
+            _ => Err(Error::new("root: invalid input"))?
+        })
+    });
+
 
 }
