@@ -91,6 +91,15 @@ impl From<Value> for Object {
     }
 }
 
+impl From<&Value> for Object {
+
+    fn from(value: &Value) -> Self {
+        Object {
+            inner: Arc::new(ObjectInner::Teon(value.clone())),
+        }
+    }
+}
+
 impl From<model::Object> for Object {
 
     fn from(value: model::Object) -> Self {

@@ -56,5 +56,18 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &mut Namespace) {
         Ok(Object::from((input % arg).err_prefix("mod")?))
     });
 
+    namespace.define_pipeline_item("max", |args: Arguments, ctx: Ctx| async move {
+        let input: &Value = ctx.value().try_into_err_prefix("max")?;
+        let arg_object = ctx.resolve_pipeline(
+            args.get_object("value").err_prefix("max(value)")?,
+            "max(value)",
+        ).await?;
+        let arg: &Value = arg_object.try_into_err_prefix("max(value)")?;
+        Ok(if input > arg {
+            arg_object
+        } else {
+            ctx.value().clone()
+        })
+    });
 
 }
