@@ -1,5 +1,6 @@
 use teo_teon::Value;
 use crate::arguments::Arguments;
+use crate::error::Error;
 use crate::namespace::Namespace;
 use crate::object::Object;
 use crate::pipeline::Ctx;
@@ -81,6 +82,16 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &mut Namespace) {
             arg_object
         } else {
             ctx.value().clone()
+        })
+    });
+
+    namespace.define_pipeline_item("floor", |args: Arguments, ctx: Ctx| async move {
+        let input: &Value = ctx.value().try_into_err_prefix("floor")?;
+        Ok(match input {
+            Value::Float32(f) => Object::from(f.floor()),
+            Value::Float(f) => Object::from(f.floor()),
+            Value::Decimal(d) => Object::from(d.with_scale(0)),
+            _ => Err(Error::new("floor: value cannot be floored"))?
         })
     });
 

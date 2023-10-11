@@ -5,6 +5,7 @@ use crate::model;
 use crate::pipeline::pipeline::Pipeline;
 use crate::r#struct;
 use crate::result::Result;
+use bigdecimal::BigDecimal;
 
 #[derive(Debug, Clone)]
 pub struct Object {
@@ -96,6 +97,33 @@ impl From<&Value> for Object {
     fn from(value: &Value) -> Self {
         Object {
             inner: Arc::new(ObjectInner::Teon(value.clone())),
+        }
+    }
+}
+
+impl From<f32> for Object {
+
+    fn from(value: f32) -> Self {
+        Object {
+            inner: Arc::new(ObjectInner::Teon(Value::Float32(value)))
+        }
+    }
+}
+
+impl From<f64> for Object {
+
+    fn from(value: f64) -> Self {
+        Object {
+            inner: Arc::new(ObjectInner::Teon(Value::Float(value)))
+        }
+    }
+}
+
+impl From<BigDecimal> for Object {
+
+    fn from(value: BigDecimal) -> Self {
+        Object {
+            inner: Arc::new(ObjectInner::Teon(Value::Decimal(value)))
         }
     }
 }
