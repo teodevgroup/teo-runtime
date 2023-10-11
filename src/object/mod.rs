@@ -101,6 +101,25 @@ impl From<&Value> for Object {
     }
 }
 
+
+impl From<i32> for Object {
+
+    fn from(value: i32) -> Self {
+        Object {
+            inner: Arc::new(ObjectInner::Teon(Value::Int(value)))
+        }
+    }
+}
+
+impl From<i64> for Object {
+
+    fn from(value: i64) -> Self {
+        Object {
+            inner: Arc::new(ObjectInner::Teon(Value::Int64(value)))
+        }
+    }
+}
+
 impl From<f32> for Object {
 
     fn from(value: f32) -> Self {
