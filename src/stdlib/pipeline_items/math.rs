@@ -1,4 +1,6 @@
+use std::ops::Add;
 use bigdecimal::num_traits::{Pow, Float};
+use bigdecimal::BigDecimal;
 use teo_teon::Value;
 use crate::arguments::Arguments;
 use crate::error::Error;
@@ -92,7 +94,7 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &mut Namespace) {
             Value::Float32(f) => Object::from(f.floor()),
             Value::Float(f) => Object::from(f.floor()),
             Value::Decimal(d) => Object::from(d.with_scale(0)),
-            _ => Err(Error::new("floor: value cannot be floored"))?
+            _ => Err(Error::new("floor: invalid input"))?
         })
     });
 
@@ -101,8 +103,12 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &mut Namespace) {
         Ok(match input {
             Value::Float32(f) => Object::from(f.ceil()),
             Value::Float(f) => Object::from(f.ceil()),
-            // Value::Decimal(d) => Object::from(d.with_scale(0) + 1),
-            _ => Err(Error::new("ceil: value cannot be ceiled"))?
+            Value::Decimal(d) => Object::from(if d.digits() == 0 {
+                d.clone()
+            } else {
+                d.with_scale(0).add(BigDecimal::from(1))
+            }),
+            _ => Err(Error::new("ceil: invalid input"))?
         })
     });
 
@@ -111,20 +117,20 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &mut Namespace) {
         Ok(match input {
             Value::Float32(f) => Object::from(f.round()),
             Value::Float(f) => Object::from(f.round()),
-            Value::Decimal(d) => Object::from(d.round(1)),
-            _ => Err(Error::new("round: value cannot be rounded"))?
+            Value::Decimal(d) => Object::from(d.round(0)),
+            _ => Err(Error::new("round: invalid input"))?
         })
     });
 
     namespace.define_pipeline_item("abs", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_into_err_prefix("abs")?;
         Ok(match input {
-            Value::Int(i)   => Object::from(i.abs()) ,
+            Value::Int(i) => Object::from(i.abs()) ,
             Value::Int64(i) => Object::from(i.abs()) ,
             Value::Float32(f) => Object::from(f.abs()),
             Value::Float(f) => Object::from(f.abs()),
             Value::Decimal(d) => Object::from(d.abs()),
-            _ => Err(Error::new("abs: value cannot be absed"))?
+            _ => Err(Error::new("abs: invalid input"))?
         })
     });
 
@@ -143,17 +149,25 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &mut Namespace) {
     namespace.define_pipeline_item("pow", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_into_err_prefix("pow")?;
         let arg_object = ctx.resolve_pipeline(
-            args.get_object("value").err_prefix("min(value)")?,
-            "min(value)",
+            args.get_object("value").err_prefix("pow(value)")?,
+            "pow(value)",
         ).await?;
-        let arg: &Value = arg_object.try_into_err_prefix("min(value)")?;
+        let arg: &Value = arg_object.try_into_err_prefix("pow(value)")?;
+        if input.is_any_int() {
+            if arg.is_any_int() {
+                return Err(Error::new("pow(value): value is not integer"));
+            }
+        } else if input.is_any_float() {
+            if arg.is_any_int_or_float() {
+                return Err(Error::new("pow(value): value is not int or float"));
+            }
+        }
         Ok(match input {
-            Value::Int(i)    => Object::from(i.pow(arg.as_int().unwrap() as u32)) ,
-            Value::Int64(i)  => Object::from(i.pow(arg.as_int().unwrap() as u32)) ,
-            Value::Float32(f)=> Object::from(f.powf(arg.as_float32().unwrap() as f32)),
-            Value::Float(f)  => Object::from(f.powf(arg.as_float32().unwrap() as f64)),
-            // Value::Decimal(d) => Object::from(d.ten_to_the()),
-            _ => Err(Error::new("pow: value cannot be powed"))?
+            Value::Int(i) => Object::from(i.pow(arg.to_int().unwrap() as u32)),
+            Value::Int64(i)   => Object::from(i.pow(arg.to_int().unwrap() as u32)),
+            Value::Float32(f) => Object::from(f.powf(arg.to_float().unwrap() as f32)),
+            Value::Float(f)   => Object::from(f.powf(arg.to_float().unwrap())),
+            _ => Err(Error::new("pow: invalid input"))?
         })
     });
 

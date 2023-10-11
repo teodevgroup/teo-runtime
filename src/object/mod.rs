@@ -147,6 +147,15 @@ impl From<BigDecimal> for Object {
     }
 }
 
+impl From<&BigDecimal> for Object {
+
+    fn from(value: &BigDecimal) -> Self {
+        Object {
+            inner: Arc::new(ObjectInner::Teon(Value::Decimal(value.clone())))
+        }
+    }
+}
+
 impl From<model::Object> for Object {
 
     fn from(value: model::Object) -> Self {
