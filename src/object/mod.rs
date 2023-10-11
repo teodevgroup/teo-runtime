@@ -260,7 +260,7 @@ impl<'a> TryFrom<&'a Object> for i32 {
         let teon: &'a Value = value.try_into()?;
         match teon.try_into() {
             Ok(v) => Ok(v),
-            Err(_) => Err(Error::new(format!("object is not &str: {:?}", value)))
+            Err(_) => Err(Error::new(format!("object is not i32: {:?}", value)))
         }
     }
 }
