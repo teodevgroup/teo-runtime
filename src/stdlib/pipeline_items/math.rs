@@ -1,7 +1,7 @@
 use num_integer::Roots;
 use std::ops::Add;
 use bigdecimal::num_traits::{Pow, Float};
-use bigdecimal::{BigDecimal, ToPrimitive};
+use bigdecimal::BigDecimal;
 use teo_teon::Value;
 use crate::arguments::Arguments;
 use crate::error::Error;
@@ -11,6 +11,7 @@ use crate::pipeline::Ctx;
 use crate::result::ResultExt;
 
 pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &mut Namespace) {
+
     namespace.define_pipeline_item("add", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_into_err_prefix("add")?;
         let arg_object = &ctx.resolve_pipeline(
@@ -135,19 +136,21 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &mut Namespace) {
         })
     });
 
-
     namespace.define_pipeline_item("sqrt", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_into_err_prefix("sqrt")?;
         Ok(match input {
-            Value::Int(i)   => Object::from((*i as f64).sqrt() as i32),
-            Value::Int64(i) => Object::from((*i as f64).sqrt() as i64),
+            Value::Int(i)   => Object::from(i.sqrt()),
+            Value::Int64(i) => Object::from(i.sqrt()),
             Value::Float32(f) => Object::from(f.sqrt()),
             Value::Float(f) => Object::from(f.sqrt()),
-            // Value::Decimal(d) => Object::from(d.sqrt()),
+            Value::Decimal(d) => Object::from(if let Some(d) = d.sqrt() {
+                d
+            } else {
+                Err(Error::new(format!("sqrt: decimal value '{d}' is invalid")))?
+            }),
             _ => Err(Error::new("sqrt: invalid input"))?
         })
     });
-
 
     namespace.define_pipeline_item("cbrt", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_into_err_prefix("cbrt")?;
@@ -161,7 +164,6 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &mut Namespace) {
         })
     });
 
-    
     namespace.define_pipeline_item("pow", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_into_err_prefix("pow")?;
         let arg_object = ctx.resolve_pipeline(
@@ -193,10 +195,10 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &mut Namespace) {
             args.get_object("value").err_prefix("root(value)")?,
             "root(value)",
         ).await?;
-        let arg: &Value = arg_object.try_into_err_prefix("root(value)")?;
+        let arg: i32 = arg_object.try_into_err_prefix("root(value)")?;
         Ok( match input {
-            Value::Int(i)     => Object::from(i.nth_root(arg.as_int().unwrap() as u32)),
-            Value::Int64(i)   => Object::from(i.nth_root(arg.as_int().unwrap() as u32)),
+            Value::Int(i)     => Object::from(i.nth_root(arg as u32)),
+            Value::Int64(i)   => Object::from(i.nth_root(arg as u32)),
             _ => Err(Error::new("root: invalid input"))?
         })
     });
