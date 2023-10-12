@@ -6,7 +6,7 @@ use crate::error::Error;
 use crate::namespace::Namespace;
 use crate::object::Object;
 use crate::pipeline::Ctx;
-use crate::result::Result;
+use crate::result::{Result, ResultExt};
 use rand::{thread_rng, Rng};
 
 pub(in crate::stdlib) fn load_pipeline_number_items(namespace: &mut Namespace) {
@@ -40,28 +40,26 @@ pub(in crate::stdlib) fn load_pipeline_number_items(namespace: &mut Namespace) {
     });
 
     namespace.define_pipeline_item("randomFloat", |args: Arguments, ctx: Ctx| async move {
-        let range: Result<&Range> = args.get("range");
-        if range.is_err() {
-            Err(Error::new("randomFloat: invalid argument"))?
-        }
-        if let Ok(range) = range {
-            let (start, end, closed) = {
-                let r = range.clone() ;
-                let start = r.start.to_float().unwrap();
-                let end   = r.end  .to_float().unwrap();
-                (start , end , r.closed)
+        let range: &Range = args.get("range").err_prefix("randomFloat")?;
+        let (start, end, closed) = {
+            let start = if let Some(f) = range.start.to_float() {
+                f
+            } else {
+                Err(Error::new("randomFloat: range start is not float"))?
             };
-            let mut rng = thread_rng();
-            let random_number;
-            if closed {
-                random_number = rng.gen_range(start..end);
-            }else {
-                random_number = rng.gen_range(start..end);
-            }
-            Ok(Object::from(Value::Float(random_number)))
+            let end   = if let Some(f) = range.end.to_float() {
+                f
+            } else {
+                Err(Error::new("randomFloat: range end is not float"))?
+            };
+            (start, end, range.closed)
+        };
+        let mut rng = thread_rng();
+        Ok(Object::from(if closed {
+            rng.gen_range(start..=end)
         } else {
-            unreachable!()
-        }
+            rng.gen_range(start..end)
+        }))
     });
 
     namespace.define_pipeline_item("randomInt", |args: Arguments, ctx: Ctx| async move {
@@ -70,25 +68,37 @@ pub(in crate::stdlib) fn load_pipeline_number_items(namespace: &mut Namespace) {
         if length.is_err() && range.is_err() {
             Err(Error::new("randomInt: invalid argument"))?
         }
-        if let Ok(length) = length {
-            if length > 0 && length < 10 {
-                let len_int = length.try_into().unwrap();
-                let ran_num: i32 = thread_rng().gen_range(10_i32.pow(len_int - 1)..10_i32.pow(len_int));
-                Ok(Object::from(Value::Int(ran_num)))
-            } else if length == 10 {
-                let ran_num: i32 = thread_rng().gen_range(10_i32.pow(9)..2147483647);
-                Ok(Object::from(Value::Int(ran_num)))
-            } else { 
-                Err(Error::new("randomInt: invalid argument"))?
+        let (start, end, closed) = {
+            if let Ok(length) = length {
+                if length > 0 && length < 10 {
+                    (10_i32.pow((length - 1) as u32), 10_i32.pow(length as u32), false)
+                } else if length == 10 {
+                    (10_i32.pow(9), 2147483647, true)
+                } else {
+                    Err(Error::new("randomInt(length): length should be between 1 and 10"))?
+                }
+            } else if let Ok(range) = range {
+                let start = if let Some(f) = range.start.to_int() {
+                    f
+                } else {
+                    Err(Error::new("randomInt: range start is not int"))?
+                };
+                let end   = if let Some(f) = range.end.to_int() {
+                    f
+                } else {
+                    Err(Error::new("randomInt: range end is not int"))?
+                };
+                (start, end, range.closed)
+            } else {
+                unreachable!()
             }
-        } else if let Ok(range) = range {
-            let start = range.start.to_int().unwrap();
-            let end   = range.end.  to_int().unwrap();
-            let ran_num: i32 = thread_rng().gen_range(start..end);
-            Ok(Object::from(Value::Int(ran_num)))
+        };
+        let mut rng = thread_rng();
+        Ok(Object::from(if closed {
+            rng.gen_range(start..=end)
         } else {
-            unreachable!()
-        }
+            rng.gen_range(start..end)
+        }))
     });
 
 }
