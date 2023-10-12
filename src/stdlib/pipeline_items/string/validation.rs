@@ -44,7 +44,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
     namespace.define_pipeline_item("isSecurePassword", |args: Arguments, ctx: Ctx| async move {
         let input: &str = ctx.value().try_into_err_prefix("isSecurePassword")?;
         for regex in SECURE_PASSWORD_REGEXES.iter() {
-            if regex.is_match(input) {
+            if !regex.is_match(input) {
                 Err(Error::new("input is not secure password"))?
             }
         }
