@@ -10,17 +10,18 @@ use regex::Regex;
 use teo_teon::Value;
 
 pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
+
     namespace.define_pipeline_item("eq", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_into_err_prefix("eq")?;
-        let arg_object = &ctx.resolve_pipeline(
-            args.get_object("value").err_prefix("eq(value)")?,
-            "eq(value)",
+        let rhs_object = &ctx.resolve_pipeline(
+            args.get_object("rhs").err_prefix("eq(rhs)")?,
+            "eq(rhs)",
         ).await?;
-        let arg: &Value = arg_object.try_into_err_prefix("eq(value)")?;
-        if input == arg {
+        let rhs: &Value = rhs_object.try_into_err_prefix("eq(rhs)")?;
+        if input == rhs {
             Ok(ctx.value().clone())
         } else {
-            Err(Error::new("eq: values do not equal"))?
+            Err(Error::new("input is not equal to rhs"))?
         }
     });
 
@@ -34,7 +35,7 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
         if input > arg {
             Ok(ctx.value().clone())
         } else {
-            Err(Error::new("gt: values not greater than rhs"))?
+            Err(Error::new("input is not greater than rhs"))?
         }
     });
 
@@ -48,7 +49,7 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
         if input >= arg {
             Ok(ctx.value().clone())
         } else {
-            Err(Error::new("gte: values is not greater than or equal to rh"))?
+            Err(Error::new("input is not greater than or equal to rhs"))?
         }
     });
 
@@ -63,7 +64,7 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
         if input < arg {
             Ok(ctx.value().clone())
         } else {
-            Err(Error::new("lt: values is less than rhs"))?
+            Err(Error::new("input is not less than rhs"))?
         }
     });
 
@@ -77,7 +78,7 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
         if input <= arg {
             Ok(ctx.value().clone())
         } else {
-            Err(Error::new("lte: values is not less than or equal to rhs"))?
+            Err(Error::new("input is not less than or equal to rhs"))?
         }
     });
 
@@ -91,58 +92,53 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
         if input != arg {
             Ok(ctx.value().clone())
         } else {
-            Err(Error::new("value is equal to rhs"))?
+            Err(Error::new("input is equal to rhs"))?
         }
     });
 
     namespace.define_pipeline_item("isNull", |args: Arguments, ctx: Ctx| async move {
-        let input: &Value = ctx.value().try_into_err_prefix("isNull")?;
-        if !input.is_null() {
-            Err(Error::new("value is not Null"))?
+        if !ctx.value().is_null() {
+            Err(Error::new("input is not null"))?
         }
         Ok(ctx.value().clone())
     });
 
-    namespace.define_pipeline_item("exists", |args: Arguments, ctx: Ctx| async move {
-        let input: &Value = ctx.value().try_into_err_prefix("exists")?;
-        if input.is_null() {
-            Err(Error::new("value does not exist"))?
+    namespace.define_pipeline_item("presents", |args: Arguments, ctx: Ctx| async move {
+        if ctx.value().is_null() {
+            Err(Error::new("input is not present"))?
         }
         Ok(ctx.value().clone())
     });
 
     namespace.define_pipeline_item("isTrue", |args: Arguments, ctx: Ctx| async move {
-        let input: &Value = ctx.value().try_into_err_prefix("isTrue")?;
-        if input.as_bool().is_some(){
+        let input: bool = ctx.value().try_into_err_prefix("isTrue")?;
+        if input {
             Ok(ctx.value().clone())
         } else {
-            Err(Error::new("value is equal to rhs"))?
+            Err(Error::new("input is not true"))?
         }
     });
 
     namespace.define_pipeline_item("isFalse", |args: Arguments, ctx: Ctx| async move {
-        let input: &Value = ctx.value().try_into_err_prefix("isFalse")?;
-        if !input.as_bool().is_some(){
+        let input: bool = ctx.value().try_into_err_prefix("isFalse")?;
+        if !input {
             Ok(ctx.value().clone())
         } else {
-            Err(Error::new("value is equal to rhs"))?
+            Err(Error::new("input is not false"))?
         }
     });
 
     namespace.define_pipeline_item("oneOf", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_into_err_prefix("oneOf")?;
-        let arg_object = &ctx.resolve_pipeline(
-            args.get_object("value").err_prefix("oneOf(value)")?,
-            "oneOf(value)",
+        let candidates_object = &ctx.resolve_pipeline(
+            args.get_object("candidates").err_prefix("oneOf(candidates)")?,
+            "oneOf(candidates)",
         ).await?;
-        let arg: &Value = arg_object.try_into_err_prefix("oneOf(value)")?;
-        let list = arg.as_array().unwrap();
-        if list.iter().find(|item| {
-            **item == *input
-        }).is_some() {
+        let candidates: &Vec<Value> = candidates_object.try_into_err_prefix("oneOf(candidates)")?;
+        if candidates.iter().find(|candidate| *candidate == input).is_some() {
             Ok(ctx.value().clone())
         } else {
-            Err(Error::new("value is equal to rhs"))?
+            Err(Error::new("input is not one of candidates"))
         }
     });
 }

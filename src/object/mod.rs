@@ -310,6 +310,32 @@ impl<'a> TryFrom<&'a Object> for i32 {
     }
 }
 
+impl<'a> TryFrom<&'a Object> for usize {
+
+    type Error = Error;
+
+    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
+        let teon: &'a Value = value.try_into()?;
+        match teon.to_usize() {
+            Some(v) => Ok(v),
+            None => Err(Error::new(format!("object cannot convert to usize: {:?}", value)))
+        }
+    }
+}
+
+impl<'a> TryFrom<&'a Object> for bool {
+
+    type Error = Error;
+
+    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
+        let teon: &'a Value = value.try_into()?;
+        match teon.try_into() {
+            Ok(v) => Ok(v),
+            Err(_) => Err(Error::new(format!("object is not bool: {:?}", value)))
+        }
+    }
+}
+
 impl<'a> TryFrom<&'a Object> for &'a str {
 
     type Error = Error;
@@ -319,6 +345,19 @@ impl<'a> TryFrom<&'a Object> for &'a str {
         match teon.try_into() {
             Ok(v) => Ok(v),
             Err(_) => Err(Error::new(format!("object is not &str: {:?}", value)))
+        }
+    }
+}
+
+impl<'a> TryFrom<&'a Object> for &'a Vec<Value> {
+
+    type Error = Error;
+
+    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
+        let teon: &'a Value = value.try_into()?;
+        match teon.try_into() {
+            Ok(v) => Ok(v),
+            Err(_) => Err(Error::new(format!("object is not Array: {:?}", value)))
         }
     }
 }

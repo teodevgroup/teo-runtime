@@ -5,6 +5,7 @@ use crate::stdlib::decorators::model_decorators::load_model_decorators;
 use crate::stdlib::decorators::model_field_decorators::load_model_field_decorators;
 use crate::stdlib::decorators::model_property_decorators::load_model_property_decorators;
 use crate::stdlib::decorators::model_relation_decorators::load_model_relation_decorators;
+use crate::stdlib::pipeline_items::logical::load_pipeline_logical_items;
 use crate::stdlib::pipeline_items::math::load_pipeline_math_items;
 use crate::stdlib::pipeline_items::model_object::load_pipeline_model_object_items;
 use crate::stdlib::pipeline_items::number::load_pipeline_number_items;
@@ -32,4 +33,6 @@ pub(crate) fn load(namespace: &mut Namespace) {
     load_pipeline_string_transform_items(std_namespace);
     load_pipeline_string_validation_items(std_namespace);
     load_pipeline_value_items(std_namespace);
+    load_pipeline_model_object_items(std_namespace);
+    load_pipeline_logical_items(std_namespace);
 }
