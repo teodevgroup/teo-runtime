@@ -196,7 +196,7 @@ impl From<Vec<Value>> for Object {
 
     fn from(value: Vec<Value>) -> Self {
         Object {
-            inner: Arc::new(ObjectInner::Teon(Value::Array(value.clone())))
+            inner: Arc::new(ObjectInner::Teon(Value::Array(value)))
         }
     }
 }
@@ -301,6 +301,18 @@ impl<'a> TryFrom<&'a Object> for &'a Value {
     fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
         match value.as_teon() {
             Some(o) => Ok(o),
+            None => Err(Error::new(format!("object is not teon: {:?}", value)))
+        }
+    }
+}
+
+impl<'a> TryFrom<&'a Object> for Value {
+
+    type Error = Error;
+
+    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
+        match value.as_teon() {
+            Some(o) => Ok(o.clone()),
             None => Err(Error::new(format!("object is not teon: {:?}", value)))
         }
     }
