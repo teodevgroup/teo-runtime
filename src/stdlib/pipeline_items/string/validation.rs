@@ -102,7 +102,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
         ).await?;
         let arg: &str = arg_object.try_into_err_prefix("hasSuffix")?;
         if !input.ends_with(arg) {
-            Err(Error::new(format!("input is not prefix of \"{arg}\"")))?
+            Err(Error::new(format!("input doesn't have suffix \"{arg}\"")))?
         }
         Ok(ctx.value().clone())
     });
@@ -127,17 +127,18 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
             "hasPrefix",
         ).await?;
         let arg: &str = arg_object.try_into_err_prefix("hasPrefix")?;
-        if !arg.ends_with(arg) {
-            Err(Error::new(format!("input is not suffix of \"{arg}\"")))?
+        if !input.starts_with(arg) {
+            Err(Error::new(format!("input doesn't have suffix \"{arg}\"")))?
         }
         Ok(ctx.value().clone())
     });
 
-    // namespace.define_pipeline_item("regexMatch", |args: Arguments, ctx: Ctx| async move {
-    //     let input: &str = ctx.value().try_into_err_prefix("hasPrefix")?;
-    //     if !.is_match(input){
-    //         Err(Error::new(format!("input is not suffix of")))?
-    //     }
-    //     Ok(ctx.value().clone())
-    // });
+    namespace.define_pipeline_item("regexMatch", |args: Arguments, ctx: Ctx| async move {
+        let input: &str = ctx.value().try_into_err_prefix("regexMatch")?;
+        let regex: &Regex = args.get("regex").err_prefix("regexMatch")?;
+        if !regex.is_match(input){
+            Err(Error::new(format!("input doesn't match regex")))?
+        }
+        Ok(ctx.value().clone())
+    });
 }

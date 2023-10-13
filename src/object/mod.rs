@@ -6,6 +6,7 @@ use crate::pipeline::pipeline::Pipeline;
 use crate::r#struct;
 use crate::result::Result;
 use bigdecimal::BigDecimal;
+use regex::Regex;
 use teo_teon::types::range::Range;
 
 #[derive(Debug, Clone)]
@@ -135,6 +136,24 @@ impl From<f64> for Object {
     fn from(value: f64) -> Self {
         Object {
             inner: Arc::new(ObjectInner::Teon(Value::Float(value)))
+        }
+    }
+}
+
+impl From<&str> for Object {
+
+    fn from(value: &str) -> Self {
+        Object {
+            inner: Arc::new(ObjectInner::Teon(Value::String(value.to_string())))
+        }
+    }
+}
+
+impl From<String> for Object {
+
+    fn from(value: String) -> Self {
+        Object {
+            inner: Arc::new(ObjectInner::Teon(Value::String(value)))
         }
     }
 }
@@ -288,6 +307,19 @@ impl<'a> TryFrom<&'a Object> for &'a Range {
         match teon.try_into() {
             Ok(v) => Ok(v),
             Err(_) => Err(Error::new(format!("object is not Range: {:?}", value)))
+        }
+    }
+}
+
+impl<'a> TryFrom<&'a Object> for &'a Regex {
+
+    type Error = Error;
+
+    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
+        let teon: &'a Value = value.try_into()?;
+        match teon.try_into() {
+            Ok(v) => Ok(v),
+            Err(_) => Err(Error::new(format!("object is not Regex: {:?}", value)))
         }
     }
 }
