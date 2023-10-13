@@ -1,4 +1,4 @@
 Teo Runtime
 ===========
 
-Runtime for Teo.
+Runtime for Teo web framework
