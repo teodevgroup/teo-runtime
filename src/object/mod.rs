@@ -71,6 +71,10 @@ impl Object {
         }
     }
 
+    pub fn is_null(&self) -> bool {
+        self.is_teon() && self.as_teon().unwrap().is_null()
+    }
+
     pub fn try_into_err_prefix<'a, T: 'a, E>(&'a self, prefix: impl AsRef<str>) -> Result<T> where E: std::error::Error, T: TryFrom<&'a Object, Error = E> {
         let result: std::result::Result<T, E> = self.try_into();
         match result {

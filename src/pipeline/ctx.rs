@@ -5,6 +5,7 @@ use crate::error::Error;
 use crate::object::Object;
 use crate::request::Request;
 use crate::model;
+use crate::pipeline::pipeline::Pipeline;
 use crate::result::{Result, ResultExt};
 
 #[derive(Clone)]
@@ -45,17 +46,25 @@ impl Ctx {
 
     pub async fn resolve_pipeline(&self, object: Object, err_prefix: impl AsRef<str>) -> Result<Object> {
         if let Some(pipeline) = object.as_pipeline() {
-            let mut ctx = self.clone();
-            for item in &pipeline.items {
-                ctx = ctx.alter_value(item.call(item.arguments.clone(), ctx.clone()).await.err_prefix(err_prefix.as_ref())?);
-            }
-            Ok(ctx.value().clone())
+            self.run_pipeline_with_err_prefix(pipeline, err_prefix).await
         } else {
             Ok(object)
         }
     }
 
-    fn alter_value(&self, value: Object) -> Self {
+    pub async fn run_pipeline_with_err_prefix(&self, pipeline: &Pipeline, err_prefix: impl AsRef<str>) -> Result<Object> {
+        self.run_pipeline(pipeline).await.err_prefix(err_prefix)
+    }
+
+    pub async fn run_pipeline(&self, pipeline: &Pipeline) -> Result<Object> {
+        let mut ctx = self.clone();
+        for item in &pipeline.items {
+            ctx = ctx.alter_value(item.call(item.arguments.clone(), ctx.clone()).await?);
+        }
+        Ok(ctx.value().clone())
+    }
+
+    pub fn alter_value(&self, value: Object) -> Self {
         Self {
             inner: Arc::new(CtxInner {
                 value,
