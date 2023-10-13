@@ -88,11 +88,19 @@ pub(in crate::stdlib) fn load_pipeline_string_transform_items(namespace: &mut Na
         Ok(Object::from(input.pad(width, char, Alignment::Right, false)))
     });
 
-    // namespace.define_pipeline_item("padEnd", |args: Arguments, ctx: Ctx| async move {
-    //     let input: &str = ctx.value().try_into_err_prefix("padEnd")?;
-    //     let width: usize = args.get("width").err_prefix("padEnd")? as usize;
-    //     let s_char = args.get("char").err_prefix("padEnd")?;
-    //     Ok( Object::from(input.pad(width, s_char, Alignment::Left, false)))
-    // });
+    namespace.define_pipeline_item("padEnd", |args: Arguments, ctx: Ctx| async move {
+        let input: &str = ctx.value().try_into_err_prefix("padEnd")?;
+        let width_object = ctx.resolve_pipeline(
+            args.get_object("width").err_prefix("padEnd(width)")?,
+            "padEnd(width)",
+        ).await?;
+        let width: usize = args.get("width").err_prefix("padEnd(width")?;
+        let char_str: &str = args.get("char").err_prefix("padEnd(char)")?;
+        if char_str.len() != 1{
+            Err(Error::new("padEnd(char): char is not 1 length string"))?
+        }
+        let char = char_str.chars().nth(0).unwrap();
+        Ok( Object::from(input.pad(width, char, Alignment::Left, false)))
+    });
 
 }
