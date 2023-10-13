@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+use std::fmt::Display;
 use std::sync::Arc;
 use teo_teon::Value;
 use crate::error::Error;
@@ -7,6 +9,7 @@ use crate::r#struct;
 use crate::result::Result;
 use bigdecimal::BigDecimal;
 use regex::Regex;
+use teo_teon::types::enum_variant::EnumVariant;
 use teo_teon::types::range::Range;
 
 #[derive(Debug, Clone)]
@@ -185,6 +188,15 @@ impl From<model::Object> for Object {
     }
 }
 
+impl From<&model::Object> for Object {
+
+    fn from(value: &model::Object) -> Self {
+        Object {
+            inner: Arc::new(ObjectInner::ModelObject(value.clone())),
+        }
+    }
+}
+
 impl From<r#struct::Object> for Object {
 
     fn from(value: r#struct::Object) -> Self {
@@ -294,6 +306,32 @@ impl<'a> TryFrom<&'a Object> for &'a str {
         match teon.try_into() {
             Ok(v) => Ok(v),
             Err(_) => Err(Error::new(format!("object is not &str: {:?}", value)))
+        }
+    }
+}
+
+impl<'a> TryFrom<&'a Object> for &'a HashMap<String, Value> {
+
+    type Error = Error;
+
+    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
+        let teon: &'a Value = value.try_into()?;
+        match teon.try_into() {
+            Ok(v) => Ok(v),
+            Err(_) => Err(Error::new(format!("object is not Dictionary: {:?}", value)))
+        }
+    }
+}
+
+impl<'a> TryFrom<&'a Object> for &'a EnumVariant {
+
+    type Error = Error;
+
+    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
+        let teon: &'a Value = value.try_into()?;
+        match teon.try_into() {
+            Ok(v) => Ok(v),
+            Err(_) => Err(Error::new(format!("object is not Dictionary: {:?}", value)))
         }
     }
 }
