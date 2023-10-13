@@ -8,6 +8,14 @@ use crate::result::{Result, ResultExt};
 
 pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) {
 
+    namespace.define_pipeline_item("valid", |args: Arguments, ctx: Ctx| async move {
+        Ok(ctx.value().clone())
+    });
+
+    namespace.define_pipeline_item("invalid", |args: Arguments, ctx: Ctx| async move {
+        Err(Error::new("input is invalid"))
+    });
+
     namespace.define_pipeline_item("validate", |args: Arguments, ctx: Ctx| async move {
         let pipeline: &Pipeline = args.get("pipeline").err_prefix("validate")?;
         if let Err(err) = ctx.run_pipeline(pipeline).await {
@@ -45,7 +53,7 @@ pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) 
 
     namespace.define_pipeline_item("presents", |args: Arguments, ctx: Ctx| async move {
         if ctx.value().is_null() {
-            Err(Error::new("value is not present"))?
+            Err(Error::new("input is not present"))?
         }
         Ok(ctx.value().clone())
     });
