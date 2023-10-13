@@ -94,7 +94,7 @@ pub(in crate::stdlib) fn load_pipeline_string_transform_items(namespace: &mut Na
             args.get_object("width").err_prefix("padEnd(width)")?,
             "padEnd(width)",
         ).await?;
-        let width: usize = args.get("width").err_prefix("padEnd(width")?;
+        let width: usize = width_object.try_into_err_prefix("padEnd(width")?;
         let char_str: &str = args.get("char").err_prefix("padEnd(char)")?;
         if char_str.len() != 1{
             Err(Error::new("padEnd(char): char is not 1 length string"))?

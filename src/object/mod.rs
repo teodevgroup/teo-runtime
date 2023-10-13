@@ -192,6 +192,15 @@ impl From<&BigDecimal> for Object {
     }
 }
 
+impl From<Vec<Value>> for Object {
+
+    fn from(value: Vec<Value>) -> Self {
+        Object {
+            inner: Arc::new(ObjectInner::Teon(Value::Array(value.clone())))
+        }
+    }
+}
+
 impl From<model::Object> for Object {
 
     fn from(value: model::Object) -> Self {
