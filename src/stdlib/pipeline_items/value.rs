@@ -136,9 +136,9 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
             "oneOf(value)",
         ).await?;
         let arg: &Value = arg_object.try_into_err_prefix("oneOf(value)")?;
-        let list = arg.as_vec().unwrap();
+        let list = arg.as_array().unwrap();
         if list.iter().find(|item| {
-            **item == input
+            **item == *input
         }).is_some() {
             Ok(ctx.value().clone())
         } else {
