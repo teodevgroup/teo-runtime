@@ -147,6 +147,15 @@ impl From<f64> for Object {
     }
 }
 
+impl From<bool> for Object {
+
+    fn from(value: bool) -> Self {
+        Object {
+            inner: Arc::new(ObjectInner::Teon(Value::Bool(value)))
+        }
+    }
+}
+
 impl From<&str> for Object {
 
     fn from(value: &str) -> Self {

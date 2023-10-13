@@ -1,6 +1,7 @@
 use crate::arguments::Arguments;
 use crate::error::Error;
 use crate::namespace::Namespace;
+use crate::object::Object;
 use crate::pipeline::Ctx;
 use crate::pipeline::pipeline::Pipeline;
 use crate::result::{Result, ResultExt};
@@ -13,6 +14,11 @@ pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) 
             Err(err)?
         }
         Ok(ctx.value().clone())
+    });
+
+    namespace.define_pipeline_item("passed", |args: Arguments, ctx: Ctx| async move {
+        let pipeline: &Pipeline = args.get("pipeline").err_prefix("validate")?;
+        Ok(Object::from(ctx.run_pipeline(pipeline).await.is_ok()))
     });
 
     namespace.define_pipeline_item("if", |args: Arguments, ctx: Ctx| async move {
