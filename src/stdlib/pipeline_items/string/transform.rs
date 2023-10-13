@@ -6,6 +6,7 @@ use crate::result::ResultExt;
 
 use crate::object::Object;
 use inflector::cases::wordcase::to_word_case;
+use inflector::Inflector;
 use teo_teon::Value;
 
 
@@ -38,5 +39,16 @@ pub(in crate::stdlib) fn load_pipeline_string_transform_items(namespace: &mut Na
         let input: &str = ctx.value().try_into_err_prefix("toUpperCase")?;
         Ok(Object::from(Value::String(input.to_uppercase())))
     });
+
+    namespace.define_pipeline_item("toTitleCase", |args: Arguments, ctx: Ctx| async move {
+        let input: &str = ctx.value().try_into_err_prefix("toTitleCase")?;
+        Ok(Object::from(Value::String(input.to_title_case())))
+    });
+
+    namespace.define_pipeline_item("toSentenceCase", |args: Arguments, ctx: Ctx| async move {
+        let input: &str = ctx.value().try_into_err_prefix("toSentenceCase")?;
+        Ok(Object::from(Value::String(input.to_sentence_case())))
+    });
+
 
 }
