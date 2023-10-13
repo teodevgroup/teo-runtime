@@ -58,13 +58,20 @@ pub(in crate::stdlib) fn load_pipeline_array_items(namespace: &mut Namespace) {
         })
     });
 
-//     namespace.define_pipeline_item("hasLength", |args: Arguments, ctx: Ctx| async move {
-//         let input: &str = ctx.value().try_into_err_prefix("hasLength")?;
-//     });
+    // namespace.define_pipeline_item("hasLength", |args: Arguments, ctx: Ctx| async move {
+    //     let input: &Value = ctx.value().try_into_err_prefix("hasLength")?;
+    //     match input {
+    //     }
+    // });
 
-//     namespace.define_pipeline_item("reverse", |args: Arguments, ctx: Ctx| async move {
-//         let input: &str = ctx.value().try_into_err_prefix("reverse")?;
-//     });
+    // namespace.define_pipeline_item("reverse", |args: Arguments, ctx: Ctx| async move {
+    //     let input: &Value = ctx.value().try_into_err_prefix("reverse")?;
+    //     match input {
+    //         Value::String(s) => Ok(Object::from(s.chars().rev().collect::<String>())),
+    //         Value::Array(v) =>  Ok(Object::from(v.into_iter().rev().map(|v| v.clone()))),
+    //         _ => Err(Error::new("input is not array or string"))?
+    //     }
+    // });
 
 //     namespace.define_pipeline_item("truncate", |args: Arguments, ctx: Ctx| async move {
 //         let input: &str = ctx.value().try_into_err_prefix("truncate")?;
