@@ -94,4 +94,51 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
         Ok(ctx.value().clone())
     });
 
+    namespace.define_pipeline_item("hasSuffix", |args: Arguments, ctx: Ctx| async move {
+        let input: &str = ctx.value().try_into_err_prefix("hasSuffix")?;
+        let arg_object = ctx.resolve_pipeline(
+            args.get_object("value").err_prefix("hasSuffix")?,
+            "hasSuffix",
+        ).await?;
+        let arg: &str = arg_object.try_into_err_prefix("hasSuffix")?;
+        if !input.ends_with(arg) {
+            Err(Error::new(format!("input is not prefix of \"{arg}\"")))?
+        }
+        Ok(ctx.value().clone())
+    });
+
+    namespace.define_pipeline_item("isPrefixOf", |args: Arguments, ctx: Ctx| async move {
+        let input: &str = ctx.value().try_into_err_prefix("isPrefixOf")?;
+        let arg_object = ctx.resolve_pipeline(
+            args.get_object("value").err_prefix("isPrefixOf")?,
+            "isPrefixOf",
+        ).await?;
+        let arg: &str = arg_object.try_into_err_prefix("isPrefixOf")?;
+        if !arg.starts_with(input) {
+            Err(Error::new(format!("input is not prefix of \"{arg}\"")))?
+        }
+        Ok(ctx.value().clone())
+    });
+
+    namespace.define_pipeline_item("hasPrefix", |args: Arguments, ctx: Ctx| async move {
+        let input: &str = ctx.value().try_into_err_prefix("hasPrefix")?;
+        let arg_object = ctx.resolve_pipeline(
+            args.get_object("value").err_prefix("hasPrefix")?,
+            "hasPrefix",
+        ).await?;
+        let arg: &str = arg_object.try_into_err_prefix("hasPrefix")?;
+        if !arg.ends_with(arg) {
+            Err(Error::new(format!("input is not suffix of \"{arg}\"")))?
+        }
+        Ok(ctx.value().clone())
+    });
+
+    // namespace.define_pipeline_item("regexMatch", |args: Arguments, ctx: Ctx| async move {
+    //     let input: &str = ctx.value().try_into_err_prefix("hasPrefix")?;
+    //     if !.is_match(input){
+    //         Err(Error::new(format!("input is not suffix of")))?
+    //     }
+    //     Ok(ctx.value().clone())
+    // });
+
 }
