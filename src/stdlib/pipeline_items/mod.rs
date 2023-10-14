@@ -5,3 +5,4 @@ pub(super) mod string;
 pub(super) mod model_object;
 pub(super) mod logical;
 pub(super) mod array;
+pub(super) mod vector;

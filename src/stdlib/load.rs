@@ -14,6 +14,7 @@ use crate::stdlib::pipeline_items::string::transform::load_pipeline_string_trans
 use crate::stdlib::pipeline_items::string::validation::load_pipeline_string_validation_items;
 use crate::stdlib::pipeline_items::value::load_pipeline_value_items;
 use crate::stdlib::pipeline_items::array::load_pipeline_array_items;
+use crate::stdlib::pipeline_items::vector::load_pipeline_vector_items;
 
 pub(crate) fn load(namespace: &mut Namespace) {
     if !namespace.path.is_empty() {
@@ -37,4 +38,5 @@ pub(crate) fn load(namespace: &mut Namespace) {
     load_pipeline_model_object_items(std_namespace);
     load_pipeline_logical_items(std_namespace);
     load_pipeline_array_items(std_namespace);
+    load_pipeline_vector_items(std_namespace);
 }
