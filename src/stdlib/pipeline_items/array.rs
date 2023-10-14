@@ -43,7 +43,7 @@ pub(in crate::stdlib) fn load_pipeline_array_items(namespace: &mut Namespace) {
                 if !arg.is_string() {
                     Err(Error::new("preend(value): value is not string"))?
                 }
-                Ok(Object::from(arg.as_str().unwrap().to_owned() + &s.clone()))
+                Ok(Object::from(arg.as_str().unwrap().to_owned() + &s))
             },
             Value::Array(v) => {
                 let mut new_array = v.clone();
