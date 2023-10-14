@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::sync::Arc;
+use chrono::{NaiveDate, Utc, DateTime};
 use teo_teon::Value;
 use crate::error::Error;
 use crate::model;
@@ -188,6 +189,24 @@ impl From<&BigDecimal> for Object {
     fn from(value: &BigDecimal) -> Self {
         Object {
             inner: Arc::new(ObjectInner::Teon(Value::Decimal(value.clone())))
+        }
+    }
+}
+
+impl From<NaiveDate> for Object {
+
+    fn from(value: NaiveDate) -> Self {
+        Object {
+            inner: Arc::new(ObjectInner::Teon(Value::Date(value)))
+        }
+    }
+}
+
+impl From<DateTime<Utc>> for Object {
+
+    fn from(value: DateTime<Utc>) -> Self {
+        Object {
+            inner: Arc::new(ObjectInner::Teon(Value::DateTime(value)))
         }
     }
 }
