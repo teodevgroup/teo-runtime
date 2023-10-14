@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::sync::Arc;
+use chrono::{NaiveDate, Utc, DateTime};
 use teo_teon::Value;
 use crate::error::Error;
 use crate::model;
@@ -188,6 +189,24 @@ impl From<&BigDecimal> for Object {
     fn from(value: &BigDecimal) -> Self {
         Object {
             inner: Arc::new(ObjectInner::Teon(Value::Decimal(value.clone())))
+        }
+    }
+}
+
+impl From<NaiveDate> for Object {
+
+    fn from(value: NaiveDate) -> Self {
+        Object {
+            inner: Arc::new(ObjectInner::Teon(Value::Date(value)))
+        }
+    }
+}
+
+impl From<DateTime<Utc>> for Object {
+
+    fn from(value: DateTime<Utc>) -> Self {
+        Object {
+            inner: Arc::new(ObjectInner::Teon(Value::DateTime(value)))
         }
     }
 }
@@ -470,6 +489,19 @@ impl<'a> TryFrom<&'a Object> for &'a Regex {
         match teon.try_into() {
             Ok(v) => Ok(v),
             Err(_) => Err(Error::new(format!("object is not Regex: {:?}", value)))
+        }
+    }
+}
+
+impl<'a> TryFrom<&'a Object> for &'a DateTime<Utc> {
+
+    type Error = Error;
+
+    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
+        let teon: &'a Value = value.try_into()?;
+        match teon.try_into() {
+            Ok(v) => Ok(v),
+            Err(_) => Err(Error::new(format!("object is not DateTime<Utc>: {:?}", value)))
         }
     }
 }
