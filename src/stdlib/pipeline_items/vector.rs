@@ -14,11 +14,10 @@ pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {
             args.get_object("value").err_prefix("join(value)")?,
             "(join(value)",
         ).await?;
-        let arg: &Value = arg_object.try_into_err_prefix("join(value)")?;
+        let separator : &str = arg_object.try_into_err_prefix("join(value)")?;
         // may be can improve (try into String directly)
         match input{
             Value::Array(v) => {
-                let separator = arg.as_str().unwrap();
                 Ok(Object::from(v.iter().map(|v| v.as_str().unwrap()).collect::<Vec<&str>>().join(separator)))
             }
             _ => Err(Error::new("join: input is not array or string"))

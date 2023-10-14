@@ -50,7 +50,7 @@ pub(in crate::stdlib) fn load_pipeline_array_items(namespace: &mut Namespace) {
                 new_array.insert(0, arg);
                 Ok(Object::from(new_array))
             },
-            _ => Err(Error::new("preend: input is not array or string"))
+            _ => Err(Error::new("prepend: input is not array or string"))
         }
     });
 
@@ -65,7 +65,7 @@ pub(in crate::stdlib) fn load_pipeline_array_items(namespace: &mut Namespace) {
 
     namespace.define_pipeline_item("hasLength", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_into_err_prefix("hasLength")?;
-        let (lower , upper , closed) = if input.is_any_number(){
+        let (lower , upper , closed) = if input.is_any_int(){
             let n = input.to_usize().unwrap();
             (n ,n ,true)
         } else if input.is_range() {
