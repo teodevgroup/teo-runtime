@@ -25,16 +25,15 @@ pub(in crate::stdlib) fn load_pipeline_datetime_items(namespace: &mut Namespace)
         Ok(Object::from(calculated.date_naive()))
     });
 
-    namespace.define_pipeline_item("toDate", |args: Arguments, ctx: Ctx| async move {
-        let input: &Value = ctx.value().try_into_err_prefix("toDate")?;
-        let arg_object = ctx.resolve_pipeline(
-            args.get_object("tz").err_prefix("toDate(tz)")?,
-            "toDate(tz)",
-        ).await?;
-        let arg: i32 = arg_object.try_into_err_prefix("toDate(tz)")?;
-        let datetime = input.as_datetime().unwrap();
-        let calculated = datetime.clone() + Duration::hours(arg.into());
-        Ok(Object::from(calculated.date_naive()))
-    });
+    // namespace.define_pipeline_item("toDate", |args: Arguments, ctx: Ctx| async move {
+    //     let datetime: &DateTime<Utc> = ctx.value().try_into_err_prefix("toDate")?;
+    //     let arg_object = ctx.resolve_pipeline(
+    //         args.get_object("tz").err_prefix("toDate(tz)")?,
+    //         "toDate(tz)",
+    //     ).await?;
+    //     let arg: i32 = arg_object.try_into_err_prefix("toDate(tz)")?;
+    //     let calculated = datetime.clone() + Duration::hours(arg.into());
+    //     Ok(Object::from(calculated.date_naive()))
+    // });
 
 }
