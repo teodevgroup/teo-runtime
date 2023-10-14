@@ -28,10 +28,10 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
     namespace.define_pipeline_item("gt", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_into_err_prefix("gt")?;
         let arg_object = &ctx.resolve_pipeline(
-            args.get_object("value").err_prefix("gt(value)")?,
-            "gt(value)",
+            args.get_object("rhs").err_prefix("gt(rhs)")?,
+            "gt(rhs)",
         ).await?;
-        let arg: &Value = arg_object.try_into_err_prefix("gt(value)")?;
+        let arg: &Value = arg_object.try_into_err_prefix("gt(rhs)")?;
         if input > arg {
             Ok(ctx.value().clone())
         } else {
@@ -42,10 +42,10 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
     namespace.define_pipeline_item("gte", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_into_err_prefix("gte")?;
         let arg_object = &ctx.resolve_pipeline(
-            args.get_object("value").err_prefix("gte(value)")?,
-            "gte(value)",
+            args.get_object("rhs").err_prefix("gte(rhs)")?,
+            "gte(rhs)",
         ).await?;
-        let arg: &Value = arg_object.try_into_err_prefix("gte(value)")?;
+        let arg: &Value = arg_object.try_into_err_prefix("gte(rhs)")?;
         if input >= arg {
             Ok(ctx.value().clone())
         } else {
@@ -57,10 +57,10 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
     namespace.define_pipeline_item("lt", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_into_err_prefix("lt")?;
         let arg_object = &ctx.resolve_pipeline(
-            args.get_object("value").err_prefix("lt(value)")?,
-            "lt(value)",
+            args.get_object("value").err_prefix("lt(rhs)")?,
+            "lt(rhs)",
         ).await?;
-        let arg: &Value = arg_object.try_into_err_prefix("lt(value)")?;
+        let arg: &Value = arg_object.try_into_err_prefix("lt(rhs)")?;
         if input < arg {
             Ok(ctx.value().clone())
         } else {
@@ -71,10 +71,10 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
     namespace.define_pipeline_item("lte", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_into_err_prefix("lte")?;
         let arg_object = &ctx.resolve_pipeline(
-            args.get_object("value").err_prefix("lte(value)")?,
-            "lte(value)",
+            args.get_object("rhs").err_prefix("lte(rhs)")?,
+            "lte(rhs)",
         ).await?;
-        let arg: &Value = arg_object.try_into_err_prefix("lte(value)")?;
+        let arg: &Value = arg_object.try_into_err_prefix("lte(rhs)")?;
         if input <= arg {
             Ok(ctx.value().clone())
         } else {
@@ -85,10 +85,10 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
     namespace.define_pipeline_item("neq", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_into_err_prefix("neq")?;
         let arg_object = &ctx.resolve_pipeline(
-            args.get_object("value").err_prefix("neq(value)")?,
-            "neq(value)",
+            args.get_object("rhs").err_prefix("neq(rhs)")?,
+            "neq(rhs)",
         ).await?;
-        let arg: &Value = arg_object.try_into_err_prefix("neq(value)")?;
+        let arg: &Value = arg_object.try_into_err_prefix("neq(rhs)")?;
         if input != arg {
             Ok(ctx.value().clone())
         } else {
