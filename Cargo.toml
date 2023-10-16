@@ -31,3 +31,4 @@ pad = "0.1.6"
 chrono = { version = "0.4.31", features = ["serde"] }
 jsonwebtoken = "9.0"
 log = "0.4.20"
+bson = { version = "2.6.0", features = ["chrono-0_4", "serde_with"] }

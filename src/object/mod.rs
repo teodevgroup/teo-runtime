@@ -1,15 +1,15 @@
 pub mod serde;
+pub mod convert;
 
 use std::fmt::Display;
 use std::sync::Arc;
-use chrono::{NaiveDate, Utc, DateTime};
+use chrono::{Utc, DateTime};
 use teo_teon::Value;
 use crate::error::Error;
 use crate::model;
 use crate::pipeline::pipeline::Pipeline;
 use crate::r#struct;
 use crate::result::Result;
-use bigdecimal::BigDecimal;
 use indexmap::IndexMap;
 use regex::Regex;
 use teo_teon::types::enum_variant::EnumVariant;
@@ -95,177 +95,11 @@ impl Object {
     }
 }
 
-impl From<Value> for Object {
-
-    fn from(value: Value) -> Self {
-        Object {
-            inner: Arc::new(ObjectInner::Teon(value)),
-        }
-    }
-}
-
-impl From<&Value> for Object {
-
-    fn from(value: &Value) -> Self {
-        Object {
-            inner: Arc::new(ObjectInner::Teon(value.clone())),
-        }
-    }
-}
 
 
-impl From<i32> for Object {
 
-    fn from(value: i32) -> Self {
-        Object {
-            inner: Arc::new(ObjectInner::Teon(Value::Int(value)))
-        }
-    }
-}
 
-impl From<i64> for Object {
 
-    fn from(value: i64) -> Self {
-        Object {
-            inner: Arc::new(ObjectInner::Teon(Value::Int64(value)))
-        }
-    }
-}
-
-impl From<f32> for Object {
-
-    fn from(value: f32) -> Self {
-        Object {
-            inner: Arc::new(ObjectInner::Teon(Value::Float32(value)))
-        }
-    }
-}
-
-impl From<f64> for Object {
-
-    fn from(value: f64) -> Self {
-        Object {
-            inner: Arc::new(ObjectInner::Teon(Value::Float(value)))
-        }
-    }
-}
-
-impl From<bool> for Object {
-
-    fn from(value: bool) -> Self {
-        Object {
-            inner: Arc::new(ObjectInner::Teon(Value::Bool(value)))
-        }
-    }
-}
-
-impl From<&str> for Object {
-
-    fn from(value: &str) -> Self {
-        Object {
-            inner: Arc::new(ObjectInner::Teon(Value::String(value.to_string())))
-        }
-    }
-}
-
-impl From<String> for Object {
-
-    fn from(value: String) -> Self {
-        Object {
-            inner: Arc::new(ObjectInner::Teon(Value::String(value)))
-        }
-    }
-}
-
-impl From<BigDecimal> for Object {
-
-    fn from(value: BigDecimal) -> Self {
-        Object {
-            inner: Arc::new(ObjectInner::Teon(Value::Decimal(value)))
-        }
-    }
-}
-
-impl From<&BigDecimal> for Object {
-
-    fn from(value: &BigDecimal) -> Self {
-        Object {
-            inner: Arc::new(ObjectInner::Teon(Value::Decimal(value.clone())))
-        }
-    }
-}
-
-impl From<NaiveDate> for Object {
-
-    fn from(value: NaiveDate) -> Self {
-        Object {
-            inner: Arc::new(ObjectInner::Teon(Value::Date(value)))
-        }
-    }
-}
-
-impl From<DateTime<Utc>> for Object {
-
-    fn from(value: DateTime<Utc>) -> Self {
-        Object {
-            inner: Arc::new(ObjectInner::Teon(Value::DateTime(value)))
-        }
-    }
-}
-
-impl From<Vec<Value>> for Object {
-
-    fn from(value: Vec<Value>) -> Self {
-        Object {
-            inner: Arc::new(ObjectInner::Teon(Value::Array(value)))
-        }
-    }
-}
-
-impl From<model::Object> for Object {
-
-    fn from(value: model::Object) -> Self {
-        Object {
-            inner: Arc::new(ObjectInner::ModelObject(value)),
-        }
-    }
-}
-
-impl From<&model::Object> for Object {
-
-    fn from(value: &model::Object) -> Self {
-        Object {
-            inner: Arc::new(ObjectInner::ModelObject(value.clone())),
-        }
-    }
-}
-
-impl From<r#struct::Object> for Object {
-
-    fn from(value: r#struct::Object) -> Self {
-        Object {
-            inner: Arc::new(ObjectInner::StructObject(value)),
-        }
-    }
-}
-
-impl From<Pipeline> for Object {
-
-    fn from(value: Pipeline) -> Self {
-        Object {
-            inner: Arc::new(ObjectInner::Pipeline(value)),
-        }
-    }
-}
-
-impl TryFrom<&Object> for Object {
-
-    type Error = Error;
-
-    fn try_from(value: &Object) -> std::result::Result<Self, Self::Error> {
-        Ok(value.clone())
-    }
-}
 
 impl<'a> TryFrom<&'a Object> for &'a model::Object {
 
