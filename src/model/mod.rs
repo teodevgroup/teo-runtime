@@ -14,6 +14,7 @@ use crate::model::field::Field;
 pub use crate::model::index::Index;
 use crate::model::property::Property;
 use crate::model::relation::Relation;
+use crate::pipeline::pipeline::Pipeline;
 
 #[derive(Debug, Serialize)]
 pub struct Model {
@@ -25,12 +26,12 @@ pub struct Model {
     properties: IndexMap<String, Property>,
     indexes: IndexMap<String, Index>,
     primary_index: String,
-    // before_save: Pipeline,
-    // after_save: Pipeline,
-    // before_delete: Pipeline,
-    // after_delete: Pipeline,
-    // can_read: Pipeline,
-    // can_mutate: Pipeline,
+    before_save: Vec<Pipeline>,
+    after_save: Vec<Pipeline>,
+    before_delete: Vec<Pipeline>,
+    after_delete: Vec<Pipeline>,
+    can_read: Vec<Pipeline>,
+    can_mutate: Vec<Pipeline>,
 }
 
 impl Model {

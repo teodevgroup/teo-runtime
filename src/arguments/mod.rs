@@ -1,6 +1,7 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
+use serde::{Serialize, Serializer};
 use crate::error::Error;
 use crate::object::Object;
 use crate::result::Result;
@@ -8,6 +9,13 @@ use crate::result::Result;
 #[derive(Clone)]
 pub struct Arguments {
     inner: Arc<ArgumentsInner>
+}
+
+impl Serialize for Arguments {
+
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: Serializer {
+        serializer.collect_map(self.inner.map.iter())
+    }
 }
 
 impl Debug for Arguments {

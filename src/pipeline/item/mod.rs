@@ -5,6 +5,7 @@ use crate::arguments::Arguments;
 use crate::pipeline::ctx::Ctx;
 use crate::result::Result;
 use futures_util::future::BoxFuture;
+use serde::Serialize;
 use crate::object::Object;
 
 #[derive(Educe)]
@@ -27,12 +28,12 @@ impl<F, Fut> Call for F where
     }
 }
 
-#[derive(Educe)]
+#[derive(Educe, Serialize)]
 #[educe(Debug)]
 pub struct BoundedItem {
     pub path: Vec<String>,
     pub arguments: Arguments,
-    #[educe(Debug(ignore))]
+    #[educe(Debug(ignore))] #[serde(skip)]
     pub(crate) call: Arc<dyn Call>,
 }
 

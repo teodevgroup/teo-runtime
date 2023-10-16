@@ -3,6 +3,7 @@ use std::sync::Arc;
 use maplit::hashmap;
 use crate::{model, model::Model, r#enum};
 use crate::arguments::Arguments;
+use crate::error::Error;
 use crate::model::field::Field;
 use crate::model::property::Property;
 use crate::model::relation::Relation;
@@ -13,6 +14,7 @@ use crate::utils::next_path;
 use crate::result::Result;
 use crate::pipeline;
 use crate::pipeline::item::Call;
+use crate::stdlib::load::load;
 
 #[derive(Debug)]
 pub struct Namespace {
@@ -54,8 +56,12 @@ impl Namespace {
         }
     }
 
-    pub fn load_standard_library(&mut self) {
-
+    pub fn load_standard_library(&mut self) -> Result<()> {
+        if self.path.is_empty() {
+            Err(Error::new("Standard library can only be loaded on main namespace"))?
+        }
+        load(self);
+        Ok(())
     }
 
     pub fn path(&self) -> Vec<&str> {

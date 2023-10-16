@@ -1,7 +1,8 @@
 use std::fmt::{Display, Formatter};
+use serde::Serialize;
 use crate::pipeline::item::BoundedItem;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Pipeline {
     pub items: Vec<BoundedItem>
 }

@@ -1,4 +1,5 @@
-use std::collections::HashMap;
+pub mod serde;
+
 use std::fmt::Display;
 use std::sync::Arc;
 use chrono::{NaiveDate, Utc, DateTime};
@@ -9,6 +10,7 @@ use crate::pipeline::pipeline::Pipeline;
 use crate::r#struct;
 use crate::result::Result;
 use bigdecimal::BigDecimal;
+use indexmap::IndexMap;
 use regex::Regex;
 use teo_teon::types::enum_variant::EnumVariant;
 use teo_teon::types::range::Range;
@@ -441,7 +443,7 @@ impl<'a> TryFrom<&'a Object> for Vec<String> {
     }
 }
 
-impl<'a> TryFrom<&'a Object> for &'a HashMap<String, Value> {
+impl<'a> TryFrom<&'a Object> for &'a IndexMap<String, Value> {
 
     type Error = Error;
 

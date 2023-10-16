@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use indexmap::IndexMap;
 use num_integer::Integer;
 use teo_teon::types::range::Range;
 use teo_teon::Value;
@@ -20,7 +21,7 @@ pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &mut Namesp
 
     namespace.define_pipeline_item("get", |args: Arguments, ctx: Ctx| async move {
         let model_object: Result<&model::Object> = ctx.value().try_into_err_prefix("get");
-        let dictionary: Result<&HashMap<String, Value>> = ctx.value().try_into_err_prefix("get");
+        let dictionary: Result<&IndexMap<String, Value>> = ctx.value().try_into_err_prefix("get");
         if let Ok(model_object) = model_object {
             let key: &EnumVariant = args.get("key").err_prefix("get(key)")?;
             // key.value.as_ref().as_str()
