@@ -4,11 +4,12 @@ use crate::request::Request;
 use super::local::Data;
 
 #[derive(Debug)]
-pub struct ReqCtx {
-    pub req: Request,
+pub struct Ctx {
+    pub request: Request,
     pub body: Value,
     // pub connection: Arc<dyn Connection>,
     // pub(crate) path_components: PathComponents,
     //pub action: Option<Action>,
-    pub req_local: Data,
+    pub data: Data,
 }
+
