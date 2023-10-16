@@ -1,6 +1,6 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::sync::Arc;
-use maplit::hashmap;
+use maplit::btreemap;
 use crate::{middleware, model, model::Model, r#enum};
 use crate::arguments::Arguments;
 use crate::error::Error;
@@ -19,19 +19,19 @@ use crate::stdlib::load::load;
 #[derive(Debug)]
 pub struct Namespace {
     pub path: Vec<String>,
-    pub namespaces: HashMap<String, Namespace>,
-    pub structs: HashMap<String, Struct>,
-    pub models: HashMap<String, Model>,
-    pub enums: HashMap<String, Enum>,
-    pub model_decorators: HashMap<String, model::Decorator>,
-    pub model_field_decorators: HashMap<String, model::field::Decorator>,
-    pub model_relation_decorators: HashMap<String, model::relation::Decorator>,
-    pub model_property_decorators: HashMap<String, model::property::Decorator>,
-    pub enum_decorators: HashMap<String, r#enum::Decorator>,
-    pub enum_member_decorators: HashMap<String, r#enum::member::Decorator>,
-    pub pipeline_items: HashMap<String, pipeline::Item>,
-    pub middlewares: HashMap<String, middleware::Definition>,
-    pub handler_groups: HashMap<String, handler::Group>,
+    pub namespaces: BTreeMap<String, Namespace>,
+    pub structs: BTreeMap<String, Struct>,
+    pub models: BTreeMap<String, Model>,
+    pub enums: BTreeMap<String, Enum>,
+    pub model_decorators: BTreeMap<String, model::Decorator>,
+    pub model_field_decorators: BTreeMap<String, model::field::Decorator>,
+    pub model_relation_decorators: BTreeMap<String, model::relation::Decorator>,
+    pub model_property_decorators: BTreeMap<String, model::property::Decorator>,
+    pub enum_decorators: BTreeMap<String, r#enum::Decorator>,
+    pub enum_member_decorators: BTreeMap<String, r#enum::member::Decorator>,
+    pub pipeline_items: BTreeMap<String, pipeline::Item>,
+    pub middlewares: BTreeMap<String, middleware::Definition>,
+    pub handler_groups: BTreeMap<String, handler::Group>,
 }
 
 impl Namespace {
@@ -44,19 +44,19 @@ impl Namespace {
     fn new(path: Vec<String>) -> Self {
         Self {
             path,
-            namespaces: hashmap!{},
-            structs: hashmap!{},
-            models: hashmap!{},
-            enums: hashmap!{},
-            model_decorators: hashmap!{},
-            model_field_decorators: hashmap!{},
-            model_relation_decorators: hashmap!{},
-            model_property_decorators: hashmap!{},
-            enum_decorators: hashmap!{},
-            enum_member_decorators: hashmap!{},
-            pipeline_items: hashmap!{},
-            middlewares: hashmap! {},
-            handler_groups: hashmap! {},
+            namespaces: btreemap!{},
+            structs: btreemap!{},
+            models: btreemap!{},
+            enums: btreemap!{},
+            model_decorators: btreemap!{},
+            model_field_decorators: btreemap!{},
+            model_relation_decorators: btreemap!{},
+            model_property_decorators: btreemap!{},
+            enum_decorators: btreemap!{},
+            enum_member_decorators: btreemap!{},
+            pipeline_items: btreemap!{},
+            middlewares: btreemap! {},
+            handler_groups: btreemap! {},
         }
     }
 
