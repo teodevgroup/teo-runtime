@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 use serde::{Serialize, Serializer};
 
@@ -9,10 +9,11 @@ pub struct Object {
 
 impl Object {
 
-    pub fn new(fields: HashMap<String, crate::object::Object>) -> Self {
+    pub fn new(struct_path: Vec<String>, fields: BTreeMap<String, crate::object::Object>) -> Self {
         Self {
             inner: Arc::new(ObjectInner {
-                fields: Arc::new(Mutex::new(fields)),
+                struct_path,
+                fields: Mutex::new(fields),
             })
         }
     }
@@ -27,6 +28,7 @@ impl Serialize for Object {
 
 #[derive(Debug)]
 struct ObjectInner {
-    fields: Arc<Mutex<HashMap<String, crate::object::Object>>>
+    struct_path: Vec<String>,
+    fields: Mutex<BTreeMap<String, crate::object::Object>>
 }
 

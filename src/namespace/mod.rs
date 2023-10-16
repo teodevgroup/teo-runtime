@@ -134,13 +134,14 @@ impl Namespace {
         self.handler_groups.insert(name.to_owned(), handler_group);
     }
 
-    pub fn define_struct<T>(&mut self, name: &str, builder: T) where T: Fn(&mut Struct) {
+    pub fn define_struct<T>(&mut self, name: &str, builder: T) where T: Fn(&'static Vec<String>, &mut Struct) {
+        let path = Box::leak(Box::new(next_path(&self.path, name))) as &'static Vec<String>;
         let mut r#struct = Struct {
-            path: next_path(&self.path, name),
+            path: path.clone(),
             functions: btreemap! {},
             static_functions: btreemap! {}
         };
-        builder(&mut r#struct);
+        builder(path, &mut r#struct);
         self.structs.insert(name.to_owned(), r#struct);
     }
 }

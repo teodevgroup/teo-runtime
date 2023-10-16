@@ -18,12 +18,15 @@ use crate::stdlib::pipeline_items::value::load_pipeline_value_items;
 use crate::stdlib::pipeline_items::array::load_pipeline_array_items;
 use crate::stdlib::pipeline_items::vector::load_pipeline_vector_items;
 use crate::stdlib::pipeline_items::datetime::load_pipeline_datetime_items;
+use crate::stdlib::structs::load_structs;
 
 pub(crate) fn load(namespace: &mut Namespace) {
     if !namespace.path.is_empty() {
         panic!("Please load standard library in the main namespace.")
     }
     let std_namespace = namespace.namespace_mut_or_create("std");
+    // structs
+    load_structs(std_namespace);
     // decorators
     load_model_decorators(std_namespace);
     load_model_field_decorators(std_namespace);
