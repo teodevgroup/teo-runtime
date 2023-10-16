@@ -4,6 +4,7 @@ use maplit::hashmap;
 use crate::{middleware, model, model::Model, r#enum};
 use crate::arguments::Arguments;
 use crate::error::Error;
+use crate::handler;
 use crate::model::field::Field;
 use crate::model::property::Property;
 use crate::model::relation::Relation;
@@ -30,6 +31,7 @@ pub struct Namespace {
     pub enum_member_decorators: HashMap<String, r#enum::member::Decorator>,
     pub pipeline_items: HashMap<String, pipeline::Item>,
     pub middlewares: HashMap<String, middleware::Definition>,
+    pub handler_groups: HashMap<String, handler::Group>,
 }
 
 impl Namespace {
@@ -54,6 +56,7 @@ impl Namespace {
             enum_member_decorators: hashmap!{},
             pipeline_items: hashmap!{},
             middlewares: hashmap! {},
+            handler_groups: hashmap! {},
         }
     }
 
@@ -120,5 +123,14 @@ impl Namespace {
             path: next_path(&self.path, name),
             creator: Arc::new(call)
         });
+    }
+
+    pub fn define_handler_group<T>(&mut self, name: &str, builder: T) where T: Fn(&mut handler::Group) {
+        let mut handler_group = handler::Group {
+            path: next_path(&self.path, name),
+            handlers: vec![],
+        };
+        builder(&mut handler_group);
+        self.handler_groups.insert(name.to_owned(), handler_group);
     }
 }

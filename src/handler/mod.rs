@@ -1,13 +1,5 @@
-use std::sync::Arc;
-use educe::Educe;
-use serde::Serialize;
+pub mod group;
+pub mod handler;
 
-#[derive(Educe)]
-#[educe(Debug)]
-#[derive(Serialize)]
-pub struct Handler {
-    name: String,
-    // #[serde(skip)] #[educe(Debug(ignore))]
-    // call: Arc<dyn Call>,
-}
-
+pub use group::Group;
+pub use handler::Handler;
