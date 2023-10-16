@@ -13,3 +13,4 @@ pub struct Ctx {
     pub data: Data,
 }
 
+unsafe impl Send for Ctx {}

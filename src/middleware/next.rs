@@ -11,7 +11,7 @@ pub trait Next: Send + Sync {
 impl<F, Fut> Next for F where
     F: Fn(Ctx) -> Fut + Sync + Send,
     Fut: Future<Output = Result<Response>> + Send + 'static {
-    fn call(&self, req_ctx: Ctx) -> BoxFuture<'static, Result<Response>> {
-        Box::pin(self(req_ctx))
+    fn call(&self, ctx: Ctx) -> BoxFuture<'static, Result<Response>> {
+        Box::pin(self(ctx))
     }
 }

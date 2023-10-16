@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use maplit::hashmap;
-use crate::{model, model::Model, r#enum};
+use crate::{middleware, model, model::Model, r#enum};
 use crate::arguments::Arguments;
 use crate::error::Error;
 use crate::model::field::Field;
@@ -13,7 +13,6 @@ use crate::r#struct::Struct;
 use crate::utils::next_path;
 use crate::result::Result;
 use crate::pipeline;
-use crate::pipeline::item::Call;
 use crate::stdlib::load::load;
 
 #[derive(Debug)]
@@ -30,6 +29,7 @@ pub struct Namespace {
     pub enum_decorators: HashMap<String, r#enum::Decorator>,
     pub enum_member_decorators: HashMap<String, r#enum::member::Decorator>,
     pub pipeline_items: HashMap<String, pipeline::Item>,
+    pub middlewares: HashMap<String, middleware::Definition>,
 }
 
 impl Namespace {
@@ -53,6 +53,7 @@ impl Namespace {
             enum_decorators: hashmap!{},
             enum_member_decorators: hashmap!{},
             pipeline_items: hashmap!{},
+            middlewares: hashmap! {},
         }
     }
 
@@ -107,7 +108,17 @@ impl Namespace {
         self.enum_member_decorators.insert(name.to_owned(), r#enum::member::Decorator { path: next_path(&self.path, name), call });
     }
 
-    pub fn define_pipeline_item<T>(&mut self, name: &str, call: T) where T: Call + 'static {
-        self.pipeline_items.insert(name.to_owned(), pipeline::Item { path: next_path(&self.path, name), call: Arc::new(call) });
+    pub fn define_pipeline_item<T>(&mut self, name: &str, call: T) where T: pipeline::item::Call + 'static {
+        self.pipeline_items.insert(name.to_owned(), pipeline::Item {
+            path: next_path(&self.path, name),
+            call: Arc::new(call)
+        });
+    }
+
+    pub fn define_middleware<T>(&mut self, name: &str, call: T) where T: middleware::creator::Creator + 'static {
+        self.middlewares.insert(name.to_owned(), middleware::Definition {
+            path: next_path(&self.path, name),
+            creator: Arc::new(call)
+        });
     }
 }
