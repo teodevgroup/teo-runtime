@@ -1,10 +1,33 @@
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
-
+use crate::request::header::readonly::HeaderMap;
 
 #[derive(Clone)]
 pub struct Request {
     inner: Arc<dyn r#trait::Request>
+}
+
+impl Request {
+
+    pub fn method(&self) -> &str {
+        self.inner.method()
+    }
+
+    pub fn path(&self) -> &str {
+        self.inner.path()
+    }
+
+    pub fn query_string(&self) -> &str {
+        self.inner.query_string()
+    }
+
+    pub fn content_type(&self) -> &str {
+        self.inner.content_type()
+    }
+
+    pub fn headers(&self) -> &HeaderMap {
+        self.inner.headers()
+    }
 }
 
 impl Debug for Request {
@@ -20,12 +43,13 @@ impl Debug for Request {
 }
 
 pub mod r#trait {
+    use crate::request::header::readonly::HeaderMap;
 
     pub trait Request {
         fn method(&self) -> &str;
         fn path(&self) -> &str;
         fn query_string(&self) -> &str;
         fn content_type(&self) -> &str;
-        //fn headers(&self) -> ReadOnlyHeaderMap;
+        fn headers(&self) -> &HeaderMap;
     }
 }
