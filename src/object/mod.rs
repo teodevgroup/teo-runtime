@@ -28,6 +28,13 @@ pub enum ObjectInner {
     Pipeline(Pipeline),
 }
 
+impl AsRef<Object> for Object {
+
+    fn as_ref(&self) -> &Object {
+        self
+    }
+}
+
 impl Object {
 
     pub fn is_teon(&self) -> bool {
@@ -238,19 +245,6 @@ impl<'a> TryFrom<&'a Object> for String {
     }
 }
 
-impl<'a> TryFrom<&'a Object> for &'a Vec<Value> {
-
-    type Error = Error;
-
-    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
-        let teon: &'a Value = value.try_into()?;
-        match teon.try_into() {
-            Ok(v) => Ok(v),
-            Err(_) => Err(Error::new(format!("object is not Array: {:?}", value)))
-        }
-    }
-}
-
 impl<'a> TryFrom<&'a Object> for Vec<i32> {
 
     type Error = Error;
@@ -286,19 +280,6 @@ impl<'a> TryFrom<&'a Object> for Vec<String> {
         match teon.try_into() {
             Ok(v) => Ok(v),
             Err(_) => Err(Error::new(format!("object is not Vec<String>: {:?}", value)))
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a Object> for &'a IndexMap<String, Value> {
-
-    type Error = Error;
-
-    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
-        let teon: &'a Value = value.try_into()?;
-        match teon.try_into() {
-            Ok(v) => Ok(v),
-            Err(_) => Err(Error::new(format!("object is not Dictionary: {:?}", value)))
         }
     }
 }
