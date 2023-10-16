@@ -133,4 +133,14 @@ impl Namespace {
         builder(&mut handler_group);
         self.handler_groups.insert(name.to_owned(), handler_group);
     }
+
+    pub fn define_struct<T>(&mut self, name: &str, builder: T) where T: Fn(&mut Struct) {
+        let mut r#struct = Struct {
+            path: next_path(&self.path, name),
+            functions: btreemap! {},
+            static_functions: btreemap! {}
+        };
+        builder(&mut r#struct);
+        self.structs.insert(name.to_owned(), r#struct);
+    }
 }

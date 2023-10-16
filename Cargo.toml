@@ -30,3 +30,4 @@ inflector-plus = "0.11.7"
 pad = "0.1.6"
 chrono = { version = "0.4.31", features = ["serde"] }
 jsonwebtoken = "9.0"
+log = "0.4.20"

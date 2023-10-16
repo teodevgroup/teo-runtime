@@ -9,10 +9,9 @@ pub struct Object {
 
 impl Object {
 
-    pub fn new(struct_id: usize, fields: HashMap<String, crate::object::Object>) -> Self {
+    pub fn new(fields: HashMap<String, crate::object::Object>) -> Self {
         Self {
             inner: Arc::new(ObjectInner {
-                struct_id,
                 fields: Arc::new(Mutex::new(fields)),
             })
         }
@@ -28,7 +27,6 @@ impl Serialize for Object {
 
 #[derive(Debug)]
 struct ObjectInner {
-    struct_id: usize,
     fields: Arc<Mutex<HashMap<String, crate::object::Object>>>
 }
 
