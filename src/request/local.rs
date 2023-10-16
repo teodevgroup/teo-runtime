@@ -4,14 +4,14 @@ use std::fmt;
 use std::fmt::{Debug, Formatter};
 
 #[derive(Default)]
-struct LocalData {
+pub struct Data {
     map: BTreeMap<String, Box<dyn Any + Send + Sync>>,
 }
 
-impl LocalData {
+impl Data {
 
     #[inline]
-    pub fn new() -> LocalData {
+    pub fn new() -> Data {
         Self {
             map: BTreeMap::default(),
         }
@@ -42,7 +42,7 @@ impl LocalData {
     }
 }
 
-impl Debug for LocalData {
+impl Debug for Data {
 
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let mut debug_struct = f.debug_struct("LocalData");
