@@ -19,3 +19,4 @@ pub mod handler;
 pub mod connection;
 pub mod middleware;
 pub mod response;
+pub mod database;
