@@ -3,8 +3,16 @@ use std::sync::Arc;
 use maplit::btreemap;
 use crate::{middleware, model, model::Model, r#enum};
 use crate::arguments::Arguments;
+use crate::config::client::Client;
+use crate::config::connector::Connector;
+use crate::config::debug::Debug;
+use crate::config::entity::Entity;
+use crate::config::server::Server;
+use crate::config::test::Test;
+use crate::connection::connection::Connection;
 use crate::error::Error;
 use crate::handler;
+use crate::interface::Interface;
 use crate::model::field::Field;
 use crate::model::property::Property;
 use crate::model::relation::Relation;
@@ -33,6 +41,13 @@ pub struct Namespace {
     pub pipeline_items: BTreeMap<String, pipeline::Item>,
     pub middlewares: BTreeMap<String, middleware::Definition>,
     pub handler_groups: BTreeMap<String, handler::Group>,
+    pub server: Option<Server>,
+    pub connector: Option<Connector>,
+    pub clients: BTreeMap<String, Client>,
+    pub entities: BTreeMap<String, Entity>,
+    pub debug: Option<Debug>,
+    pub test: Option<Test>,
+    pub connection: Option<Arc<dyn Connection>>,
 }
 
 impl Namespace {
@@ -49,6 +64,7 @@ impl Namespace {
             structs: btreemap!{},
             models: btreemap!{},
             enums: btreemap!{},
+            interfaces: btreemap!{},
             model_decorators: btreemap!{},
             model_field_decorators: btreemap!{},
             model_relation_decorators: btreemap!{},
@@ -58,6 +74,13 @@ impl Namespace {
             pipeline_items: btreemap!{},
             middlewares: btreemap! {},
             handler_groups: btreemap! {},
+            server: None,
+            connector: None,
+            clients: btreemap! {},
+            entities: btreemap! {},
+            debug: None,
+            test: None,
+            connection: None,
         }
     }
 
@@ -82,6 +105,14 @@ impl Namespace {
             self.namespaces.insert(name.to_owned(), Namespace::new(next_path(&self.path, name)));
         }
         self.namespaces.get_mut(name).unwrap()
+    }
+
+    pub fn namespace_mut_or_create_at_path(&mut self, path: &Vec<&str>) -> &mut Namespace {
+        let mut current = self;
+        for item in path {
+            current = current.namespace_mut_or_create(*item)
+        }
+        current
     }
 
     pub fn namespace(&self, name: &str) -> Option<&Namespace> {

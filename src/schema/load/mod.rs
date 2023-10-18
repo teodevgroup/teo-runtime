@@ -3,8 +3,8 @@ use crate::namespace::Namespace;
 use crate::result::Result;
 
 pub fn load_schema(main_namespace: &Namespace, schema: &Schema) -> Result<()> {
-
-
+    // some of these are just load from schema, while some are validate and load
+    //main_namespace.namespace_mut_or_create()
 
     //
     // pub fn server(&self) -> Option<&Config> {
@@ -74,4 +74,5 @@ pub fn load_schema(main_namespace: &Namespace, schema: &Schema) -> Result<()> {
     // pub fn struct_declarations(&self) -> Vec<&StructDeclaration> {
     //     self.references.struct_declarations.iter().map(|path| self.find_top_by_path(path).unwrap().as_struct_declaration().unwrap()).collect()
     // }
+    Ok(())
 }
