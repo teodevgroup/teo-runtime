@@ -20,3 +20,5 @@ pub mod connection;
 pub mod middleware;
 pub mod response;
 pub mod database;
+pub mod config;
+mod schema;

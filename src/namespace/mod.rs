@@ -23,6 +23,7 @@ pub struct Namespace {
     pub structs: BTreeMap<String, Struct>,
     pub models: BTreeMap<String, Model>,
     pub enums: BTreeMap<String, Enum>,
+    pub interfaces: BTreeMap<String, Interface>,
     pub model_decorators: BTreeMap<String, model::Decorator>,
     pub model_field_decorators: BTreeMap<String, model::field::Decorator>,
     pub model_relation_decorators: BTreeMap<String, model::relation::Decorator>,
