@@ -1,4 +1,3 @@
-use std::ops::Deref;
 use teo_parser::ast::info_provider::InfoProvider;
 use teo_parser::ast::reference::ReferenceType;
 use teo_parser::ast::schema::Schema;
@@ -74,6 +73,7 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema) -> Result<()
         }
     }
 
+    // validate decorator declarations
     for decorator_declaration in schema.decorator_declarations() {
         let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&decorator_declaration.namespace_str_path());
         match decorator_declaration.decorator_class {
@@ -108,6 +108,7 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema) -> Result<()
         }
     }
 
+    // validate pipeline item declarations
     for pipeline_item_declaration in schema.pipeline_item_declarations() {
         let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&pipeline_item_declaration.namespace_str_path());
         if dest_namespace.pipeline_items.get(pipeline_item_declaration.identifier.name()).is_none() {
@@ -115,14 +116,39 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema) -> Result<()
         }
     }
 
+    // validate middleware declarations
+    for middleware_declaration in schema.middleware_declarations() {
+        let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&middleware_declaration.namespace_str_path());
+        if dest_namespace.middlewares.get(middleware_declaration.identifier.name()).is_none() {
+            diagnostics.insert(DiagnosticsError::new(middleware_declaration.identifier.span, "middleware implementation is not found", schema.source(middleware_declaration.source_id()).unwrap().file_path.clone()))
+        }
+    }
 
-    //
-    // pub fn middleware_declarations(&self) -> Vec<&MiddlewareDeclaration> {
-    //     self.references.middlewares.iter().map(|path| self.find_top_by_path(path).unwrap().as_middleware_declaration().unwrap()).collect()
-    // }
-    // pub fn struct_declarations(&self) -> Vec<&StructDeclaration> {
-    //     self.references.struct_declarations.iter().map(|path| self.find_top_by_path(path).unwrap().as_struct_declaration().unwrap()).collect()
-    // }
+    // validate struct declarations
+    for struct_declaration in schema.struct_declarations() {
+        let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&struct_declaration.namespace_str_path());
+        if let Some(struct_implementation) = dest_namespace.structs.get(struct_declaration.identifier.name()) {
+            for function_declaration in &struct_declaration.function_declarations {
+                if function_declaration.r#static {
+                    if struct_implementation.static_functions.get(function_declaration.identifier.name()).is_none() {
+                        diagnostics.insert(DiagnosticsError::new(function_declaration.identifier.span, "function implementation is not found", schema.source(struct_declaration.source_id()).unwrap().file_path.clone()));
+                    }
+                } else {
+                    if struct_implementation.functions.get(function_declaration.identifier.name()).is_none() {
+                        diagnostics.insert(DiagnosticsError::new(function_declaration.identifier.span, "function implementation is not found", schema.source(struct_declaration.source_id()).unwrap().file_path.clone()));
+                    }
+                }
+            }
+        } else {
+            diagnostics.insert(DiagnosticsError::new(struct_declaration.identifier.span, "struct implementation is not found", schema.source(struct_declaration.source_id()).unwrap().file_path.clone()))
+        }
+    }
+
+    for enum_declaration in schema.enums() {
+        if enum_declaration.is_available() {
+
+        }
+    }
 
     //
     // pub fn enums(&self) -> Vec<&Enum> {

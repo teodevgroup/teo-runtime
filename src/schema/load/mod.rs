@@ -5,3 +5,7 @@ mod load_debug;
 mod load_test;
 mod load_entity;
 mod load_client;
+mod load_enum;
+mod load_model;
+mod load_interface;
+mod load_comment;
