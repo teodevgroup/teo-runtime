@@ -5,7 +5,10 @@ use teo_parser::ast::span::Span;
 use teo_parser::diagnostics::diagnostics::{Diagnostics, DiagnosticsError};
 use crate::namespace::Namespace;
 use crate::result::Result;
+use crate::schema::load::load_connector::load_connector;
+use crate::schema::load::load_debug::load_debug;
 use crate::schema::load::load_server::load_server;
+use crate::schema::load::load_test::load_test;
 
 pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema) -> Result<()> {
 
@@ -29,33 +32,45 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema) -> Result<()
     }
 
     // load connectors
+    for connector in schema.connectors() {
+        if connector.is_available() {
+            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&connector.namespace_str_path());
+            load_connector(dest_namespace, schema, connector, &mut diagnostics)?;
+        }
+    }
 
-    // load_connectors(main_namespace, schema);
+    // load debug
+    for debug in schema.debug() {
+        if debug.is_available() {
+            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&debug.namespace_str_path());
+            load_debug(dest_namespace, schema, debug, &mut diagnostics)?;
+        }
+    }
 
-    //
-    // pub fn server(&self) -> Option<&Config> {
-    //     self.references.server.as_ref().map(|path| self.find_top_by_path(path).unwrap().as_config().unwrap())
-    // }
-    //
-    // pub fn debug(&self) -> Option<&Config> {
-    //     self.references.debug.as_ref().map(|path| self.find_top_by_path(path).unwrap().as_config().unwrap())
-    // }
-    //
-    // pub fn test(&self) -> Option<&Config> {
-    //     self.references.test.as_ref().map(|path| self.find_top_by_path(path).unwrap().as_config().unwrap())
-    // }
-    //
-    // pub fn connectors(&self) -> Vec<&Config> {
-    //     self.references.connectors.iter().map(|path| self.find_top_by_path(path).unwrap().as_config().unwrap()).collect()
-    // }
-    //
-    // pub fn entities(&self) -> Vec<&Config> {
-    //     self.references.entities.iter().map(|path| self.find_top_by_path(path).unwrap().as_config().unwrap()).collect()
-    // }
-    //
-    // pub fn clients(&self) -> Vec<&Config> {
-    //     self.references.clients.iter().map(|path| self.find_top_by_path(path).unwrap().as_config().unwrap()).collect()
-    // }
+    // load test
+    for test in schema.debug() {
+        if test.is_available() {
+            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&test.namespace_str_path());
+            load_test(dest_namespace, schema, test, &mut diagnostics)?;
+        }
+    }
+
+    // load entities
+    for debug in schema.entities() {
+        if debug.is_available() {
+            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&debug.namespace_str_path());
+            //load_entity(dest_namespace, schema, debug, &mut diagnostics)?;
+        }
+    }
+
+    // load clients
+    for debug in schema.clients() {
+        if debug.is_available() {
+            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&debug.namespace_str_path());
+            //load_client(dest_namespace, schema, debug, &mut diagnostics)?;
+        }
+    }
+
     //
     // pub fn enums(&self) -> Vec<&Enum> {
     //     self.references.enums.iter().map(|path| self.find_top_by_path(path).unwrap().as_enum().unwrap()).collect()

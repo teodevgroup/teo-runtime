@@ -1,10 +1,7 @@
-use std::ops::Deref;
 use teo_parser::ast::config::Config;
 use teo_parser::ast::schema::Schema;
-use teo_parser::ast::span::Span;
-use teo_parser::diagnostics::diagnostics::{Diagnostics, DiagnosticsError};
+use teo_parser::diagnostics::diagnostics::Diagnostics;
 use crate::config::server::Server;
-use crate::error::Error;
 use crate::namespace::Namespace;
 use crate::result::Result;
 use crate::schema::fetch::fetch_expression::fetch_expression_or_null;
