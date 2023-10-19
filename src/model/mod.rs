@@ -11,3 +11,4 @@ pub use model::Model;
 pub use object::Object;
 pub use decorator::Decorator;
 pub use index::Index;
+pub use migration::Migration;
