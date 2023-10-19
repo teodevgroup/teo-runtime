@@ -8,8 +8,8 @@ pub fn fetch_expression<I>(expression: &Expression, schema: &Schema, info_provid
     unreachable!()
 }
 
-pub fn fetch_expression_or_default<I>(expression: Option<&Expression>, schema: &Schema, info_provider: I, default: Object) -> Object where I: InfoProvider {
-    default
+pub fn fetch_expression_or_default<I, T>(expression: Option<&Expression>, schema: &Schema, info_provider: I, default: T) -> Object where I: InfoProvider, T: Into<Object> {
+    default.into()
 }
 
 pub fn fetch_expression_or_null<I>(expression: Option<&Expression>, schema: &Schema, info_provider: I) -> Object where I: InfoProvider {

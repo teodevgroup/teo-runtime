@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use maplit::btreemap;
-use crate::{middleware, model, model::Model, r#enum};
+use crate::{interface, middleware, model, model::Model, r#enum};
 use crate::arguments::Arguments;
 use crate::config::client::Client;
 use crate::config::connector::Connector;
@@ -38,6 +38,9 @@ pub struct Namespace {
     pub model_property_decorators: BTreeMap<String, model::property::Decorator>,
     pub enum_decorators: BTreeMap<String, r#enum::Decorator>,
     pub enum_member_decorators: BTreeMap<String, r#enum::member::Decorator>,
+    pub interface_decorators: BTreeMap<String, interface::Decorator>,
+    pub interface_field_decorators: BTreeMap<String, interface::field::Decorator>,
+    pub handler_decorators: BTreeMap<String, handler::Decorator>,
     pub pipeline_items: BTreeMap<String, pipeline::Item>,
     pub middlewares: BTreeMap<String, middleware::Definition>,
     pub handler_groups: BTreeMap<String, handler::Group>,
@@ -71,6 +74,9 @@ impl Namespace {
             model_property_decorators: btreemap!{},
             enum_decorators: btreemap!{},
             enum_member_decorators: btreemap!{},
+            interface_decorators: btreemap! {},
+            interface_field_decorators: btreemap! {},
+            handler_decorators: btreemap! {},
             pipeline_items: btreemap!{},
             middlewares: btreemap! {},
             handler_groups: btreemap! {},
