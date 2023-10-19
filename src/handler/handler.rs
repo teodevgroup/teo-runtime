@@ -7,11 +7,23 @@ use crate::request::ctx::Ctx;
 use crate::response::Response;
 use crate::result::Result;
 
+#[derive(Debug, Serialize)]
+pub enum Method {
+    Get,
+    Post,
+    Patch,
+    Put,
+    Delete,
+}
+
 #[derive(Educe)]
 #[educe(Debug)]
 #[derive(Serialize)]
 pub struct Handler {
     pub path: Vec<String>,
+    pub method: Method,
+    pub url: Option<String>,
+    pub ignore_namespace: bool,
     #[serde(skip)] #[educe(Debug(ignore))]
     pub call: &'static dyn Call,
 }
