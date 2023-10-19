@@ -1,7 +1,7 @@
 use teo_teon::types::enum_variant::EnumVariant;
 use teo_teon::Value;
 use crate::config::test::ResetDataSets;
-use crate::error::Error;
+use teo_result::Error;
 use crate::object::Object;
 
 impl TryFrom<Object> for ResetDataSets {

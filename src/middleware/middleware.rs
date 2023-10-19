@@ -4,7 +4,7 @@ use futures_util::future::BoxFuture;
 use crate::middleware::next::Next;
 use crate::request::ctx::Ctx;
 use crate::response::Response;
-use crate::result::Result;
+use teo_result::Result;
 
 pub trait Middleware: Send + Sync {
     fn call(&self, ctx: Ctx, next: &'static dyn Next) -> BoxFuture<'static, Result<Response>>;

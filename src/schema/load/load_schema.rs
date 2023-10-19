@@ -4,7 +4,7 @@ use teo_parser::ast::schema::Schema;
 use teo_parser::ast::span::Span;
 use teo_parser::diagnostics::diagnostics::{Diagnostics, DiagnosticsError};
 use crate::namespace::Namespace;
-use crate::result::Result;
+use teo_result::Result;
 use crate::schema::load::load_client::load_client;
 use crate::schema::load::load_connector::load_connector;
 use crate::schema::load::load_debug::load_debug;

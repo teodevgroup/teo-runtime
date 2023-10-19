@@ -1,6 +1,6 @@
 use indexmap::IndexMap;
 use teo_teon::Value;
-use crate::error::Error;
+use teo_result::Error;
 use crate::object::Object;
 
 impl<'a> TryFrom<&'a Object> for &'a IndexMap<String, Value> {

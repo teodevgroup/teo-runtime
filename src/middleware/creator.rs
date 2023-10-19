@@ -2,7 +2,7 @@ use std::future::Future;
 use futures_util::future::BoxFuture;
 use crate::arguments::Arguments;
 use crate::middleware::middleware::Middleware;
-use crate::result::Result;
+use teo_result::Result;
 
 pub trait Creator: Send + Sync {
     fn call(&self, arguments: Arguments) -> BoxFuture<'static, Result<&'static dyn Middleware>>;

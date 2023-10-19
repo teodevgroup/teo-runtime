@@ -3,8 +3,8 @@ use crate::arguments::Arguments;
 use crate::namespace::Namespace;
 use crate::pipeline::Ctx;
 use once_cell::sync::Lazy;
-use crate::error::Error;
-use crate::result::ResultExt;
+use teo_result::Error;
+use teo_result::ResultExt;
 
 pub(super) static EMAIL_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"^\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b$").unwrap()

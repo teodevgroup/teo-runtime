@@ -3,7 +3,7 @@ use std::sync::Arc;
 use educe::Educe;
 use crate::arguments::Arguments;
 use crate::pipeline::ctx::Ctx;
-use crate::result::Result;
+use teo_result::Result;
 use futures_util::future::BoxFuture;
 use serde::Serialize;
 use crate::object::Object;

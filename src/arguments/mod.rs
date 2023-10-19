@@ -2,9 +2,9 @@ use std::collections::BTreeMap;
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 use serde::{Serialize, Serializer};
-use crate::error::Error;
+use teo_result::Error;
 use crate::object::Object;
-use crate::result::Result;
+use teo_result::Result;
 
 #[derive(Clone)]
 pub struct Arguments {

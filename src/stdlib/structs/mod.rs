@@ -9,7 +9,7 @@ use crate::namespace::Namespace;
 use crate::arguments::Arguments;
 use crate::r#struct;
 use crate::object::Object;
-use crate::error::Error;
+use teo_result::Error;
 
 pub(in crate::stdlib) fn load_structs(namespace: &mut Namespace) {
 

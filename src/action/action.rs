@@ -1,8 +1,8 @@
 use std::ops::{BitAnd, BitOr, BitXor, Neg, Not};
 use serde::Serialize;
 use super::const_values::*;
-use crate::error::Error;
-use crate::result::Result;
+use teo_result::Error;
+use teo_result::Result;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize)]
 pub struct Action(u32);

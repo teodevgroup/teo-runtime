@@ -1,6 +1,6 @@
 use crate::arguments::Arguments;
 use crate::r#enum::Enum;
-use crate::result::Result;
+use teo_result::Result;
 
 #[derive(Debug)]
 pub struct Decorator {

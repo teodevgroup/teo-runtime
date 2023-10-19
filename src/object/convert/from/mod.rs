@@ -18,7 +18,7 @@ pub mod struct_object;
 pub mod model_object;
 pub mod pipeline;
 
-use crate::error::Error;
+use teo_result::Error;
 use crate::object::Object;
 
 impl TryFrom<&Object> for Object {

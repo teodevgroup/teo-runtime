@@ -1,9 +1,9 @@
 use crate::namespace::Namespace;
 use crate::arguments::Arguments;
 use crate::pipeline::Ctx;
-use crate::result::ResultExt;
+use teo_result::ResultExt;
 use crate::object::Object;
-use crate::error::Error;
+use teo_result::Error;
 use teo_teon::Value;
 
 pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {

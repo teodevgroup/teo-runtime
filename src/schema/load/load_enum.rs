@@ -3,7 +3,7 @@ use teo_parser::diagnostics::diagnostics::Diagnostics;
 use crate::namespace::Namespace;
 use crate::r#enum::Enum;
 use crate::r#enum::member::Member;
-use crate::result::Result;
+use teo_result::Result;
 use crate::schema::load::load_comment::load_comment;
 
 pub fn load_enum(dest_namespace: &mut Namespace, schema: &Schema, enum_declaration: &teo_parser::ast::r#enum::Enum, diagnostics: &mut Diagnostics) -> Result<()> {

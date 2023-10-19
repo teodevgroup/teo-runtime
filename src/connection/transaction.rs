@@ -2,7 +2,7 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use teo_teon::Value;
 use crate::action::Action;
-use crate::result::Result;
+use teo_result::Result;
 use crate::model;
 use crate::model::Model;
 

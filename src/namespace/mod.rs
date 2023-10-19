@@ -10,7 +10,7 @@ use crate::config::entity::Entity;
 use crate::config::server::Server;
 use crate::config::test::Test;
 use crate::connection::connection::Connection;
-use crate::error::Error;
+use teo_result::Error;
 use crate::handler;
 use crate::interface::Interface;
 use crate::model::field::Field;
@@ -20,7 +20,7 @@ use crate::r#enum::Enum;
 use crate::r#enum::member::Member;
 use crate::r#struct::Struct;
 use crate::utils::next_path;
-use crate::result::Result;
+use teo_result::Result;
 use crate::pipeline;
 use crate::stdlib::load::load;
 

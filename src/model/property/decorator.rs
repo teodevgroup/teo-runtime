@@ -1,6 +1,6 @@
 use crate::arguments::Arguments;
 use crate::model::property::Property;
-use crate::result::Result;
+use teo_result::Result;
 
 #[derive(Debug)]
 pub struct Decorator {

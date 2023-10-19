@@ -1,10 +1,10 @@
 use crate::arguments::Arguments;
-use crate::error::Error;
+use teo_result::Error;
 use crate::namespace::Namespace;
 use crate::object::Object;
 use crate::pipeline::Ctx;
 use crate::pipeline::pipeline::Pipeline;
-use crate::result::{Result, ResultExt};
+use teo_result::{Result, ResultExt};
 
 pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) {
 

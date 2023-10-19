@@ -5,7 +5,7 @@ use futures_util::future::BoxFuture;
 use serde::Serialize;
 use crate::request::ctx::Ctx;
 use crate::response::Response;
-use crate::result::Result;
+use teo_result::Result;
 
 #[derive(Debug, Serialize)]
 pub enum Method {

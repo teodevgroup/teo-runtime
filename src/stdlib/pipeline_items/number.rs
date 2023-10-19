@@ -2,11 +2,11 @@ use num_integer::Integer;
 use teo_teon::types::range::Range;
 use teo_teon::Value;
 use crate::arguments::Arguments;
-use crate::error::Error;
+use teo_result::Error;
 use crate::namespace::Namespace;
 use crate::object::Object;
 use crate::pipeline::Ctx;
-use crate::result::{Result, ResultExt};
+use teo_result::{Result, ResultExt};
 use rand::{thread_rng, Rng};
 
 pub(in crate::stdlib) fn load_pipeline_number_items(namespace: &mut Namespace) {

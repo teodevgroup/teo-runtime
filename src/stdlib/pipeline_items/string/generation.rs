@@ -1,7 +1,7 @@
 use crate::namespace::Namespace;
 use crate::arguments::Arguments;
 use crate::pipeline::Ctx;
-use crate::result::ResultExt;
+use teo_result::ResultExt;
 use crate::object::Object;
 use cuid2::create_id;
 use random_string::generate;

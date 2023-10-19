@@ -4,7 +4,7 @@ use std::sync::Arc;
 use futures_util::future::BoxFuture;
 use crate::arguments::Arguments;
 use crate::object::Object;
-use crate::result::Result;
+use teo_result::Result;
 
 #[derive(Educe)]
 #[educe(Debug)]

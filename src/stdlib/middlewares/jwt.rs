@@ -6,8 +6,8 @@ use crate::middleware::middleware::Middleware;
 use crate::middleware::next::Next;
 use crate::namespace::Namespace;
 use crate::request::ctx::Ctx;
-use crate::result::Result;
-use crate::error::Error;
+use teo_result::Result;
+use teo_result::Error;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {

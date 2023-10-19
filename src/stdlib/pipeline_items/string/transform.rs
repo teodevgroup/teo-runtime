@@ -1,13 +1,13 @@
 use crate::namespace::Namespace;
 use crate::arguments::Arguments;
 use crate::pipeline::Ctx;
-use crate::result::ResultExt;
+use teo_result::ResultExt;
 use crate::object::Object;
 use pad::{PadStr, Alignment};
 use inflector::Inflector;
 use regex::Regex;
 use teo_teon::Value;
-use crate::error::Error;
+use teo_result::Error;
 
 pub(in crate::stdlib) fn load_pipeline_string_transform_items(namespace: &mut Namespace) {
 

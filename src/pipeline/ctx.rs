@@ -1,12 +1,12 @@
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 use key_path::KeyPath;
-use crate::error::Error;
+use teo_result::Error;
 use crate::object::Object;
 use crate::request::Request;
 use crate::model;
 use crate::pipeline::pipeline::Pipeline;
-use crate::result::{Result, ResultExt};
+use teo_result::{Result, ResultExt};
 
 #[derive(Clone)]
 pub struct Ctx {

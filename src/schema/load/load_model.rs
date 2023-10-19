@@ -2,7 +2,7 @@ use teo_parser::ast::schema::Schema;
 use teo_parser::diagnostics::diagnostics::Diagnostics;
 use crate::model::Model;
 use crate::namespace::Namespace;
-use crate::result::Result;
+use teo_result::Result;
 use crate::schema::load::load_comment::load_comment;
 
 pub fn load_model(main_namespace: &mut Namespace, schema: &Schema, model_declaration: &teo_parser::ast::model::Model, diagnostics: &mut Diagnostics) -> Result<()> {

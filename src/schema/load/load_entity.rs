@@ -4,7 +4,7 @@ use teo_parser::diagnostics::diagnostics::Diagnostics;
 use crate::config::debug::Debug;
 use crate::config::entity::{Entity, Runtime};
 use crate::namespace::Namespace;
-use crate::result::Result;
+use teo_result::Result;
 use crate::schema::fetch::fetch_expression::fetch_expression_or_null;
 
 pub fn load_entity(dest_namespace: &mut Namespace, schema: &Schema, entity: &Config, diagnostics: &mut Diagnostics) -> Result<()> {
