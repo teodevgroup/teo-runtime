@@ -2,7 +2,6 @@ use std::collections::BTreeMap;
 use maplit::btreemap;
 use serde::Serialize;
 use teo_parser::r#type::Type;
-use teo_teon::Value;
 pub use super::decorator::Decorator;
 use crate::comment::Comment;
 use crate::database::mysql::r#type::MySQLType;
@@ -19,11 +18,11 @@ use crate::readwrite::write::Write;
 #[derive(Debug, Serialize)]
 pub struct Field {
     pub name: String,
+    pub comment: Option<Comment>,
     pub column_name: String,
     pub foreign_key: bool,
     pub dropped: bool,
     pub migration: Option<Migration>,
-    pub comment: Option<Comment>,
     pub r#type: Type,
     pub database_type: DatabaseType,
     pub optionality: Optionality,

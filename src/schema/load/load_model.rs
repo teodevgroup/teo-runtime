@@ -44,7 +44,6 @@ pub fn load_model(main_namespace: &mut Namespace, schema: &Schema, model_declara
 }
 
 fn load_model_field(field_declaration: &teo_parser::ast::field::Field, schema: &Schema, diagnostics: &mut Diagnostics) -> Result<model::Field> {
-
     unreachable!()
 }
 

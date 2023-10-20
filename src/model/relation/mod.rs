@@ -1,13 +1,7 @@
 pub mod decorator;
+pub mod relation;
+pub mod delete;
+pub mod update;
 
-use serde::Serialize;
 pub use decorator::Decorator;
-
-#[derive(Debug, Serialize)]
-pub struct Relation {
-
-}
-
-impl Relation {
-
-}
+pub use relation::Relation;
