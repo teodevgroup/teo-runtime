@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::ops::Deref;
 use std::sync::Arc;
 use maplit::btreemap;
 use crate::{interface, middleware, model, model::Model, r#enum};
@@ -125,6 +126,17 @@ impl Namespace {
         self.namespaces.get(name)
     }
 
+    pub fn namespace_at_path(&self, path: &Vec<&str>) -> Option<&Namespace> {
+        let mut current = Some(self);
+        for item in path {
+            if current.is_none() {
+                return None;
+            }
+            current = current.unwrap().namespace(item);
+        }
+        current
+    }
+
     pub fn define_model_decorator(&mut self, name: &str, call: fn(Arguments, &mut Model) -> Result<()>) {
         self.model_decorators.insert(name.to_owned(), model::Decorator { path: next_path(&self.path, name), call });
     }
@@ -181,5 +193,95 @@ impl Namespace {
         };
         builder(path, &mut r#struct);
         self.structs.insert(name.to_owned(), r#struct);
+    }
+
+    pub fn model_decorator_at_path(&self, path: &Vec<&str>) -> Option<&model::Decorator> {
+        let decorator_name = path.last().unwrap().deref();
+        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+            ns.model_decorators.get(decorator_name)
+        } else {
+            None
+        }
+    }
+
+    pub fn model_field_decorator_at_path(&self, path: &Vec<&str>) -> Option<&model::field::Decorator> {
+        let decorator_name = path.last().unwrap().deref();
+        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+            ns.model_field_decorators.get(decorator_name)
+        } else {
+            None
+        }
+    }
+
+    pub fn model_relation_decorator_at_path(&self, path: &Vec<&str>) -> Option<&model::relation::Decorator> {
+        let decorator_name = path.last().unwrap().deref();
+        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+            ns.model_relation_decorators.get(decorator_name)
+        } else {
+            None
+        }
+    }
+
+    pub fn model_property_decorator_at_path(&self, path: &Vec<&str>) -> Option<&model::property::Decorator> {
+        let decorator_name = path.last().unwrap().deref();
+        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+            ns.model_property_decorators.get(decorator_name)
+        } else {
+            None
+        }
+    }
+
+    pub fn enum_decorator_at_path(&self, path: &Vec<&str>) -> Option<&r#enum::Decorator> {
+        let decorator_name = path.last().unwrap().deref();
+        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+            ns.enum_decorators.get(decorator_name)
+        } else {
+            None
+        }
+    }
+
+    pub fn enum_member_decorator_at_path(&self, path: &Vec<&str>) -> Option<&r#enum::member::Decorator> {
+        let decorator_name = path.last().unwrap().deref();
+        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+            ns.enum_member_decorators.get(decorator_name)
+        } else {
+            None
+        }
+    }
+
+    pub fn interface_decorator_at_path(&self, path: &Vec<&str>) -> Option<&interface::Decorator> {
+        let decorator_name = path.last().unwrap().deref();
+        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+            ns.interface_decorators.get(decorator_name)
+        } else {
+            None
+        }
+    }
+
+    pub fn interface_field_decorator_at_path(&self, path: &Vec<&str>) -> Option<&interface::field::Decorator> {
+        let decorator_name = path.last().unwrap().deref();
+        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+            ns.interface_field_decorators.get(decorator_name)
+        } else {
+            None
+        }
+    }
+
+    pub fn handler_decorator_at_path(&self, path: &Vec<&str>) -> Option<&handler::Decorator> {
+        let decorator_name = path.last().unwrap().deref();
+        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+            ns.handler_decorators.get(decorator_name)
+        } else {
+            None
+        }
     }
 }

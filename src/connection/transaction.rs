@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::sync::Arc;
 use async_trait::async_trait;
 use teo_teon::Value;
@@ -7,7 +8,7 @@ use crate::model;
 use crate::model::Model;
 
 #[async_trait]
-pub trait Transaction: Send + Sync {
+pub trait Transaction: Send + Sync + Debug {
 
     // Migration (Setup database)
 

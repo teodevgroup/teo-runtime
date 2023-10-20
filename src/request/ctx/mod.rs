@@ -1,6 +1,8 @@
 use std::cell::{Ref, RefCell, RefMut};
+use std::collections::BTreeMap;
+use std::sync::Arc;
 use teo_teon::Value;
-use crate::action::Action;
+use crate::connection::transaction::Transaction;
 use crate::request::Request;
 use super::local::Data;
 
@@ -8,7 +10,7 @@ use super::local::Data;
 pub struct Ctx {
     request: Request,
     body: Value,
-    // pub connection: Arc<dyn Connection>,
+    transactions: Arc<BTreeMap<Vec<String>, Arc<dyn Transaction>>>,
     // pub(crate) path_components: PathComponents,
     //pub action: Option<Action>,
     data: RefCell<Data>,

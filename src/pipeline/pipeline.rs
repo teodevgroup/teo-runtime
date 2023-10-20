@@ -9,6 +9,9 @@ pub struct Pipeline {
 
 impl Pipeline {
 
+    pub fn new() -> Self {
+        Self { items: vec![] }
+    }
 }
 
 impl Display for Pipeline {

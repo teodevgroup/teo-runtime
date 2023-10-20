@@ -1,13 +1,9 @@
 pub mod decorator;
+pub mod index;
+pub mod field;
+pub mod migration;
 
-use serde::Serialize;
+pub use field::Field;
+pub use index::Index;
 pub use decorator::Decorator;
-
-#[derive(Debug, Serialize)]
-pub struct Field {
-
-}
-
-impl Field {
-
-}
+pub use migration::Migration;
