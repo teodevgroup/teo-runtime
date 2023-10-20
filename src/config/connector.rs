@@ -1,12 +1,6 @@
 use serde::Serialize;
+use crate::database::database::Database;
 
-#[derive(Debug, Serialize)]
-pub enum Database {
-    MongoDB,
-    MySQL,
-    PostgreSQL,
-    SQLite,
-}
 
 #[derive(Debug, Serialize)]
 pub struct Connector {

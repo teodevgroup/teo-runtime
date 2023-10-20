@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub enum MySQLType {
     VarChar(i32),
     Text,
@@ -10,16 +10,16 @@ pub enum MySQLType {
     LongText,
     Bit(i32),
     TinyInt(i32, bool),
-    Int(bool),
-    SmallInt(bool),
-    MediumInt(bool),
-    BigInt(bool),
+    Int(Option<i32>, bool),
+    SmallInt(Option<i32>, bool),
+    MediumInt(Option<i32>, bool),
+    BigInt(Option<i32>, bool),
     Year,
     Float,
     Double,
     Decimal(i32, i32), // p r
     DateTime(i32),
-    Date(i32),
+    Date,
     Time(i32),
     Timestamp(i32),
     Json,

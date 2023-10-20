@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub enum PostgreSQLType {
     Text,
     Char(i32),
@@ -20,9 +20,11 @@ pub enum PostgreSQLType {
     Real,
     Decimal(i32, i32),
     Money,
+    Date,
     Timestamp(i32),
     TimestampTz(i32),
     Json,
     JsonB,
     ByteA,
+    Array(Box<PostgreSQLType>),
 }

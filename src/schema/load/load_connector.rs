@@ -1,9 +1,10 @@
 use teo_parser::ast::config::Config;
 use teo_parser::ast::schema::Schema;
 use teo_parser::diagnostics::diagnostics::Diagnostics;
-use crate::config::connector::{Connector, Database};
+use crate::config::connector::{Connector};
 use crate::namespace::Namespace;
 use teo_result::Result;
+use crate::database::database::Database;
 use crate::schema::fetch::fetch_expression::fetch_expression_or_null;
 
 pub fn load_connector(dest_namespace: &mut Namespace, schema: &Schema, connector: &Config, diagnostics: &mut Diagnostics) -> Result<()> {

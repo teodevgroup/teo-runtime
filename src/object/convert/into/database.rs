@@ -1,7 +1,8 @@
 use teo_teon::types::enum_variant::EnumVariant;
 use teo_teon::Value;
-use crate::config::connector::Database;
+
 use teo_result::Error;
+use crate::database::database::Database;
 use crate::object::Object;
 
 impl TryFrom<Object> for Database {

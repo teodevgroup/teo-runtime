@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub enum MongoDBType {
     String,
     Bool,
@@ -10,4 +10,5 @@ pub enum MongoDBType {
     Date,
     Timestamp,
     BinData,
+    ObjectId,
 }
