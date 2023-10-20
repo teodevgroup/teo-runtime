@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+use maplit::btreemap;
 use serde::Serialize;
 use teo_parser::r#type::Type;
 use teo_teon::Value;
@@ -7,14 +9,17 @@ use crate::database::mysql::r#type::MySQLType;
 use crate::database::r#type::DatabaseType;
 use crate::model::field::Index;
 use crate::model::field::Migration;
+use crate::object::Object;
 use crate::optionality::Optionality;
 use crate::pipeline::pipeline::Pipeline;
 use crate::previous::Previous;
+use crate::readwrite::read::Read;
+use crate::readwrite::write::Write;
 
 #[derive(Debug, Serialize)]
 pub struct Field {
     pub name: String,
-    pub column_name: Option<String>,
+    pub column_name: String,
     pub foreign_key: bool,
     pub dropped: bool,
     pub migration: Option<Migration>,
@@ -22,6 +27,8 @@ pub struct Field {
     pub r#type: Type,
     pub database_type: DatabaseType,
     pub optionality: Optionality,
+    pub read: Read,
+    pub write: Write,
     pub previous: Previous,
     pub atomic: bool,
     pub r#virtual: bool,
@@ -32,14 +39,13 @@ pub struct Field {
     pub sortable: bool,
     pub auto: bool,
     pub auto_increment: bool,
-    pub identity: bool,
-    pub identity_checker: Option<Pipeline>,
-    pub default: Option<Value>,
+    pub default: Option<Object>,
     pub on_set_pipeline: Pipeline,
     pub on_save_pipeline: Pipeline,
     pub on_output_pipeline: Pipeline,
     pub can_mutate_pipeline: Pipeline,
     pub can_read_pipeline: Pipeline,
+    pub data: BTreeMap<String, Object>,
 }
 
 impl Field {
@@ -64,14 +70,13 @@ impl Field {
             sortable: false,
             auto: false,
             auto_increment: false,
-            identity: false,
-            identity_checker: None,
             default: None,
             on_set_pipeline: Pipeline::new(),
             on_save_pipeline: Pipeline::new(),
             on_output_pipeline: Pipeline::new(),
             can_mutate_pipeline: Pipeline::new(),
             can_read_pipeline: Pipeline::new(),
+            data: btreemap! {},
         }
     }
 }

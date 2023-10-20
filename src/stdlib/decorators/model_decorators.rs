@@ -1,5 +1,4 @@
 use std::ops::Not;
-use log::__private_api::enabled;
 use teo_teon::Value;
 use crate::namespace::Namespace;
 use teo_result::Result;
@@ -112,6 +111,24 @@ pub(in crate::stdlib) fn load_model_decorators(namespace: &mut Namespace) {
                 model.actions = vec![action.not()];
             }
         }
+        Ok(())
+    });
+
+    namespace.define_model_decorator("generateClient", |arguments, model| {
+        let gen: bool = arguments.get("generate")?;
+        model.generate_client = gen;
+        Ok(())
+    });
+
+    namespace.define_model_decorator("generateEntity", |arguments, model| {
+        let gen: bool = arguments.get("generate")?;
+        model.generate_entity = gen;
+        Ok(())
+    });
+
+    namespace.define_model_decorator("showInStudio", |arguments, model| {
+        let show: bool = arguments.get("show")?;
+        model.show_in_studio = show;
         Ok(())
     });
 }

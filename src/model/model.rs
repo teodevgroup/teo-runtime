@@ -1,5 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 use indexmap::IndexMap;
+use maplit::btreemap;
 use serde::Serialize;
 use crate::action::Action;
 use crate::comment::Comment;
@@ -8,6 +9,7 @@ use crate::model::Index;
 use crate::model::migration::Migration;
 use crate::model::property::Property;
 use crate::model::relation::Relation;
+use crate::object::Object;
 use crate::pipeline::pipeline::Pipeline;
 
 #[derive(Debug, Serialize)]
@@ -31,6 +33,7 @@ pub struct Model {
     pub can_read: Pipeline,
     pub can_mutate: Pipeline,
     pub migration: Migration,
+    pub data: BTreeMap<String, Object>,
     pub cache: Cache,
 }
 
@@ -57,6 +60,7 @@ impl Model {
             can_mutate: Pipeline::new(),
             actions: vec![],
             migration: Default::default(),
+            data: btreemap! {},
             cache: Cache::new(),
         }
     }

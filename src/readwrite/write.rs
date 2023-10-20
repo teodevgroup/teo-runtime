@@ -2,7 +2,7 @@ use serde::Serialize;
 use crate::pipeline::pipeline::Pipeline;
 
 #[derive(Debug, Serialize)]
-pub enum WriteRule {
+pub enum Write {
     Write,
     NoWrite,
     WriteOnce,
@@ -11,11 +11,11 @@ pub enum WriteRule {
     WriteIf(Pipeline),
 }
 
-impl WriteRule {
+impl Write {
 
     pub fn is_no_write(&self) -> bool {
         match self {
-            WriteRule::NoWrite => true,
+            Write::NoWrite => true,
             _ => false
         }
     }
