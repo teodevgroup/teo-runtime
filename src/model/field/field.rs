@@ -52,7 +52,7 @@ impl Field {
     pub fn new() -> Self {
         Self {
             name: "".to_string(),
-            column_name: None,
+            column_name: "".to_string(),
             foreign_key: false,
             dropped: false,
             migration: None,
@@ -62,6 +62,8 @@ impl Field {
             optionality: Optionality::Optional,
             previous: Previous::DontKeep,
             atomic: false,
+            read: Read::Read,
+            write: Write::Write,
             r#virtual: false,
             input_omissible: false,
             output_omissible: false,

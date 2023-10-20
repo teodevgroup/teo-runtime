@@ -1,6 +1,7 @@
+use serde::Serialize;
 use crate::pipeline::pipeline::Pipeline;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub enum Read {
     Read,
     NoRead,

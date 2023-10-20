@@ -23,6 +23,8 @@ pub enum PostgreSQLType {
     Date,
     Timestamp(i32),
     TimestampTz(i32),
+    Time,
+    TimeTz,
     Json,
     JsonB,
     ByteA,
