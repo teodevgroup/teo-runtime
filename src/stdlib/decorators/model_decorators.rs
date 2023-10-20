@@ -1,7 +1,9 @@
+use std::ops::Not;
 use log::__private_api::enabled;
 use teo_teon::Value;
 use crate::namespace::Namespace;
 use teo_result::Result;
+use crate::action::Action;
 use crate::pipeline::pipeline::Pipeline;
 
 pub(in crate::stdlib) fn load_model_decorators(namespace: &mut Namespace) {
@@ -101,15 +103,15 @@ pub(in crate::stdlib) fn load_model_decorators(namespace: &mut Namespace) {
             if disable.is_array() {
                 let mut results = vec![];
                 for a in disable.as_array().unwrap() {
-                    results.push(a.as_enum_variant().unwrap().value.as_ref().try_into()?);
+                    let action: Action = a.as_enum_variant().unwrap().value.as_ref().try_into()?;
+                    results.push(action.not());
                 }
                 model.actions = results;
             } else if disable.is_enum_variant() {
-                model.actions = vec![disable.as_enum_variant().unwrap().value.as_ref().try_into()?];
+                let action: Action = disable.as_enum_variant().unwrap().value.as_ref().try_into()?;
+                model.actions = vec![action.not()];
             }
         }
-
         Ok(())
     });
-
 }
