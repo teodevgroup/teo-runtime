@@ -336,16 +336,6 @@ impl<'a> TryFrom<&'a Object> for &'a DateTime<Utc> {
     }
 }
 
-impl<'a> TryFrom<&'a Object> for &'a Pipeline {
 
-    type Error = Error;
-
-    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
-        match value.as_pipeline() {
-            Some(p) => Ok(p),
-            None => Err(Error::new(format!("object is not pipeline: {:?}", value)))
-        }
-    }
-}
 
 

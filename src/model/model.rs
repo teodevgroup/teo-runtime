@@ -24,12 +24,12 @@ pub struct Model {
     pub properties: IndexMap<String, Property>,
     pub indexes: IndexMap<String, Index>,
     pub primary_index: String,
-    pub before_save: Vec<Pipeline>,
-    pub after_save: Vec<Pipeline>,
-    pub before_delete: Vec<Pipeline>,
-    pub after_delete: Vec<Pipeline>,
-    pub can_read: Vec<Pipeline>,
-    pub can_mutate: Vec<Pipeline>,
+    pub before_save: Pipeline,
+    pub after_save: Pipeline,
+    pub before_delete: Pipeline,
+    pub after_delete: Pipeline,
+    pub can_read: Pipeline,
+    pub can_mutate: Pipeline,
     pub migration: Migration,
     pub cache: Cache,
 }
@@ -49,16 +49,20 @@ impl Model {
             properties: Default::default(),
             indexes: Default::default(),
             primary_index: "".to_string(),
-            before_save: vec![],
-            after_save: vec![],
-            before_delete: vec![],
-            after_delete: vec![],
-            can_read: vec![],
-            can_mutate: vec![],
+            before_save: Pipeline::new(),
+            after_save: Pipeline::new(),
+            before_delete: Pipeline::new(),
+            after_delete: Pipeline::new(),
+            can_read: Pipeline::new(),
+            can_mutate: Pipeline::new(),
             actions: vec![],
             migration: Default::default(),
             cache: Cache::new(),
         }
+    }
+
+    pub fn namespace_path(&self) -> Vec<&str> {
+        self.path.iter().rev().skip(1).rev().map(AsRef::as_ref).collect()
     }
 
     pub fn finalize(&mut self) {

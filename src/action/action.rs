@@ -5,7 +5,7 @@ use teo_result::Error;
 use teo_result::Result;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize)]
-pub struct Action(u32);
+pub struct Action(pub u32);
 
 impl BitOr for Action {
 

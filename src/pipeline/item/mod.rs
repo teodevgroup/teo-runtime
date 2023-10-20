@@ -28,7 +28,7 @@ impl<F, Fut> Call for F where
     }
 }
 
-#[derive(Educe, Serialize)]
+#[derive(Educe, Serialize, Clone)]
 #[educe(Debug)]
 pub struct BoundedItem {
     pub path: Vec<String>,
