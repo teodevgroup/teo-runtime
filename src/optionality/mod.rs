@@ -3,8 +3,8 @@ use crate::pipeline::pipeline::Pipeline;
 
 #[derive(Debug, Serialize)]
 pub enum Optionality {
-    Optional,
     Required,
+    Optional,
     PresentWith(Vec<String>),
     PresentWithout(Vec<String>),
     PresentIf(Pipeline),

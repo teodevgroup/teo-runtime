@@ -1,8 +1,11 @@
+use std::collections::BTreeMap;
+use maplit::btreemap;
 use serde::Serialize;
 use crate::comment::Comment;
 use crate::model::Field;
 use crate::model::relation::delete::Delete;
 use crate::model::relation::update::Update;
+use crate::object::Object;
 use crate::optionality::Optionality;
 
 #[derive(Debug, Serialize)]
@@ -20,6 +23,7 @@ pub struct Relation {
     pub delete_rule: Delete,
     pub update_rule: Update,
     pub has_foreign_key: bool,
+    data: BTreeMap<String, Object>,
 }
 
 impl Relation {
@@ -39,6 +43,7 @@ impl Relation {
             delete_rule: Delete::Default,
             update_rule: Update::Default,
             has_foreign_key: false,
+            data: btreemap! {},
         }
     }
 
