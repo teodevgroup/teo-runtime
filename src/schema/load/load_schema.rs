@@ -177,18 +177,15 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema) -> Result<()
         }
     }
 
-    //
-    // pub fn interfaces(&self) -> Vec<&InterfaceDeclaration> {
-    //     self.references.interfaces.iter().map(|path| self.find_top_by_path(path).unwrap().as_interface_declaration().unwrap()).collect()
-    // }
+    // load handler groups
+    for handler_group_declaration in schema.handler_group_declarations() {
 
-    //
-    // pub fn handler_group_declarations(&self) -> Vec<&HandlerGroupDeclaration> {
-    //     self.references.handler_groups.iter().map(|path| self.find_top_by_path(path).unwrap().as_handler_group_declaration().unwrap()).collect()
-    // }
-    //
-    // pub fn data_sets(&self) -> Vec<&DataSet> {
-    //     self.references.data_sets.iter().map(|path| self.find_top_by_path(path).unwrap().as_data_set().unwrap()).collect()
-    // }
+    }
+
+    // load data set
+    for data_set_declaration in schema.data_sets() {
+
+    }
+
     Ok(())
 }
