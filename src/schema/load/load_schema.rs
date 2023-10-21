@@ -16,7 +16,7 @@ use crate::schema::load::load_model::load_model;
 use crate::schema::load::load_server::load_server;
 use crate::schema::load::load_test::load_test;
 
-pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema) -> Result<()> {
+pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_checking: bool) -> Result<()> {
 
     // diagnostics for schema loading
     let mut diagnostics = Diagnostics::new();
@@ -85,74 +85,77 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema) -> Result<()
         }
     }
 
-    // validate decorator declarations
-    for decorator_declaration in schema.decorator_declarations() {
-        let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&decorator_declaration.namespace_str_path());
-        match decorator_declaration.decorator_class {
-            ReferenceType::EnumDecorator => if dest_namespace.enum_decorators.get(decorator_declaration.identifier.name()).is_none() {
-                diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier.span, "enum decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
-            },
-            ReferenceType::EnumMemberDecorator => if dest_namespace.enum_member_decorators.get(decorator_declaration.identifier.name()).is_none() {
-                diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier.span, "enum member decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
-            },
-            ReferenceType::ModelDecorator => if dest_namespace.model_decorators.get(decorator_declaration.identifier.name()).is_none() {
-                diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier.span, "model decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
-            },
-            ReferenceType::ModelFieldDecorator => if dest_namespace.model_field_decorators.get(decorator_declaration.identifier.name()).is_none() {
-                diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier.span, "model field decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
-            },
-            ReferenceType::ModelRelationDecorator => if dest_namespace.model_relation_decorators.get(decorator_declaration.identifier.name()).is_none() {
-                diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier.span, "model relation decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
-            },
-            ReferenceType::ModelPropertyDecorator => if dest_namespace.model_property_decorators.get(decorator_declaration.identifier.name()).is_none() {
-                diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier.span, "model property decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
-            },
-            ReferenceType::InterfaceDecorator => if dest_namespace.interface_decorators.get(decorator_declaration.identifier.name()).is_none() {
-                diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier.span, "interface decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
-            },
-            ReferenceType::InterfaceFieldDecorator => if dest_namespace.interface_field_decorators.get(decorator_declaration.identifier.name()).is_none() {
-                diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier.span, "interface field decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
-            },
-            ReferenceType::HandlerDecorator => if dest_namespace.handler_decorators.get(decorator_declaration.identifier.name()).is_none() {
-                diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier.span, "handler decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
-            },
-            _ => (),
-        }
-    }
+    if !ignores_checking {
 
-    // validate pipeline item declarations
-    for pipeline_item_declaration in schema.pipeline_item_declarations() {
-        let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&pipeline_item_declaration.namespace_str_path());
-        if dest_namespace.pipeline_items.get(pipeline_item_declaration.identifier.name()).is_none() {
-            diagnostics.insert(DiagnosticsError::new(pipeline_item_declaration.identifier.span, "pipeline item implementation is not found", schema.source(pipeline_item_declaration.source_id()).unwrap().file_path.clone()))
+        // validate decorator declarations
+        for decorator_declaration in schema.decorator_declarations() {
+            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&decorator_declaration.namespace_str_path());
+            match decorator_declaration.decorator_class {
+                ReferenceType::EnumDecorator => if dest_namespace.enum_decorators.get(decorator_declaration.identifier.name()).is_none() {
+                    diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier.span, "enum decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
+                },
+                ReferenceType::EnumMemberDecorator => if dest_namespace.enum_member_decorators.get(decorator_declaration.identifier.name()).is_none() {
+                    diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier.span, "enum member decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
+                },
+                ReferenceType::ModelDecorator => if dest_namespace.model_decorators.get(decorator_declaration.identifier.name()).is_none() {
+                    diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier.span, "model decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
+                },
+                ReferenceType::ModelFieldDecorator => if dest_namespace.model_field_decorators.get(decorator_declaration.identifier.name()).is_none() {
+                    diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier.span, "model field decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
+                },
+                ReferenceType::ModelRelationDecorator => if dest_namespace.model_relation_decorators.get(decorator_declaration.identifier.name()).is_none() {
+                    diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier.span, "model relation decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
+                },
+                ReferenceType::ModelPropertyDecorator => if dest_namespace.model_property_decorators.get(decorator_declaration.identifier.name()).is_none() {
+                    diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier.span, "model property decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
+                },
+                ReferenceType::InterfaceDecorator => if dest_namespace.interface_decorators.get(decorator_declaration.identifier.name()).is_none() {
+                    diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier.span, "interface decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
+                },
+                ReferenceType::InterfaceFieldDecorator => if dest_namespace.interface_field_decorators.get(decorator_declaration.identifier.name()).is_none() {
+                    diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier.span, "interface field decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
+                },
+                ReferenceType::HandlerDecorator => if dest_namespace.handler_decorators.get(decorator_declaration.identifier.name()).is_none() {
+                    diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier.span, "handler decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
+                },
+                _ => (),
+            }
         }
-    }
 
-    // validate middleware declarations
-    for middleware_declaration in schema.middleware_declarations() {
-        let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&middleware_declaration.namespace_str_path());
-        if dest_namespace.middlewares.get(middleware_declaration.identifier.name()).is_none() {
-            diagnostics.insert(DiagnosticsError::new(middleware_declaration.identifier.span, "middleware implementation is not found", schema.source(middleware_declaration.source_id()).unwrap().file_path.clone()))
+        // validate pipeline item declarations
+        for pipeline_item_declaration in schema.pipeline_item_declarations() {
+            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&pipeline_item_declaration.namespace_str_path());
+            if dest_namespace.pipeline_items.get(pipeline_item_declaration.identifier.name()).is_none() {
+                diagnostics.insert(DiagnosticsError::new(pipeline_item_declaration.identifier.span, "pipeline item implementation is not found", schema.source(pipeline_item_declaration.source_id()).unwrap().file_path.clone()))
+            }
         }
-    }
 
-    // validate struct declarations
-    for struct_declaration in schema.struct_declarations() {
-        let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&struct_declaration.namespace_str_path());
-        if let Some(struct_implementation) = dest_namespace.structs.get(struct_declaration.identifier.name()) {
-            for function_declaration in &struct_declaration.function_declarations {
-                if function_declaration.r#static {
-                    if struct_implementation.static_functions.get(function_declaration.identifier.name()).is_none() {
-                        diagnostics.insert(DiagnosticsError::new(function_declaration.identifier.span, "function implementation is not found", schema.source(struct_declaration.source_id()).unwrap().file_path.clone()));
-                    }
-                } else {
-                    if struct_implementation.functions.get(function_declaration.identifier.name()).is_none() {
-                        diagnostics.insert(DiagnosticsError::new(function_declaration.identifier.span, "function implementation is not found", schema.source(struct_declaration.source_id()).unwrap().file_path.clone()));
+        // validate middleware declarations
+        for middleware_declaration in schema.middleware_declarations() {
+            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&middleware_declaration.namespace_str_path());
+            if dest_namespace.middlewares.get(middleware_declaration.identifier.name()).is_none() {
+                diagnostics.insert(DiagnosticsError::new(middleware_declaration.identifier.span, "middleware implementation is not found", schema.source(middleware_declaration.source_id()).unwrap().file_path.clone()))
+            }
+        }
+
+        // validate struct declarations
+        for struct_declaration in schema.struct_declarations() {
+            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&struct_declaration.namespace_str_path());
+            if let Some(struct_implementation) = dest_namespace.structs.get(struct_declaration.identifier.name()) {
+                for function_declaration in &struct_declaration.function_declarations {
+                    if function_declaration.r#static {
+                        if struct_implementation.static_functions.get(function_declaration.identifier.name()).is_none() {
+                            diagnostics.insert(DiagnosticsError::new(function_declaration.identifier.span, "function implementation is not found", schema.source(struct_declaration.source_id()).unwrap().file_path.clone()));
+                        }
+                    } else {
+                        if struct_implementation.functions.get(function_declaration.identifier.name()).is_none() {
+                            diagnostics.insert(DiagnosticsError::new(function_declaration.identifier.span, "function implementation is not found", schema.source(struct_declaration.source_id()).unwrap().file_path.clone()));
+                        }
                     }
                 }
+            } else {
+                diagnostics.insert(DiagnosticsError::new(struct_declaration.identifier.span, "struct implementation is not found", schema.source(struct_declaration.source_id()).unwrap().file_path.clone()))
             }
-        } else {
-            diagnostics.insert(DiagnosticsError::new(struct_declaration.identifier.span, "struct implementation is not found", schema.source(struct_declaration.source_id()).unwrap().file_path.clone()))
         }
     }
 
