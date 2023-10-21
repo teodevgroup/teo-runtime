@@ -4,6 +4,7 @@ use serde::Serialize;
 use crate::comment::Comment;
 use crate::database::database::Database;
 use crate::model::Field;
+use crate::model::field::named::Named;
 use crate::model::relation::delete::Delete;
 use crate::model::relation::update::Update;
 use crate::object::Object;
@@ -21,8 +22,8 @@ pub struct Relation {
     pub is_vec: bool,
     pub fields: Vec<String>,
     pub references: Vec<String>,
-    pub delete_rule: Delete,
-    pub update_rule: Update,
+    pub delete: Delete,
+    pub update: Update,
     pub has_foreign_key: bool,
     data: BTreeMap<String, Object>,
 }
@@ -41,8 +42,8 @@ impl Relation {
             references: vec![],
             foreign: None,
             local: None,
-            delete_rule: Delete::Default,
-            update_rule: Update::Default,
+            delete: Delete::Default,
+            update: Update::Default,
             has_foreign_key: false,
             data: btreemap! {},
         }
@@ -54,5 +55,12 @@ impl Relation {
         } else {
             self.fields.iter().find(|name| fields.iter().find(|f| f.name() == name.as_str() && f.foreign_key).is_some()).is_some()
         }
+    }
+}
+
+impl Named for &Relation {
+
+    fn name(&self) -> &str {
+        self.name.as_str()
     }
 }

@@ -46,7 +46,7 @@ pub fn load_model(main_namespace: &mut Namespace, schema: &Schema, model_declara
             }
         }
     }
-    model.finalize();
+    model.finalize()?;
     let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&model_declaration.namespace_str_path());
     dest_namespace.models.insert(model_declaration.identifier.name().to_owned(), model);
     Ok(())

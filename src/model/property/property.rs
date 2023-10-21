@@ -5,7 +5,10 @@ use teo_result::Result;
 use crate::comment::Comment;
 use crate::database::database::Database;
 use crate::database::r#type::DatabaseType;
+use crate::model::field::column_named::ColumnNamed;
 use crate::model::field::Index;
+use crate::model::field::indexable::{Indexable, IndexableMut};
+use crate::model::field::named::Named;
 use crate::object::Object;
 use crate::optionality::Optionality;
 use crate::pipeline::pipeline::Pipeline;
@@ -69,5 +72,33 @@ impl Property {
             self.database_type = database.default_database_type(&self.r#type)?;
         }
         Ok(())
+    }
+}
+
+impl Named for &Property {
+
+    fn name(&self) -> &str {
+        self.name.as_str()
+    }
+}
+
+impl ColumnNamed for &Property {
+
+    fn column_name(&self) -> &str {
+        self.column_name.as_str()
+    }
+}
+
+impl IndexableMut for &mut Property {
+
+    fn set_index(&mut self, index: Index) {
+        self.index = Some(index);
+    }
+}
+
+impl Indexable for &Property {
+
+    fn index(&self) -> Option<&Index> {
+        self.index.as_ref()
     }
 }

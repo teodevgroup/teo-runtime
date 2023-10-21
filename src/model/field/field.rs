@@ -9,7 +9,9 @@ use crate::database::database::Database;
 use crate::database::mysql::r#type::MySQLType;
 use crate::database::r#type::DatabaseType;
 use crate::model::field::Index;
+use crate::model::field::indexable::{Indexable, IndexableMut};
 use crate::model::field::Migration;
+use crate::model::field::named::Named;
 use crate::object::Object;
 use crate::optionality::Optionality;
 use crate::pipeline::pipeline::Pipeline;
@@ -106,11 +108,28 @@ impl Field {
         Ok(())
     }
 
-    pub fn name(&self) -> &str {
-        self.name.as_str()
-    }
-
     pub fn column_name(&self) -> &str {
         self.column_name.as_str()
+    }
+}
+
+impl Named for &Field {
+
+    fn name(&self) -> &str {
+        self.name.as_str()
+    }
+}
+
+impl IndexableMut for &mut Field {
+
+    fn set_index(&mut self, index: Index) {
+        self.index = Some(index);
+    }
+}
+
+impl Indexable for &Field {
+
+    fn index(&self) -> Option<&Index> {
+        self.index.as_ref()
     }
 }
