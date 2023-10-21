@@ -141,23 +141,23 @@ impl Namespace {
         self.model_decorators.insert(name.to_owned(), model::Decorator { path: next_path(&self.path, name), call });
     }
 
-    pub fn define_model_field_decorator(&mut self, name: &str, call: fn(&Arguments, &mut Field) -> Result<()>) {
+    pub fn define_model_field_decorator(&mut self, name: &str, call: fn(Arguments, &mut Field) -> Result<()>) {
         self.model_field_decorators.insert(name.to_owned(), model::field::Decorator { path: next_path(&self.path, name), call });
     }
 
-    pub fn define_model_relation_decorator(&mut self, name: &str, call: fn(&Arguments, &mut Relation) -> Result<()>) {
+    pub fn define_model_relation_decorator(&mut self, name: &str, call: fn(Arguments, &mut Relation) -> Result<()>) {
         self.model_relation_decorators.insert(name.to_owned(), model::relation::Decorator { path: next_path(&self.path, name), call });
     }
 
-    pub fn define_model_property_decorator(&mut self, name: &str, call: fn(&Arguments, &mut Property) -> Result<()>) {
+    pub fn define_model_property_decorator(&mut self, name: &str, call: fn(Arguments, &mut Property) -> Result<()>) {
         self.model_property_decorators.insert(name.to_owned(), model::property::Decorator { path: next_path(&self.path, name), call });
     }
 
-    pub fn define_enum_decorator(&mut self, name: &str, call: fn(&Arguments, &mut Enum) -> Result<()>) {
+    pub fn define_enum_decorator(&mut self, name: &str, call: fn(Arguments, &mut Enum) -> Result<()>) {
         self.enum_decorators.insert(name.to_owned(), r#enum::Decorator { path: next_path(&self.path, name), call });
     }
 
-    pub fn define_enum_member_decorator(&mut self, name: &str, call: fn(&Arguments, &mut Member) -> Result<()>) {
+    pub fn define_enum_member_decorator(&mut self, name: &str, call: fn(Arguments, &mut Member) -> Result<()>) {
         self.enum_member_decorators.insert(name.to_owned(), r#enum::member::Decorator { path: next_path(&self.path, name), call });
     }
 

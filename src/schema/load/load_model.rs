@@ -5,6 +5,7 @@ use crate::model::Model;
 use crate::model;
 use crate::namespace::Namespace;
 use teo_result::Result;
+use crate::optionality::Optionality;
 use crate::schema::fetch::fetch_decorator_arguments::fetch_decorator_arguments;
 use crate::schema::load::load_comment::load_comment;
 
@@ -21,20 +22,26 @@ pub fn load_model(main_namespace: &mut Namespace, schema: &Schema, model_declara
     }
     for field_declaration in &model_declaration.fields {
         if field_declaration.resolved().class.is_model_primitive_field() {
-            model.fields.insert(
-                field_declaration.identifier.name().to_owned(),
-                load_model_field(field_declaration, schema, diagnostics)?,
-            );
+            if field_declaration.is_available() {
+                model.fields.insert(
+                    field_declaration.identifier.name().to_owned(),
+                    load_model_field(main_namespace, field_declaration, schema, diagnostics)?,
+                );
+            }
         } else if field_declaration.resolved().class.is_model_relation() {
-            model.relations.insert(
-                field_declaration.identifier.name().to_owned(),
-                load_model_relation(field_declaration, schema, diagnostics)?,
-            );
+            if field_declaration.is_available() {
+                model.relations.insert(
+                    field_declaration.identifier.name().to_owned(),
+                    load_model_relation(main_namespace, field_declaration, schema, diagnostics)?,
+                );
+            }
         } else if field_declaration.resolved().class.is_model_property() {
-            model.properties.insert(
-                field_declaration.identifier.name().to_owned(),
-                load_model_property(field_declaration, schema, diagnostics)?,
-            );
+            if field_declaration.is_available() {
+                model.properties.insert(
+                    field_declaration.identifier.name().to_owned(),
+                    load_model_property(main_namespace, field_declaration, schema, diagnostics)?,
+                );
+            }
         }
     }
     model.finalize();
@@ -43,14 +50,71 @@ pub fn load_model(main_namespace: &mut Namespace, schema: &Schema, model_declara
     Ok(())
 }
 
-fn load_model_field(field_declaration: &teo_parser::ast::field::Field, schema: &Schema, diagnostics: &mut Diagnostics) -> Result<model::Field> {
-    unreachable!()
+fn load_model_field(main_namespace: &mut Namespace, field_declaration: &teo_parser::ast::field::Field, schema: &Schema, diagnostics: &mut Diagnostics) -> Result<model::Field> {
+    let mut field = model::Field::new();
+    field.name = field_declaration.identifier.name().to_owned();
+    field.comment = load_comment(field_declaration.comment.as_ref());
+    if field_declaration.type_expr.resolved().is_optional() {
+        field.optionality = Optionality::Optional;
+    } else {
+        field.optionality = Optionality::Required;
+    }
+    field.r#type = field_declaration.type_expr.resolved().unwrap_optional().clone();
+    for decorator in &field_declaration.decorators {
+        let decorator_declaration = schema.find_top_by_path(&decorator.resolved().path).unwrap().as_decorator_declaration().unwrap();
+        if let Some(decorator_implementation) = main_namespace.model_field_decorator_at_path(&decorator_declaration.str_path()) {
+            let args = fetch_decorator_arguments(decorator, schema, field_declaration);
+            (decorator_implementation.call)(args, &mut field)?;
+        }
+    }
+    // field.finalize
+    Ok(field)
 }
 
-fn load_model_relation(field_declaration: &teo_parser::ast::field::Field, schema: &Schema, diagnostics: &mut Diagnostics) -> Result<model::Relation> {
-    unreachable!()
+fn load_model_relation(main_namespace: &mut Namespace, field_declaration: &teo_parser::ast::field::Field, schema: &Schema, diagnostics: &mut Diagnostics) -> Result<model::Relation> {
+    let mut relation = model::Relation::new();
+    relation.name = field_declaration.identifier.name().to_owned();
+    relation.comment = load_comment(field_declaration.comment.as_ref());
+    let mut r#type = field_declaration.type_expr.resolved();
+    if r#type.is_optional() {
+        relation.optionality = Optionality::Optional;
+    } else {
+        relation.optionality = Optionality::Required;
+    }
+    r#type = r#type.unwrap_optional();
+    relation.is_vec = r#type.is_array();
+    r#type = r#type.unwrap_array();
+    relation.model = r#type.as_model_object().unwrap().1.clone();
+    for decorator in &field_declaration.decorators {
+        let decorator_declaration = schema.find_top_by_path(&decorator.resolved().path).unwrap().as_decorator_declaration().unwrap();
+        if let Some(decorator_implementation) = main_namespace.model_relation_decorator_at_path(&decorator_declaration.str_path()) {
+            let args = fetch_decorator_arguments(decorator, schema, field_declaration);
+            (decorator_implementation.call)(args, &mut relation)?;
+        }
+    }
+    // relation.finalize
+    Ok(relation)
 }
 
-fn load_model_property(field_declaration: &teo_parser::ast::field::Field, schema: &Schema, diagnostics: &mut Diagnostics) -> Result<model::Property> {
-    unreachable!()
+fn load_model_property(main_namespace: &mut Namespace, field_declaration: &teo_parser::ast::field::Field, schema: &Schema, diagnostics: &mut Diagnostics) -> Result<model::Property> {
+    let mut property = model::Property::new();
+    property.name = field_declaration.identifier.name().to_owned();
+    property.comment = load_comment(field_declaration.comment.as_ref());
+    let mut r#type = field_declaration.type_expr.resolved();
+    if r#type.is_optional() {
+        property.optionality = Optionality::Optional;
+    } else {
+        property.optionality = Optionality::Required;
+    }
+    r#type = r#type.unwrap_optional();
+    property.r#type = r#type.clone();
+    for decorator in &field_declaration.decorators {
+        let decorator_declaration = schema.find_top_by_path(&decorator.resolved().path).unwrap().as_decorator_declaration().unwrap();
+        if let Some(decorator_implementation) = main_namespace.model_property_decorator_at_path(&decorator_declaration.str_path()) {
+            let args = fetch_decorator_arguments(decorator, schema, field_declaration);
+            (decorator_implementation.call)(args, &mut property)?;
+        }
+    }
+    // property.finalize
+    Ok(property)
 }

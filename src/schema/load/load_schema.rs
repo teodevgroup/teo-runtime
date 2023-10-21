@@ -42,7 +42,7 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema) -> Result<()
     }
 
     // load debug
-    for debug in schema.debug() {
+    if let Some(debug) = schema.debug() {
         if debug.is_available() {
             let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&debug.namespace_str_path());
             load_debug(dest_namespace, schema, debug, &mut diagnostics)?;
@@ -50,7 +50,7 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema) -> Result<()
     }
 
     // load test
-    for test in schema.debug() {
+    if let Some(test) = schema.debug() {
         if test.is_available() {
             let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&test.namespace_str_path());
             load_test(dest_namespace, schema, test, &mut diagnostics)?;
