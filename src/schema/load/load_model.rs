@@ -117,6 +117,6 @@ fn load_model_property(main_namespace: &mut Namespace, field_declaration: &teo_p
             (decorator_implementation.call)(args, &mut property)?;
         }
     }
-    // property.finalize
+    property.finalize(database.unwrap())?;
     Ok(property)
 }
