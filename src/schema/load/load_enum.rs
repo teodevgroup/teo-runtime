@@ -1,3 +1,4 @@
+use teo_parser::ast::info_provider::InfoProvider;
 use teo_parser::ast::schema::Schema;
 use teo_parser::diagnostics::diagnostics::Diagnostics;
 use crate::namespace::Namespace;
@@ -6,7 +7,7 @@ use crate::r#enum::member::Member;
 use teo_result::Result;
 use crate::schema::load::load_comment::load_comment;
 
-pub fn load_enum(dest_namespace: &mut Namespace, schema: &Schema, enum_declaration: &teo_parser::ast::r#enum::Enum, diagnostics: &mut Diagnostics) -> Result<()> {
+pub fn load_enum(main_namespace: &mut Namespace, schema: &Schema, enum_declaration: &teo_parser::ast::r#enum::Enum, diagnostics: &mut Diagnostics) -> Result<()> {
     let mut r#enum = Enum::new();
     r#enum.path = enum_declaration.string_path.clone();
     r#enum.comment = load_comment(enum_declaration.comment.as_ref());
@@ -18,6 +19,7 @@ pub fn load_enum(dest_namespace: &mut Namespace, schema: &Schema, enum_declarati
         }
     }
     r#enum.finalize();
+    let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&enum_declaration.namespace_str_path());
     dest_namespace.enums.insert(enum_declaration.identifier.name().to_owned(), r#enum);
     Ok(())
 }

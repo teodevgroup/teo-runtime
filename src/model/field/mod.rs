@@ -5,6 +5,7 @@ pub mod migration;
 pub mod indexable;
 pub mod named;
 pub mod column_named;
+pub mod is_optional;
 
 pub use field::Field;
 pub use index::Index;

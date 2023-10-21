@@ -11,6 +11,7 @@ use crate::schema::load::load_database_information::load_database_information;
 use crate::schema::load::load_debug::load_debug;
 use crate::schema::load::load_entity::load_entity;
 use crate::schema::load::load_enum::load_enum;
+use crate::schema::load::load_interface::load_interface;
 use crate::schema::load::load_model::load_model;
 use crate::schema::load::load_server::load_server;
 use crate::schema::load::load_test::load_test;
@@ -159,6 +160,13 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema) -> Result<()
     for enum_declaration in schema.enums() {
         if enum_declaration.is_available() {
             load_enum(main_namespace, schema, enum_declaration, &mut diagnostics)?;
+        }
+    }
+
+    // load interfaces
+    for interface_declaration in schema.interfaces() {
+        if interface_declaration.is_available() {
+            load_interface(main_namespace, schema, interface_declaration, &mut diagnostics)?;
         }
     }
 

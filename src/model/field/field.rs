@@ -10,6 +10,7 @@ use crate::database::mysql::r#type::MySQLType;
 use crate::database::r#type::DatabaseType;
 use crate::model::field::Index;
 use crate::model::field::indexable::{Indexable, IndexableMut};
+use crate::model::field::is_optional::IsOptionalMut;
 use crate::model::field::Migration;
 use crate::model::field::named::Named;
 use crate::object::Object;
@@ -86,16 +87,6 @@ impl Field {
         }
     }
 
-    pub(crate) fn set_required(&mut self) {
-        self.optionality = Optionality::Required;
-    }
-
-    pub(crate) fn set_optional(&mut self) {
-        self.optionality = Optionality::Optional;
-        self.input_omissible = true;
-        self.output_omissible = true;
-    }
-
     pub fn finalize(&mut self, database: Database) -> Result<()> {
         // set default column name
         if self.column_name.is_empty() {
@@ -131,5 +122,29 @@ impl Indexable for &Field {
 
     fn index(&self) -> Option<&Index> {
         self.index.as_ref()
+    }
+}
+
+impl IsOptionalMut for &mut Field {
+
+    fn set_optional(&mut self) {
+        self.optionality = Optionality::Optional;
+        self.input_omissible = true;
+        self.output_omissible = true;
+    }
+
+    fn set_required(&mut self) {
+        self.optionality = Optionality::Required;
+    }
+}
+
+impl IsOptionalMut for Field {
+
+    fn set_optional(&mut self) {
+        self.set_optional()
+    }
+
+    fn set_required(&mut self) {
+        self.set_required()
     }
 }

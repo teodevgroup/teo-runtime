@@ -4,6 +4,7 @@ use serde::Serialize;
 use crate::comment::Comment;
 use crate::database::database::Database;
 use crate::model::Field;
+use crate::model::field::is_optional::IsOptionalMut;
 use crate::model::field::named::Named;
 use crate::model::relation::delete::Delete;
 use crate::model::relation::update::Update;
@@ -62,5 +63,16 @@ impl Named for &Relation {
 
     fn name(&self) -> &str {
         self.name.as_str()
+    }
+}
+
+impl IsOptionalMut for &mut Relation {
+
+    fn set_optional(&mut self) {
+        self.optionality = Optionality::Optional;
+    }
+
+    fn set_required(&mut self) {
+        self.optionality = Optionality::Required;
     }
 }

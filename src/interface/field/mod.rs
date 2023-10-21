@@ -1,13 +1,6 @@
 pub mod decorator;
+pub mod field;
 
-use serde::Serialize;
 pub use decorator::Decorator;
+pub use field::Field;
 
-#[derive(Debug, Serialize)]
-pub struct Field {
-
-}
-
-impl Field {
-
-}

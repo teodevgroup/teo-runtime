@@ -4,3 +4,4 @@ pub mod field;
 
 pub use interface::Interface;
 pub use decorator::Decorator;
+pub use field::Field;
