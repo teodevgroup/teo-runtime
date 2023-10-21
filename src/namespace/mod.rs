@@ -22,6 +22,7 @@ use crate::r#enum::member::Member;
 use crate::r#struct::Struct;
 use crate::utils::next_path;
 use teo_result::Result;
+use crate::database::database::Database;
 use crate::pipeline;
 use crate::stdlib::load::load;
 
@@ -51,6 +52,8 @@ pub struct Namespace {
     pub entities: BTreeMap<String, Entity>,
     pub debug: Option<Debug>,
     pub test: Option<Test>,
+    pub database: Option<Database>,
+    pub connector_reference: Option<Vec<String>>,
     pub connection: Option<Arc<dyn Connection>>,
 }
 
@@ -87,6 +90,8 @@ impl Namespace {
             entities: btreemap! {},
             debug: None,
             test: None,
+            database: None,
+            connector_reference: None,
             connection: None,
         }
     }

@@ -7,7 +7,7 @@ use crate::database::postgres::r#type::PostgreSQLType;
 use crate::database::sqlite::r#type::SQLiteType;
 use crate::database::r#type::DatabaseType;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone, Copy)]
 pub enum Database {
     MongoDB,
     MySQL,

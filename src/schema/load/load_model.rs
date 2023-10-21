@@ -1,10 +1,11 @@
 use teo_parser::ast::info_provider::InfoProvider;
 use teo_parser::ast::schema::Schema;
 use teo_parser::diagnostics::diagnostics::Diagnostics;
-use crate::model::Model;
+use crate::model::{Field, Model};
 use crate::model;
 use crate::namespace::Namespace;
 use teo_result::Result;
+use crate::database::database::Database;
 use crate::optionality::Optionality;
 use crate::schema::fetch::fetch_decorator_arguments::fetch_decorator_arguments;
 use crate::schema::load::load_comment::load_comment;
@@ -20,26 +21,27 @@ pub fn load_model(main_namespace: &mut Namespace, schema: &Schema, model_declara
             (decorator_implementation.call)(args, &mut model)?;
         }
     }
+    let database = main_namespace.namespace_mut_or_create_at_path(&model_declaration.namespace_str_path()).database;
     for field_declaration in &model_declaration.fields {
         if field_declaration.resolved().class.is_model_primitive_field() {
             if field_declaration.is_available() {
                 model.fields.insert(
                     field_declaration.identifier.name().to_owned(),
-                    load_model_field(main_namespace, field_declaration, schema, diagnostics)?,
+                    load_model_field(main_namespace, field_declaration, schema, database, diagnostics)?,
                 );
             }
         } else if field_declaration.resolved().class.is_model_relation() {
             if field_declaration.is_available() {
                 model.relations.insert(
                     field_declaration.identifier.name().to_owned(),
-                    load_model_relation(main_namespace, field_declaration, schema, diagnostics)?,
+                    load_model_relation(main_namespace, field_declaration, schema, database, model.fields.values().collect(), diagnostics)?,
                 );
             }
         } else if field_declaration.resolved().class.is_model_property() {
             if field_declaration.is_available() {
                 model.properties.insert(
                     field_declaration.identifier.name().to_owned(),
-                    load_model_property(main_namespace, field_declaration, schema, diagnostics)?,
+                    load_model_property(main_namespace, field_declaration, schema, database, diagnostics)?,
                 );
             }
         }
@@ -50,14 +52,14 @@ pub fn load_model(main_namespace: &mut Namespace, schema: &Schema, model_declara
     Ok(())
 }
 
-fn load_model_field(main_namespace: &mut Namespace, field_declaration: &teo_parser::ast::field::Field, schema: &Schema, diagnostics: &mut Diagnostics) -> Result<model::Field> {
+fn load_model_field(main_namespace: &mut Namespace, field_declaration: &teo_parser::ast::field::Field, schema: &Schema, database: Option<Database>, diagnostics: &mut Diagnostics) -> Result<model::Field> {
     let mut field = model::Field::new();
     field.name = field_declaration.identifier.name().to_owned();
     field.comment = load_comment(field_declaration.comment.as_ref());
     if field_declaration.type_expr.resolved().is_optional() {
-        field.optionality = Optionality::Optional;
+        field.set_optional();
     } else {
-        field.optionality = Optionality::Required;
+        field.set_required();
     }
     field.r#type = field_declaration.type_expr.resolved().unwrap_optional().clone();
     for decorator in &field_declaration.decorators {
@@ -67,11 +69,11 @@ fn load_model_field(main_namespace: &mut Namespace, field_declaration: &teo_pars
             (decorator_implementation.call)(args, &mut field)?;
         }
     }
-    // field.finalize
+    field.finalize(database.unwrap())?;
     Ok(field)
 }
 
-fn load_model_relation(main_namespace: &mut Namespace, field_declaration: &teo_parser::ast::field::Field, schema: &Schema, diagnostics: &mut Diagnostics) -> Result<model::Relation> {
+fn load_model_relation(main_namespace: &mut Namespace, field_declaration: &teo_parser::ast::field::Field, schema: &Schema, database: Option<Database>, fields: Vec<&Field>, diagnostics: &mut Diagnostics) -> Result<model::Relation> {
     let mut relation = model::Relation::new();
     relation.name = field_declaration.identifier.name().to_owned();
     relation.comment = load_comment(field_declaration.comment.as_ref());
@@ -92,11 +94,11 @@ fn load_model_relation(main_namespace: &mut Namespace, field_declaration: &teo_p
             (decorator_implementation.call)(args, &mut relation)?;
         }
     }
-    // relation.finalize
+    relation.finalize(database.unwrap(), fields);
     Ok(relation)
 }
 
-fn load_model_property(main_namespace: &mut Namespace, field_declaration: &teo_parser::ast::field::Field, schema: &Schema, diagnostics: &mut Diagnostics) -> Result<model::Property> {
+fn load_model_property(main_namespace: &mut Namespace, field_declaration: &teo_parser::ast::field::Field, schema: &Schema, database: Option<Database>, diagnostics: &mut Diagnostics) -> Result<model::Property> {
     let mut property = model::Property::new();
     property.name = field_declaration.identifier.name().to_owned();
     property.comment = load_comment(field_declaration.comment.as_ref());

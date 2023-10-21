@@ -1,9 +1,11 @@
 use std::collections::BTreeMap;
 use maplit::btreemap;
 use serde::Serialize;
+use teo_result::Result;
 use teo_parser::r#type::Type;
 pub use super::decorator::Decorator;
 use crate::comment::Comment;
+use crate::database::database::Database;
 use crate::database::mysql::r#type::MySQLType;
 use crate::database::r#type::DatabaseType;
 use crate::model::field::Index;
@@ -48,6 +50,7 @@ pub struct Field {
 }
 
 impl Field {
+
     pub fn new() -> Self {
         Self {
             name: "".to_string(),
@@ -79,5 +82,35 @@ impl Field {
             can_read_pipeline: Pipeline::new(),
             data: btreemap! {},
         }
+    }
+
+    pub(crate) fn set_required(&mut self) {
+        self.optionality = Optionality::Required;
+    }
+
+    pub(crate) fn set_optional(&mut self) {
+        self.optionality = Optionality::Optional;
+        self.input_omissible = true;
+        self.output_omissible = true;
+    }
+
+    pub fn finalize(&mut self, database: Database) -> Result<()> {
+        // set default column name
+        if self.column_name.is_empty() {
+            self.column_name = self.name.clone();
+        }
+        // set default database type
+        if self.database_type.is_undetermined() {
+            self.database_type = database.default_database_type(&self.r#type)?;
+        }
+        Ok(())
+    }
+
+    pub fn name(&self) -> &str {
+        self.name.as_str()
+    }
+
+    pub fn column_name(&self) -> &str {
+        self.column_name.as_str()
     }
 }

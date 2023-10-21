@@ -7,8 +7,11 @@ use crate::namespace::Namespace;
 use teo_result::Result;
 use crate::schema::load::load_client::load_client;
 use crate::schema::load::load_connector::load_connector;
+use crate::schema::load::load_database_information::load_database_information;
 use crate::schema::load::load_debug::load_debug;
 use crate::schema::load::load_entity::load_entity;
+use crate::schema::load::load_enum::load_enum;
+use crate::schema::load::load_model::load_model;
 use crate::schema::load::load_server::load_server;
 use crate::schema::load::load_test::load_test;
 
@@ -18,6 +21,11 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema) -> Result<()
     let mut diagnostics = Diagnostics::new();
 
     // some of these are just load from schema, while some are validate and load
+
+    // setup namespaces, this is used for recursively setting database information
+    for namespace in schema.namespaces() {
+        let _ = main_namespace.namespace_mut_or_create_at_path(&namespace.str_path());
+    }
 
     // load server
     let mut server_loaded = false;
@@ -40,6 +48,9 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema) -> Result<()
             load_connector(dest_namespace, schema, connector, &mut diagnostics)?;
         }
     }
+
+    // setting up database information
+    load_database_information(main_namespace);
 
     // load debug
     if let Some(debug) = schema.debug() {
@@ -144,24 +155,25 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema) -> Result<()
         }
     }
 
+    // load enums
     for enum_declaration in schema.enums() {
         if enum_declaration.is_available() {
+            load_enum(main_namespace, schema, enum_declaration, &mut diagnostics)?;
+        }
+    }
 
+    // load models
+    for model_declaration in schema.models() {
+        if model_declaration.is_available() {
+            load_model(main_namespace, schema, model_declaration, &mut diagnostics)?;
         }
     }
 
     //
-    // pub fn enums(&self) -> Vec<&Enum> {
-    //     self.references.enums.iter().map(|path| self.find_top_by_path(path).unwrap().as_enum().unwrap()).collect()
-    // }
-    //
     // pub fn interfaces(&self) -> Vec<&InterfaceDeclaration> {
     //     self.references.interfaces.iter().map(|path| self.find_top_by_path(path).unwrap().as_interface_declaration().unwrap()).collect()
     // }
-    // pub fn models(&self) -> Vec<&Model> {
-    //     self.references.models.iter().map(|path| self.find_top_by_path(path).unwrap().as_model().unwrap()).collect()
-    // }
-    //
+
     //
     // pub fn handler_group_declarations(&self) -> Vec<&HandlerGroupDeclaration> {
     //     self.references.handler_groups.iter().map(|path| self.find_top_by_path(path).unwrap().as_handler_group_declaration().unwrap()).collect()

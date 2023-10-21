@@ -2,6 +2,7 @@ use std::collections::BTreeMap;
 use maplit::btreemap;
 use serde::Serialize;
 use crate::comment::Comment;
+use crate::database::database::Database;
 use crate::model::Field;
 use crate::model::relation::delete::Delete;
 use crate::model::relation::update::Update;
@@ -47,7 +48,11 @@ impl Relation {
         }
     }
 
-    pub fn finalize(&mut self, fields: Vec<&Field>) {
-
+    pub fn finalize(&mut self, database: Database, fields: Vec<&Field>) {
+        self.has_foreign_key = if self.through.is_some() {
+            false
+        } else {
+            self.fields.iter().find(|name| fields.iter().find(|f| f.name() == name.as_str() && f.foreign_key).is_some()).is_some()
+        }
     }
 }

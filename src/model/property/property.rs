@@ -44,4 +44,14 @@ impl Property {
             data: Default::default(),
         }
     }
+
+    pub(crate) fn set_required(&mut self) {
+        self.optionality = Optionality::Required;
+    }
+
+    pub(crate) fn set_optional(&mut self) {
+        self.optionality = Optionality::Optional;
+        self.input_omissible = true;
+        self.output_omissible = true;
+    }
 }

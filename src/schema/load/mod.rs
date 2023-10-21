@@ -9,3 +9,4 @@ mod load_enum;
 mod load_model;
 mod load_interface;
 mod load_comment;
+mod load_database_information;
