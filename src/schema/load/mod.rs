@@ -1,4 +1,4 @@
-mod load_schema;
+pub mod load_schema;
 mod load_server;
 mod load_connector;
 mod load_debug;

@@ -16,7 +16,7 @@ use crate::schema::load::load_model::load_model;
 use crate::schema::load::load_server::load_server;
 use crate::schema::load::load_test::load_test;
 
-pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_checking: bool) -> Result<()> {
+pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_loading: bool) -> Result<()> {
 
     // diagnostics for schema loading
     let mut diagnostics = Diagnostics::new();
@@ -85,7 +85,7 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_chec
         }
     }
 
-    if !ignores_checking {
+    if !ignores_loading {
 
         // validate decorator declarations
         for decorator_declaration in schema.decorator_declarations() {

@@ -20,7 +20,7 @@ use crate::stdlib::pipeline_items::vector::load_pipeline_vector_items;
 use crate::stdlib::pipeline_items::datetime::load_pipeline_datetime_items;
 use crate::stdlib::structs::load_structs;
 
-pub(crate) fn load(namespace: &mut Namespace) {
+pub fn load(namespace: &mut Namespace) {
     if !namespace.path.is_empty() {
         panic!("Please load standard library in the main namespace.")
     }

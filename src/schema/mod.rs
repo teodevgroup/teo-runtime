@@ -1,2 +1,2 @@
-pub(crate) mod load;
+pub mod load;
 pub(crate) mod fetch;

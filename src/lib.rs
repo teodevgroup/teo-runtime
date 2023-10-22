@@ -1,4 +1,4 @@
-mod stdlib;
+pub mod stdlib;
 pub mod object;
 pub mod namespace;
 pub mod model;
@@ -19,7 +19,7 @@ pub mod middleware;
 pub mod response;
 pub mod database;
 pub mod config;
-mod schema;
+pub mod schema;
 pub mod cell;
 pub mod optionality;
 pub mod previous;
