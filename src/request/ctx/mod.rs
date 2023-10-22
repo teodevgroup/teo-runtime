@@ -2,15 +2,20 @@ use std::cell::{Ref, RefCell, RefMut};
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use teo_teon::Value;
-use crate::connection::transaction::Transaction;
 use crate::request::Request;
+use crate::connection;
 use super::local::Data;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Ctx {
+    inner: Arc<CtxInner>
+}
+
+#[derive(Debug)]
+struct CtxInner {
     request: Request,
     body: Value,
-    transactions: Arc<BTreeMap<Vec<String>, Arc<dyn Transaction>>>,
+    connection_ctx: connection::Ctx,
     // pub(crate) path_components: PathComponents,
     //pub action: Option<Action>,
     data: RefCell<Data>,
@@ -19,15 +24,15 @@ pub struct Ctx {
 impl Ctx {
 
     pub fn request(&self) -> &Request {
-        &self.request
+        &self.inner.request
     }
 
     pub fn data(&self) -> Ref<Data> {
-        self.data.borrow()
+        self.inner.data.borrow()
     }
 
     pub fn data_mut(&self) -> RefMut<Data> {
-        self.data.borrow_mut()
+        self.inner.data.borrow_mut()
     }
 }
 

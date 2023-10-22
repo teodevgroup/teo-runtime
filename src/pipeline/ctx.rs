@@ -6,6 +6,7 @@ use crate::object::Object;
 use crate::request::Request;
 use crate::model;
 use crate::pipeline::pipeline::Pipeline;
+use crate::request;
 use teo_result::{Result, ResultExt};
 
 #[derive(Clone)]
@@ -23,7 +24,7 @@ struct CtxInner {
     path: KeyPath,
     //pub(crate) action: Action,
     //pub(crate) conn: Arc<dyn Connection>,
-    request: Option<Request>,
+    request_ctx: Option<request::Ctx>,
 }
 
 impl Ctx {
@@ -40,8 +41,8 @@ impl Ctx {
         &self.inner.path
     }
 
-    pub fn request(&self) -> Option<&Request> {
-        self.inner.request.as_ref()
+    pub fn request_ctx(&self) -> Option<&request::Ctx> {
+        self.inner.request_ctx.as_ref()
     }
 
     pub async fn resolve_pipeline(&self, object: Object, err_prefix: impl AsRef<str>) -> Result<Object> {
@@ -70,7 +71,7 @@ impl Ctx {
                 value,
                 object: self.inner.object.clone(),
                 path: self.inner.path.clone(),
-                request: self.inner.request.clone(),
+                request_ctx: self.inner.request_ctx.clone(),
             })
         }
     }
