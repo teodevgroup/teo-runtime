@@ -5,6 +5,6 @@ use teo_parser::r#type::Type;
 use teo_result::Result;
 use crate::object::Object;
 
-pub fn fetch_unit<I>(unit: &Unit, schema: &Schema, info_provider: I, _expect: &Type) -> Result<Object> where I: InfoProvider {
+pub fn fetch_unit<I>(unit: &Unit, schema: &Schema, info_provider: &I, _expect: &Type) -> Result<Object> where I: InfoProvider {
     unreachable!()
 }

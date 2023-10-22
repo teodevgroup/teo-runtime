@@ -7,7 +7,7 @@ use teo_result::Result;
 use crate::object::Object;
 use crate::schema::fetch::fetchers::fetch_expression_kind::fetch_expression_kind;
 
-pub fn fetch_expression<I>(expression: &Expression, schema: &Schema, info_provider: I, expect: &Type) -> Result<Object> where I: InfoProvider {
+pub fn fetch_expression<I>(expression: &Expression, schema: &Schema, info_provider: &I, expect: &Type) -> Result<Object> where I: InfoProvider {
     if let Some(value) = expression.resolved().value() {
         Ok(Object::from(value.clone()))
     } else {
@@ -15,7 +15,7 @@ pub fn fetch_expression<I>(expression: &Expression, schema: &Schema, info_provid
     }
 }
 
-pub fn fetch_expression_or_default<I, T>(expression: Option<&Expression>, schema: &Schema, info_provider: I, default: T, expect: &Type) -> Result<Object> where I: InfoProvider, T: Into<Object> {
+pub fn fetch_expression_or_default<I, T>(expression: Option<&Expression>, schema: &Schema, info_provider: &I, default: T, expect: &Type) -> Result<Object> where I: InfoProvider, T: Into<Object> {
     if let Some(expression) = expression {
         fetch_expression(expression, schema, info_provider, expect)
     } else {
@@ -23,7 +23,7 @@ pub fn fetch_expression_or_default<I, T>(expression: Option<&Expression>, schema
     }
 }
 
-pub fn fetch_expression_or_null<I>(expression: Option<&Expression>, schema: &Schema, info_provider: I, expect: &Type) -> Result<Object> where I: InfoProvider {
+pub fn fetch_expression_or_null<I>(expression: Option<&Expression>, schema: &Schema, info_provider: &I, expect: &Type) -> Result<Object> where I: InfoProvider {
     if let Some(expression) = expression {
         fetch_expression(expression, schema, info_provider, expect)
     } else {

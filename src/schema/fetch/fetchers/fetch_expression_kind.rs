@@ -11,7 +11,7 @@ use crate::schema::fetch::fetchers::fetch_literals::{fetch_array_literal, fetch_
 use crate::schema::fetch::fetchers::fetch_pipeline::fetch_pipeline;
 use crate::schema::fetch::fetchers::fetch_unit::fetch_unit;
 
-pub fn fetch_expression_kind<I>(expression: &Expression, schema: &Schema, info_provider: I, expect: &Type) -> Result<Object> where I: InfoProvider {
+pub fn fetch_expression_kind<I>(expression: &Expression, schema: &Schema, info_provider: &I, expect: &Type) -> Result<Object> where I: InfoProvider {
     match &expression.kind {
         ExpressionKind::Group(g) => fetch_expression(&g.expression.as_ref(), schema, info_provider, expect),
         ExpressionKind::ArithExpr(a) => fetch_arith_expr(a, schema, info_provider),
@@ -20,15 +20,15 @@ pub fn fetch_expression_kind<I>(expression: &Expression, schema: &Schema, info_p
         ExpressionKind::RegexLiteral(r) => unreachable!(),
         ExpressionKind::BoolLiteral(b) => unreachable!(),
         ExpressionKind::NullLiteral(n) => unreachable!(),
-        ExpressionKind::EnumVariantLiteral(e) => fetch_enum_variant_literal(e, schema, info_provider),
-        ExpressionKind::TupleLiteral(t) => fetch_tuple_literal(t, schema, info_provider),
-        ExpressionKind::ArrayLiteral(a) => fetch_array_literal(a, schema, info_provider),
-        ExpressionKind::DictionaryLiteral(d) => fetch_dictionary_literal(d, schema, info_provider),
-        ExpressionKind::Identifier(i) => fetch_identifier(i, schema, info_provider),
+        ExpressionKind::EnumVariantLiteral(e) => fetch_enum_variant_literal(e, schema, info_provider, expect),
+        ExpressionKind::TupleLiteral(t) => fetch_tuple_literal(t, schema, info_provider, expect),
+        ExpressionKind::ArrayLiteral(a) => fetch_array_literal(a, schema, info_provider, expect),
+        ExpressionKind::DictionaryLiteral(d) => fetch_dictionary_literal(d, schema, info_provider, expect),
+        ExpressionKind::Identifier(i) => fetch_identifier(i, schema, info_provider, expect),
         ExpressionKind::ArgumentList(_) => unreachable!(),
         ExpressionKind::Subscript(_) => unreachable!(),
         ExpressionKind::Call(_) => unreachable!(),
-        ExpressionKind::Unit(u) => fetch_unit(u, schema, info_provider),
-        ExpressionKind::Pipeline(p) => fetch_pipeline(p, schema, info_provider),
+        ExpressionKind::Unit(u) => fetch_unit(u, schema, info_provider, expect),
+        ExpressionKind::Pipeline(p) => fetch_pipeline(p, schema, info_provider, expect),
     }
 }
