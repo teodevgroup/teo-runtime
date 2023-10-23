@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
+use maplit::btreemap;
 use serde::{Serialize, Serializer};
 use teo_result::Error;
 use crate::object::Object;
@@ -63,6 +64,17 @@ impl Arguments {
 
     pub fn get_object(&self, key: impl AsRef<str>) -> Result<Object> {
         self.get_object_ref(key).map(|o| o.clone())
+    }
+}
+
+impl Default for Arguments {
+
+    fn default() -> Self {
+        Arguments {
+            inner: Arc::new(ArgumentsInner {
+                map: btreemap!{}
+            })
+        }
     }
 }
 

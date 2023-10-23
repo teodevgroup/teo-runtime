@@ -290,6 +290,16 @@ impl Namespace {
         }
     }
 
+    pub fn pipeline_item_at_path(&self, path: &Vec<&str>) -> Option<&pipeline::Item> {
+        let pipeline_item_name = path.last().unwrap().deref();
+        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+            ns.pipeline_items.get(pipeline_item_name)
+        } else {
+            None
+        }
+    }
+
     pub fn struct_at_path(&self, path: &Vec<&str>) -> Option<&Struct> {
         let struct_name = path.last().unwrap().deref();
         let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
