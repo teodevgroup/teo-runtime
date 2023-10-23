@@ -1,12 +1,21 @@
+use maplit::btreemap;
 use teo_parser::ast::argument_list::ArgumentList;
 use teo_parser::ast::info_provider::InfoProvider;
 use teo_parser::ast::schema::Schema;
 use teo_result::Result;
 use crate::arguments::Arguments;
 use crate::namespace::Namespace;
+use crate::schema::fetch::fetch_expression::fetch_expression;
 
 pub fn fetch_argument_list<I>(argument_list: &ArgumentList, schema: &Schema, info_provider: &I, namespace: &Namespace) -> Result<Arguments> where I: InfoProvider {
-    unreachable!()
+    let mut map = btreemap! {};
+    for argument in argument_list.arguments() {
+        map.insert(
+            argument.resolved_name().unwrap().to_owned(),
+            fetch_expression(&argument.value, schema, info_provider, &argument.resolved().expect, namespace)?,
+        );
+    }
+    Ok(Arguments::new(map))
 }
 
 pub fn fetch_argument_list_or_empty<I>(argument_list: Option<&ArgumentList>, schema: &Schema, info_provider: &I, namespace: &Namespace) -> Result<Arguments> where I: InfoProvider {

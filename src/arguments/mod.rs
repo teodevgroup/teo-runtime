@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 use std::fmt::{Debug, Formatter};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use maplit::btreemap;
 use serde::{Serialize, Serializer};
 use teo_result::Error;
@@ -32,7 +32,7 @@ impl Debug for Arguments {
 
 impl Arguments {
 
-    fn new(map: BTreeMap<String, Object>) -> Self {
+    pub(crate) fn new(map: BTreeMap<String, Object>) -> Self {
         Self {
             inner: Arc::new(ArgumentsInner { map })
         }
