@@ -15,7 +15,7 @@ use crate::schema::fetch::fetchers::fetch_unit::fetch_unit;
 pub fn fetch_expression_kind<I>(expression: &Expression, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
     match &expression.kind {
         ExpressionKind::Group(g) => fetch_expression(&g.expression.as_ref(), schema, info_provider, expect, namespace),
-        ExpressionKind::ArithExpr(a) => fetch_arith_expr(a, schema, info_provider, namespace),
+        ExpressionKind::ArithExpr(a) => fetch_arith_expr(a, schema, info_provider, expect, namespace),
         ExpressionKind::NumericLiteral(n) => unreachable!(),
         ExpressionKind::StringLiteral(s) => unreachable!(),
         ExpressionKind::RegexLiteral(r) => unreachable!(),
