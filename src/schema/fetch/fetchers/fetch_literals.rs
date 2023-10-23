@@ -58,12 +58,12 @@ pub fn fetch_enum_variant_literal<I>(e: &EnumVariantLiteral, schema: &Schema, in
             if let Some((model_object, model_name)) = t.as_model_object() {
                 let model = schema.find_top_by_path(model_object).unwrap().as_model().unwrap();
                 if model.resolved().scalar_fields.contains(&e.identifier.name) {
-                    Ok(Object::from(Some(Value::EnumVariant(EnumVariant {
+                    Ok(Object::from(Value::EnumVariant(EnumVariant {
                         value: Box::new(Value::String(e.identifier.name().to_owned())),
                         display: format!(".{}", e.identifier.name()),
                         path: model_name.clone(),
                         args: None,
-                    }))))
+                    })))
                 } else {
                     panic!()
                 }
@@ -75,12 +75,12 @@ pub fn fetch_enum_variant_literal<I>(e: &EnumVariantLiteral, schema: &Schema, in
             if let Some((model_object, model_name)) = t.as_model_object() {
                 let model = schema.find_top_by_path(model_object).unwrap().as_model().unwrap();
                 if model.resolved().scalar_fields_without_virtuals.contains(&e.identifier.name) {
-                    Ok(Object::from(Some(Value::EnumVariant(EnumVariant {
+                    Ok(Object::from(Value::EnumVariant(EnumVariant {
                         value: Box::new(Value::String(e.identifier.name().to_owned())),
                         display: format!(".{}", e.identifier.name()),
                         path: model_name.clone(),
                         args: None,
-                    }))))
+                    })))
                 } else {
                     panic!()
                 }
@@ -92,12 +92,12 @@ pub fn fetch_enum_variant_literal<I>(e: &EnumVariantLiteral, schema: &Schema, in
             if let Some((model_object, model_name)) = t.as_model_object() {
                 let model = schema.find_top_by_path(model_object).unwrap().as_model().unwrap();
                 if model.resolved().scalar_fields_and_cached_properties_without_virtuals.contains(&e.identifier.name) {
-                    Ok(Object::from(Some(Value::EnumVariant(EnumVariant {
+                    Ok(Object::from(Value::EnumVariant(EnumVariant {
                         value: Box::new(Value::String(e.identifier.name().to_owned())),
                         display: format!(".{}", e.identifier.name()),
                         path: model_name.clone(),
                         args: None,
-                    }))))
+                    })))
                 } else {
                     panic!()
                 }
@@ -109,12 +109,12 @@ pub fn fetch_enum_variant_literal<I>(e: &EnumVariantLiteral, schema: &Schema, in
             if let Some((model_object, model_name)) = t.as_model_object() {
                 let model = schema.find_top_by_path(model_object).unwrap().as_model().unwrap();
                 if model.resolved().relations.contains(&e.identifier.name) {
-                    Ok(Object::from(Some(Value::EnumVariant(EnumVariant {
+                    Ok(Object::from(Value::EnumVariant(EnumVariant {
                         value: Box::new(Value::String(e.identifier.name().to_owned())),
                         display: format!(".{}", e.identifier.name()),
                         path: model_name.clone(),
                         args: None,
-                    }))))
+                    })))
                 } else {
                     panic!()
                 }
@@ -126,12 +126,12 @@ pub fn fetch_enum_variant_literal<I>(e: &EnumVariantLiteral, schema: &Schema, in
             if let Some((model_object, model_name)) = t.as_model_object() {
                 let model = schema.find_top_by_path(model_object).unwrap().as_model().unwrap();
                 if model.resolved().direct_relations.contains(&e.identifier.name) {
-                    Ok(Object::from(Some(Value::EnumVariant(EnumVariant {
+                    Ok(Object::from(Value::EnumVariant(EnumVariant {
                         value: Box::new(Value::String(e.identifier.name().to_owned())),
                         display: format!(".{}", e.identifier.name()),
                         path: model_name.clone(),
                         args: None,
-                    }))))
+                    })))
                 } else {
                     panic!()
                 }

@@ -22,11 +22,11 @@ impl PrimitiveStruct for Value {
             Value::DateTime(_) => vec!["std", "DateTime"],
             Value::Array(_) => vec!["std", "Array"],
             Value::Dictionary(_) => vec!["std", "Dictionary"],
-            Value::Range(_) => Err(Error::new("range struct is not supported")),
-            Value::Tuple(_) => Err(Error::new("tuple struct is not supported")),
-            Value::EnumVariant(_) => Err(Error::new("enum variant struct is not supported")),
-            Value::Regex(_) => Err(Error::new("regex struct is not supported")),
-            Value::File(_) => Err(Error::new("file struct is not supported")),
+            Value::Range(_) => Err(Error::new("range struct is not supported"))?,
+            Value::Tuple(_) => Err(Error::new("tuple struct is not supported"))?,
+            Value::EnumVariant(_) => Err(Error::new("enum variant struct is not supported"))?,
+            Value::Regex(_) => Err(Error::new("regex struct is not supported"))?,
+            Value::File(_) => Err(Error::new("file struct is not supported"))?,
         })
     }
 }
