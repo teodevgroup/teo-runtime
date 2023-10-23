@@ -15,14 +15,14 @@ pub struct Definition {
 }
 
 pub trait StaticFunction: Send + Sync {
-    fn call(&self, arguments: Arguments) -> BoxFuture<'static, Result<Object>>;
+    fn call(&self, arguments: Arguments) -> Result<Object>;
 }
 
 impl<F, Fut> StaticFunction for F where
     F: Fn(Arguments) -> Fut + Sync + Send,
     Fut: Future<Output = Result<Object>> + Send + 'static {
-    fn call(&self, arguments: Arguments) -> BoxFuture<'static, Result<Object>> {
-        Box::pin(self(arguments))
+    fn call(&self, arguments: Arguments) -> Result<Object> {
+        self(arguments)
     }
 }
 

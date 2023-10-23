@@ -1,5 +1,6 @@
 pub mod serde;
 pub mod convert;
+pub mod traits;
 
 use std::fmt::Display;
 use std::sync::Arc;

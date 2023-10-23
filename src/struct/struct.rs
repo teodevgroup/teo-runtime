@@ -29,4 +29,12 @@ impl Struct {
             body: Arc::new(f),
         });
     }
+
+    pub fn static_function(&self, name: &str) -> Option<&static_function::Definition> {
+        self.static_functions.get(name)
+    }
+
+    pub fn function(&self, name: &str) -> Option<&instance_function::Definition> {
+        self.functions.get(name)
+    }
 }

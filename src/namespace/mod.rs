@@ -289,4 +289,44 @@ impl Namespace {
             None
         }
     }
+
+    pub fn struct_at_path(&self, path: &Vec<&str>) -> Option<&Struct> {
+        let struct_name = path.last().unwrap().deref();
+        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+            ns.structs.get(struct_name)
+        } else {
+            None
+        }
+    }
+
+    pub fn enum_at_path(&self, path: &Vec<&str>) -> Option<&Enum> {
+        let enum_name = path.last().unwrap().deref();
+        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+            ns.enums.get(enum_name)
+        } else {
+            None
+        }
+    }
+
+    pub fn model_at_path(&self, path: &Vec<&str>) -> Option<&Model> {
+        let model_name = path.last().unwrap().deref();
+        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+            ns.models.get(model_name)
+        } else {
+            None
+        }
+    }
+
+    pub fn interface_at_path(&self, path: &Vec<&str>) -> Option<&Interface> {
+        let interface_name = path.last().unwrap().deref();
+        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+            ns.interfaces.get(interface_name)
+        } else {
+            None
+        }
+    }
 }

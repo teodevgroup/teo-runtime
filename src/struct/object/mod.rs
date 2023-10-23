@@ -17,6 +17,10 @@ impl Object {
             })
         }
     }
+
+    pub fn struct_path(&self) -> Vec<&str> {
+        self.inner.as_ref().struct_path.iter().map(AsRef::as_ref).collect()
+    }
 }
 
 impl Serialize for Object {
