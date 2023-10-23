@@ -32,8 +32,7 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_load
     let mut server_loaded = false;
     if let Some(server) = schema.server() {
         if server.is_available() {
-            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&server.namespace_str_path());
-            load_server(dest_namespace, schema, server, &mut diagnostics)?;
+            load_server(main_namespace, schema, server, &mut diagnostics)?;
             server_loaded = true;
         }
     }
@@ -45,8 +44,7 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_load
     // load connectors
     for connector in schema.connectors() {
         if connector.is_available() {
-            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&connector.namespace_str_path());
-            load_connector(dest_namespace, schema, connector, &mut diagnostics)?;
+            load_connector(main_namespace, schema, connector, &mut diagnostics)?;
         }
     }
 
@@ -56,32 +54,28 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_load
     // load debug
     if let Some(debug) = schema.debug() {
         if debug.is_available() {
-            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&debug.namespace_str_path());
-            load_debug(dest_namespace, schema, debug, &mut diagnostics)?;
+            load_debug(main_namespace, schema, debug, &mut diagnostics)?;
         }
     }
 
     // load test
     if let Some(test) = schema.debug() {
         if test.is_available() {
-            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&test.namespace_str_path());
-            load_test(dest_namespace, schema, test, &mut diagnostics)?;
+            load_test(main_namespace, schema, test, &mut diagnostics)?;
         }
     }
 
     // load entities
     for entity in schema.entities() {
         if entity.is_available() {
-            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&entity.namespace_str_path());
-            load_entity(dest_namespace, schema, entity, &mut diagnostics)?;
+            load_entity(main_namespace, schema, entity, &mut diagnostics)?;
         }
     }
 
     // load clients
     for debug in schema.clients() {
         if debug.is_available() {
-            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&debug.namespace_str_path());
-            load_client(dest_namespace, schema, debug, &mut diagnostics)?;
+            load_client(main_namespace, schema, debug, &mut diagnostics)?;
         }
     }
 

@@ -8,16 +8,17 @@ use crate::namespace::Namespace;
 use teo_result::Result;
 use crate::schema::fetch::fetch_expression::fetch_expression_or_null;
 
-pub fn load_entity(dest_namespace: &mut Namespace, schema: &Schema, entity: &Config, diagnostics: &mut Diagnostics) -> Result<()> {
+pub fn load_entity(main_namespace: &mut Namespace, schema: &Schema, entity: &Config, diagnostics: &mut Diagnostics) -> Result<()> {
     let config_decl = schema.find_config_declaration_by_name("entity", entity.availability()).unwrap();
     let provider_expect = config_decl.get_field("provider").unwrap().type_expr.resolved();
     let dest_expect = config_decl.get_field("dest").unwrap().type_expr.resolved();
-    let provider: Runtime = fetch_expression_or_null(entity.get_item("provider"), schema, entity, provider_expect)?.try_into()?;
-    let dest: String = fetch_expression_or_null(entity.get_item("dest"), schema, entity, dest_expect)?.try_into()?;
+    let provider: Runtime = fetch_expression_or_null(entity.get_item("provider"), schema, entity, provider_expect, main_namespace)?.try_into()?;
+    let dest: String = fetch_expression_or_null(entity.get_item("dest"), schema, entity, dest_expect, main_namespace)?.try_into()?;
     let entity_config = Entity {
         provider,
         dest,
     };
+    let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&entity.namespace_str_path());
     dest_namespace.entities.insert(entity.name().to_owned(), entity_config);
     Ok(())
 }
