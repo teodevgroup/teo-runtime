@@ -6,7 +6,7 @@ use teo_parser::ast::reference::ReferenceType;
 use teo_parser::ast::schema::Schema;
 use teo_parser::ast::top::Top;
 use teo_parser::r#type::Type;
-use teo_parser::utils::top_filter::top_filter_for_reference_type;
+use teo_parser::utils::top_filter::{top_filter_for_pipeline, top_filter_for_reference_type};
 use teo_result::{Error, Result};
 use teo_teon::types::enum_variant::EnumVariant;
 use teo_teon::Value;
@@ -50,7 +50,7 @@ pub fn fetch_unit<I>(unit: &Unit, schema: &Schema, info_provider: &I, expect: &T
         let first_expression = unit.expressions.get(0).unwrap();
         let expected = Type::Undetermined;
         let mut current = if let Some(identifier) = first_expression.kind.as_identifier() {
-            let reference = fetch_identifier_path(identifier, schema, info_provider, &expected, namespace)?;
+            let reference = fetch_identifier_path(identifier, schema, info_provider, &expected, namespace, &top_filter_for_pipeline())?;
             let top = schema.find_top_by_path(&reference).unwrap();
             if let Some(constant) = top.as_constant() {
                 UnitFetchResult::Object(fetch_expression(&constant.expression, schema, info_provider, &expected, namespace)?)

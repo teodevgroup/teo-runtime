@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use teo_parser::ast::identifier::Identifier;
 use teo_parser::ast::info_provider::InfoProvider;
 use teo_parser::ast::reference::ReferenceType;
@@ -13,7 +14,7 @@ use crate::object::Object;
 use crate::schema::fetch::fetch_expression::fetch_expression;
 
 pub fn fetch_identifier<I>(identifier: &Identifier, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
-    let path = fetch_identifier_path(identifier, schema, info_provider, expect, namespace)?;
+    let path = fetch_identifier_path(identifier, schema, info_provider, expect, namespace, &top_filter_for_reference_type(ReferenceType::Default))?;
     let top = schema.find_top_by_path(&path).unwrap();
     match top {
         Top::Config(c) => Err(Error::new("cannot resolve")),
@@ -27,13 +28,13 @@ pub fn fetch_identifier<I>(identifier: &Identifier, schema: &Schema, info_provid
     }
 }
 
-pub fn fetch_identifier_path<I>(identifier: &Identifier, schema: &Schema, info_provider: &I, _expect: &Type, namespace: &Namespace) -> Result<Vec<usize>> where I: InfoProvider {
+pub fn fetch_identifier_path<I>(identifier: &Identifier, schema: &Schema, info_provider: &I, _expect: &Type, namespace: &Namespace, filter: &Arc<dyn Fn(&Top) -> bool>) -> Result<Vec<usize>> where I: InfoProvider {
     Ok(search_identifier_path_in_source(
         schema,
         schema.source(info_provider.source_id()).unwrap(),
         &info_provider.namespace_str_path(),
         &vec![identifier.name()],
-        &top_filter_for_reference_type(ReferenceType::Default),
+        filter,
         info_provider.availability()
     ).unwrap())
 }

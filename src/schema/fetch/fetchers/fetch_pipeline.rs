@@ -13,7 +13,7 @@ use crate::schema::fetch::fetch_argument_list::fetch_argument_list_or_empty;
 use crate::schema::fetch::fetchers::fetch_identifier::fetch_identifier_path;
 
 pub fn fetch_pipeline<I>(pipeline: &teo_parser::ast::pipeline::Pipeline, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
-    unreachable!()
+    fetch_pipeline_unit(pipeline.unit.as_ref(), schema, info_provider, expect, namespace)
 }
 
 fn fetch_pipeline_unit<I>(unit: &Unit, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
@@ -24,7 +24,7 @@ fn fetch_pipeline_unit<I>(unit: &Unit, schema: &Schema, info_provider: &I, expec
             if let Some(this_top) = if current_space.is_some() {
                 current_space.unwrap().find_top_by_name(identifier.name(), &top_filter_for_pipeline(), info_provider.availability())
             } else {
-                let path = fetch_identifier_path(identifier, schema, info_provider, expect, namespace).unwrap();
+                let path = fetch_identifier_path(identifier, schema, info_provider, expect, namespace, &top_filter_for_pipeline()).unwrap();
                 schema.find_top_by_path(&path)
             } {
                 match this_top {
