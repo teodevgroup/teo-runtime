@@ -14,12 +14,12 @@ pub struct Definition {
     pub body: Arc<dyn StaticFunction>,
 }
 
-pub trait StaticFunction {
+pub trait StaticFunction: Send + Sync {
     fn call(&self, arguments: Arguments) -> Result<Object>;
 }
 
 impl<F> StaticFunction for F where
-    F: Fn(Arguments) -> Result<Object> {
+    F: Fn(Arguments) -> Result<Object> + Send + Sync {
     fn call(&self, arguments: Arguments) -> Result<Object> {
         self(arguments)
     }

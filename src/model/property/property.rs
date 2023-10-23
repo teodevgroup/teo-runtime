@@ -8,7 +8,7 @@ use crate::database::r#type::DatabaseType;
 use crate::model::field::column_named::ColumnNamed;
 use crate::model::field::Index;
 use crate::model::field::indexable::{Indexable, IndexableMut};
-use crate::model::field::is_optional::IsOptionalMut;
+use crate::model::field::is_optional::IsOptional;
 use crate::model::field::named::Named;
 use crate::object::Object;
 use crate::optionality::Optionality;
@@ -94,7 +94,15 @@ impl Indexable for &Property {
     }
 }
 
-impl IsOptionalMut for &mut Property {
+impl IsOptional for Property {
+
+    fn is_optional(&self) -> bool {
+        self.optionality.is_any_optional()
+    }
+
+    fn is_required(&self) -> bool {
+        self.optionality.is_required()
+    }
 
     fn set_optional(&mut self) {
         self.optionality = Optionality::Optional;

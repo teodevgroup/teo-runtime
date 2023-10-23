@@ -13,12 +13,12 @@ pub struct Definition {
     pub body: Arc<dyn Function>,
 }
 
-pub trait Function {
+pub trait Function: Send + Sync {
     fn call(&self, this: Object, arguments: Arguments) -> Result<Object>;
 }
 
 impl<F> Function for F where
-    F: Fn(Object, Arguments) -> Result<Object> {
+    F: Fn(Object, Arguments) -> Result<Object> + Send + Sync {
     fn call(&self, this: Object, arguments: Arguments) -> Result<Object> {
         self(this, arguments)
     }

@@ -10,7 +10,7 @@ use crate::database::mysql::r#type::MySQLType;
 use crate::database::r#type::DatabaseType;
 use crate::model::field::Index;
 use crate::model::field::indexable::{Indexable, IndexableMut};
-use crate::model::field::is_optional::IsOptionalMut;
+use crate::model::field::is_optional::IsOptional;
 use crate::model::field::Migration;
 use crate::model::field::named::Named;
 use crate::object::Object;
@@ -125,7 +125,15 @@ impl Indexable for &Field {
     }
 }
 
-impl IsOptionalMut for &mut Field {
+impl IsOptional for Field {
+
+    fn is_optional(&self) -> bool {
+        self.optionality.is_any_optional()
+    }
+
+    fn is_required(&self) -> bool {
+        self.optionality.is_required()
+    }
 
     fn set_optional(&mut self) {
         self.optionality = Optionality::Optional;
@@ -135,16 +143,5 @@ impl IsOptionalMut for &mut Field {
 
     fn set_required(&mut self) {
         self.optionality = Optionality::Required;
-    }
-}
-
-impl IsOptionalMut for Field {
-
-    fn set_optional(&mut self) {
-        self.set_optional()
-    }
-
-    fn set_required(&mut self) {
-        self.set_required()
     }
 }

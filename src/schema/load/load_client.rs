@@ -8,7 +8,7 @@ use teo_result::Result;
 use crate::schema::fetch::fetch_expression::{fetch_expression_or_default, fetch_expression_or_null};
 
 pub fn load_client(main_namespace: &mut Namespace, schema: &Schema, client: &Config, diagnostics: &mut Diagnostics) -> Result<()> {
-    let config_decl = schema.find_config_declaration_by_name("entity", client.availability()).unwrap();
+    let config_decl = schema.find_config_declaration_by_name("client", client.availability()).unwrap();
     let provider_expect = config_decl.get_field("provider").unwrap().type_expr.resolved();
     let dest_expect = config_decl.get_field("dest").unwrap().type_expr.resolved();
     let package_expect = config_decl.get_field("package").unwrap().type_expr.resolved();

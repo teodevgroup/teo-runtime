@@ -1,7 +1,7 @@
 use serde::Serialize;
 use teo_parser::r#type::Type;
 use crate::comment::Comment;
-use crate::model::field::is_optional::IsOptionalMut;
+use crate::model::field::is_optional::{IsOptional};
 use crate::optionality::Optionality;
 
 #[derive(Debug, Serialize)]
@@ -24,7 +24,15 @@ impl Field {
     }
 }
 
-impl IsOptionalMut for &mut Field {
+impl IsOptional for Field {
+
+    fn is_optional(&self) -> bool {
+        self.optionality.is_any_optional()
+    }
+
+    fn is_required(&self) -> bool {
+        self.optionality.is_required()
+    }
 
     fn set_optional(&mut self) {
         self.optionality = Optionality::Optional;
@@ -32,16 +40,5 @@ impl IsOptionalMut for &mut Field {
 
     fn set_required(&mut self) {
         self.optionality = Optionality::Required;
-    }
-}
-
-impl IsOptionalMut for Field {
-
-    fn set_optional(&mut self) {
-        self.set_optional()
-    }
-
-    fn set_required(&mut self) {
-        self.set_required()
     }
 }

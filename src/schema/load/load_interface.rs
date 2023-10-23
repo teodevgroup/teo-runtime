@@ -1,11 +1,10 @@
-use teo_parser::ast::info_provider::InfoProvider;
 use teo_parser::ast::schema::Schema;
 use teo_parser::diagnostics::diagnostics::Diagnostics;
 use crate::namespace::Namespace;
 use teo_result::Result;
 use crate::interface;
 use crate::interface::Interface;
-use crate::model::field::is_optional::IsOptionalMut;
+use crate::model::field::is_optional::{IsOptional};
 use crate::schema::load::load_comment::load_comment;
 
 pub fn load_interface(main_namespace: &mut Namespace, schema: &Schema, interface_declaration: &teo_parser::ast::interface::InterfaceDeclaration, diagnostics: &mut Diagnostics) -> Result<()> {
