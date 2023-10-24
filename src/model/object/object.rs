@@ -642,7 +642,7 @@ impl Object {
             if let Some(opposite_relation) = opposite_relation {
                 if opposite_relation.delete == Delete::Deny {
                     let finder = self.intrinsic_where_unique_for_relation(relation);
-                    let count = self.transaction_ctx().count(opposite_model, &finder, self.connection()).await.unwrap();
+                    let count = self.transaction_ctx().count(opposite_model, &finder).await.unwrap();
                     if count > 0 {
                         return Err(Error::deletion_denied(relation.name()));
                     }
@@ -656,30 +656,30 @@ impl Object {
             if relation.through().is_some() {
                 continue
             }
-            let (opposite_model, opposite_relation) = graph.opposite_relation(relation);
+            let (opposite_model, opposite_relation) = namespace.opposite_relation(relation);
             if let Some(opposite_relation) = opposite_relation {
                 match opposite_relation.delete_rule() {
-                    DeleteRule::Default => {}, // do nothing
-                    DeleteRule::Deny => {}, // done before
-                    DeleteRule::Nullify => {
+                    Delete::Default => {}, // do nothing
+                    Delete::Deny => {}, // done before
+                    Delete::Nullify => {
                         if !opposite_relation.has_foreign_key() {
                             continue
                         }
                         let finder = self.intrinsic_where_unique_for_relation(relation);
-                        graph.batch(opposite_model, &finder, Action::from_u32(PROGRAM_CODE | DISCONNECT | (if relation.is_vec { MANY } else { SINGLE })), Initiator::ProgramCode(self.initiator().as_req()), |object| async move {
+                        self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | (if relation.is_vec { MANY } else { SINGLE }), self.request_ctx(), |object| async move {
                             for key in opposite_relation.fields() {
                                 object.set_value(key, Value::Null)?;
                             }
                             object.save_with_session_and_path( &path![]).await?;
                             Ok(())
-                        }, self.connection()).await?;
+                        }).await?;
                     },
-                    DeleteRule::Cascade => {
+                    Delete::Cascade => {
                         let finder = self.intrinsic_where_unique_for_relation(relation);
-                        graph.batch(opposite_model, &finder, Action::from_u32(PROGRAM_CODE | DELETE | (if relation.is_vec { MANY } else { SINGLE })), Initiator::ProgramCode(self.initiator().as_req()), |object| async move {
+                        self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DELETE | if relation.is_vec { MANY } else { SINGLE }, self.request_ctx(), |object| async move {
                             object.delete_from_database().await?;
                             Ok(())
-                        }, self.connection()).await?;
+                        }).await?;
                     }
                 }
             }
@@ -745,24 +745,18 @@ impl Object {
     }
 
     async fn trigger_before_delete_callbacks<'a>(&self, path: impl AsRef<KeyPath>) -> Result<()> {
-        let model = self.model();
-        let pipeline = model.before_delete_pipeline();
-        let ctx = PipelineCtx::initial_state_with_object_as_value(self.clone(), self.connection(), self.initiator().as_req()).with_path(path.as_ref());
-        pipeline.process_into_permission_result(ctx).await
+        let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
+        ctx.run_pipeline_into_path_unauthorized_error(&self.model().before_delete)
     }
 
     async fn trigger_after_delete_callbacks<'a>(&self, path: impl AsRef<KeyPath>) -> Result<()> {
-        let model = self.model();
-        let pipeline = model.after_delete_pipeline();
-        let ctx = PipelineCtx::initial_state_with_object_as_value(self.clone(), self.connection(), self.initiator().as_req()).with_path(path.as_ref());
-        pipeline.process_into_permission_result(ctx).await
+        let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
+        ctx.run_pipeline_into_path_unauthorized_error(&self.model().after_delete)
     }
 
     async fn trigger_before_save_callbacks<'a>(&self, path: impl AsRef<KeyPath>) -> Result<()> {
-        let model = self.model();
-        let pipeline = model.before_save_pipeline();
-        let ctx = PipelineCtx::initial_state_with_object_as_value(self.clone(), self.connection(), self.initiator().as_req()).with_path(path.as_ref());
-        pipeline.process_into_permission_result(ctx).await
+        let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
+        ctx.run_pipeline_into_path_unauthorized_error(&self.model().before_save)
     }
 
     async fn trigger_after_save_callbacks<'a>(&self, path: impl AsRef<KeyPath>) -> Result<()> {
@@ -771,10 +765,8 @@ impl Object {
             return Ok(());
         }
         self.inner.inside_after_save_callback.store(true, Ordering::SeqCst);
-        let model = self.model();
-        let pipeline = model.after_save_pipeline();
-        let ctx = PipelineCtx::initial_state_with_object_as_value(self.clone(), self.connection(), self.initiator().as_req()).with_path(path.as_ref());
-        pipeline.process_into_permission_result(ctx).await?;
+        let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
+        ctx.run_pipeline_into_path_unauthorized_error(&self.model().after_save)?;
         self.inner.inside_after_save_callback.store(false, Ordering::SeqCst);
         Ok(())
     }
@@ -851,7 +843,7 @@ impl Object {
                 }
             }
         }
-        return Ok(Value::IndexMap(map))
+        return Ok(Value::Dictionary(map))
     }
 
     pub fn is_new(&self) -> bool {
