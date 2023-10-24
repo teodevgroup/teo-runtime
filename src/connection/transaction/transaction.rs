@@ -4,11 +4,16 @@ use async_trait::async_trait;
 use teo_teon::Value;
 use crate::action::Action;
 use teo_result::Result;
+use crate::connection::connection::Connection;
 use crate::model;
 use crate::model::Model;
 
 #[async_trait]
 pub trait Transaction: Send + Sync + Debug {
+
+    // Connection
+
+    async fn connection(&self) -> Arc<dyn Connection>;
 
     // Migration (Setup database)
 

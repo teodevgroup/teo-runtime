@@ -8,4 +8,6 @@ use teo_result::Result;
 pub trait Connection: Send + Sync + Debug {
 
     async fn transaction(&self) -> Result<Arc<dyn Transaction>>;
+
+    async fn no_transaction(&self) -> Result<Arc<dyn Transaction>>;
 }

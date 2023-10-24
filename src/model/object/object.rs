@@ -6,14 +6,18 @@ pub struct Object {
     inner: Arc<ObjectInner>
 }
 
-impl Serialize for Object {
+impl Object {
 
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
-        serializer.serialize_none()
-    }
 }
 
 #[derive(Debug)]
 struct ObjectInner {
 
+}
+
+impl Serialize for Object {
+
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+        serializer.serialize_none()
+    }
 }
