@@ -5,7 +5,7 @@ use key_path::KeyPath;
 #[derive(Debug)]
 pub struct Error {
     pub title: &'static str,
-    pub message: &'static str,
+    pub message: String,
     pub fields: Option<IndexMap<String, String>>,
     pub code: i32,
 }
@@ -15,7 +15,7 @@ impl Error {
     pub fn value_error(path: KeyPath, message: impl Into<String>) -> Self {
         Self {
             title: "ValueError",
-            message: "value is invalid",
+            message: "value is invalid".to_owned(),
             fields: Some(indexmap!{
                 path.to_string() => message.into()
             }),
@@ -23,12 +23,12 @@ impl Error {
         }
     }
 
-    pub fn unique_error(path: KeyPath, constrait: String) -> Self {
+    pub fn unique_error(path: KeyPath, constraint: String) -> Self {
         Self {
             title: "UniqueError",
-            message: "value is not unique",
+            message: "value is not unique".to_owned(),
             fields: Some(indexmap! {
-                path.to_string() => format!("value violates '{}' constraint", constrait)
+                path.to_string() => format!("value violates '{}' constraint", constraint)
             }),
             code: 400
         }
@@ -37,7 +37,7 @@ impl Error {
     pub fn internal_server_error(path: KeyPath, message: String) -> Self {
         Self {
             title: "InternalServerError",
-            message: "internal server error",
+            message: "internal server error".to_owned(),
             fields: Some(indexmap! {
                 path.to_string() => message
             }),
@@ -45,10 +45,19 @@ impl Error {
         }
     }
 
+    pub fn internal_server_error_message_only(message: String) -> Self {
+        Self {
+            title: "InternalServerError",
+            message,
+            fields: None,
+            code: 500,
+        }
+    }
+
     pub fn unauthorized_error(path: KeyPath, message: String) -> Self {
         Self {
             title: "Unauthorized",
-            message: "unauthorized",
+            message: "unauthorized".to_owned(),
             fields: Some(indexmap! {
                 path.to_string() => message
             }),
@@ -72,7 +81,7 @@ impl Display for Error {
                 f.write_str(k)?;
                 f.write_str(": ")?;
                 f.write_str(v)?;
-            });
+            })?;
             f.write_str("]")?;
         }
         Ok(())
@@ -80,3 +89,17 @@ impl Display for Error {
 }
 
 impl std::error::Error for Error { }
+
+impl From<teo_result::Error> for Error {
+
+    fn from(value: teo_result::Error) -> Self {
+        Self::internal_server_error_message_only(value.message)
+    }
+}
+
+impl From<Error> for teo_result::Error {
+
+    fn from(value: Error) -> Self {
+        teo_result::Error::new(value.message)
+    }
+}

@@ -358,7 +358,7 @@ impl Namespace {
         let opposite_model = self.model_at_path(&relation.model_path()).unwrap();
         let opposite_relation = opposite_model.relations().iter().find(|r| &r.fields == &relation.references && &r.references == &relation.fields);
         match opposite_relation {
-            Some(relation) => (opposite_model, Some(relation.as_ref())),
+            Some(relation) => (opposite_model, Some(relation.deref())),
             None => (opposite_model, None)
         }
     }

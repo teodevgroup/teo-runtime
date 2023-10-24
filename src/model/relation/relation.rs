@@ -21,8 +21,8 @@ pub struct Relation {
     pub local: Option<String>,
     pub foreign: Option<String>,
     pub is_vec: bool,
-    pub fields: BTreeSet<String>,
-    pub references: BTreeSet<String>,
+    pub fields: Vec<String>,
+    pub references: Vec<String>,
     pub delete: Delete,
     pub update: Update,
     pub has_foreign_key: bool,
@@ -65,16 +65,28 @@ impl Relation {
     pub fn through_path(&self) -> Option<Vec<&str>> {
         self.through.map(|t| t.iter().map(AsRef::as_ref).collect())
     }
+
+    pub fn local(&self) -> Option<&str> {
+        self.local.map(AsRef::as_ref)
+    }
+
+    pub fn foreign(&self) -> Option<&str> {
+        self.foreign.map(AsRef::as_ref)
+    }
+
+    pub fn has_join_table(&self) -> bool {
+        self.through().is_some()
+    }
 }
 
-impl Named for &Relation {
+impl Named for Relation {
 
     fn name(&self) -> &str {
         self.name.as_str()
     }
 }
 
-impl IsOptional for &mut Relation {
+impl IsOptional for Relation {
 
     fn is_optional(&self) -> bool {
         self.optionality.is_any_optional()

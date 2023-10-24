@@ -1,5 +1,4 @@
 use teo_parser::ast::identifiable::Identifiable;
-use teo_parser::ast::info_provider::InfoProvider;
 use teo_parser::ast::reference::ReferenceType;
 use teo_parser::ast::schema::Schema;
 use teo_parser::ast::span::Span;

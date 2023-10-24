@@ -1,7 +1,6 @@
 use std::cell::{Ref, RefCell, RefMut};
 use std::sync::Arc;
 use teo_teon::Value;
-use crate::action::Action;
 use crate::request::Request;
 use crate::connection::transaction;
 use super::local::Data;
@@ -10,6 +9,9 @@ use super::local::Data;
 pub struct Ctx {
     inner: Arc<CtxInner>
 }
+
+unsafe impl Send for Ctx { }
+unsafe impl Sync for Ctx { }
 
 #[derive(Debug)]
 struct CtxInner {
@@ -36,4 +38,3 @@ impl Ctx {
     }
 }
 
-unsafe impl Send for Ctx {}

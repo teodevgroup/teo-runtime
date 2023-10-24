@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+use std::borrow::Cow::{Borrowed, Owned};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::ops::Deref;
 use std::sync::{Arc, Mutex};
@@ -12,8 +14,8 @@ use crate::model::{Field, Model};
 use key_path::{path, KeyPath};
 use crate::model::field::named::Named;
 use async_recursion::async_recursion;
-use maplit::hashmap;
-use indexmap::IndexMap;
+use futures_util::StreamExt;
+use indexmap::{IndexMap, indexmap};
 use itertools::Itertools;
 use teo_teon::teon;
 use crate::action::action::*;
@@ -21,6 +23,8 @@ use crate::model::object::input::Input;
 use crate::model::object::input::Input::{AtomicUpdater, SetValue};
 use crate::model::relation::Relation;
 use crate::{object, pipeline, request};
+use crate::model::field::column_named::ColumnNamed;
+use crate::model::field::is_optional::IsOptional;
 use crate::model::relation::delete::Delete;
 use crate::namespace::Namespace;
 use crate::optionality::Optionality;
@@ -122,9 +126,9 @@ impl Object {
         // find keys to iterate
         let initialized = self.inner.is_initialized.load(Ordering::SeqCst);
         let keys = if initialized {
-            self.model().all_keys().iter().filter(|k| value_map_keys.contains(*k)).map(|k| *k).collect::<Vec<&str>>()
+            self.model().cache.all_keys.iter().filter(|k| value_map_keys.contains(&k.as_str())).map(|k| k.as_str()).collect::<Vec<&str>>()
         } else {
-            self.model().all_keys().clone()
+            self.model().cache.all_keys.iter().map(|k| k.as_str()).collect()
         };
         // assign values
         for key in keys {
@@ -290,8 +294,8 @@ impl Object {
                 let inner_select = include_arg.as_dictionary().map(|m| m.get("select")).flatten();
                 let inner_include = include_arg.as_dictionary().map(|m| m.get("include")).flatten();
                 for v in v.as_array().unwrap() {
-                    let action = Action::from_u32(FIND | (if relation.is_vec { MANY } else { SINGLE }) | NESTED );
-                    let object = self.graph().new_object(relation.model(), action, self.action_source().clone(), self.connection()).unwrap();
+                    let action = FIND | (if relation.is_vec { MANY } else { SINGLE }) | NESTED ;
+                    let object = self.transaction_ctx().new_object(self.namespace().model_at_path(&relation.model_path()).unwrap(), action, self.request_ctx()).unwrap();
                     object.set_from_database_result_value(v, inner_select, inner_include);
                     self.inner.relation_query_map.lock().unwrap().get_mut(k).unwrap().push(object);
                 }
@@ -316,7 +320,7 @@ impl Object {
         if !self.is_new() {
             self.inner.is_modified.store(true, Ordering::SeqCst);
             self.inner.modified_fields.lock().unwrap().insert(key.to_string());
-            if let Some(properties) = self.model().field_property_map().get(key) {
+            if let Some(properties) = self.model().cache.field_property_map.get(key) {
                 for property in properties {
                     self.inner.modified_fields.lock().unwrap().insert(property.to_string());
                     self.inner.cached_property_map.lock().unwrap().remove(&property.to_string());
@@ -604,7 +608,7 @@ impl Object {
                     if map.get(&key.to_string()).is_some() {
                         continue
                     }
-                    for field_name in relation.fields() {
+                    for field_name in &relation.fields {
                         if self.get_value(field_name).unwrap().is_null() {
                             return Err(Error::missing_required_input(&(path + *key)));
                         }
@@ -662,12 +666,12 @@ impl Object {
                     Delete::Default => {}, // do nothing
                     Delete::Deny => {}, // done before
                     Delete::Nullify => {
-                        if !opposite_relation.has_foreign_key() {
+                        if !opposite_relation.has_foreign_key {
                             continue
                         }
                         let finder = self.intrinsic_where_unique_for_relation(relation);
                         self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | (if relation.is_vec { MANY } else { SINGLE }), self.request_ctx(), |object| async move {
-                            for key in opposite_relation.fields() {
+                            for key in &opposite_relation.fields {
                                 object.set_value(key, Value::Null)?;
                             }
                             object.save_with_session_and_path( &path![]).await?;
@@ -744,19 +748,22 @@ impl Object {
         self.save_with_session_and_path_and_ignore(&path![], true).await
     }
 
-    async fn trigger_before_delete_callbacks<'a>(&self, path: impl AsRef<KeyPath>) -> Result<()> {
+    async fn trigger_before_delete_callbacks<'a>(&self, path: impl AsRef<KeyPath>) -> crate::path::Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        ctx.run_pipeline_into_path_unauthorized_error(&self.model().before_delete)
+        let _ = ctx.run_pipeline_into_path_unauthorized_error(&self.model().before_delete).await?;
+        Ok(())
     }
 
-    async fn trigger_after_delete_callbacks<'a>(&self, path: impl AsRef<KeyPath>) -> Result<()> {
+    async fn trigger_after_delete_callbacks<'a>(&self, path: impl AsRef<KeyPath>) -> crate::path::Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        ctx.run_pipeline_into_path_unauthorized_error(&self.model().after_delete)
+        let _ = ctx.run_pipeline_into_path_unauthorized_error(&self.model().after_delete).await?;
+        Ok(())
     }
 
-    async fn trigger_before_save_callbacks<'a>(&self, path: impl AsRef<KeyPath>) -> Result<()> {
+    async fn trigger_before_save_callbacks<'a>(&self, path: impl AsRef<KeyPath>) -> crate::path::Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        ctx.run_pipeline_into_path_unauthorized_error(&self.model().before_save)
+        let _ = ctx.run_pipeline_into_path_unauthorized_error(&self.model().before_save)?;
+        Ok(())
     }
 
     async fn trigger_after_save_callbacks<'a>(&self, path: impl AsRef<KeyPath>) -> Result<()> {
@@ -766,7 +773,7 @@ impl Object {
         }
         self.inner.inside_after_save_callback.store(true, Ordering::SeqCst);
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        ctx.run_pipeline_into_path_unauthorized_error(&self.model().after_save)?;
+        ctx.run_pipeline_into_path_unauthorized_error(&self.model().after_save).await?;
         self.inner.inside_after_save_callback.store(false, Ordering::SeqCst);
         Ok(())
     }
@@ -776,7 +783,7 @@ impl Object {
         self.delete_from_database().await
     }
 
-    pub(crate) async fn delete_internal<'a>(&self, path: impl AsRef<KeyPath>) -> Result<()> {
+    pub(crate) async fn delete_internal<'a>(&self, path: impl AsRef<KeyPath>) -> crate::path::Result<()> {
         self.check_model_write_permission(path.as_ref()).await?;
         self.trigger_before_delete_callbacks(path.as_ref()).await?;
         self.delete_from_database().await?;
@@ -784,7 +791,7 @@ impl Object {
     }
 
     #[async_recursion]
-    pub(crate) async fn to_json_internal<'a>(&self, path: &KeyPath) -> Result<Value> {
+    pub(crate) async fn to_json_internal<'a>(&self, path: &KeyPath) -> crate::path::Result<Value> {
         // check read permission
         self.check_model_read_permission(path.as_ref()).await?;
         // output
@@ -818,10 +825,8 @@ impl Object {
                     if self.check_field_read_permission(field, path.as_ref()).await.is_err() {
                         continue
                     }
-                    let context = PipelineCtx::initial_state_with_object(self.clone(), self.connection(), self.initiator().as_req())
-                        .with_value(value)
-                        .with_path(path![*key]);
-                    let value = field.perform_on_output_callback(context).await?;
+                    let ctx = self.pipeline_ctx_for_path_and_value(path![*key], value);
+                    let value: Value = ctx.run_pipeline(&field.on_output).await?.try_into()?;
                     if !value.is_null() {
                         map.insert(key.to_string(), value);
                     }
@@ -833,8 +838,8 @@ impl Object {
                         }
                     } else {
                         if let Some(getter) = &property.getter {
-                            let ctx = PipelineCtx::initial_state_with_object(self.clone(), self.connection(), self.initiator().as_req());
-                            let value = getter.process(ctx).await?;
+                            let ctx = self.pipeline_ctx_for_path_and_value(path![*key], Value::Null);
+                            let value: Value = ctx.run_pipeline(&getter).await?.try_into()?;
                             if !value.is_null() {
                                 map.insert(key.to_string(), value);
                             }
@@ -856,17 +861,17 @@ impl Object {
 
     pub(crate) fn identifier(&self) -> Value {
         let model = self.model();
-        let mut identifier: HashMap<String, Value> = HashMap::new();
+        let mut identifier: IndexMap<String, Value> = IndexMap::new();
         for item in model.primary_index().items() {
             let val = self.get_value(item.field_name()).unwrap();
             identifier.insert(item.field_name().to_owned(), val);
         }
-        Value::HashMap(identifier)
+        Value::Dictionary(identifier)
     }
 
     pub(crate) fn previous_identifier(&self) -> Value {
         let model = self.model();
-        let mut identifier: HashMap<String, Value> = HashMap::new();
+        let mut identifier: IndexMap<String, Value> = IndexMap::new();
         for item in model.primary_index().items() {
             let modify_map = self.inner.modified_fields.lock().unwrap();
             let val = if modify_map.contains(item.field_name()) {
@@ -884,12 +889,12 @@ impl Object {
             };
             identifier.insert(item.field_name().to_owned(), val);
         }
-        Value::HashMap(identifier)
+        Value::Dictionary(identifier)
     }
 
     pub(crate) fn db_identifier(&self) -> Value {
         let model = self.model();
-        let mut identifier: HashMap<String, Value> = HashMap::new();
+        let mut identifier: IndexMap<String, Value> = IndexMap::new();
         let modified_fields = self.inner.modified_fields.lock().unwrap();
         for item in model.primary_index().items() {
             let val = if modified_fields.contains(item.field_name()) {
@@ -899,7 +904,7 @@ impl Object {
             };
             identifier.insert(self.model().field(item.field_name()).unwrap().column_name().to_owned(), val.clone());
         }
-        Value::HashMap(identifier)
+        Value::Dictionary(identifier)
     }
 
     async fn perform_relation_manipulations<F: Fn(&'static Relation) -> bool>(&self, f: F, path: &KeyPath) -> Result<()> {
@@ -936,8 +941,8 @@ impl Object {
                 if let Some(objects_to_disconnect) = object_disconnect_map.get(relation.name()) {
                     for object in objects_to_disconnect {
                         if relation.has_join_table() {
-                            self.delete_join_object(object, relation.as_ref(), self.graph().opposite_relation(relation).1.unwrap(), path).await?;
-                        } else if relation.has_foreign_key() {
+                            self.delete_join_object(object, relation.as_ref(), self.namespace().opposite_relation(relation).1.unwrap(), path).await?;
+                        } else if relation.has_foreign_key {
                             self.remove_linked_values_from_related_relation(relation);
                         } else {
                             object.remove_linked_values_from_related_relation_on_related_object(relation, &object);
@@ -960,12 +965,12 @@ impl Object {
     }
 
     async fn create_join_object<'a>(&'a self, object: &'a Object, relation: &'static Relation, opposite_relation: &'static Relation, path: &'a KeyPath) -> Result<()> {
-        let join_model = AppCtx::get().unwrap().model(relation.through_path().unwrap()).unwrap().unwrap();
-        let action = Action::from_u32(JOIN_CREATE | CREATE | SINGLE);
-        let join_object = self.graph().new_object(join_model, action, self.action_source().clone(), self.connection())?;
+        let join_model = self.namespace().model_at_path(&relation.through_path().unwrap()).unwrap();
+        let action = JOIN_CREATE | CREATE | SINGLE;
+        let join_object = self.transaction_ctx().new_object(join_model, action, self.request_ctx())?;
         join_object.set_teon(&teon!({})).await?; // initialize
-        let local = relation.local();
-        let foreign = opposite_relation.local();
+        let local = relation.local().unwrap();
+        let foreign = opposite_relation.local().unwrap();
         let join_local_relation = join_model.relation(local).unwrap();
         self.assign_linked_values_to_related_object(&join_object, join_local_relation);
         let join_foreign_relation = join_model.relation(foreign).unwrap();
@@ -977,21 +982,21 @@ impl Object {
     }
 
     async fn delete_join_object<'a>(&'a self, object: &'a Object, relation: &'static Relation, opposite_relation: &'static Relation, path: &'a KeyPath) -> Result<()> {
-        let join_model = AppCtx::get().unwrap().model(relation.through_path().unwrap()).unwrap().unwrap();
-        let action = Action::from_u32(JOIN_DELETE | DELETE | SINGLE);
-        let local = relation.local();
-        let foreign = opposite_relation.local();
+        let join_model = self.namespace().model_at_path(&relation.through_path().unwrap()).unwrap();
+        let action = JOIN_DELETE | DELETE | SINGLE;
+        let local = relation.local().unwrap();
+        let foreign = opposite_relation.local().unwrap();
         let join_local_relation = join_model.relation(local).unwrap();
         let join_foreign_relation = join_model.relation(foreign).unwrap();
-        let mut finder = HashMap::new();
+        let mut finder = IndexMap::new();
         for (l, f) in join_local_relation.iter() {
             finder.insert(l.to_owned(), self.get_value(f).unwrap());
         }
         for (l, f) in join_foreign_relation.iter() {
             finder.insert(l.to_owned(), object.get_value(f).unwrap());
         }
-        let r#where = Value::HashMap(finder);
-        let object = match self.graph().find_unique_internal(join_model, &teon!({ "where": r#where }), true, action, self.action_source().clone(), self.connection()).await {
+        let r#where = Value::Dictionary(finder);
+        let object = match self.transaction_ctx().find_unique_internal(join_model, &teon!({ "where": r#where }), true, action, self.request_ctx()).await {
             Ok(object) => object,
             Err(_) => return Err(Error::unexpected_input_value_with_reason("Join object is not found.", path)),
         }.into_not_found_error()?;
@@ -1021,16 +1026,16 @@ impl Object {
 
     async fn link_and_save_relation_object(&self, relation: &'static Relation, object: &Object, path: &KeyPath) -> Result<()> {
         let mut linked = false;
-        let (_, opposite_relation) = self.graph().opposite_relation(relation);
+        let (_, opposite_relation) = self.namespace().opposite_relation(relation);
         if let Some(opposite_relation) = opposite_relation {
-            if opposite_relation.has_foreign_key() {
+            if opposite_relation.has_foreign_key {
                 self.assign_linked_values_to_related_object(object, opposite_relation);
                 linked = true;
             }
         }
         object.save_with_session_and_path(path).await?;
         if !linked {
-            if relation.has_foreign_key() {
+            if relation.has_foreign_key {
                 object.assign_linked_values_to_related_object(self, relation);
             } else if relation.has_join_table() {
                 self.create_join_object(object, relation, opposite_relation.unwrap(), path).await?;
@@ -1040,10 +1045,10 @@ impl Object {
     }
 
     async fn nested_create_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
-        let action = Action::from_u32(NESTED | CREATE | SINGLE);
-        let object = self.graph().new_object(relation.model(), action, self.action_source().clone(), self.connection())?;
+        let action = NESTED | CREATE | SINGLE;
+        let object = self.transaction_ctx().new_object(self.namespace().model_at_path(&relation.model_path()).unwrap(), action, self.request_ctx())?;
         object.set_teon_with_path(value.get("create").unwrap(), path).await?;
-        if let Some(opposite) = self.graph().opposite_relation(relation).1 {
+        if let Some(opposite) = self.namespace().opposite_relation(relation).1 {
             object.ignore_relation(opposite.name());
         }
         self.link_and_save_relation_object(relation, &object, path).await
@@ -1077,15 +1082,15 @@ impl Object {
     }
 
     async fn nested_set_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
-        if !(relation.has_foreign_key() && relation.is_required()) {
+        if !(relation.has_foreign_key && relation.is_required()) {
             // disconnect old
             let disconnect_value = self.intrinsic_where_unique_for_relation(relation);
             let _ = self.nested_disconnect_relation_object_no_check(relation, &disconnect_value, path).await;
         }
         if !value.is_null() {
             // connect new
-            let action = Action::from_u32(NESTED | SET | SINGLE);
-            let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": value }), true, action, self.action_source().clone(), self.connection()).await {
+            let action = NESTED | SET | SINGLE;
+            let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": value }), true, action, self.request_ctx()).await {
                 Ok(object) => object.into_not_found_error()?,
                 Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
             };
@@ -1095,8 +1100,8 @@ impl Object {
     }
 
     async fn nested_connect_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
-        let action = Action::from_u32(NESTED | CONNECT | SINGLE);
-        let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": value }), true, action, self.action_source().clone(), self.connection()).await {
+        let action = NESTED | CONNECT | SINGLE;
+        let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": value }), true, action, self.request_ctx()).await {
             Ok(object) => object,
             Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
         }.into_not_found_error()?;
@@ -1106,28 +1111,28 @@ impl Object {
     async fn nested_connect_or_create_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
         let r#where = value.get("where").unwrap();
         let create = value.get("create").unwrap();
-        let action = Action::from_u32(CONNECT_OR_CREATE | CONNECT | NESTED | SINGLE);
-        let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone(), self.connection()).await {
+        let action = CONNECT_OR_CREATE | CONNECT | NESTED | SINGLE;
+        let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx()).await {
             Ok(object) => object.into_not_found_error()?,
             Err(_) => {
-                self.graph().new_object_with_teon_and_path(relation.model(), create, &(path + "create"), action, self.action_source().clone(), self.connection()).await?
+                self.transaction_ctx().new_object_with_teon_and_path(self.namespace().model_at_path(&relation.model_path()).unwrap(), create, &(path + "create"), action, self.request_ctx()).await?
             },
         };
         self.link_and_save_relation_object(relation, &object, path).await
     }
 
     fn intrinsic_where_unique_for_relation(&self, relation: &'static Relation) -> Value {
-        Value::HashMap(relation.iter().map(|(f, r)| (r.to_owned(), self.get_value(f).unwrap())).collect())
+        Value::Dictionary(relation.iter().map(|(f, r)| (r.to_owned(), self.get_value(f).unwrap())).collect())
     }
 
     async fn nested_disconnect_relation_object_object(&self, relation: &'static Relation, object: &Object, path: &KeyPath) -> Result<()> {
         if !relation.is_vec && relation.is_required() {
             return Err(Error::unexpected_input_value_with_reason("Cannot disconnect required relation.", path));
         }
-        if relation.has_foreign_key() {
+        if relation.has_foreign_key {
             self.remove_linked_values_from_related_relation(relation);
         } else if relation.has_join_table() {
-            self.delete_join_object(object, relation, self.graph().opposite_relation(relation).1.unwrap(), path).await?;
+            self.delete_join_object(object, relation, self.namespace().opposite_relation(relation).1.unwrap(), path).await?;
         } else {
             object.remove_linked_values_from_related_relation_on_related_object(relation, &object);
             object.save_with_session_and_path(path).await?;
@@ -1136,12 +1141,12 @@ impl Object {
     }
 
     async fn nested_disconnect_relation_object_no_check(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
-        if relation.has_foreign_key() {
+        if relation.has_foreign_key {
             self.remove_linked_values_from_related_relation(relation);
         } else {
             let r#where = value;
-            let action = Action::from_u32(NESTED | DISCONNECT | SINGLE);
-            let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone(), self.connection()).await {
+            let action = NESTED | DISCONNECT | SINGLE;
+            let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx()).await {
                 Ok(object) => object,
                 Err(_) => return Err(Error::unexpected_input_value_with_reason("object is not found", path)),
             }.into_not_found_error()?;
@@ -1164,16 +1169,16 @@ impl Object {
         r#where.as_dictionary_mut().unwrap().extend(value.get("where").unwrap().as_dictionary().cloned().unwrap());
         let create = value.get("create").unwrap();
         let update = value.get("update").unwrap();
-        let action = Action::from_u32(NESTED | UPSERT | UPDATE | SINGLE);
-        match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone(), self.connection()).await.into_not_found_error() {
+        let action = NESTED | UPSERT | UPDATE | SINGLE;
+        match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx()).await.into_not_found_error() {
             Ok(object) => {
                 let path = path + "update";
                 object.set_teon_with_path(update, &path).await?;
                 object.save_with_session_and_path(&path).await?;
             },
             Err(_) => {
-                let action = Action::from_u32(NESTED | UPSERT | CREATE | SINGLE);
-                let object = self.graph().new_object_with_teon_and_path(relation.model(), create, &(path + "create"), action, self.action_source().clone(), self.connection()).await?;
+                let action = NESTED | UPSERT | CREATE | SINGLE;
+                let object = self.transaction_ctx().new_object_with_teon_and_path(self.namespace().model_at_path(&relation.model_path()).unwrap(), create, &(path + "create"), action, self.request_ctx()).await?;
                 self.link_and_save_relation_object(relation, &object, path).await?;
             },
         };
@@ -1182,17 +1187,17 @@ impl Object {
 
     async fn nested_many_disconnect_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
         if relation.has_join_table() {
-            let action = Action::from_u32(JOIN_DELETE | DELETE | SINGLE);
-            let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": value }), true, action, self.action_source().clone(), self.connection()).await {
+            let action = JOIN_DELETE | DELETE | SINGLE;
+            let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": value }), true, action, self.request_ctx()).await {
                 Ok(object) => object.into_not_found_error()?,
                 Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
             };
-            self.delete_join_object(&object, relation, self.graph().opposite_relation(relation).1.unwrap(), path).await?;
+            self.delete_join_object(&object, relation, self.namespace().opposite_relation(relation).1.unwrap(), path).await?;
         } else {
             let mut r#where = self.intrinsic_where_unique_for_relation(relation);
             r#where.as_dictionary_mut().unwrap().extend(value.as_dictionary().cloned().unwrap().into_iter());
-            let action = Action::from_u32(DISCONNECT | NESTED | SINGLE);
-            let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone(), self.connection()).await {
+            let action = DISCONNECT | NESTED | SINGLE;
+            let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx()).await {
                 Ok(object) => object.into_not_found_error()?,
                 Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", path)),
             };
@@ -1204,7 +1209,7 @@ impl Object {
 
     async fn find_relation_objects_by_value(&self, relation: &'static Relation, value: &Value, path: &KeyPath, action: Action) -> Result<Vec<Object>> {
         if relation.has_join_table() {
-            let mut finder = HashMap::new();
+            let mut finder = IndexMap::new();
             let join_relation = self.graph().through_relation(relation).1;
             for (l, f) in join_relation.iter() {
                 finder.insert(l.to_owned(), self.get_value(f).unwrap());
@@ -1212,12 +1217,12 @@ impl Object {
             finder.insert(self.graph().through_opposite_relation(relation).1.name().to_owned(), teon!({
                 "is": value
             }));
-            if let Ok(join_objects) = self.graph().find_many_internal(relation.through().unwrap(), &teon!({
-                "where": Value::HashMap(finder),
+            if let Ok(join_objects) = self.transaction_ctx().find_many_internal(relation.through().unwrap(), &teon!({
+                "where": Value::Dictionary(finder),
                 "include": {
                     self.graph().through_opposite_relation(relation).1.name(): true
                 }
-            }), true, action, self.action_source().clone(), self.connection()).await {
+            }), true, action, self.request_ctx()).await {
                 let mut results = vec![];
                 for join_object in join_objects {
                     let object = join_object.get_query_relation_object(self.graph().through_opposite_relation(relation).1.name())?.unwrap();
@@ -1230,15 +1235,15 @@ impl Object {
         } else {
             let mut r#where = self.intrinsic_where_unique_for_relation(relation);
             r#where.as_dictionary_mut().unwrap().extend(value.as_dictionary().cloned().unwrap());
-            let action = Action::from_u32(NESTED | UPDATE | MANY);
-            let objects = self.graph().find_many_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone(), self.connection()).await.unwrap();
+            let action = NESTED | UPDATE | MANY;
+            let objects = self.transaction_ctx().find_many_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx()).await.unwrap();
             Ok(objects)
         }
     }
 
     async fn find_relation_object_by_value(&self, relation: &'static Relation, value: &Value, path: &KeyPath, action: Action) -> Result<Object> {
         if relation.has_join_table() {
-            let mut finder = HashMap::new();
+            let mut finder = IndexMap::new();
             let join_relation = self.graph().through_relation(relation).1;
             for (l, f) in join_relation.iter() {
                 finder.insert(l.to_owned(), self.get_value(f).unwrap());
@@ -1246,12 +1251,12 @@ impl Object {
             finder.insert(self.graph().through_opposite_relation(relation).1.name().to_owned(), teon!({
                 "is": value
             }));
-            if let Ok(join_object) = self.graph().find_first_internal(relation.through().unwrap(), &teon!({
-                "where": Value::HashMap(finder),
+            if let Ok(join_object) = self.transaction_ctx().find_first_internal(relation.through().unwrap(), &teon!({
+                "where": Value::Dictionary(finder),
                 "include": {
                     self.graph().through_opposite_relation(relation).1.name(): true
                 }
-            }), true, action, self.action_source().clone(), self.connection()).await.into_not_found_error() {
+            }), true, action, self.request_ctx()).await.into_not_found_error() {
                 let object = join_object.get_query_relation_object(self.graph().through_opposite_relation(relation).1.name())?.unwrap();
                 Ok(object)
             } else {
@@ -1260,8 +1265,8 @@ impl Object {
         } else {
             let mut r#where = self.intrinsic_where_unique_for_relation(relation);
             r#where.as_dictionary_mut().unwrap().extend(value.as_dictionary().cloned().unwrap());
-            let action = Action::from_u32(NESTED | UPDATE | SINGLE);
-            let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone(), self.connection()).await {
+            let action = NESTED | UPDATE | SINGLE;
+            let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx()).await {
                 Ok(object) => object,
                 Err(_) => return Err(Error::unexpected_input_value_with_reason("Object is not found.", &(path + "where"))),
             }.into_not_found_error()?;
@@ -1270,14 +1275,14 @@ impl Object {
     }
 
     async fn nested_many_update_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
-        let object = self.find_relation_object_by_value(relation, value.get("where").unwrap(), path, Action::from_u32(NESTED | UPDATE | SINGLE)).await?;
+        let object = self.find_relation_object_by_value(relation, value.get("where").unwrap(), path, NESTED | UPDATE | SINGLE).await?;
         object.set_teon_with_path(value.get("update").unwrap(), &(path + "update")).await?;
         object.save_with_session_and_path(path).await?;
         Ok(())
     }
 
     async fn nested_many_update_many_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
-        let objects = self.find_relation_objects_by_value(relation, value.get("where").unwrap(), path, Action::from_u32(NESTED | UPDATE | MANY)).await?;
+        let objects = self.find_relation_objects_by_value(relation, value.get("where").unwrap(), path, NESTED | UPDATE | MANY).await?;
         let update = value.get("update").unwrap();
         for object in objects {
             object.set_teon_with_path(update, path).await?;
@@ -1289,7 +1294,7 @@ impl Object {
     async fn nested_update_relation_object<'a>(&'a self, relation: &'static Relation, value: &'a Value, path: &'a KeyPath) -> Result<()> {
         let r#where = value.get("where").unwrap();
         let action = NESTED | UPDATE | SINGLE;
-        let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone(), self.connection()).await {
+        let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx()).await {
             Ok(object) => object.into_not_found_error()?,
             Err(_) => return Err(Error::unexpected_input_value_with_reason("update: object not found", path)),
         };
@@ -1303,38 +1308,38 @@ impl Object {
             return Err(Error::unexpected_input_value_with_reason("Cannot delete required relation.", path));
         }
         let r#where = value.get("where").unwrap();
-        let action = Action::from_u32(NESTED | DELETE | SINGLE);
-        let object = match self.graph().find_unique_internal(relation.model(), &teon!({ "where": r#where }), true, action, self.action_source().clone(), self.connection()).await {
+        let action = NESTED | DELETE | SINGLE;
+        let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx()).await {
             Ok(object) => object.into_not_found_error()?,
             Err(_) => return Err(Error::unexpected_input_value_with_reason("delete: object not found", path)),
         };
         object.delete_from_database().await?;
         if relation.has_join_table() {
-            let opposite_relation = self.graph().opposite_relation(relation).1.unwrap();
+            let opposite_relation = self.namespace().opposite_relation(relation).1.unwrap();
             self.delete_join_object(&object, relation, opposite_relation, path).await?;
         }
-        if relation.has_foreign_key() {
+        if relation.has_foreign_key {
             self.remove_linked_values_from_related_relation(relation);
         }
         Ok(())
     }
 
     async fn nested_many_delete_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
-        let object = self.find_relation_object_by_value(relation, value, path, Action::from_u32(NESTED | DELETE | SINGLE)).await?;
+        let object = self.find_relation_object_by_value(relation, value, path, NESTED | DELETE | SINGLE).await?;
         object.delete_from_database().await?;
         if relation.has_join_table() {
-            let opposite_relation = self.graph().opposite_relation(relation).1.unwrap();
+            let opposite_relation = self.namespace().opposite_relation(relation).1.unwrap();
             self.delete_join_object(&object, relation, opposite_relation, path).await?;
         }
         Ok(())
     }
 
     async fn nested_many_delete_many_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
-        let objects = self.find_relation_objects_by_value(relation, value, path, Action::from_u32(NESTED | DELETE | MANY)).await?;
+        let objects = self.find_relation_objects_by_value(relation, value, path, NESTED | DELETE | MANY).await?;
         for object in objects {
             object.delete_from_database().await?;
             if relation.has_join_table() {
-                let opposite_relation = self.graph().opposite_relation(relation).1.unwrap();
+                let opposite_relation = self.namespace().opposite_relation(relation).1.unwrap();
                 self.delete_join_object(&object, relation, opposite_relation, path).await?;
             }
         }
@@ -1342,13 +1347,13 @@ impl Object {
     }
 
     async fn disconnect_object_which_connects_to<'a>(&'a self, relation: &'static Relation, value: &'a Value) -> Result<()> {
-        if let Ok(that) = self.graph().find_unique::<Object>(self.model(), &teon!({
+        if let Ok(that) = self.transaction_ctx().find_unique::<Object>(self.model(), &teon!({
             "where": {
                 relation.name(): {
                     "is": value
                 }
             }
-        }), self.connection(), self.initiator().as_req()).await.into_not_found_error() {
+        }), self.request_ctx()).await.into_not_found_error() {
             if relation.is_required() {
                 return Err(Error::cannot_disconnect_previous_relation());
             } else {
@@ -1363,7 +1368,7 @@ impl Object {
 
     async fn perform_relation_manipulation_one_inner(&self, relation: &'static Relation, action: Action, value: &Value, path: &KeyPath) -> Result<()> {
         let action_u32 = action.to_u32();
-        if !relation.is_vec && !relation.has_foreign_key() && !self.is_new() {
+        if !relation.is_vec && !relation.has_foreign_key && !self.is_new() {
             match action {
                 NESTED_CREATE_ACTION | NESTED_CONNECT_ACTION | NESTED_CONNECT_OR_CREATE_ACTION => {
                     let disconnect_value = self.intrinsic_where_unique_for_relation(relation);
@@ -1372,8 +1377,8 @@ impl Object {
                 _ => ()
             }
         }
-        if !relation.is_vec && relation.has_foreign_key() {
-            if let Some(opposite_relation) = self.graph().opposite_relation(relation).1 {
+        if !relation.is_vec && relation.has_foreign_key {
+            if let Some(opposite_relation) = self.namespace().opposite_relation(relation).1 {
                 if !opposite_relation.is_vec {
                     match action {
                         NESTED_CONNECT_ACTION | NESTED_SET_ACTION => {
@@ -1404,9 +1409,9 @@ impl Object {
 
     fn normalize_relation_one_value<'a>(&'a self, relation: &'static Relation, action: Action, value: &'a Value) -> Cow<Value> {
         match action.to_u32() {
-            NESTED_CREATE_ACTION => Owned(Value::HashMap(hashmap! {"create".to_owned() => value.clone()})),
-            NESTED_UPDATE_ACTION => Owned(Value::HashMap(hashmap! {"update".to_owned() => value.clone(), "where".to_owned() => self.intrinsic_where_unique_for_relation(relation)})),
-            NESTED_DELETE_ACTION => Owned(Value::HashMap(hashmap! {"where".to_owned() => self.intrinsic_where_unique_for_relation(relation)})),
+            NESTED_CREATE_ACTION => Owned(Value::Dictionary(indexmap! {"create".to_owned() => value.clone()})),
+            NESTED_UPDATE_ACTION => Owned(Value::Dictionary(indexmap! {"update".to_owned() => value.clone(), "where".to_owned() => self.intrinsic_where_unique_for_relation(relation)})),
+            NESTED_DELETE_ACTION => Owned(Value::Dictionary(indexmap! {"where".to_owned() => self.intrinsic_where_unique_for_relation(relation)})),
             NESTED_DISCONNECT_ACTION => Owned(self.intrinsic_where_unique_for_relation(relation)),
             NESTED_UPSERT_ACTION => {
                 let mut value = value.clone();
@@ -1422,24 +1427,25 @@ impl Object {
             let key = key.as_str();
             let path = path + key;
             let action = Action::nested_action_from_name(key).unwrap();
-            let other_model = self.graph().opposite_relation(relation).0;
+            let other_model = self.namespace().opposite_relation(relation).0;
             let normalized_value = self.normalize_relation_one_value(relation, action, value);
-            let ctx = PipelineCtx::initial_state_with_value(normalized_value.as_ref().clone(), self.connection(), self.initiator().as_req()).with_path(path.clone()).with_action(action);
-            let (transformed_value, new_action) = other_model.transformed_action(ctx).await?;
-            self.perform_relation_manipulation_one_inner(relation, new_action, &transformed_value, &path).await?;
+            // todo: action transform
+            //let ctx = PipelineCtx::initial_state_with_value(normalized_value.as_ref().clone(), self.connection(), self.initiator().as_req()).with_path(path.clone()).with_action(action);
+            //let (transformed_value, new_action) = other_model.transformed_action(ctx).await?;
+            self.perform_relation_manipulation_one_inner(relation, action, &normalized_value, &path).await?;
         }
         Ok(())
     }
 
     fn normalize_relation_many_value<'a>(&'a self, action: Action, value: &'a Value) -> Cow<Value> {
-        match action.to_u32() {
-            NESTED_CREATE_ACTION => Owned(Value::HashMap(hashmap! {"create".to_owned() => value.clone()})),
+        match action {
+            NESTED_CREATE_ACTION => Owned(Value::Dictionary(indexmap! {"create".to_owned() => value.clone()})),
             _ => Borrowed(value)
         }
     }
 
     async fn perform_relation_manipulation_many_inner(&self, relation: &'static Relation, action: Action, value: &Value, path: &KeyPath) -> Result<()> {
-        match action.to_u32() {
+        match action {
             NESTED_CREATE_ACTION => self.nested_create_relation_object(relation, value, &path).await,
             NESTED_CONNECT_ACTION => self.nested_connect_relation_object(relation, value, &path).await,
             NESTED_SET_ACTION => self.nested_set_many_relation_object(relation, value, &path).await,
@@ -1459,19 +1465,21 @@ impl Object {
             let key = key.as_str();
             let path = path + key;
             let action = Action::nested_action_from_name(key).unwrap();
-            let other_model = self.graph().opposite_relation(relation).0;
+            let other_model = self.namespace().opposite_relation(relation).0;
             if value.is_vec() && action.to_u32() != NESTED_SET_ACTION {
                 for (index, value) in value.as_array().unwrap().iter().enumerate() {
                     let normalized_value = self.normalize_relation_many_value(action, value);
-                    let ctx = PipelineCtx::initial_state_with_value(normalized_value.as_ref().clone(), self.connection(), self.initiator().as_req()).with_path(&(path.clone() + index)).with_action(action);
-                    let (transformed_value, new_action) = other_model.transformed_action(ctx).await?;
-                    self.perform_relation_manipulation_many_inner(relation, new_action, &transformed_value, &path).await?;
+                    // todo: transform action
+                    //let ctx = PipelineCtx::initial_state_with_value(normalized_value.as_ref().clone(), self.connection(), self.initiator().as_req()).with_path(&(path.clone() + index)).with_action(action);
+                    //let (transformed_value, new_action) = other_model.transformed_action(ctx).await?;
+                    self.perform_relation_manipulation_many_inner(relation, action, &normalized_value, &path).await?;
                 }
             }  else {
                 let normalized_value = self.normalize_relation_many_value(action, value);
-                let ctx = PipelineCtx::initial_state_with_value(normalized_value.as_ref().clone(), self.connection(), self.initiator().as_req()).with_path(path.clone()).with_action(action);
-                let (transformed_value, new_action) = other_model.transformed_action(ctx).await?;
-                self.perform_relation_manipulation_many_inner(relation, new_action, &transformed_value, &path).await?;
+                // todo: transform action
+                //let ctx = PipelineCtx::initial_state_with_value(normalized_value.as_ref().clone(), self.connection(), self.initiator().as_req()).with_path(path.clone()).with_action(action);
+                //let (transformed_value, new_action) = other_model.transformed_action(ctx).await?;
+                self.perform_relation_manipulation_many_inner(relation, action, &normalized_value, &path).await?;
             }
         }
         Ok(())
@@ -1482,7 +1490,6 @@ impl Object {
             self.set_select(select).unwrap();
             return Ok(self.clone())
         }
-        let graph = self.graph();
         let mut finder = teon!({
             "where": self.identifier(),
         });
@@ -1492,7 +1499,7 @@ impl Object {
         if let Some(select) = select {
             finder.as_dictionary_mut().unwrap().insert("select".to_string(), select.clone());
         }
-        let target = graph.find_unique_internal(self.model(), &finder, false, self.action(), self.action_source().clone(), self.connection()).await.into_not_found_error();
+        let target = self.transaction_ctx().find_unique_internal(self.model(), &finder, false, self.action(), self.request_ctx()).await.into_not_found_error();
         match target {
             Ok(obj) => {
                 if self.model().has_virtual_fields() {
@@ -1558,10 +1565,9 @@ impl Object {
                 finder.as_dictionary_mut().unwrap().insert("select".to_owned(), select.clone());
             }
         }
-        let relation_model_name = relation.model();
-        let graph = self.graph();
-        let action = Action::from_u32(NESTED | FIND | PROGRAM_CODE | SINGLE);
-        match graph.find_unique_internal(relation_model_name, &finder, false, action, Initiator::ProgramCode(self.initiator().as_req()), self.connection()).await {
+        let relation_model_name = self.namespace().model_at_path(&relation.model_path()).unwrap();
+        let action = NESTED | FIND | CODE_NAME | SINGLE;
+        match self.transaction_ctx().find_unique_internal(relation_model_name, &finder, false, action, self.request_ctx()).await {
             Ok(result) => {
                 self.inner.relation_query_map.lock().unwrap().insert(key.as_ref().to_string(), vec![result.into_not_found_error()?]);
                 let obj = self.inner.relation_query_map.lock().unwrap().get(key.as_ref()).unwrap().get(0).unwrap().clone();
@@ -1587,15 +1593,15 @@ impl Object {
         } else {
             &empty
         };
-        let action = Action::from_u32(INTERNAL_POSITION | FIND | PROGRAM_CODE | MANY);
+        let action = CODE_POSITION | CODE_NAME | FIND | MANY;
         if relation.has_join_table() {
             let identifier = self.identifier();
-            let new_self = self.graph().find_unique_internal(model, &teon!({
+            let new_self = self.transaction_ctx().find_unique_internal(model, &teon!({
                 "where": identifier,
                 "include": {
                     key.as_ref(): include_inside
                 }
-            }), false, action, Initiator::ProgramCode(self.initiator().as_req()), self.connection()).await.into_not_found_error()?;
+            }), false, action, self.request_ctx()).await.into_not_found_error()?;
             let vec = new_self.inner.relation_query_map.lock().unwrap().get(key.as_ref()).unwrap().clone();
             Ok(vec)
         } else {
@@ -1608,8 +1614,8 @@ impl Object {
             if finder.as_dictionary().unwrap().get("where").is_none() {
                 finder.as_dictionary_mut().unwrap().insert("where".to_string(), teon!({}));
             }
-            for (index, local_field_name) in relation.fields().iter().enumerate() {
-                let foreign_field_name = relation.references().get(index).unwrap();
+            for (index, local_field_name) in relation.fields.iter().enumerate() {
+                let foreign_field_name = relation.references.get(index).unwrap();
                 let value = self.get_value(local_field_name).unwrap();
                 if value == Value::Null {
                     return Ok(vec![]);
@@ -1617,8 +1623,8 @@ impl Object {
                 let json_value = value;
                 finder.as_dictionary_mut().unwrap().get_mut("where").unwrap().as_dictionary_mut().unwrap().insert(foreign_field_name.to_owned(), json_value);
             }
-            let relation_model = AppCtx::get().unwrap().model(relation.model_path()).unwrap().unwrap();
-            let results = self.graph().find_many_internal(relation_model, &finder, false, action, Initiator::ProgramCode(self.initiator().as_req()), self.connection()).await?;
+            let relation_model = self.namespace().model_at_path(&relation.model_path()).unwrap();
+            let results = self.transaction_ctx().find_many_internal(relation_model, &finder, false, action, self.request_ctx()).await?;
             Ok(results)
         }
     }
