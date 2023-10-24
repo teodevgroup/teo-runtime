@@ -5,7 +5,7 @@ use crate::sort::Sort;
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Index {
     pub r#type: Type,
-    pub name: Option<String>,
+    pub name: String,
     pub sort: Sort,
     pub length: Option<usize>,
 }

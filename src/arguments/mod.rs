@@ -54,6 +54,21 @@ impl Arguments {
         }
     }
 
+    pub fn get_optional<'a, T: 'a, E>(&'a self, key: impl AsRef<str>) -> Result<Option<T>> where E: std::error::Error, T: TryFrom<&'a Object, Error = E> {
+        if let Ok(object) = self.get_object_ref(key) {
+            if object.is_null() {
+                Ok(None)
+            } else {
+                match object.try_into() {
+                    Ok(v) => Ok(Some(v)),
+                    Err(e) => Err(Error::new(format!("{e}")))
+                }
+            }
+        } else {
+            Ok(None)
+        }
+    }
+
     pub fn get_object_ref(&self, key: impl AsRef<str>) -> Result<&Object> {
         if let Some(object) = self.inner.map.get(key.as_ref()) {
             Ok(object)

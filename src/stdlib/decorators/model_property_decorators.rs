@@ -3,6 +3,7 @@ use teo_teon::Value;
 use teo_result::Result;
 use crate::namespace::Namespace;
 use crate::pipeline::pipeline::Pipeline;
+use crate::stdlib::decorators::indexable_decorators::{id_decorator, index_decorator, unique_decorator};
 
 pub(in crate::stdlib) fn load_model_property_decorators(namespace: &mut Namespace) {
 
@@ -31,11 +32,15 @@ pub(in crate::stdlib) fn load_model_property_decorators(namespace: &mut Namespac
         Ok(())
     });
 
-    // /// @name Index
-    // /// Define index for this cached property
-    // declare unique model property decorator index(sort: Sort?, length: Int?, map: String?)
-    //
-    // /// @name Unique
-    // /// Define unique index for this cached property
-    // declare unique model property decorator unique(sort: Sort?, length: Int?, map: String?)
+    namespace.define_model_property_decorator("id", |arguments, property| {
+        id_decorator(arguments, property)
+    });
+
+    namespace.define_model_property_decorator("index", |arguments, property| {
+        index_decorator(arguments, property)
+    });
+
+    namespace.define_model_property_decorator("unique", |arguments, property| {
+        unique_decorator(arguments, property)
+    });
 }

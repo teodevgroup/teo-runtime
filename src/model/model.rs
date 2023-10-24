@@ -81,7 +81,7 @@ impl Model {
             let name = indexable.name();
             let index = model::Index::new(field_index.r#type, name.to_owned(), vec![
                 Item::new(
-                    field_index.name.clone().unwrap_or(name.to_owned()),
+                    field_index.name.clone(),
                     field_index.sort,
                     field_index.length,
                 )

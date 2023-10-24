@@ -7,6 +7,7 @@ use crate::pipeline::pipeline::Pipeline;
 use crate::previous::Previous;
 use crate::readwrite::read::Read;
 use crate::readwrite::write::Write;
+use crate::stdlib::decorators::indexable_decorators::{id_decorator, index_decorator, unique_decorator};
 
 pub(in crate::stdlib) fn load_model_field_decorators(namespace: &mut Namespace) {
 
@@ -108,18 +109,15 @@ pub(in crate::stdlib) fn load_model_field_decorators(namespace: &mut Namespace) 
     });
 
     namespace.define_model_field_decorator("id", |arguments, field| {
-
-        Ok(())
+        id_decorator(arguments, field)
     });
 
     namespace.define_model_field_decorator("index", |arguments, field| {
-
-        Ok(())
+        index_decorator(arguments, field)
     });
 
     namespace.define_model_field_decorator("unique", |arguments, field| {
-
-        Ok(())
+        unique_decorator(arguments, field)
     });
 
     namespace.define_model_field_decorator("virtual", |arguments, field| {
