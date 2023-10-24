@@ -339,4 +339,8 @@ impl Namespace {
             None
         }
     }
+
+    pub fn connector_reference(&self) -> Option<Vec<&str>> {
+        self.connector_reference.as_ref().map(|r| r.iter().map(AsRef::as_ref).collect())
+    }
 }

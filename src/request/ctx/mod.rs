@@ -1,9 +1,9 @@
 use std::cell::{Ref, RefCell, RefMut};
-use std::collections::BTreeMap;
 use std::sync::Arc;
 use teo_teon::Value;
+use crate::action::Action;
 use crate::request::Request;
-use crate::connection;
+use crate::connection::transaction;
 use super::local::Data;
 
 #[derive(Debug, Clone)]
@@ -15,7 +15,7 @@ pub struct Ctx {
 struct CtxInner {
     request: Request,
     body: Value,
-    connection_ctx: connection::Ctx,
+    transaction_ctx: transaction::Ctx,
     // pub(crate) path_components: PathComponents,
     //pub action: Option<Action>,
     data: RefCell<Data>,

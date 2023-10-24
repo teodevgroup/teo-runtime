@@ -167,19 +167,19 @@ pub(in crate::stdlib) fn load_model_field_decorators(namespace: &mut Namespace) 
 
     namespace.define_model_field_decorator("onSet", |arguments, field| {
         let pipeline: Pipeline = arguments.get("pipeline")?;
-        field.on_set_pipeline = pipeline;
+        field.on_set = pipeline;
         Ok(())
     });
 
     namespace.define_model_field_decorator("onSave", |arguments, field| {
         let pipeline: Pipeline = arguments.get("pipeline")?;
-        field.on_save_pipeline = pipeline;
+        field.on_save = pipeline;
         Ok(())
     });
 
     namespace.define_model_field_decorator("onOutput", |arguments, field| {
         let pipeline: Pipeline = arguments.get("pipeline")?;
-        field.on_output_pipeline = pipeline;
+        field.on_output = pipeline;
         Ok(())
     });
 
@@ -205,13 +205,13 @@ pub(in crate::stdlib) fn load_model_field_decorators(namespace: &mut Namespace) 
 
     namespace.define_model_field_decorator("canRead", |arguments, field| {
         let pipeline: Pipeline = arguments.get("pipeline")?;
-        field.can_read_pipeline = pipeline;
+        field.can_read = pipeline;
         Ok(())
     });
 
     namespace.define_model_field_decorator("canMutate", |arguments, field| {
         let pipeline: Pipeline = arguments.get("pipeline")?;
-        field.can_mutate_pipeline = pipeline;
+        field.can_mutate = pipeline;
         Ok(())
     });
 

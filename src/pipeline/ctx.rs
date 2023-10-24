@@ -1,13 +1,13 @@
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 use key_path::KeyPath;
-use teo_result::Error;
 use crate::object::Object;
-use crate::request::Request;
 use crate::model;
 use crate::pipeline::pipeline::Pipeline;
 use crate::request;
 use teo_result::{Result, ResultExt};
+use crate::action::Action;
+use crate::connection::transaction;
 
 #[derive(Clone)]
 pub struct Ctx {
@@ -22,12 +22,18 @@ struct CtxInner {
     value: Object,
     object: model::Object,
     path: KeyPath,
-    //pub(crate) action: Action,
-    //pub(crate) conn: Arc<dyn Connection>,
+    action: Action,
+    transaction_ctx: transaction::Ctx,
     request_ctx: Option<request::Ctx>,
 }
 
 impl Ctx {
+
+    pub fn new(value: Object, object: model::Object, path: KeyPath, action: Action, transaction_ctx: transaction::Ctx, request_ctx: Option<request::Ctx>) -> Self {
+        Self {
+            inner: Arc::new(CtxInner { value, object, path, action, transaction_ctx, request_ctx })
+        }
+    }
 
     pub fn value(&self) -> &Object {
         &self.inner.value
@@ -41,8 +47,16 @@ impl Ctx {
         &self.inner.path
     }
 
-    pub fn request_ctx(&self) -> Option<&request::Ctx> {
-        self.inner.request_ctx.as_ref()
+    pub fn action(&self) -> Action {
+        self.inner.action
+    }
+
+    pub fn transaction_ctx(&self) -> transaction::Ctx {
+        self.inner.transaction_ctx.clone()
+    }
+
+    pub fn request_ctx(&self) -> Option<request::Ctx> {
+        self.inner.request_ctx.clone()
     }
 
     pub async fn resolve_pipeline(&self, object: Object, err_prefix: impl AsRef<str>) -> Result<Object> {
@@ -65,12 +79,28 @@ impl Ctx {
         Ok(ctx.value().clone())
     }
 
+    pub async fn run_pipeline_into_path_value_error(&self, pipeline: &Pipeline) -> crate::path::Result<Object> {
+        match self.run_pipeline(pipeline).await {
+            Ok(object) => Ok(object),
+            Err(e) => Err(crate::path::Error::value_error(self.path().clone(), e.message))
+        }
+    }
+
+    pub async fn run_pipeline_into_path_unauthorized_error(&self, pipeline: &Pipeline) -> crate::path::Result<Object> {
+        match self.run_pipeline(pipeline).await {
+            Ok(object) => Ok(object),
+            Err(e) => Err(crate::path::Error::unauthorized_error(self.path().clone(), e.message))
+        }
+    }
+
     pub fn alter_value(&self, value: Object) -> Self {
         Self {
             inner: Arc::new(CtxInner {
                 value,
                 object: self.inner.object.clone(),
                 path: self.inner.path.clone(),
+                action: self.inner.action,
+                transaction_ctx: self.inner.transaction_ctx.clone(),
                 request_ctx: self.inner.request_ctx.clone(),
             })
         }

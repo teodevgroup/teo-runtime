@@ -45,11 +45,11 @@ pub struct Field {
     pub auto: bool,
     pub auto_increment: bool,
     pub default: Option<Object>,
-    pub on_set_pipeline: Pipeline,
-    pub on_save_pipeline: Pipeline,
-    pub on_output_pipeline: Pipeline,
-    pub can_mutate_pipeline: Pipeline,
-    pub can_read_pipeline: Pipeline,
+    pub on_set: Pipeline,
+    pub on_save: Pipeline,
+    pub on_output: Pipeline,
+    pub can_mutate: Pipeline,
+    pub can_read: Pipeline,
     pub data: BTreeMap<String, Object>,
 }
 
@@ -79,11 +79,11 @@ impl Field {
             auto: false,
             auto_increment: false,
             default: None,
-            on_set_pipeline: Pipeline::new(),
-            on_save_pipeline: Pipeline::new(),
-            on_output_pipeline: Pipeline::new(),
-            can_mutate_pipeline: Pipeline::new(),
-            can_read_pipeline: Pipeline::new(),
+            on_set: Pipeline::new(),
+            on_save: Pipeline::new(),
+            on_output: Pipeline::new(),
+            can_mutate: Pipeline::new(),
+            can_read: Pipeline::new(),
             data: btreemap! {},
         }
     }

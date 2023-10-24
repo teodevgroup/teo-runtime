@@ -76,6 +76,18 @@ impl Model {
         self.path.iter().rev().skip(1).rev().map(AsRef::as_ref).collect()
     }
 
+    pub fn field(&self, name: &str) -> Option<&Field> {
+        self.fields.get(name)
+    }
+
+    pub fn relation(&self, name: &str) -> Option<&Relation> {
+        self.relations.get(name)
+    }
+
+    pub fn property(&self, name: &str) -> Option<&Property> {
+        self.properties.get(name)
+    }
+
     pub fn collect_field_index<I>(&self, indexable: &I) -> Option<Index> where I: Indexable {
         if let Some(field_index) = indexable.index() {
             let name = indexable.name();
@@ -235,22 +247,22 @@ impl Model {
 
 #[derive(Debug, Serialize)]
 pub struct Cache {
-    all_keys: Vec<String>,
-    input_keys: Vec<String>,
-    save_keys: Vec<String>,
-    save_keys_and_virtual_keys: Vec<String>,
-    output_keys: Vec<String>,
-    query_keys: Vec<String>,
-    unique_query_keys: Vec<BTreeSet<String>>,
-    sort_keys: Vec<String>,
-    auto_keys: Vec<String>,
-    deny_relation_keys: Vec<String>,
-    scalar_keys: Vec<String>,
-    scalar_number_keys: Vec<String>,
-    local_output_keys: Vec<String>,
-    relation_output_keys: Vec<String>,
-    field_property_map: BTreeMap<String, Vec<String>>,
-    has_virtual_fields: bool,
+    pub all_keys: Vec<String>,
+    pub input_keys: Vec<String>,
+    pub save_keys: Vec<String>,
+    pub save_keys_and_virtual_keys: Vec<String>,
+    pub output_keys: Vec<String>,
+    pub query_keys: Vec<String>,
+    pub unique_query_keys: Vec<BTreeSet<String>>,
+    pub sort_keys: Vec<String>,
+    pub auto_keys: Vec<String>,
+    pub deny_relation_keys: Vec<String>,
+    pub scalar_keys: Vec<String>,
+    pub scalar_number_keys: Vec<String>,
+    pub local_output_keys: Vec<String>,
+    pub relation_output_keys: Vec<String>,
+    pub field_property_map: BTreeMap<String, Vec<String>>,
+    pub has_virtual_fields: bool,
 }
 
 impl Cache {
@@ -274,5 +286,12 @@ impl Cache {
             field_property_map: Default::default(),
             has_virtual_fields: false,
         }
+    }
+}
+
+impl Named for Model {
+
+    fn name(&self) -> &str {
+        self.path.last().map(|s| s.as_str()).unwrap()
     }
 }
