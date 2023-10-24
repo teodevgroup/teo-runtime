@@ -1,5 +1,5 @@
-use std::collections::BTreeMap;
-use maplit::btreemap;
+use std::collections::{BTreeMap, BTreeSet};
+use maplit::{btreemap, btreeset};
 use serde::Serialize;
 use crate::comment::Comment;
 use crate::database::database::Database;
@@ -21,8 +21,8 @@ pub struct Relation {
     pub local: Option<String>,
     pub foreign: Option<String>,
     pub is_vec: bool,
-    pub fields: Vec<String>,
-    pub references: Vec<String>,
+    pub fields: BTreeSet<String>,
+    pub references: BTreeSet<String>,
     pub delete: Delete,
     pub update: Update,
     pub has_foreign_key: bool,
@@ -39,8 +39,8 @@ impl Relation {
             model: vec![],
             through: None,
             is_vec: false,
-            fields: vec![],
-            references: vec![],
+            fields: btreeset!{},
+            references: btreeset!{},
             foreign: None,
             local: None,
             delete: Delete::Default,
@@ -56,6 +56,14 @@ impl Relation {
         } else {
             self.fields.iter().find(|name| fields.iter().find(|f| f.name() == name.as_str() && f.foreign_key).is_some()).is_some()
         }
+    }
+
+    pub fn model_path(&self) -> Vec<&str> {
+        self.model.iter().map(AsRef::as_ref).collect()
+    }
+
+    pub fn through_path(&self) -> Option<Vec<&str>> {
+        self.through.map(|t| t.iter().map(AsRef::as_ref).collect())
     }
 }
 

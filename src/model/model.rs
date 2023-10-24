@@ -88,6 +88,10 @@ impl Model {
         self.properties.get(name)
     }
 
+    pub fn relations(&self) -> Vec<&Relation> {
+        self.relations.values().collect()
+    }
+
     pub fn collect_field_index<I>(&self, indexable: &I) -> Option<Index> where I: Indexable {
         if let Some(field_index) = indexable.index() {
             let name = indexable.name();

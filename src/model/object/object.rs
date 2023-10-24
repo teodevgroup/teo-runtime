@@ -21,6 +21,8 @@ use crate::model::object::input::Input;
 use crate::model::object::input::Input::{AtomicUpdater, SetValue};
 use crate::model::relation::Relation;
 use crate::{object, pipeline, request};
+use crate::model::relation::delete::Delete;
+use crate::namespace::Namespace;
 use crate::optionality::Optionality;
 use crate::readwrite::write::Write;
 use crate::utils::ContainsStr;
@@ -73,6 +75,10 @@ impl Object {
 
     fn model(&self) -> &'static Model {
         self.inner.model
+    }
+
+    fn namespace(&self) -> &'static Namespace {
+        self.inner.transaction_ctx.namespace()
     }
 
     fn pipeline_ctx_for_path_and_value(&self, path: KeyPath, value: Value) -> pipeline::Ctx {
@@ -522,7 +528,7 @@ impl Object {
                         if value.is_null() {
                             for field_name in field_names {
                                 match field_name {
-                                    Value::Vec(names) => {
+                                    Value::Array(names) => {
                                         for name in names {
                                             let name = name.as_str().unwrap();
                                             let value_at_name = self.get_value(name).unwrap();
@@ -547,7 +553,7 @@ impl Object {
                         if value.is_null() {
                             for field_name in field_names {
                                 match field_name {
-                                    Value::Vec(names) => {
+                                    Value::Array(names) => {
                                         for name in names {
                                             let name = name.as_str().unwrap();
                                             let value_at_name = self.get_value(name).unwrap();
@@ -571,10 +577,10 @@ impl Object {
                     Optionality::PresentIf(pipeline) => {
                         let value = self.get_value(key).unwrap();
                         if value.is_null() {
-                            let ctx = PipelineCtx::initial_state_with_object(self.clone(), self.connection(), self.initiator().as_req());
-                            let invalid = pipeline.process(ctx).await.is_err();
+                            let ctx = self.pipeline_ctx_for_path_and_value(path + field.name(), Value::Null);
+                            let invalid = ctx.run_pipeline(pipeline).await.is_err();
                             if invalid {
-                                return Err(Error::missing_required_input_with_type(key, path))
+                                return Err(Error::new("missing required input"));
                             }
                         }
                     }
@@ -614,33 +620,29 @@ impl Object {
         let is_new = self.is_new();
         self.inner.is_new.store(false, Ordering::SeqCst);
         self.inner.is_modified.store(false, Ordering::SeqCst);
-        // set self as identity when identity
-        if is_new && self.model().is_identity() && self.action_source().is_identity() && self.action_source().as_identity().is_none() {
-            let mut_inner = self.inner.as_ref().to_mut();
-            mut_inner.initiator = Initiator::Identity(Some(self.clone()), self.initiator().as_req().unwrap());
-        }
+        // todo: set self as identity when identity
     }
 
     pub(crate) fn clear_state(&self) {
         self.inner.is_new.store(false, Ordering::SeqCst);
         self.inner.is_modified.store(false, Ordering::SeqCst);
-        *self.inner.modified_fields.lock().unwrap() = HashSet::new();
+        *self.inner.modified_fields.lock().unwrap() = BTreeSet::new();
     }
 
     #[async_recursion]
     pub(crate) async fn delete_from_database(&self) -> Result<()> {
         let model = self.model();
-        let graph = self.graph();
+        let namespace = self.namespace();
         // check deny first
         for relation in model.relations() {
             if relation.through().is_some() {
                 continue
             }
-            let (opposite_model, opposite_relation) = graph.opposite_relation(relation);
+            let (opposite_model, opposite_relation) = namespace.opposite_relation(relation);
             if let Some(opposite_relation) = opposite_relation {
-                if opposite_relation.delete_rule() == DeleteRule::Deny {
+                if opposite_relation.delete == Delete::Deny {
                     let finder = self.intrinsic_where_unique_for_relation(relation);
-                    let count = graph.count(opposite_model, &finder, self.connection()).await.unwrap();
+                    let count = self.transaction_ctx().count(opposite_model, &finder, self.connection()).await.unwrap();
                     if count > 0 {
                         return Err(Error::deletion_denied(relation.name()));
                     }
@@ -815,7 +817,7 @@ impl Object {
                         for (index, o) in vec.iter().enumerate() {
                             result_vec.push(o.to_json_internal(&(path.as_ref() + relation.name() + index)).await?);
                         }
-                        map.insert(key.to_string(), Value::Vec(result_vec));
+                        map.insert(key.to_string(), Value::Array(result_vec));
                     }
                 }
             } else if (!select_filter) || (select_filter && select_list.contains(&key.to_string())) {

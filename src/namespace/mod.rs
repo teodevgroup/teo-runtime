@@ -343,4 +343,57 @@ impl Namespace {
     pub fn connector_reference(&self) -> Option<Vec<&str>> {
         self.connector_reference.as_ref().map(|r| r.iter().map(AsRef::as_ref).collect())
     }
+
+    /// Returns the opposite relation of the argument relation.
+    ///
+    /// # Arguments
+    ///
+    /// * `relation` - The relation must be of a model of this graph.
+    ///
+    /// # Return Value
+    ///
+    /// A tuple of opposite relation's model and opposite relation.
+    ///
+    pub(crate) fn opposite_relation(&self, relation: &Relation) -> (&Model, Option<&Relation>) {
+        let opposite_model = self.model_at_path(&relation.model_path()).unwrap();
+        let opposite_relation = opposite_model.relations().iter().find(|r| &r.fields == &relation.references && &r.references == &relation.fields);
+        match opposite_relation {
+            Some(relation) => (opposite_model, Some(relation.as_ref())),
+            None => (opposite_model, None)
+        }
+    }
+
+    /// Returns the through relation of the argument relation.
+    ///
+    /// # Arguments
+    ///
+    /// * `relation` - The relation must be of a model of this graph. This relation must be a
+    /// through relation.
+    ///
+    /// # Return Value
+    ///
+    /// A tuple of through relation's model and through model's local relation.
+    ///
+    pub(crate) fn through_relation(&self, relation: &Relation) -> (&Model, &Relation) {
+        let through_model = self.model_at_path(&relation.through_path().unwrap()).unwrap();
+        let through_local_relation = through_model.relation(relation.local.as_ref().unwrap()).unwrap();
+        (through_model, through_local_relation)
+    }
+
+    /// Returns the through opposite relation of the argument relation.
+    ///
+    /// # Arguments
+    ///
+    /// * `relation` - The relation must be of a model of this graph. This relation must be a
+    /// through relation.
+    ///
+    /// # Return Value
+    ///
+    /// A tuple of through relation's model and through model's foreign relation.
+    ///
+    pub(crate) fn through_opposite_relation(&self, relation: &Relation) -> (&Model, &Relation) {
+        let through_model = self.model_at_path(&relation.through_path().unwrap()).unwrap();
+        let through_foreign_relation = through_model.relation(relation.foreign.as_ref().unwrap()).unwrap();
+        (through_model, through_foreign_relation)
+    }
 }
