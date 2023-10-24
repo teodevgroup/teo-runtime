@@ -8,8 +8,9 @@ use crate::comment::Comment;
 use crate::database::database::Database;
 use crate::database::mysql::r#type::MySQLType;
 use crate::database::r#type::DatabaseType;
+use crate::model::field::column_named::ColumnNamed;
 use crate::model::field::Index;
-use crate::model::field::indexable::{Indexable, IndexableMut};
+use crate::model::field::indexable::{Indexable};
 use crate::model::field::is_optional::IsOptional;
 use crate::model::field::Migration;
 use crate::model::field::named::Named;
@@ -98,30 +99,31 @@ impl Field {
         }
         Ok(())
     }
-
-    pub fn column_name(&self) -> &str {
-        self.column_name.as_str()
-    }
 }
 
-impl Named for &Field {
+impl Named for Field {
 
     fn name(&self) -> &str {
         self.name.as_str()
     }
 }
 
-impl IndexableMut for &mut Field {
+impl ColumnNamed for Field {
 
-    fn set_index(&mut self, index: Index) {
-        self.index = Some(index);
+    fn column_name(&self) -> &str {
+        self.column_name.as_str()
     }
+
 }
 
-impl Indexable for &Field {
+impl Indexable for Field {
 
     fn index(&self) -> Option<&Index> {
         self.index.as_ref()
+    }
+
+    fn set_index(&mut self, index: Index) {
+        self.index = Some(index);
     }
 }
 

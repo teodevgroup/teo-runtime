@@ -76,7 +76,7 @@ impl Model {
         self.path.iter().rev().skip(1).rev().map(AsRef::as_ref).collect()
     }
 
-    pub fn collect_field_index<I>(&self, indexable: I) -> Option<Index> where I: Indexable {
+    pub fn collect_field_index<I>(&self, indexable: &I) -> Option<Index> where I: Indexable {
         if let Some(field_index) = indexable.index() {
             let name = indexable.name();
             let index = model::Index::new(field_index.r#type, name.to_owned(), vec![
