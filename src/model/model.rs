@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
+use std::ops::BitOr;
 use indexmap::IndexMap;
-use maplit::btreemap;
+use maplit::{btreemap, btreeset};
 use serde::Serialize;
 use teo_result::{Result, Error};
 use crate::action::Action;
@@ -106,6 +107,18 @@ impl Model {
         } else {
             None
         }
+    }
+
+    pub(crate) fn allowed_keys_for_aggregate(&self, name: &str) -> BTreeSet<&str> {
+        match name {
+            "_count" => self.cache.scalar_keys.iter().map(|k| k.as_str()).collect::<BTreeSet<&str>>().bitor(&btreeset!{"_all"}),
+            "_min" | "_max" => self.cache.scalar_keys.iter().map(|k| k.as_str()).collect(),
+            _ => self.cache.scalar_number_keys.iter().map(|k| k.as_str()).collect(),
+        }
+    }
+
+    pub(crate) fn allows_drop_when_migrate(&self) -> bool {
+        self.migration.drop
     }
 
     pub fn finalize(&mut self) -> Result<()> {

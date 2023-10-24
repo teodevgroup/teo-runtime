@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::borrow::Cow::{Borrowed, Owned};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
+use std::fmt::{Debug, Display, Formatter};
 use std::ops::Deref;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -1689,4 +1690,60 @@ fn check_user_json_keys<'a>(map: &IndexMap<String, Value>, allowed: &HashSet<&st
         return Err(Error::new(format!("key '{}' is not allowed for {}", unallowed, model.name())));
     }
     Ok(())
+}
+
+impl Debug for Object {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut result = f.debug_struct(self.model().name());
+        for field in self.model().fields() {
+            let map = self.inner.value_map.lock().unwrap();
+            let value = map.get(field.name()).unwrap_or(&Value::Null);
+            result.field(field.name(), value);
+        }
+        result.finish()
+    }
+}
+
+impl Display for Object {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(format!("{} {{ {} }}", self.model().name(), self.model().fields().iter().map(|field| {
+            let map = self.inner.value_map.lock().unwrap();
+            let value = map.get(field.name()).unwrap_or(&Value::Null);
+            format!("{}: {}", field.name(), value.fmt_for_display().as_ref())
+        }).join(", ")).as_str())
+    }
+}
+
+impl PartialEq for Object {
+    fn eq(&self, other: &Self) -> bool {
+        self.model() == other.model() && self.identifier() == other.identifier()
+    }
+}
+
+unsafe impl Send for Object { }
+unsafe impl Sync for Object { }
+
+pub(crate) trait ErrorIfNotFound {
+    fn into_not_found_error(self) -> Result<Object>;
+}
+
+impl ErrorIfNotFound for Option<Object> {
+    fn into_not_found_error(self) -> Result<Object> {
+        match self {
+            Some(object) => Ok(object),
+            None => Err(Error::object_not_found()),
+        }
+    }
+}
+
+impl ErrorIfNotFound for Result<Option<Object>> {
+    fn into_not_found_error(self) -> Result<Object> {
+        match self {
+            Err(err) => Err(err),
+            Ok(option) => match option {
+                Some(object) => Ok(object),
+                None => Err(Error::object_not_found()),
+            }
+        }
+    }
 }
