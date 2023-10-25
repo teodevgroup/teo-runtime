@@ -34,11 +34,11 @@ pub trait Transaction: Send + Sync + Debug {
 
     async fn find_many(&self, model: &Model, finder: &Value, ignore_select_and_include: bool, action: Action, transaction_ctx: transaction::Ctx, req_ctx: Option<request::Ctx>) -> Result<Vec<model::Object>>;
 
-    async fn count(&self, model: &Model, finder: &Value) -> Result<usize>;
+    async fn count(&self, model: &Model, finder: &Value, transaction_ctx: transaction::Ctx) -> Result<usize>;
 
-    async fn aggregate(&self, model: &Model, finder: &Value) -> Result<Value>;
+    async fn aggregate(&self, model: &Model, finder: &Value, transaction_ctx: transaction::Ctx) -> Result<Value>;
 
-    async fn group_by(&self, model: &Model, finder: &Value) -> Result<Value>;
+    async fn group_by(&self, model: &Model, finder: &Value, transaction_ctx: transaction::Ctx) -> Result<Value>;
 
     // Transaction
 

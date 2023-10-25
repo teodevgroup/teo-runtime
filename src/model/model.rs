@@ -132,7 +132,7 @@ impl Model {
         }
     }
 
-    pub(crate) fn allows_drop_when_migrate(&self) -> bool {
+    pub fn allows_drop_when_migrate(&self) -> bool {
         self.migration.drop
     }
 

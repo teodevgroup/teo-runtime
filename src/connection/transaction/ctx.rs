@@ -180,17 +180,17 @@ impl Ctx {
 
     pub async fn count(&self, model: &Model, finder: &Value) -> Result<usize> {
         let transaction = self.transaction_for_model_or_create(model).await?;
-        transaction.count(model, finder).await
+        transaction.count(model, finder, self.clone()).await
     }
 
     pub async fn aggregate(&self, model: &Model, finder: &Value) -> Result<Value> {
         let transaction = self.transaction_for_model_or_create(model).await?;
-        transaction.aggregate(model, finder).await
+        transaction.aggregate(model, finder, self.clone()).await
     }
 
     pub async fn group_by(&self, model: &Model, finder: &Value) -> Result<Value> {
         let transaction = self.transaction_for_model_or_create(model).await?;
-        transaction.group_by(model, finder).await
+        transaction.group_by(model, finder, self.clone()).await
     }
 
     // MARK: - Create an object
