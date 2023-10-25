@@ -301,7 +301,7 @@ impl Namespace {
     }
 
     pub fn struct_at_path(&self, path: &Vec<&str>) -> Option<&Struct> {
-        let struct_name = path.last().unwrap().deref();
+        let struct_name = *path.last().unwrap();
         let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.structs.get(struct_name)
@@ -356,11 +356,8 @@ impl Namespace {
     ///
     pub(crate) fn opposite_relation(&self, relation: &Relation) -> (&Model, Option<&Relation>) {
         let opposite_model = self.model_at_path(&relation.model_path()).unwrap();
-        let opposite_relation = opposite_model.relations().iter().find(|r| &r.fields == &relation.references && &r.references == &relation.fields);
-        match opposite_relation {
-            Some(relation) => (opposite_model, Some(relation.deref())),
-            None => (opposite_model, None)
-        }
+        let opposite_relation = opposite_model.relations.values().find(|r| &r.fields == &relation.references && &r.references == &relation.fields);
+        (opposite_model, opposite_relation)
     }
 
     /// Returns the through relation of the argument relation.

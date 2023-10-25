@@ -428,7 +428,7 @@ impl Object {
     pub fn get_value(&self, key: impl AsRef<str>) -> Result<Value> {
         let model_keys = &self.model().cache.all_keys;
         if !model_keys.contains_str(key.as_ref()) {
-            Err(error_ext::invalid_key_on_model(KeyPath::default(), key, self.model()))?;
+            Err(error_ext::invalid_key_on_model(KeyPath::default(), key.as_ref(), self.model()))?;
         }
         Ok(self.get_value_map_value(key.as_ref()))
     }
@@ -460,7 +460,7 @@ impl Object {
         } else if !false_empty {
             // all - false
             let mut result: Vec<String> = vec![];
-            &self.model().cache.all_keys.iter().for_each(|k| {
+            self.model().cache.all_keys.iter().for_each(|k| {
                 if let Some(field) = self.model().field(k) {
                     if !false_list.contains(&&***&k) {
                         result.push(field.name.to_string());
@@ -476,7 +476,7 @@ impl Object {
         } else {
             // true
             let mut result: Vec<String> = vec![];
-            &self.model().cache.all_keys.iter().for_each(|k| {
+            self.model().cache.all_keys.iter().for_each(|k| {
                 if let Some(field) = self.model().field(k) {
                     if true_list.contains(&k.as_str()) {
                         result.push(field.name.to_string());
@@ -816,7 +816,7 @@ impl Object {
                         }
                     } else {
                         if let Some(getter) = &property.getter {
-                            let ctx = self.pipeline_ctx_for_path_and_value(path![*key], Value::Null);
+                            let ctx = self.pipeline_ctx_for_path_and_value(path![key], Value::Null);
                             let value: Value = ctx.run_pipeline(&getter).await?.try_into()?;
                             if !value.is_null() {
                                 map.insert(key.to_string(), value);

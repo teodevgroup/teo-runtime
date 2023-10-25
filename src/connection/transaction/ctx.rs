@@ -26,7 +26,7 @@ struct CtxInner {
 
 impl Ctx {
 
-    pub fn namespace(&self) -> &Namespace {
+    pub fn namespace(&self) -> &'static Namespace {
         self.inner.connection_ctx.namespace()
     }
 
