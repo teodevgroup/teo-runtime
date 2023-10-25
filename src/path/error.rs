@@ -1,5 +1,6 @@
 use std::fmt::{Display, Formatter};
 use indexmap::{IndexMap, indexmap};
+use itertools::Itertools;
 use key_path::KeyPath;
 
 #[derive(Debug)]
@@ -23,44 +24,53 @@ impl Error {
         }
     }
 
-    pub fn unique_error(path: KeyPath, constraint: String) -> Self {
+    pub fn unique_error(path: KeyPath, constraint: impl AsRef<str>) -> Self {
         Self {
             title: "UniqueError",
             message: "value is not unique".to_owned(),
             fields: Some(indexmap! {
-                path.to_string() => format!("value violates '{}' constraint", constraint)
+                path.to_string() => format!("value violates '{}' constraint", constraint.as_ref())
             }),
             code: 400
         }
     }
 
-    pub fn internal_server_error(path: KeyPath, message: String) -> Self {
+    pub fn internal_server_error(path: KeyPath, message: impl Into<String>) -> Self {
         Self {
             title: "InternalServerError",
             message: "internal server error".to_owned(),
             fields: Some(indexmap! {
-                path.to_string() => message
+                path.to_string() => message.into()
             }),
             code: 500
         }
     }
 
-    pub fn internal_server_error_message_only(message: String) -> Self {
+    pub fn internal_server_error_message_only(message: impl Into<String>) -> Self {
         Self {
             title: "InternalServerError",
-            message,
+            message: message.into(),
             fields: None,
             code: 500,
         }
     }
 
-    pub fn unauthorized_error(path: KeyPath, message: String) -> Self {
+    pub fn unauthorized_error(path: KeyPath, message: impl Into<String>) -> Self {
         Self {
             title: "Unauthorized",
             message: "unauthorized".to_owned(),
             fields: Some(indexmap! {
-                path.to_string() => message
+                path.to_string() => message.into()
             }),
+            code: 401
+        }
+    }
+
+    pub fn unauthorized_error_message_only(message: impl Into<String>) -> Self {
+        Self {
+            title: "Unauthorized",
+            message: message.into(),
+            fields: None,
             code: 401
         }
     }
@@ -77,11 +87,11 @@ impl Display for Error {
         f.write_str(")")?;
         if let Some(fields) = &self.fields {
             f.write_str("[")?;
-            fields.iter().for_each(|(k, v)| {
+            for (k, v) in fields {
                 f.write_str(k)?;
                 f.write_str(": ")?;
                 f.write_str(v)?;
-            })?;
+            }
             f.write_str("]")?;
         }
         Ok(())
@@ -100,6 +110,11 @@ impl From<teo_result::Error> for Error {
 impl From<Error> for teo_result::Error {
 
     fn from(value: Error) -> Self {
-        teo_result::Error::new(value.message)
+        let message = if let Some(fields) = &value.fields {
+            fields.iter().map(|(k, v)| format!("{}: {}", k, v)).join("; ")
+        } else {
+            value.message
+        };
+        teo_result::Error::new(message)
     }
 }

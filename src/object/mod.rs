@@ -1,6 +1,7 @@
 pub mod serde;
 pub mod convert;
 pub mod traits;
+pub mod error_ext;
 
 use std::fmt::Display;
 use std::sync::Arc;

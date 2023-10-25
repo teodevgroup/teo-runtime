@@ -39,8 +39,8 @@ impl Relation {
             model: vec![],
             through: None,
             is_vec: false,
-            fields: btreeset!{},
-            references: btreeset!{},
+            fields: vec![],
+            references: vec![],
             foreign: None,
             local: None,
             delete: Delete::Default,
@@ -58,24 +58,28 @@ impl Relation {
         }
     }
 
+    pub(crate) fn iter(&self) -> RelationIter {
+        RelationIter { index: 0, relation: self }
+    }
+
     pub fn model_path(&self) -> Vec<&str> {
         self.model.iter().map(AsRef::as_ref).collect()
     }
 
     pub fn through_path(&self) -> Option<Vec<&str>> {
-        self.through.map(|t| t.iter().map(AsRef::as_ref).collect())
+        self.through.as_ref().map(|t| t.iter().map(AsRef::as_ref).collect())
     }
 
     pub fn local(&self) -> Option<&str> {
-        self.local.map(AsRef::as_ref)
+        self.local.as_ref().map(AsRef::as_ref)
     }
 
     pub fn foreign(&self) -> Option<&str> {
-        self.foreign.map(AsRef::as_ref)
+        self.foreign.as_ref().map(AsRef::as_ref)
     }
 
     pub fn has_join_table(&self) -> bool {
-        self.through().is_some()
+        self.through_path().is_some()
     }
 }
 
@@ -102,5 +106,24 @@ impl IsOptional for Relation {
 
     fn set_required(&mut self) {
         self.optionality = Optionality::Required;
+    }
+}
+
+pub(crate) struct RelationIter<'a> {
+    index: usize,
+    relation: &'a Relation,
+}
+
+impl<'a> Iterator for RelationIter<'a> {
+    type Item = (&'a str, &'a str);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(f) = self.relation.fields.get(self.index) {
+            let result = Some((f.as_str(), self.relation.references.get(self.index).unwrap().as_str()));
+            self.index += 1;
+            result
+        } else {
+            None
+        }
     }
 }
