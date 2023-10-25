@@ -45,6 +45,13 @@ pub struct Model {
     pub cache: Cache,
 }
 
+impl PartialEq for Model {
+
+    fn eq(&self, other: &Self) -> bool {
+        self.path == other.path
+    }
+}
+
 impl Model {
 
     pub fn new() -> Self {
@@ -89,8 +96,16 @@ impl Model {
         self.properties.get(name)
     }
 
+    pub fn fields(&self) -> Vec<&Field> {
+        self.fields.values().collect()
+    }
+
     pub fn relations(&self) -> Vec<&Relation> {
         self.relations.values().collect()
+    }
+
+    pub fn properties(&self) -> Vec<&Property> {
+        self.properties.values().collect()
     }
 
     pub fn collect_field_index<I>(&self, indexable: &I) -> Option<Index> where I: Indexable {
@@ -119,6 +134,10 @@ impl Model {
 
     pub(crate) fn allows_drop_when_migrate(&self) -> bool {
         self.migration.drop
+    }
+
+    pub fn primary_index(&self) -> Option<&Index> {
+        self.indexes.values().find(|i| i.r#type().is_primary())
     }
 
     pub fn finalize(&mut self) -> Result<()> {

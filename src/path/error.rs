@@ -55,6 +55,17 @@ impl Error {
         }
     }
 
+    pub fn not_found(path: KeyPath) -> Self {
+        Self {
+            title: "NotFound",
+            message: "not found".to_owned(),
+            fields: Some(indexmap!{
+                path.to_string() => "not found".to_owned()
+            }),
+            code: 404
+        }
+    }
+
     pub fn unauthorized_error(path: KeyPath, message: impl Into<String>) -> Self {
         Self {
             title: "Unauthorized",
@@ -99,6 +110,17 @@ impl Display for Error {
 }
 
 impl std::error::Error for Error { }
+
+pub trait IntoPathedValueError {
+    fn into_pathed_value_error(self, path: KeyPath) -> Error;
+}
+
+impl IntoPathedValueError for teo_result::Error {
+
+    fn into_pathed_value_error(self, path: KeyPath) -> Error {
+        Error::value_error(path, self.message)
+    }
+}
 
 impl From<teo_result::Error> for Error {
 
