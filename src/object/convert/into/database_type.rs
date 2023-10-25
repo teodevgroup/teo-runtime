@@ -128,16 +128,15 @@ impl TryFrom<&Object> for DatabaseType {
                     },
                     "money" => Ok(DatabaseType::PostgreSQLType(PostgreSQLType::Money)),
                     "timestamp" => {
-                        let len  = enum_variant.args.unwrap().get("len").unwrap().as_int().unwrap();
-                        Ok(DatabaseType::PostgreSQLType(PostgreSQLType::Timestamp(len)))
-                    },
-                    "timestampTz" => {
-                        let len  = enum_variant.args.unwrap().get("len").unwrap().as_int().unwrap();
-                        Ok(DatabaseType::PostgreSQLType(PostgreSQLType::TimestampTz(len)))
+                        let len  = enum_variant.args.clone().unwrap().get("len").unwrap().as_int().unwrap();
+                        let tz = enum_variant.args.unwrap().get("tz").unwrap().as_bool().unwrap();
+                        Ok(DatabaseType::PostgreSQLType(PostgreSQLType::Timestamp(len, tz)))
                     },
                     "date" => Ok(DatabaseType::PostgreSQLType(PostgreSQLType::Date)),
-                    "time" => Ok(DatabaseType::PostgreSQLType(PostgreSQLType::Time)),
-                    "timeTz" => Ok(DatabaseType::PostgreSQLType(PostgreSQLType::TimeTz)),
+                    "time" => {
+                        let tz = enum_variant.args.clone().unwrap().get("tz").unwrap().as_bool().unwrap();
+                        Ok(DatabaseType::PostgreSQLType(PostgreSQLType::Time(tz)))
+                    },
                     "json" => Ok(DatabaseType::PostgreSQLType(PostgreSQLType::Json)),
                     "jsonB" => Ok(DatabaseType::PostgreSQLType(PostgreSQLType::JsonB)),
                     "byteA" => Ok(DatabaseType::PostgreSQLType(PostgreSQLType::ByteA)),

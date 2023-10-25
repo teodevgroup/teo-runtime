@@ -9,28 +9,28 @@ pub enum Type {
 
 impl Type {
 
-    pub(crate) fn is_primary(&self) -> bool {
+    pub fn is_primary(&self) -> bool {
         match self {
             Type::Primary => true,
             _ => false,
         }
     }
 
-    pub(crate) fn is_unique_or_primary(&self) -> bool {
+    pub fn is_unique_or_primary(&self) -> bool {
         match self {
             Type::Unique | Type::Primary => true,
             _ => false,
         }
     }
 
-    pub(crate) fn is_unique(&self) -> bool {
+    pub fn is_unique(&self) -> bool {
         match self {
             Type::Unique => true,
             _ => false,
         }
     }
 
-    pub(crate) fn is_index(&self) -> bool {
+    pub fn is_index(&self) -> bool {
         match self {
             Type::Index => true,
             _ => false,

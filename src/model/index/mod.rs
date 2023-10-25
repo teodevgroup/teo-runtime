@@ -10,15 +10,15 @@ pub use item::Item;
 #[educe(Debug, PartialEq)]
 #[derive(Serialize)]
 pub struct Index {
-    r#type: index::Type,
-    name: String,
-    items: Vec<Item>,
+    pub r#type: index::Type,
+    pub name: String,
+    pub items: Vec<Item>,
     #[serde(skip)]
     #[educe(PartialEq(ignore))]
-    cache: Cache,
+    pub cache: Cache,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Cache {
     pub keys: BTreeSet<String>,
 }

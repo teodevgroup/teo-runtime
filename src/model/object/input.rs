@@ -3,7 +3,7 @@ use self::Input::{SetValue, AtomicUpdater};
 use teo_teon::value::Value;
 
 
-pub(crate) enum Input {
+pub enum Input {
     SetValue(Value),
     AtomicUpdater(Value),
 }

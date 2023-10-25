@@ -70,7 +70,7 @@ impl Database {
             Type::Decimal => Ok(DatabaseType::PostgreSQLType(PostgreSQLType::Decimal(65, 30))),
             Type::String => Ok(DatabaseType::PostgreSQLType(PostgreSQLType::Text)),
             Type::Date => Ok(DatabaseType::PostgreSQLType(PostgreSQLType::Date)),
-            Type::DateTime => Ok(DatabaseType::PostgreSQLType(PostgreSQLType::Timestamp(3))),
+            Type::DateTime => Ok(DatabaseType::PostgreSQLType(PostgreSQLType::Timestamp(3,true))),
             Type::Array(inner) => Ok(DatabaseType::PostgreSQLType(self.default_postgres_database_type(inner.as_ref())?.as_postgres().unwrap().clone())),
             Type::Optional(inner) => self.default_postgres_database_type(inner.as_ref()),
             _ => Err(Error::new(format!("unsupported postgres database type {}", r#type))),
