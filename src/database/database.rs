@@ -46,7 +46,7 @@ impl Database {
 
     fn default_mysql_database_type(&self, r#type: &Type) -> Result<DatabaseType> {
         match r#type {
-            Type::Bool => Ok(DatabaseType::MySQLType(MySQLType::TinyInt(1, false))),
+            Type::Bool => Ok(DatabaseType::MySQLType(MySQLType::TinyInt(Some(1), false))),
             Type::Int => Ok(DatabaseType::MySQLType(MySQLType::Int(None, false))),
             Type::Int64 => Ok(DatabaseType::MySQLType(MySQLType::BigInt(None, false))),
             Type::Float32 => Ok(DatabaseType::MySQLType(MySQLType::Float)),

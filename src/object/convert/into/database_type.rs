@@ -36,12 +36,12 @@ impl TryFrom<&Object> for DatabaseType {
                     "longText" => Ok(DatabaseType::MySQLType(MySQLType::LongText)),
                     "bit" => {
                         let len = enum_variant.args.unwrap().get("len").unwrap().as_int().unwrap();
-                        Ok(DatabaseType::MySQLType(MySQLType::Bit(len)))
+                        Ok(DatabaseType::MySQLType(MySQLType::Bit(Some(len))))
                     },
                     "tinyInt" => {
                         let len = enum_variant.args.as_ref().unwrap().get("len").unwrap().as_int().unwrap();
                         let signed = enum_variant.args.unwrap().get("signed").unwrap().as_bool().unwrap();
-                        Ok(DatabaseType::MySQLType(MySQLType::TinyInt(len, signed)))
+                        Ok(DatabaseType::MySQLType(MySQLType::TinyInt(Some(len), signed)))
                     },
                     "int" => {
                         let len = enum_variant.args.as_ref().unwrap().get("len").map(|v| v.as_int()).flatten();

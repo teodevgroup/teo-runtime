@@ -8,8 +8,8 @@ pub enum MySQLType {
     TinyText,
     MediumText,
     LongText,
-    Bit(i32),
-    TinyInt(i32, bool),
+    Bit(Option<i32>),
+    TinyInt(Option<i32>, bool),
     Int(Option<i32>, bool),
     SmallInt(Option<i32>, bool),
     MediumInt(Option<i32>, bool),
@@ -37,7 +37,7 @@ impl MySQLType {
         self.as_tiny_int().is_some()
     }
 
-    pub fn as_tiny_int(&self) -> Option<(i32, bool)> {
+    pub fn as_tiny_int(&self) -> Option<(Option<i32>, bool)> {
         match self {
             MySQLType::TinyInt(len, signed) => Some((*len, *signed)),
             _ => None,
