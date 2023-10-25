@@ -10,6 +10,7 @@ use crate::model::field::Index;
 use crate::model::field::indexable::{Indexable};
 use crate::model::field::is_optional::IsOptional;
 use crate::model::field::named::Named;
+use crate::model::field::typed::Typed;
 use crate::object::Object;
 use crate::optionality::Optionality;
 use crate::pipeline::pipeline::Pipeline;
@@ -110,5 +111,12 @@ impl IsOptional for Property {
 
     fn set_required(&mut self) {
         self.optionality = Optionality::Required;
+    }
+}
+
+impl Typed for Property {
+
+    fn r#type(&self) -> &Type {
+        &self.r#type
     }
 }
