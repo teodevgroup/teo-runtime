@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use indexmap::IndexMap;
 use self::Input::{SetValue, AtomicUpdater};
 use teo_teon::value::Value;
 
@@ -24,11 +24,11 @@ impl Input {
         }
     }
 
-    pub fn key_value(value: &HashMap<String, Value>) -> (&str, &Value) {
+    pub fn key_value(value: &IndexMap<String, Value>) -> (&str, &Value) {
         (value.keys().next().unwrap().as_str(), value.values().next().unwrap())
     }
 
-    pub fn has_i_mode(map: &HashMap<String, Value>) -> bool {
+    pub fn has_i_mode(map: &IndexMap<String, Value>) -> bool {
         match map.get("mode") {
             Some(val) => {
                 if let Some(str) = val.as_str() {
