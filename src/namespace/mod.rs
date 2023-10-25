@@ -354,7 +354,7 @@ impl Namespace {
     ///
     /// A tuple of opposite relation's model and opposite relation.
     ///
-    pub(crate) fn opposite_relation(&self, relation: &Relation) -> (&Model, Option<&Relation>) {
+    pub fn opposite_relation(&self, relation: &Relation) -> (&Model, Option<&Relation>) {
         let opposite_model = self.model_at_path(&relation.model_path()).unwrap();
         let opposite_relation = opposite_model.relations.values().find(|r| &r.fields == &relation.references && &r.references == &relation.fields);
         (opposite_model, opposite_relation)
@@ -371,7 +371,7 @@ impl Namespace {
     ///
     /// A tuple of through relation's model and through model's local relation.
     ///
-    pub(crate) fn through_relation(&self, relation: &Relation) -> (&Model, &Relation) {
+    pub fn through_relation(&self, relation: &Relation) -> (&Model, &Relation) {
         let through_model = self.model_at_path(&relation.through_path().unwrap()).unwrap();
         let through_local_relation = through_model.relation(relation.local.as_ref().unwrap()).unwrap();
         (through_model, through_local_relation)
@@ -388,7 +388,7 @@ impl Namespace {
     ///
     /// A tuple of through relation's model and through model's foreign relation.
     ///
-    pub(crate) fn through_opposite_relation(&self, relation: &Relation) -> (&Model, &Relation) {
+    pub fn through_opposite_relation(&self, relation: &Relation) -> (&Model, &Relation) {
         let through_model = self.model_at_path(&relation.through_path().unwrap()).unwrap();
         let through_foreign_relation = through_model.relation(relation.foreign.as_ref().unwrap()).unwrap();
         (through_model, through_foreign_relation)

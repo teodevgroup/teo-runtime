@@ -9,7 +9,8 @@ pub enum Input {
 }
 
 impl Input {
-    pub(crate) fn decode_field(updator: &Value) -> Input {
+
+    pub fn decode_field(updator: &Value) -> Input {
         if let Some(updator_map) = updator.as_dictionary() {
             let key = updator_map.keys().next().unwrap();
             let value = updator_map.values().next().unwrap();
@@ -23,11 +24,11 @@ impl Input {
         }
     }
 
-    pub(crate) fn key_value(value: &HashMap<String, Value>) -> (&str, &Value) {
+    pub fn key_value(value: &HashMap<String, Value>) -> (&str, &Value) {
         (value.keys().next().unwrap().as_str(), value.values().next().unwrap())
     }
 
-    pub(crate) fn has_i_mode(map: &HashMap<String, Value>) -> bool {
+    pub fn has_i_mode(map: &HashMap<String, Value>) -> bool {
         match map.get("mode") {
             Some(val) => {
                 if let Some(str) = val.as_str() {
@@ -42,7 +43,7 @@ impl Input {
         }
     }
 
-    pub(crate) fn has_negative_take(json_value: &Value) -> bool {
+    pub fn has_negative_take(json_value: &Value) -> bool {
         if json_value.is_dictionary() {
             let take = json_value.as_dictionary().unwrap().get("take");
             if take.is_some() {

@@ -80,11 +80,11 @@ impl Object {
         self.inner.request_ctx.clone()
     }
 
-    fn model(&self) -> &'static Model {
+    pub fn model(&self) -> &'static Model {
         self.inner.model
     }
 
-    fn namespace(&self) -> &'static Namespace {
+    pub fn namespace(&self) -> &'static Namespace {
         self.inner.transaction_ctx.namespace()
     }
 
@@ -110,11 +110,11 @@ impl Object {
         Ok(())
     }
 
-    pub(crate) async fn set_teon_with_path(&self, json_value: &Value, path: &KeyPath) -> crate::path::Result<()> {
+    pub async fn set_teon_with_path(&self, json_value: &Value, path: &KeyPath) -> crate::path::Result<()> {
         self.set_teon_with_path_and_user_mode(json_value, path, false).await
     }
 
-    pub(crate) async fn set_teon_with_path_and_user_mode(&self, value: &Value, path: &KeyPath, bypass_permission_check: bool) -> crate::path::Result<()> {
+    pub async fn set_teon_with_path_and_user_mode(&self, value: &Value, path: &KeyPath, bypass_permission_check: bool) -> crate::path::Result<()> {
         let model = self.model();
         // permission
         if !bypass_permission_check {
@@ -287,7 +287,7 @@ impl Object {
         Ok(())
     }
 
-    pub(crate) fn set_from_database_result_value(&self, value: &Value, select: Option<&Value>, include: Option<&Value>) {
+    pub fn set_from_database_result_value(&self, value: &Value, select: Option<&Value>, include: Option<&Value>) {
         let model = self.model();
         for (k, v) in value.as_dictionary().unwrap() {
             if let Some(_) = model.field(k) {
@@ -404,7 +404,7 @@ impl Object {
         }
     }
 
-    pub(crate) fn get_previous_value(&self, key: impl AsRef<str>) -> Result<Value> {
+    pub fn get_previous_value(&self, key: impl AsRef<str>) -> Result<Value> {
         let key = key.as_ref();
         let model_keys = &self.model().cache.all_keys;
         if !model_keys.contains_str(key) {
@@ -433,7 +433,7 @@ impl Object {
         Ok(self.get_value_map_value(key.as_ref()))
     }
 
-    pub(crate) fn get_atomic_updator(&self, key: &str) -> Option<Value> {
+    pub fn get_atomic_updator(&self, key: &str) -> Option<Value> {
         self.inner.atomic_updater_map.lock().unwrap().get(key).cloned()
     }
 
@@ -493,7 +493,7 @@ impl Object {
     }
 
     #[async_recursion]
-    pub(crate) async fn apply_on_save_pipeline_and_validate_required_fields(&self, path: &KeyPath, ignore_required_relation: bool) -> crate::path::Result<()> {
+    pub async fn apply_on_save_pipeline_and_validate_required_fields(&self, path: &KeyPath, ignore_required_relation: bool) -> crate::path::Result<()> {
         // apply on save pipeline first
         let model_keys = &self.model().cache.save_keys;
         for key in model_keys {
@@ -598,21 +598,21 @@ impl Object {
         Ok(())
     }
 
-    pub(crate) fn clear_new_state(&self) {
+    pub fn clear_new_state(&self) {
         let is_new = self.is_new();
         self.inner.is_new.store(false, Ordering::SeqCst);
         self.inner.is_modified.store(false, Ordering::SeqCst);
         // todo: set self as identity when identity
     }
 
-    pub(crate) fn clear_state(&self) {
+    pub fn clear_state(&self) {
         self.inner.is_new.store(false, Ordering::SeqCst);
         self.inner.is_modified.store(false, Ordering::SeqCst);
         *self.inner.modified_fields.lock().unwrap() = BTreeSet::new();
     }
 
     #[async_recursion]
-    pub(crate) async fn delete_from_database(&self, path: &KeyPath) -> crate::path::Result<()> {
+    pub async fn delete_from_database(&self, path: &KeyPath) -> crate::path::Result<()> {
         let model = self.model();
         let namespace = self.namespace();
         // check deny first
@@ -684,12 +684,12 @@ impl Object {
         Ok(())
     }
 
-    pub(crate) async fn save_with_session_and_path(&self, path: &KeyPath) -> crate::path::Result<()> {
+    pub async fn save_with_session_and_path(&self, path: &KeyPath) -> crate::path::Result<()> {
         self.save_with_session_and_path_and_ignore(path, false).await
     }
 
     #[async_recursion]
-    pub(crate) async fn save_with_session_and_path_and_ignore(&self, path: &KeyPath, ignore_required_relation: bool) -> crate::path::Result<()> {
+    pub async fn save_with_session_and_path_and_ignore(&self, path: &KeyPath, ignore_required_relation: bool) -> crate::path::Result<()> {
         // check if it's inside before callback
         self.before_save_callback_check(path)?;
         let is_new = self.is_new();
@@ -721,7 +721,7 @@ impl Object {
         Ok(())
     }
 
-    pub(crate) async fn save_for_seed_without_required_relation(&self) -> crate::path::Result<()> {
+    pub async fn save_for_seed_without_required_relation(&self) -> crate::path::Result<()> {
         self.save_with_session_and_path_and_ignore(&path![], true).await
     }
 
@@ -761,7 +761,7 @@ impl Object {
         Ok(())
     }
 
-    pub(crate) async fn delete_internal<'a>(&self, path: impl AsRef<KeyPath>) -> crate::path::Result<()> {
+    pub async fn delete_internal<'a>(&self, path: impl AsRef<KeyPath>) -> crate::path::Result<()> {
         self.check_model_write_permission(path.as_ref()).await?;
         self.trigger_before_delete_callbacks(path.as_ref()).await?;
         self.delete_from_database(path.as_ref()).await?;
@@ -769,7 +769,7 @@ impl Object {
     }
 
     #[async_recursion]
-    pub(crate) async fn to_json_internal<'a>(&self, path: &KeyPath) -> crate::path::Result<Value> {
+    pub async fn to_json_internal<'a>(&self, path: &KeyPath) -> crate::path::Result<Value> {
         // check read permission
         self.check_model_read_permission(path.as_ref()).await?;
         // output
@@ -837,7 +837,7 @@ impl Object {
         self.inner.is_modified.load(Ordering::SeqCst)
     }
 
-    pub(crate) fn identifier(&self) -> Value {
+    pub fn identifier(&self) -> Value {
         let model = self.model();
         let mut identifier: IndexMap<String, Value> = IndexMap::new();
         for item in model.primary_index().unwrap().items() {
@@ -847,7 +847,7 @@ impl Object {
         Value::Dictionary(identifier)
     }
 
-    pub(crate) fn previous_identifier(&self) -> Value {
+    pub fn previous_identifier(&self) -> Value {
         let model = self.model();
         let mut identifier: IndexMap<String, Value> = IndexMap::new();
         for item in model.primary_index().unwrap().items() {
@@ -870,7 +870,7 @@ impl Object {
         Value::Dictionary(identifier)
     }
 
-    pub(crate) fn db_identifier(&self) -> Value {
+    pub fn db_identifier(&self) -> Value {
         let model = self.model();
         let mut identifier: IndexMap<String, Value> = IndexMap::new();
         let modified_fields = self.inner.modified_fields.lock().unwrap();
@@ -1602,7 +1602,7 @@ impl Object {
         }
     }
 
-    pub(crate) fn keys_for_save(&self) -> Vec<&str> {
+    pub fn keys_for_save(&self) -> Vec<&str> {
         if self.is_new() {
             self.model().cache.save_keys.iter().map(|k| k.as_str()).collect()
         } else {
@@ -1613,11 +1613,11 @@ impl Object {
         }
     }
 
-    pub(crate) fn action(&self) -> Action {
+    pub fn action(&self) -> Action {
         self.inner.action
     }
 
-    pub(crate) fn ignore_relation(&self, name: &str) {
+    pub fn ignore_relation(&self, name: &str) {
         *self.inner.ignore_relation.lock().unwrap() = Some(name.to_owned()); 
     }
 }
@@ -1697,7 +1697,7 @@ impl PartialEq for Object {
 unsafe impl Send for Object { }
 unsafe impl Sync for Object { }
 
-pub(crate) trait ErrorIfNotFound {
+pub trait ErrorIfNotFound {
     fn into_not_found_error(self, path: KeyPath) -> crate::path::Result<Object>;
 }
 

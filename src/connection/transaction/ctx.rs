@@ -135,17 +135,17 @@ impl Ctx {
         }
     }
 
-    pub(crate) async fn find_unique_internal(&self, model: &Model, finder: &Value, ignore_select_and_include: bool, action: Action, req_ctx: Option<request::Ctx>) -> Result<Option<model::Object>> {
+    pub async fn find_unique_internal(&self, model: &Model, finder: &Value, ignore_select_and_include: bool, action: Action, req_ctx: Option<request::Ctx>) -> Result<Option<model::Object>> {
         let transaction = self.transaction_for_model_or_create(model).await?;
-        transaction.find_unique(model, finder, ignore_select_and_include, action, req_ctx).await
+        transaction.find_unique(model, finder, ignore_select_and_include, action, self.clone(), req_ctx).await
     }
 
-    pub(crate) async fn find_first_internal(&self, model: &Model, finder: &Value, ignore_select_and_include: bool, action: Action, req_ctx: Option<request::Ctx>) -> Result<Option<model::Object>> {
+    pub async fn find_first_internal(&self, model: &Model, finder: &Value, ignore_select_and_include: bool, action: Action, req_ctx: Option<request::Ctx>) -> Result<Option<model::Object>> {
         let transaction = self.transaction_for_model_or_create(model).await?;
         let mut finder = finder.as_dictionary().clone().unwrap().clone();
         finder.insert("take".to_string(), 1.into());
         let finder = Value::Dictionary(finder);
-        let result = transaction.find_many(model, &finder, ignore_select_and_include, action, req_ctx).await?;
+        let result = transaction.find_many(model, &finder, ignore_select_and_include, action, self.clone(), req_ctx).await?;
         if result.is_empty() {
             Ok(None)
         } else {
@@ -153,12 +153,12 @@ impl Ctx {
         }
     }
 
-    pub(crate) async fn find_many_internal(&self, model: &Model, finder: &Value, mutation_mode: bool, action: Action, req_ctx: Option<request::Ctx>) -> Result<Vec<model::Object>> {
+    pub async fn find_many_internal(&self, model: &Model, finder: &Value, mutation_mode: bool, action: Action, req_ctx: Option<request::Ctx>) -> Result<Vec<model::Object>> {
         let transaction = self.transaction_for_model_or_create(model).await?;
-        transaction.find_many(model, finder, mutation_mode, action, req_ctx).await
+        transaction.find_many(model, finder, mutation_mode, action, self.clone(), req_ctx).await
     }
 
-    pub(crate) async fn batch<'a, F, Fut>(&self, model: &'static Model, finder: &'a Value, action: Action, req_ctx: Option<request::Ctx>, f: F) -> Result<()> where
+    pub async fn batch<F, Fut>(&self, model: &Model, finder: &Value, action: Action, req_ctx: Option<request::Ctx>, f: F) -> Result<()> where
         F: Fn(model::Object) -> Fut,
         Fut: Future<Output = Result<()>> {
         let batch_size: usize = 200;
@@ -178,28 +178,28 @@ impl Ctx {
         }
     }
 
-    pub(crate) async fn count<'a>(&self, model: &'static Model, finder: &'a Value) -> Result<usize> {
+    pub async fn count(&self, model: &Model, finder: &Value) -> Result<usize> {
         let transaction = self.transaction_for_model_or_create(model).await?;
         transaction.count(model, finder).await
     }
 
-    pub(crate) async fn aggregate<'a>(&self, model: &'static Model, finder: &'a Value) -> Result<Value> {
+    pub async fn aggregate(&self, model: &Model, finder: &Value) -> Result<Value> {
         let transaction = self.transaction_for_model_or_create(model).await?;
         transaction.aggregate(model, finder).await
     }
 
-    pub(crate) async fn group_by<'a>(&self, model: &'static Model, finder: &'a Value) -> Result<Value> {
+    pub async fn group_by(&self, model: &Model, finder: &Value) -> Result<Value> {
         let transaction = self.transaction_for_model_or_create(model).await?;
         transaction.group_by(model, finder).await
     }
 
     // MARK: - Create an object
 
-    pub(crate) fn new_object(&self, model: &'static Model, action: Action, req_ctx: Option<request::Ctx>) -> Result<model::Object> {
+    pub fn new_object(&self, model: &'static Model, action: Action, req_ctx: Option<request::Ctx>) -> Result<model::Object> {
         Ok(model::Object::new(req_ctx, self.clone(), model, action))
     }
 
-    pub(crate) async fn new_object_with_teon_and_path<'a>(&self, model: &'static Model, initial: &Value, path: &KeyPath, action: Action, req_ctx: Option<request::Ctx>) -> Result<model::Object> {
+    pub async fn new_object_with_teon_and_path<'a>(&self, model: &'static Model, initial: &Value, path: &KeyPath, action: Action, req_ctx: Option<request::Ctx>) -> Result<model::Object> {
         let object = self.new_object(model, action, req_ctx)?;
         object.set_teon_with_path(initial, path).await?;
         Ok(object)

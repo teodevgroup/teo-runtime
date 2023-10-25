@@ -58,7 +58,7 @@ impl Relation {
         }
     }
 
-    pub(crate) fn iter(&self) -> RelationIter {
+    pub fn iter(&self) -> RelationIter {
         RelationIter { index: 0, relation: self }
     }
 
@@ -109,7 +109,7 @@ impl IsOptional for Relation {
     }
 }
 
-pub(crate) struct RelationIter<'a> {
+pub struct RelationIter<'a> {
     index: usize,
     relation: &'a Relation,
 }

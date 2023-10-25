@@ -6,14 +6,11 @@ use crate::action::Action;
 use teo_result::Result;
 use crate::connection::connection::Connection;
 use crate::{model, request};
+use crate::connection::transaction;
 use crate::model::Model;
 
 #[async_trait]
 pub trait Transaction: Send + Sync + Debug {
-
-    // Connection
-
-    async fn connection(&self) -> Arc<dyn Connection>;
 
     // Migration (Setup database)
 
@@ -33,9 +30,9 @@ pub trait Transaction: Send + Sync + Debug {
 
     async fn delete_object(&self, object: &model::Object) -> Result<()>;
 
-    async fn find_unique(&self, model: &Model, finder: &Value, ignore_select_and_include: bool, action: Action, req_ctx: Option<request::Ctx>) -> Result<Option<model::Object>>;
+    async fn find_unique(&self, model: &Model, finder: &Value, ignore_select_and_include: bool, action: Action, transaction_ctx: transaction::Ctx, req_ctx: Option<request::Ctx>) -> Result<Option<model::Object>>;
 
-    async fn find_many(&self, model: &Model, finder: &Value, ignore_select_and_include: bool, action: Action, req_ctx: Option<request::Ctx>) -> Result<Vec<model::Object>>;
+    async fn find_many(&self, model: &Model, finder: &Value, ignore_select_and_include: bool, action: Action, transaction_ctx: transaction::Ctx, req_ctx: Option<request::Ctx>) -> Result<Vec<model::Object>>;
 
     async fn count(&self, model: &Model, finder: &Value) -> Result<usize>;
 
