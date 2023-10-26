@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter};
 use serde::Serialize;
 use teo_parser::r#type::Type;
 use teo_result::{Error, Result};
@@ -13,6 +14,19 @@ pub enum Database {
     MySQL,
     PostgreSQL,
     SQLite,
+}
+
+impl Display for Database {
+
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Database::MongoDB => f.write_str("MongoDB")?,
+            Database::MySQL => f.write_str("MySQL")?,
+            Database::PostgreSQL => f.write_str("PostgreSQL")?,
+            Database::SQLite => f.write_str("SQLite")?,
+        }
+        Ok(())
+    }
 }
 
 impl Database {
