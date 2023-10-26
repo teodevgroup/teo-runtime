@@ -15,7 +15,7 @@ pub trait Transaction: Send + Sync + Debug {
 
     // Migration (Setup database)
 
-    async fn migrate(&self, models: Vec<&Model>, reset_database: bool) -> Result<()>;
+    async fn migrate(&self, models: Vec<&Model>,  dry_run: bool, reset_database: bool, silent: bool) -> Result<()>;
 
     // Purge (Clear database data)
 
