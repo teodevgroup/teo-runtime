@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Clone, PartialEq, Eq, Hash)]
 pub enum PostgreSQLType {
     Text,
     Char(i32),

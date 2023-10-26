@@ -1,7 +1,7 @@
 use serde::Serialize;
 use crate::sort::Sort;
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, PartialEq, Serialize, Hash, Clone)]
 pub struct Item {
     pub field: String,
     pub sort: Sort,

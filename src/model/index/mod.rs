@@ -7,20 +7,20 @@ use crate::index;
 pub use item::Item;
 
 #[derive(Educe)]
-#[educe(Debug, PartialEq)]
-#[derive(Serialize)]
+#[educe(Debug, PartialEq, Eq, Hash)]
+#[derive(Serialize, Clone)]
 pub struct Index {
     pub r#type: index::Type,
     pub name: String,
     pub items: Vec<Item>,
     #[serde(skip)]
-    #[educe(PartialEq(ignore))]
+    #[educe(PartialEq(ignore))] #[educe(Hash(ignore))]
     pub cache: Cache,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Cache {
-    pub keys: BTreeSet<String>,
+    pub keys: Vec<String>,
 }
 
 impl Index {
@@ -47,7 +47,7 @@ impl Index {
         &self.items
     }
 
-    pub fn keys(&self) -> &BTreeSet<String> {
+    pub fn keys(&self) -> &Vec<String> {
         &self.cache.keys
     }
 }

@@ -62,6 +62,10 @@ impl Relation {
         RelationIter { index: 0, relation: self }
     }
 
+    pub fn len(&self) -> usize {
+        self.fields.len()
+    }
+
     pub fn model_path(&self) -> Vec<&str> {
         self.model.iter().map(AsRef::as_ref).collect()
     }
@@ -80,6 +84,14 @@ impl Relation {
 
     pub fn has_join_table(&self) -> bool {
         self.through_path().is_some()
+    }
+
+    pub fn fields(&self) -> Vec<&str> {
+        self.fields.iter().map(AsRef::as_ref).collect()
+    }
+
+    pub fn references(&self) -> Vec<&str> {
+        self.references.iter().map(AsRef::as_ref).collect()
     }
 }
 

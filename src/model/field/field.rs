@@ -89,6 +89,10 @@ impl Field {
         }
     }
 
+    pub fn migration(&self) -> Option<&Migration> {
+        self.migration.as_ref()
+    }
+
     pub fn finalize(&mut self, database: Database) -> Result<()> {
         // set default column name
         if self.column_name.is_empty() {

@@ -7,6 +7,7 @@ use teo_result::{Result, Error};
 use crate::action::Action;
 use crate::comment::Comment;
 use crate::model;
+use crate::model::field::column_named::ColumnNamed;
 use crate::model::field::Field;
 use crate::model::field::indexable::Indexable;
 use crate::model::field::named::Named;
@@ -84,8 +85,16 @@ impl Model {
         self.path.iter().rev().skip(1).rev().map(AsRef::as_ref).collect()
     }
 
+    pub fn table_name(&self) -> &str {
+        &self.table_name
+    }
+
     pub fn field(&self, name: &str) -> Option<&Field> {
-        self.fields.get(name)
+        self.fields.get(name).filter(|f| !f.dropped)
+    }
+
+    pub fn dropped_field(&self, name: &str) -> Option<&Field> {
+        self.fields.get(name).filter(|f| f.dropped)
     }
 
     pub fn relation(&self, name: &str) -> Option<&Relation> {
@@ -94,6 +103,18 @@ impl Model {
 
     pub fn property(&self, name: &str) -> Option<&Property> {
         self.properties.get(name)
+    }
+
+    pub fn field_with_column_name(&self, name: &str) -> Option<&Field> {
+        self.fields().iter().find(|f| f.column_name() == name).map(|f| *f)
+    }
+
+    pub fn property_with_column_name(&self, name: &str) -> Option<&Property> {
+        self.properties().iter().find(|p| p.column_name() == name).map(|p| *p)
+    }
+
+    pub fn indexes(&self) -> Vec<&Index> {
+        self.indexes.values().collect()
     }
 
     pub fn fields(&self) -> Vec<&Field> {

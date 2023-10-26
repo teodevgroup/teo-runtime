@@ -48,3 +48,11 @@ pub fn unknown_database_find_error(path: KeyPath, reason: impl AsRef<str>) -> cr
 pub fn unique_value_duplicated(path: KeyPath, field: impl AsRef<str>) -> crate::path::Error {
     crate::path::Error::value_error(path, format!("unique value duplicated: {}", field.as_ref()))
 }
+
+pub fn invalid_sql_query(reason: impl AsRef<str>) -> crate::path::Error {
+    crate::path::Error::internal_server_error_message_only(reason.as_ref())
+}
+
+pub fn object_is_not_saved_thus_cant_be_deleted(path: KeyPath) -> crate::path::Error {
+    crate::path::Error::value_error(path, "object is not saved thus can't be deleted")
+}

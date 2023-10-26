@@ -4,7 +4,7 @@ use crate::database::mysql::r#type::MySQLType;
 use crate::database::postgres::r#type::PostgreSQLType;
 use crate::database::sqlite::r#type::SQLiteType;
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Clone, PartialEq, Eq, Hash)]
 pub enum DatabaseType {
     Undetermined,
     MySQLType(MySQLType),
