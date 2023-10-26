@@ -65,7 +65,7 @@ impl Field {
             migration: None,
             comment: None,
             r#type: Type::Undetermined,
-            database_type: DatabaseType::MySQLType(MySQLType::Text),
+            database_type: DatabaseType::Undetermined,
             optionality: Optionality::Optional,
             previous: Previous::DontKeep,
             atomic: false,

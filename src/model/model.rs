@@ -163,6 +163,15 @@ impl Model {
 
     pub fn finalize(&mut self) -> Result<()> {
 
+        // set default table name
+        if self.table_name.is_empty() {
+            let mut namespace_prefix = self.namespace_path().join("_");
+            if !namespace_prefix.is_empty() {
+                namespace_prefix += "__";
+            }
+            self.table_name = namespace_prefix + self.path.last().unwrap();
+        }
+
         // load index and set primary index
         let mut indexes_from_fields = vec![];
         for field in self.fields.values() {
