@@ -166,7 +166,7 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_load
             load_interface(main_namespace, schema, interface_declaration, &mut diagnostics)?;
         }
     }
-    println!("load model");
+
     // load models
     for model_declaration in schema.models() {
         if model_declaration.is_available() {
@@ -174,7 +174,6 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_load
         }
     }
 
-    println!("load handler groups");
     // load handler groups
     for handler_group_declaration in schema.handler_group_declarations() {
 
