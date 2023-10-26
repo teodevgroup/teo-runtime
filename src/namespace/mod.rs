@@ -393,4 +393,17 @@ impl Namespace {
         let through_foreign_relation = through_model.relation(relation.foreign.as_ref().unwrap()).unwrap();
         (through_model, through_foreign_relation)
     }
+
+    pub fn models_under_connector(&self) -> Vec<&Model> {
+        let mut result = vec![];
+                for model in self.models.values() {
+            result.push(model);
+        }
+        for n in self.namespaces.values() {
+            if !n.connector.is_some() {
+                result.extend(n.models_under_connector());
+            }
+        }
+        result
+    }
 }

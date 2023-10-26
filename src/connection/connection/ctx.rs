@@ -52,6 +52,10 @@ impl Ctx {
     pub(in crate::connection) fn connections(&self) -> Vec<Arc<dyn Connection>> {
         self.inner.connections.values().map(Clone::clone).collect()
     }
+
+    pub fn connections_iter(&self) -> &BTreeMap<Vec<String>, Arc<dyn Connection>> {
+        self.inner.connections.as_ref()
+    }
 }
 
 fn retrieve_connections(namespace: &Namespace) -> BTreeMap<Vec<String>, Arc<dyn Connection>> {
