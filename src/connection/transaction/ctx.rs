@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 use std::future::Future;
 use std::sync::{Arc, Mutex};
 use key_path::KeyPath;
+use maplit::btreemap;
 use teo_result::Result;
 use teo_teon::Value;
 use crate::{connection, model, request};
@@ -25,6 +26,15 @@ struct CtxInner {
 }
 
 impl Ctx {
+
+    pub fn new(connection_ctx: connection::Ctx) -> Self {
+        Self {
+            inner: Arc::new(CtxInner {
+                connection_ctx,
+                transactions: Mutex::new(btreemap!{})
+            })
+        }
+    }
 
     pub fn namespace(&self) -> &'static Namespace {
         self.inner.connection_ctx.namespace()
