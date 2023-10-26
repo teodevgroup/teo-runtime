@@ -36,3 +36,15 @@ pub fn invalid_operation(path: KeyPath, reason: impl AsRef<str>) -> crate::path:
 pub fn not_found(path: KeyPath) -> crate::path::Error {
     crate::path::Error::not_found(path)
 }
+
+pub fn unknown_database_write_error(path: KeyPath, reason: impl AsRef<str>) -> crate::path::Error {
+    crate::path::Error::internal_server_error(path, format!("unknown database write error: {}", reason.as_ref()))
+}
+
+pub fn unknown_database_find_error(path: KeyPath, reason: impl AsRef<str>) -> crate::path::Error {
+    crate::path::Error::internal_server_error(path, format!("unknown database find error: {}", reason.as_ref()))
+}
+
+pub fn unique_value_duplicated(path: KeyPath, field: impl AsRef<str>) -> crate::path::Error {
+    crate::path::Error::value_error(path, format!("unique value duplicated: {}", field.as_ref()))
+}

@@ -624,7 +624,7 @@ impl Object {
             if let Some(opposite_relation) = opposite_relation {
                 if opposite_relation.delete == Delete::Deny {
                     let finder = self.intrinsic_where_unique_for_relation(relation);
-                    let count = self.transaction_ctx().count(opposite_model, &finder).await.unwrap();
+                    let count = self.transaction_ctx().count(opposite_model, &finder, path.clone()).await.unwrap();
                     if count > 0 {
                         return Err(error_ext::deletion_denied(path.clone(), relation.name()));
                     }
@@ -632,7 +632,7 @@ impl Object {
             }
         }
         // real delete
-        self.transaction_ctx().transaction_for_model(self.model()).unwrap().delete_object(self, path.clone()).await.into_pathed_value_result(path.clone())?;
+        self.transaction_ctx().transaction_for_model(self.model()).unwrap().delete_object(self, path.clone()).await?;
         // nullify and cascade
         for relation in model.relations() {
             if relation.through_path().is_some() {
@@ -648,7 +648,7 @@ impl Object {
                             continue
                         }
                         let finder = self.intrinsic_where_unique_for_relation(relation);
-                        self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | (if relation.is_vec { MANY } else { SINGLE }), self.request_ctx(), |object| async move {
+                        self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | (if relation.is_vec { MANY } else { SINGLE }), self.request_ctx(), path.clone(), |object| async move {
                             for key in &opposite_relation.fields {
                                 object.set_value(key, Value::Null)?;
                             }
@@ -658,7 +658,7 @@ impl Object {
                     },
                     Delete::Cascade => {
                         let finder = self.intrinsic_where_unique_for_relation(relation);
-                        self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DELETE | if relation.is_vec { MANY } else { SINGLE }, self.request_ctx(), |object| async move {
+                        self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DELETE | if relation.is_vec { MANY } else { SINGLE }, self.request_ctx(), path.clone(), |object| async move {
                             object.delete_from_database(path).await?;
                             Ok(())
                         }).await?;
@@ -974,7 +974,7 @@ impl Object {
             finder.insert(l.to_owned(), object.get_value(f).unwrap());
         }
         let r#where = Value::Dictionary(finder);
-        let object = match self.transaction_ctx().find_unique_internal(join_model, &teon!({ "where": r#where }), true, action, self.request_ctx()).await {
+        let object = match self.transaction_ctx().find_unique_internal(join_model, &teon!({ "where": r#where }), true, action, self.request_ctx(), path.clone()).await {
             Ok(object) => object,
             Err(_) => return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "Join object is not found.")),
         }.into_not_found_error(path.clone())?;
@@ -1068,7 +1068,7 @@ impl Object {
         if !value.is_null() {
             // connect new
             let action = NESTED | SET | SINGLE;
-            let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": value }), true, action, self.request_ctx()).await {
+            let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": value }), true, action, self.request_ctx(), path.clone()).await {
                 Ok(object) => object.into_not_found_error(path.clone())?,
                 Err(_) => return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "Object is not found.")),
             };
@@ -1079,7 +1079,7 @@ impl Object {
 
     async fn nested_connect_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> crate::path::Result<()> {
         let action = NESTED | CONNECT | SINGLE;
-        let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": value }), true, action, self.request_ctx()).await {
+        let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": value }), true, action, self.request_ctx(), path.clone()).await {
             Ok(object) => object,
             Err(_) => return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "Object is not found.")),
         }.into_not_found_error(path.clone())?;
@@ -1090,7 +1090,7 @@ impl Object {
         let r#where = value.get("where").unwrap();
         let create = value.get("create").unwrap();
         let action = CONNECT_OR_CREATE | CONNECT | NESTED | SINGLE;
-        let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx()).await {
+        let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx(), path.clone()).await {
             Ok(object) => object.into_not_found_error(path.clone())?,
             Err(_) => {
                 self.transaction_ctx().new_object_with_teon_and_path(self.namespace().model_at_path(&relation.model_path()).unwrap(), create, &(path + "create"), action, self.request_ctx()).await?
@@ -1124,7 +1124,7 @@ impl Object {
         } else {
             let r#where = value;
             let action = NESTED | DISCONNECT | SINGLE;
-            let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx()).await {
+            let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx(), path.clone()).await {
                 Ok(object) => object,
                 Err(_) => return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "object is not found")),
             }.into_not_found_error(path.clone())?;
@@ -1148,7 +1148,7 @@ impl Object {
         let create = value.get("create").unwrap();
         let update = value.get("update").unwrap();
         let action = NESTED | UPSERT | UPDATE | SINGLE;
-        match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx()).await.into_not_found_error(path.clone()) {
+        match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx(), path.clone()).await.into_not_found_error(path.clone()) {
             Ok(object) => {
                 let path = path + "update";
                 object.set_teon_with_path(update, &path).await?;
@@ -1166,7 +1166,7 @@ impl Object {
     async fn nested_many_disconnect_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> crate::path::Result<()> {
         if relation.has_join_table() {
             let action = JOIN_DELETE | DELETE | SINGLE;
-            let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": value }), true, action, self.request_ctx()).await {
+            let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": value }), true, action, self.request_ctx(), path.clone()).await {
                 Ok(object) => object.into_not_found_error(path.clone())?,
                 Err(_) => return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "Object is not found.")),
             };
@@ -1175,7 +1175,7 @@ impl Object {
             let mut r#where = self.intrinsic_where_unique_for_relation(relation);
             r#where.as_dictionary_mut().unwrap().extend(value.as_dictionary().cloned().unwrap().into_iter());
             let action = DISCONNECT | NESTED | SINGLE;
-            let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx()).await {
+            let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx(), path.clone()).await {
                 Ok(object) => object.into_not_found_error(path.clone())?,
                 Err(_) => return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "Object is not found.")),
             };
@@ -1200,7 +1200,7 @@ impl Object {
                 "include": {
                     self.namespace().through_opposite_relation(relation).1.name(): true
                 }
-            }), true, action, self.request_ctx()).await {
+            }), true, action, self.request_ctx(), path.clone()).await {
                 let mut results = vec![];
                 for join_object in join_objects {
                     let object = join_object.get_query_relation_object(self.namespace().through_opposite_relation(relation).1.name(), path)?.unwrap();
@@ -1214,7 +1214,7 @@ impl Object {
             let mut r#where = self.intrinsic_where_unique_for_relation(relation);
             r#where.as_dictionary_mut().unwrap().extend(value.as_dictionary().cloned().unwrap());
             let action = NESTED | UPDATE | MANY;
-            let objects = self.transaction_ctx().find_many_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx()).await.unwrap();
+            let objects = self.transaction_ctx().find_many_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx(), path.clone()).await.unwrap();
             Ok(objects)
         }
     }
@@ -1234,7 +1234,7 @@ impl Object {
                 "include": {
                     self.namespace().through_opposite_relation(relation).1.name(): true
                 }
-            }), true, action, self.request_ctx()).await.into_not_found_error(path.clone()) {
+            }), true, action, self.request_ctx(), path.clone()).await.into_not_found_error(path.clone()) {
                 let object = join_object.get_query_relation_object(self.namespace().through_opposite_relation(relation).1.name(), path)?.unwrap();
                 Ok(object)
             } else {
@@ -1244,7 +1244,7 @@ impl Object {
             let mut r#where = self.intrinsic_where_unique_for_relation(relation);
             r#where.as_dictionary_mut().unwrap().extend(value.as_dictionary().cloned().unwrap());
             let action = NESTED | UPDATE | SINGLE;
-            let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx()).await {
+            let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx(), path.clone()).await {
                 Ok(object) => object,
                 Err(_) => return Err(error_ext::unexpected_input_value_with_reason(path + "where", "Object is not found.")),
             }.into_not_found_error(path.clone())?;
@@ -1272,7 +1272,7 @@ impl Object {
     async fn nested_update_relation_object<'a>(&'a self, relation: &'static Relation, value: &'a Value, path: &'a KeyPath) -> crate::path::Result<()> {
         let r#where = value.get("where").unwrap();
         let action = NESTED | UPDATE | SINGLE;
-        let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx()).await {
+        let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx(), path.clone()).await {
             Ok(object) => object.into_not_found_error(path.clone())?,
             Err(_) => return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "update: object not found")),
         };
@@ -1287,7 +1287,7 @@ impl Object {
         }
         let r#where = value.get("where").unwrap();
         let action = NESTED | DELETE | SINGLE;
-        let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx()).await {
+        let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx(), path.clone()).await {
             Ok(object) => object.into_not_found_error(path.clone())?,
             Err(_) => return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "delete: object not found")),
         };
@@ -1331,7 +1331,7 @@ impl Object {
                     "is": value
                 }
             }
-        }), self.request_ctx()).await.into_not_found_error(path.clone()) {
+        }), self.request_ctx(), path.clone()).await.into_not_found_error(path.clone()) {
             if relation.is_required() {
                 return Err(error_ext::cannot_disconnect_previous_relation(path.clone()));
             } else {
@@ -1472,7 +1472,7 @@ impl Object {
         if let Some(select) = select {
             finder.as_dictionary_mut().unwrap().insert("select".to_string(), select.clone());
         }
-        let target = self.transaction_ctx().find_unique_internal(self.model(), &finder, false, self.action(), self.request_ctx()).await.into_not_found_error(path![]);
+        let target = self.transaction_ctx().find_unique_internal(self.model(), &finder, false, self.action(), self.request_ctx(), path![]).await.into_not_found_error(path![]);
         match target {
             Ok(obj) => {
                 if self.model().cache.has_virtual_fields {
@@ -1505,7 +1505,7 @@ impl Object {
         self.inner.object_disconnect_map.lock().await.insert(key.to_owned(), objects);
     }
 
-    pub async fn force_get_relation_objects(&self, key: &str, find_many_args: impl AsRef<Value>) -> Result<Vec<Object>> {
+    pub async fn force_get_relation_objects(&self, key: &str, find_many_args: impl AsRef<Value>) -> crate::path::Result<Vec<Object>> {
         self.fetch_relation_objects(key, Some(find_many_args.as_ref())).await
     }
 
@@ -1517,11 +1517,14 @@ impl Object {
         if self.has_mutation_relation_fetched(key) {
             self.get_mutation_relation_object(key)
         } else {
-            self.fetch_relation_object(key, None).await
+            match self.fetch_relation_object(key, None).await {
+                Ok(r) => Ok(r),
+                Err(e) => Err(e.into()),
+            }
         }
     }
 
-    pub async fn fetch_relation_object(&self, key: impl AsRef<str>, find_unique_arg: Option<&Value>) -> Result<Option<Object>> {
+    pub async fn fetch_relation_object(&self, key: impl AsRef<str>, find_unique_arg: Option<&Value>) -> crate::path::Result<Option<Object>> {
         // get relation
         let model = self.model();
         let relation = model.relation(key.as_ref());
@@ -1540,7 +1543,7 @@ impl Object {
         }
         let relation_model_name = self.namespace().model_at_path(&relation.model_path()).unwrap();
         let action = NESTED | FIND | CODE_NAME | SINGLE;
-        match self.transaction_ctx().find_unique_internal(relation_model_name, &finder, false, action, self.request_ctx()).await {
+        match self.transaction_ctx().find_unique_internal(relation_model_name, &finder, false, action, self.request_ctx(), path![]).await {
             Ok(result) => {
                 self.inner.relation_query_map.lock().unwrap().insert(key.as_ref().to_string(), vec![result.into_not_found_error(path![])?]);
                 let obj = self.inner.relation_query_map.lock().unwrap().get(key.as_ref()).unwrap().get(0).unwrap().clone();
@@ -1552,7 +1555,7 @@ impl Object {
         }
     }
 
-    pub async fn fetch_relation_objects(&self, key: impl AsRef<str>, find_many_arg: Option<&Value>) -> Result<Vec<Object>> {
+    pub async fn fetch_relation_objects(&self, key: impl AsRef<str>, find_many_arg: Option<&Value>) -> crate::path::Result<Vec<Object>> {
         // get relation
         let model = self.model();
         let relation = model.relation(key.as_ref());
@@ -1574,7 +1577,7 @@ impl Object {
                 "include": {
                     key.as_ref(): include_inside
                 }
-            }), false, action, self.request_ctx()).await.into_not_found_error(path![])?;
+            }), false, action, self.request_ctx(), path![]).await.into_not_found_error(path![])?;
             let vec = new_self.inner.relation_query_map.lock().unwrap().get(key.as_ref()).unwrap().clone();
             Ok(vec)
         } else {
@@ -1597,7 +1600,7 @@ impl Object {
                 finder.as_dictionary_mut().unwrap().get_mut("where").unwrap().as_dictionary_mut().unwrap().insert(foreign_field_name.to_owned(), json_value);
             }
             let relation_model = self.namespace().model_at_path(&relation.model_path()).unwrap();
-            let results = self.transaction_ctx().find_many_internal(relation_model, &finder, false, action, self.request_ctx()).await?;
+            let results = self.transaction_ctx().find_many_internal(relation_model, &finder, false, action, self.request_ctx(), path![]).await?;
             Ok(results)
         }
     }
@@ -1706,6 +1709,19 @@ impl ErrorIfNotFound for Option<Object> {
         match self {
             Some(object) => Ok(object),
             None => Err(error_ext::not_found(path)),
+        }
+    }
+}
+
+impl ErrorIfNotFound for crate::path::Result<Option<Object>> {
+
+    fn into_not_found_error(self, path: KeyPath) -> crate::path::Result<Object> {
+        match self {
+            Err(err) => Err(err),
+            Ok(option) => match option {
+                Some(object) => Ok(object),
+                None => Err(error_ext::not_found(path)),
+            }
         }
     }
 }

@@ -108,8 +108,8 @@ impl Ctx {
 
     // database methods
 
-    pub async fn find_unique<T: From<model::Object>>(&self, model: &Model, finder: &Value, req_ctx: Option<request::Ctx>) -> Result<Option<T>> {
-        match self.find_unique_internal(model, finder, false, CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx).await {
+    pub async fn find_unique<T: From<model::Object>>(&self, model: &Model, finder: &Value, req_ctx: Option<request::Ctx>, path: KeyPath) -> crate::path::Result<Option<T>> {
+        match self.find_unique_internal(model, finder, false, CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx, path).await {
             Ok(result) => match result {
                 Some(o) => Ok(Some(o.into())),
                 None => Ok(None),
@@ -118,8 +118,8 @@ impl Ctx {
         }
     }
 
-    pub async fn find_first<T: From<model::Object>>(&self, model: &Model, finder: &Value, req_ctx: Option<request::Ctx>) -> Result<Option<T>> {
-        match self.find_first_internal(model, finder, false, CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx).await {
+    pub async fn find_first<T: From<model::Object>>(&self, model: &Model, finder: &Value, req_ctx: Option<request::Ctx>, path: KeyPath) -> crate::path::Result<Option<T>> {
+        match self.find_first_internal(model, finder, false, CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx, path).await {
             Ok(result) => match result {
                 Some(o) => Ok(Some(o.into())),
                 None => Ok(None),
@@ -128,24 +128,24 @@ impl Ctx {
         }
     }
 
-    pub async fn find_many<T: From<model::Object>>(&self, model: &Model, finder: &Value, req_ctx: Option<request::Ctx>) -> Result<Vec<T>> {
-        match self.find_many_internal(model, finder, false, CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx).await {
+    pub async fn find_many<T: From<model::Object>>(&self, model: &Model, finder: &Value, req_ctx: Option<request::Ctx>, path: KeyPath) -> crate::path::Result<Vec<T>> {
+        match self.find_many_internal(model, finder, false, CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx, path).await {
             Ok(results) => Ok(results.iter().map(|item| item.clone().into()).collect()),
             Err(err) => Err(err),
         }
     }
 
-    pub async fn find_unique_internal(&self, model: &Model, finder: &Value, ignore_select_and_include: bool, action: Action, req_ctx: Option<request::Ctx>) -> Result<Option<model::Object>> {
+    pub async fn find_unique_internal(&self, model: &Model, finder: &Value, ignore_select_and_include: bool, action: Action, req_ctx: Option<request::Ctx>, path: KeyPath) -> crate::path::Result<Option<model::Object>> {
         let transaction = self.transaction_for_model_or_create(model).await?;
-        transaction.find_unique(model, finder, ignore_select_and_include, action, self.clone(), req_ctx).await
+        transaction.find_unique(model, finder, ignore_select_and_include, action, self.clone(), req_ctx, path).await
     }
 
-    pub async fn find_first_internal(&self, model: &Model, finder: &Value, ignore_select_and_include: bool, action: Action, req_ctx: Option<request::Ctx>) -> Result<Option<model::Object>> {
+    pub async fn find_first_internal(&self, model: &Model, finder: &Value, ignore_select_and_include: bool, action: Action, req_ctx: Option<request::Ctx>, path: KeyPath) -> crate::path::Result<Option<model::Object>> {
         let transaction = self.transaction_for_model_or_create(model).await?;
         let mut finder = finder.as_dictionary().clone().unwrap().clone();
         finder.insert("take".to_string(), 1.into());
         let finder = Value::Dictionary(finder);
-        let result = transaction.find_many(model, &finder, ignore_select_and_include, action, self.clone(), req_ctx).await?;
+        let result = transaction.find_many(model, &finder, ignore_select_and_include, action, self.clone(), req_ctx, path).await?;
         if result.is_empty() {
             Ok(None)
         } else {
@@ -153,12 +153,12 @@ impl Ctx {
         }
     }
 
-    pub async fn find_many_internal(&self, model: &Model, finder: &Value, mutation_mode: bool, action: Action, req_ctx: Option<request::Ctx>) -> Result<Vec<model::Object>> {
+    pub async fn find_many_internal(&self, model: &Model, finder: &Value, mutation_mode: bool, action: Action, req_ctx: Option<request::Ctx>, path: KeyPath) -> crate::path::Result<Vec<model::Object>> {
         let transaction = self.transaction_for_model_or_create(model).await?;
-        transaction.find_many(model, finder, mutation_mode, action, self.clone(), req_ctx).await
+        transaction.find_many(model, finder, mutation_mode, action, self.clone(), req_ctx, path).await
     }
 
-    pub async fn batch<F, Fut>(&self, model: &Model, finder: &Value, action: Action, req_ctx: Option<request::Ctx>, f: F) -> Result<()> where
+    pub async fn batch<F, Fut>(&self, model: &Model, finder: &Value, action: Action, req_ctx: Option<request::Ctx>, path: KeyPath, f: F) -> Result<()> where
         F: Fn(model::Object) -> Fut,
         Fut: Future<Output = Result<()>> {
         let batch_size: usize = 200;
@@ -167,7 +167,7 @@ impl Ctx {
             let mut batch_finder = finder.clone();
             batch_finder.as_dictionary_mut().unwrap().insert("skip".to_owned(), (index * batch_size).into());
             batch_finder.as_dictionary_mut().unwrap().insert("take".to_owned(), batch_size.into());
-            let results = self.find_many_internal(model, &batch_finder, true, action, req_ctx.clone()).await?;
+            let results = self.find_many_internal(model, &batch_finder, true, action, req_ctx.clone(), path.clone()).await?;
             for result in results.iter() {
                 f(result.clone()).await?;
             }
@@ -178,19 +178,19 @@ impl Ctx {
         }
     }
 
-    pub async fn count(&self, model: &Model, finder: &Value) -> Result<usize> {
+    pub async fn count(&self, model: &Model, finder: &Value, path: KeyPath) -> crate::path::Result<usize> {
         let transaction = self.transaction_for_model_or_create(model).await?;
-        transaction.count(model, finder, self.clone()).await
+        transaction.count(model, finder, self.clone(), path).await
     }
 
-    pub async fn aggregate(&self, model: &Model, finder: &Value) -> Result<Value> {
+    pub async fn aggregate(&self, model: &Model, finder: &Value, path: KeyPath) -> crate::path::Result<Value> {
         let transaction = self.transaction_for_model_or_create(model).await?;
-        transaction.aggregate(model, finder, self.clone()).await
+        transaction.aggregate(model, finder, self.clone(), path).await
     }
 
-    pub async fn group_by(&self, model: &Model, finder: &Value) -> Result<Value> {
+    pub async fn group_by(&self, model: &Model, finder: &Value, path: KeyPath) -> crate::path::Result<Value> {
         let transaction = self.transaction_for_model_or_create(model).await?;
-        transaction.group_by(model, finder, self.clone()).await
+        transaction.group_by(model, finder, self.clone(), path).await
     }
 
     // MARK: - Create an object

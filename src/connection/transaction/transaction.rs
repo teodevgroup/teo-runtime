@@ -27,19 +27,19 @@ pub trait Transaction: Send + Sync + Debug {
 
     // Object manipulation
 
-    async fn save_object(&self, object: &model::Object, path: KeyPath) -> Result<()>;
+    async fn save_object(&self, object: &model::Object, path: KeyPath) -> crate::path::Result<()>;
 
-    async fn delete_object(&self, object: &model::Object, path: KeyPath) -> Result<()>;
+    async fn delete_object(&self, object: &model::Object, path: KeyPath) -> crate::path::Result<()>;
 
-    async fn find_unique(&self, model: &Model, finder: &Value, ignore_select_and_include: bool, action: Action, transaction_ctx: transaction::Ctx, req_ctx: Option<request::Ctx>) -> Result<Option<model::Object>>;
+    async fn find_unique(&self, model: &Model, finder: &Value, ignore_select_and_include: bool, action: Action, transaction_ctx: transaction::Ctx, req_ctx: Option<request::Ctx>, path: KeyPath) -> crate::path::Result<Option<model::Object>>;
 
-    async fn find_many(&self, model: &Model, finder: &Value, ignore_select_and_include: bool, action: Action, transaction_ctx: transaction::Ctx, req_ctx: Option<request::Ctx>) -> Result<Vec<model::Object>>;
+    async fn find_many(&self, model: &Model, finder: &Value, ignore_select_and_include: bool, action: Action, transaction_ctx: transaction::Ctx, req_ctx: Option<request::Ctx>, path: KeyPath) -> crate::path::Result<Vec<model::Object>>;
 
-    async fn count(&self, model: &Model, finder: &Value, transaction_ctx: transaction::Ctx) -> Result<usize>;
+    async fn count(&self, model: &Model, finder: &Value, transaction_ctx: transaction::Ctx, path: KeyPath) -> crate::path::Result<usize>;
 
-    async fn aggregate(&self, model: &Model, finder: &Value, transaction_ctx: transaction::Ctx) -> Result<Value>;
+    async fn aggregate(&self, model: &Model, finder: &Value, transaction_ctx: transaction::Ctx, path: KeyPath) -> crate::path::Result<Value>;
 
-    async fn group_by(&self, model: &Model, finder: &Value, transaction_ctx: transaction::Ctx) -> Result<Value>;
+    async fn group_by(&self, model: &Model, finder: &Value, transaction_ctx: transaction::Ctx, path: KeyPath) -> crate::path::Result<Value>;
 
     // Transaction
 
