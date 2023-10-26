@@ -3,7 +3,7 @@ use std::borrow::Cow::{Borrowed, Owned};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::fmt::{Debug, Display, Formatter};
 use std::ops::Deref;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard};
 use std::sync::atomic::{AtomicBool, Ordering};
 use serde::{Serialize, Serializer};
 use teo_teon::Value;
@@ -36,7 +36,7 @@ use crate::utils::ContainsStr;
 
 #[derive(Clone)]
 pub struct Object {
-    inner: Arc<ObjectInner>
+    pub inner: Arc<ObjectInner>
 }
 
 impl Object {
@@ -435,6 +435,10 @@ impl Object {
 
     pub fn get_atomic_updator(&self, key: &str) -> Option<Value> {
         self.inner.atomic_updater_map.lock().unwrap().get(key).cloned()
+    }
+
+    pub fn atomic_updators(&self) -> MutexGuard<BTreeMap<String, Value>> {
+        self.inner.atomic_updater_map.lock().unwrap()
     }
 
     pub fn set_select(&self, select: Option<&Value>) -> Result<()> {
@@ -1626,13 +1630,13 @@ impl Object {
 }
 
 #[derive(Debug)]
-struct ObjectInner {
+pub struct ObjectInner {
     request_ctx: Option<request::Ctx>,
     transaction_ctx: transaction::Ctx,
     model: &'static Model,
     action: Action,
-    is_initialized: AtomicBool,
-    is_new: AtomicBool,
+    pub is_initialized: AtomicBool,
+    pub is_new: AtomicBool,
     is_modified: AtomicBool,
     is_partial: AtomicBool,
     is_deleted: AtomicBool,
@@ -1642,14 +1646,14 @@ struct ObjectInner {
     modified_fields: Arc<Mutex<BTreeSet<String>>>,
     value_map: Arc<Mutex<BTreeMap<String, Value>>>,
     previous_value_map: Arc<Mutex<BTreeMap<String, Value>>>,
-    atomic_updater_map: Arc<Mutex<BTreeMap<String, Value>>>,
-    relation_mutation_map: Arc<TokioMutex<BTreeMap<String, Value>>>,
-    relation_query_map: Arc<Mutex<BTreeMap<String, Vec<Object>>>>,
-    cached_property_map: Arc<Mutex<BTreeMap<String, Value>>>,
-    object_set_map: Arc<TokioMutex<BTreeMap<String, Option<Object>>>>,
-    object_set_many_map: Arc<TokioMutex<BTreeMap<String, Vec<Object>>>>,
-    object_connect_map: Arc<TokioMutex<BTreeMap<String, Vec<Object>>>>,
-    object_disconnect_map: Arc<TokioMutex<BTreeMap<String, Vec<Object>>>>,
+    pub atomic_updater_map: Arc<Mutex<BTreeMap<String, Value>>>,
+    pub relation_mutation_map: Arc<TokioMutex<BTreeMap<String, Value>>>,
+    pub relation_query_map: Arc<Mutex<BTreeMap<String, Vec<Object>>>>,
+    pub cached_property_map: Arc<Mutex<BTreeMap<String, Value>>>,
+    pub object_set_map: Arc<TokioMutex<BTreeMap<String, Option<Object>>>>,
+    pub object_set_many_map: Arc<TokioMutex<BTreeMap<String, Vec<Object>>>>,
+    pub object_connect_map: Arc<TokioMutex<BTreeMap<String, Vec<Object>>>>,
+    pub object_disconnect_map: Arc<TokioMutex<BTreeMap<String, Vec<Object>>>>,
     ignore_relation: Arc<Mutex<Option<String>>>,
 }
 

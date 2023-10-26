@@ -65,34 +65,34 @@ impl Neg for Action {
     }
 }
 
-pub(crate) const CREATE: Action = Action(CREATE_U32);
-pub(crate) const UPDATE: Action = Action(UPDATE_U32);
-pub(crate) const DELETE: Action = Action(DELETE_U32);
-pub(crate) const COPY: Action = Action(COPY_U32);
-pub(crate) const FIND: Action = Action(FIND_U32);
-pub(crate) const FIRST: Action = Action(FIRST_U32);
-pub(crate) const CONNECT: Action = Action(CONNECT_U32);
-pub(crate) const DISCONNECT: Action = Action(DISCONNECT_U32);
-pub(crate) const SET: Action = Action(SET_U32);
-pub(crate) const JOIN: Action = Action(JOIN_U32);
-pub(crate) const COUNT: Action = Action(COUNT_U32);
-pub(crate) const AGGREGATE: Action = Action(AGGREGATE_U32);
-pub(crate) const GROUP_BY: Action = Action(GROUP_BY_U32);
-pub(crate) const CODE_NAME: Action = Action(CODE_NAME_U32);
+pub const CREATE: Action = Action(CREATE_U32);
+pub const UPDATE: Action = Action(UPDATE_U32);
+pub const DELETE: Action = Action(DELETE_U32);
+pub const COPY: Action = Action(COPY_U32);
+pub const FIND: Action = Action(FIND_U32);
+pub const FIRST: Action = Action(FIRST_U32);
+pub const CONNECT: Action = Action(CONNECT_U32);
+pub const DISCONNECT: Action = Action(DISCONNECT_U32);
+pub const SET: Action = Action(SET_U32);
+pub const JOIN: Action = Action(JOIN_U32);
+pub const COUNT: Action = Action(COUNT_U32);
+pub const AGGREGATE: Action = Action(AGGREGATE_U32);
+pub const GROUP_BY: Action = Action(GROUP_BY_U32);
+pub const CODE_NAME: Action = Action(CODE_NAME_U32);
 
-pub(crate) const UPSERT: Action = Action(UPSERT_U32);
-pub(crate) const CONNECT_OR_CREATE: Action = Action(CONNECT_OR_CREATE_U32);
-pub(crate) const JOIN_CREATE: Action = Action(JOIN_CREATE_U32);
-pub(crate) const JOIN_DELETE: Action = Action(JOIN_DELETE_U32);
-pub(crate) const FIND_FIRST: Action = Action(FIND_FIRST_U32);
+pub const UPSERT: Action = Action(UPSERT_U32);
+pub const CONNECT_OR_CREATE: Action = Action(CONNECT_OR_CREATE_U32);
+pub const JOIN_CREATE: Action = Action(JOIN_CREATE_U32);
+pub const JOIN_DELETE: Action = Action(JOIN_DELETE_U32);
+pub const FIND_FIRST: Action = Action(FIND_FIRST_U32);
 
-pub(crate) const ENTRY: Action = Action(ENTRY_U32);
-pub(crate) const NESTED: Action = Action(NESTED_U32);
-pub(crate) const CODE_POSITION: Action = Action(CODE_POSITION_U32);
+pub const ENTRY: Action = Action(ENTRY_U32);
+pub const NESTED: Action = Action(NESTED_U32);
+pub const CODE_POSITION: Action = Action(CODE_POSITION_U32);
 
-pub(crate) const SINGLE: Action = Action(SINGLE_U32);
-pub(crate) const MANY: Action = Action(MANY_U32);
-pub(crate) const CODE_AMOUNT: Action = Action(CODE_AMOUNT_U32);
+pub const SINGLE: Action = Action(SINGLE_U32);
+pub const MANY: Action = Action(MANY_U32);
+pub const CODE_AMOUNT: Action = Action(CODE_AMOUNT_U32);
 
 const ALL_NAMES: Action = Action(ALL_NAMES_U32);
 const ALL_POSITIONS: Action = Action(ALL_POSITIONS_U32);

@@ -7,7 +7,7 @@ pub struct Enum {
     pub path: Vec<String>,
     pub comment: Option<Comment>,
     pub members: Vec<Member>,
-    pub(crate) cache: Cache,
+    pub cache: Cache,
 }
 
 impl Enum {
@@ -29,6 +29,6 @@ impl Enum {
 }
 
 #[derive(Debug, Serialize)]
-pub(crate) struct Cache {
-    pub(crate) member_names: Vec<String>,
+pub struct Cache {
+    pub member_names: Vec<String>,
 }

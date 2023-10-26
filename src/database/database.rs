@@ -17,6 +17,13 @@ pub enum Database {
 
 impl Database {
 
+    pub fn is_mongo(&self) -> bool {
+        match self {
+            Database::MongoDB => true,
+            _ => false,
+        }
+    }
+
     pub fn default_database_type(&self, r#type: &Type) -> Result<DatabaseType> {
         match self {
             Database::MongoDB => self.default_mongo_database_type(r#type),

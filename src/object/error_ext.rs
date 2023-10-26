@@ -41,6 +41,10 @@ pub fn unknown_database_write_error(path: KeyPath, reason: impl AsRef<str>) -> c
     crate::path::Error::internal_server_error(path, format!("unknown database write error: {}", reason.as_ref()))
 }
 
+pub fn unknown_database_delete_error(path: KeyPath, reason: impl AsRef<str>) -> crate::path::Error {
+    crate::path::Error::internal_server_error(path, format!("unknown database delete error: {}", reason.as_ref()))
+}
+
 pub fn unknown_database_find_error(path: KeyPath, reason: impl AsRef<str>) -> crate::path::Error {
     crate::path::Error::internal_server_error(path, format!("unknown database find error: {}", reason.as_ref()))
 }
@@ -55,4 +59,8 @@ pub fn invalid_sql_query(reason: impl AsRef<str>) -> crate::path::Error {
 
 pub fn object_is_not_saved_thus_cant_be_deleted(path: KeyPath) -> crate::path::Error {
     crate::path::Error::value_error(path, "object is not saved thus can't be deleted")
+}
+
+pub fn record_decoding_error(model: &str, path: impl AsRef<KeyPath>, t: &str) -> crate::path::Error {
+    crate::path::Error::value_error(path.as_ref().clone(), format!("value decoding error on: {}: {}", model, t))
 }
