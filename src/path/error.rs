@@ -2,6 +2,7 @@ use std::fmt::{Display, Formatter};
 use indexmap::{IndexMap, indexmap};
 use itertools::Itertools;
 use key_path::KeyPath;
+use teo_teon::Value;
 
 #[derive(Debug)]
 pub struct Error {
@@ -138,5 +139,26 @@ impl From<Error> for teo_result::Error {
             value.message
         };
         teo_result::Error::new(message)
+    }
+}
+
+impl From<Error> for Value {
+
+    fn from(value: Error) -> Self {
+        let fields = value.fields.map(|f| {
+            let mut result = indexmap! {};
+            for (k, v) in f {
+                result.insert(k, Value::String(v));
+            }
+            Value::Dictionary(result)
+        }) ;
+        let mut retval = Value::Dictionary(indexmap! {
+            "type".to_string() => Value::String(value.title.to_string()),
+            "message".to_string() => Value::String(value.message),
+        });
+        if fields.is_some() {
+            retval.as_dictionary_mut().unwrap().insert("fields".to_owned(), fields.unwrap());
+        }
+        retval
     }
 }

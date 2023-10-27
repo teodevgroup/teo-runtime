@@ -1,10 +1,6 @@
-use std::path::PathBuf;
-use indexmap::IndexMap;
-use teo_teon::Value;
+pub mod response;
+pub mod header;
+pub mod body;
 
-pub enum Response {
-    EmptyRes,
-    TeonRes(Value),
-    ErrorRes { code: u16, kind: String, message: String, fields: Option<IndexMap<String, String>> },
-    File(PathBuf),
-}
+pub use response::Response;
+pub use header::readwrite::HeaderMap;
