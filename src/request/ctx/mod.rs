@@ -38,8 +38,8 @@ impl Ctx {
         self.inner.data.borrow_mut()
     }
 
-    pub fn transaction_ctx(&self) -> &transaction::Ctx {
-        &self.inner.transaction_ctx
+    pub fn transaction_ctx(&self) -> transaction::Ctx {
+        self.inner.transaction_ctx.clone()
     }
 
     pub fn namespace(&self) -> &'static Namespace {

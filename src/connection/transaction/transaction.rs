@@ -43,7 +43,9 @@ pub trait Transaction: Send + Sync + Debug {
 
     // Transaction
 
-    async fn is_committed(&self) -> bool;
+    fn is_committed(&self) -> bool;
+
+    fn is_transaction(&self) -> bool;
 
     async fn commit(&self) -> Result<()>;
 
