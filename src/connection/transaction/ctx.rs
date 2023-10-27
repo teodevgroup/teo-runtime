@@ -128,17 +128,18 @@ impl Ctx {
         if result.is_ok() {
             self.commit().await?;
         } else {
-            self.abort();
+            self.abort().await?;
         }
         Ok(result?)
     }
 
-    fn abort(&self) {
+    async fn abort(&self) -> Result<()> {
         for transaction in self.inner.transactions.lock().unwrap().values() {
             if transaction.is_transaction() {
-                transaction.abort();
+                transaction.abort().await?;
             }
         }
+        Ok(())
     }
 
     async fn commit(&self) -> Result<()> {

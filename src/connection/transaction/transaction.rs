@@ -49,7 +49,7 @@ pub trait Transaction: Send + Sync + Debug {
 
     async fn commit(&self) -> Result<()>;
 
-    fn abort(&self);
+    async fn abort(&self) -> Result<()>;
 
     async fn spawn(&self) -> Result<Arc<dyn Transaction>>;
 }
