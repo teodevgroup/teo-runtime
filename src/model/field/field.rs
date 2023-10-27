@@ -6,7 +6,6 @@ use teo_parser::r#type::Type;
 pub use super::decorator::Decorator;
 use crate::comment::Comment;
 use crate::database::database::Database;
-use crate::database::mysql::r#type::MySQLType;
 use crate::database::r#type::DatabaseType;
 use crate::model::field::column_named::ColumnNamed;
 use crate::model::field::Index;
@@ -33,6 +32,7 @@ pub struct Field {
     pub r#type: Type,
     pub database_type: DatabaseType,
     pub optionality: Optionality,
+    pub copy: bool,
     pub read: Read,
     pub write: Write,
     pub previous: Previous,
@@ -69,6 +69,7 @@ impl Field {
             optionality: Optionality::Optional,
             previous: Previous::DontKeep,
             atomic: false,
+            copy: true,
             read: Read::Read,
             write: Write::Write,
             r#virtual: false,
@@ -94,6 +95,11 @@ impl Field {
     }
 
     pub fn finalize(&mut self, database: Database) -> Result<()> {
+
+        // do not copy primary field and unique field
+        if self.index.is_some() && self.index().unwrap().r#type.is_unique_or_primary() {
+            self.copy = false;
+        }
         // set default column name
         if self.column_name.is_empty() {
             self.column_name = self.name.clone();

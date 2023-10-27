@@ -194,6 +194,17 @@ impl Object {
         Ok(())
     }
 
+    pub fn copied_value(&self) -> Value {
+        let mut map = indexmap! {};
+        for (k, v) in self.inner.value_map.lock().unwrap().iter() {
+            let field = self.model().field(k).unwrap();
+            if field.copy {
+                map.insert(k.to_owned(), v.clone());
+            }
+        }
+        Value::Dictionary(map)
+    }
+
     async fn check_model_write_permission<'a>(&self, path: impl AsRef<KeyPath>) -> Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
         ctx.run_pipeline(&self.model().can_mutate).await?;

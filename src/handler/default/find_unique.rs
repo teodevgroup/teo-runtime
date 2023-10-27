@@ -4,7 +4,7 @@ use crate::request;
 use crate::response::Response;
 use crate::action::action::*;
 
-pub async fn find_unique(ctx: request::Ctx) -> crate::path::Result<Response> {
+pub async fn find_unique(ctx: &request::Ctx) -> crate::path::Result<Response> {
     let model = ctx.namespace().model_at_path(&ctx.handler_match().path()).unwrap();
     let action = FIND | SINGLE | ENTRY;
     let result = ctx.transaction_ctx().find_unique_internal(
