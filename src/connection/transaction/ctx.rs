@@ -125,8 +125,20 @@ impl Ctx {
             self.set_transaction_for_model(model, transaction);
         }
         let result = f(self.into()).await;
-        self.commit().await?;
+        if result.is_ok() {
+            self.commit().await?;
+        } else {
+            self.abort();
+        }
         Ok(result?)
+    }
+
+    fn abort(&self) {
+        for transaction in self.inner.transactions.lock().unwrap().values() {
+            if transaction.is_transaction() {
+                transaction.abort();
+            }
+        }
     }
 
     async fn commit(&self) -> Result<()> {
