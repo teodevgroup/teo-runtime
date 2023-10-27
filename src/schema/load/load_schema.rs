@@ -15,6 +15,7 @@ use crate::schema::load::load_interface::load_interface;
 use crate::schema::load::load_model::load_model;
 use crate::schema::load::load_server::load_server;
 use crate::schema::load::load_test::load_test;
+use crate::schema::load::load_use_middlewares::load_use_middlewares;
 
 pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_loading: bool) -> Result<()> {
 
@@ -124,14 +125,6 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_load
             }
         }
 
-        // validate middleware declarations
-        for middleware_declaration in schema.middleware_declarations() {
-            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&middleware_declaration.namespace_str_path());
-            if dest_namespace.middlewares.get(middleware_declaration.identifier.name()).is_none() {
-                diagnostics.insert(DiagnosticsError::new(middleware_declaration.identifier.span, "middleware implementation is not found", schema.source(middleware_declaration.source_id()).unwrap().file_path.clone()))
-            }
-        }
-
         // validate struct declarations
         for struct_declaration in schema.struct_declarations() {
             let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&struct_declaration.namespace_str_path());
@@ -151,6 +144,17 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_load
                 diagnostics.insert(DiagnosticsError::new(struct_declaration.identifier.span, "struct implementation is not found", schema.source(struct_declaration.source_id()).unwrap().file_path.clone()))
             }
         }
+
+        // validate middleware declarations
+        for middleware_declaration in schema.middleware_declarations() {
+            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&middleware_declaration.namespace_str_path());
+            if dest_namespace.middlewares.get(middleware_declaration.identifier.name()).is_none() {
+                diagnostics.insert(DiagnosticsError::new(middleware_declaration.identifier.span, "middleware implementation is not found", schema.source(middleware_declaration.source_id()).unwrap().file_path.clone()))
+            }
+        }
+
+        // load middlewares
+        load_use_middlewares(main_namespace, schema)?;
     }
 
     // load enums

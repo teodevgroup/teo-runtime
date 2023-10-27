@@ -5,7 +5,7 @@ use crate::namespace::Namespace;
 use crate::request::ctx::Ctx;
 
 pub(in crate::stdlib) fn load_log_request_middleware(namespace: &mut Namespace) {
-    namespace.define_middleware("logRequest", |arguments: Arguments| async move {
+    namespace.define_middleware("logRequest", |arguments: Arguments| {
         let timing: bool = arguments.get("timing")?;
         Ok(Box::leak(Box::new(move |ctx: Ctx, next: &'static dyn Next| async move {
             if timing {

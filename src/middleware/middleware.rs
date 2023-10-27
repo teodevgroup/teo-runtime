@@ -1,5 +1,4 @@
 use std::future::Future;
-use std::sync::Arc;
 use futures_util::future::BoxFuture;
 use crate::middleware::next::Next;
 use crate::request::ctx::Ctx;
@@ -18,11 +17,15 @@ impl<F, Fut> Middleware for F where
     }
 }
 
+pub(crate) fn empty_middleware() -> &'static dyn Middleware {
+    Box::leak(Box::new(|ctx: Ctx, next: &'static dyn Next| async move {
+        next.call(ctx).await
+    }))
+}
+
 pub(crate) fn combine_middleware(middlewares: Vec<&'static dyn Middleware>) -> &'static dyn Middleware {
     match middlewares.len() {
-        0 => Box::leak(Box::new(|ctx: Ctx, next: &'static dyn Next| async move {
-            next.call(ctx).await
-        })),
+        0 => empty_middleware(),
         1 => *middlewares.first().unwrap(),
         2 => join_middleware(*middlewares.get(1).unwrap(), *middlewares.get(0).unwrap()),
         _ => {

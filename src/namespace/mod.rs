@@ -23,10 +23,13 @@ use crate::r#struct::Struct;
 use crate::utils::next_path;
 use teo_result::Result;
 use crate::database::database::Database;
+use crate::middleware::middleware::{empty_middleware, Middleware};
 use crate::pipeline;
 use crate::stdlib::load::load;
+use educe::Educe;
 
-#[derive(Debug)]
+#[derive(Educe)]
+#[educe(Debug)]
 pub struct Namespace {
     pub path: Vec<String>,
     pub namespaces: BTreeMap<String, Namespace>,
@@ -52,9 +55,12 @@ pub struct Namespace {
     pub entities: BTreeMap<String, Entity>,
     pub debug: Option<Debug>,
     pub test: Option<Test>,
+    pub middlewares_block: Option<middleware::Block>,
     pub database: Option<Database>,
     pub connector_reference: Option<Vec<String>>,
     pub connection: Option<Arc<dyn Connection>>,
+    #[educe(Debug(ignore))]
+    pub middleware_stack: &'static dyn Middleware,
 }
 
 impl Namespace {
@@ -90,9 +96,11 @@ impl Namespace {
             entities: btreemap! {},
             debug: None,
             test: None,
+            middlewares_block: None,
             database: None,
             connector_reference: None,
             connection: None,
+            middleware_stack: empty_middleware(),
         }
     }
 
@@ -340,6 +348,16 @@ impl Namespace {
         }
     }
 
+    pub fn middleware_at_path(&self, path: &Vec<&str>) -> Option<&middleware::Definition> {
+        let middleware_name = path.last().unwrap().deref();
+        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+            ns.middlewares.get(middleware_name)
+        } else {
+            None
+        }
+    }
+
     pub fn connector_reference(&self) -> Option<Vec<&str>> {
         self.connector_reference.as_ref().map(|r| r.iter().map(AsRef::as_ref).collect())
     }
@@ -407,3 +425,6 @@ impl Namespace {
         result
     }
 }
+
+unsafe impl Send for Namespace { }
+unsafe impl Sync for Namespace { }

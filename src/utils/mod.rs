@@ -5,6 +5,7 @@ pub(crate) fn next_path(path: &Vec<String>, name: &str) -> Vec<String> {
 }
 
 pub trait ContainsStr {
+
     fn contains_str(&self, str: &str) -> bool;
 }
 

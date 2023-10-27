@@ -10,3 +10,4 @@ mod load_model;
 mod load_interface;
 mod load_comment;
 mod load_database_information;
+mod load_use_middlewares;

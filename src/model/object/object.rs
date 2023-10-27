@@ -30,7 +30,6 @@ use crate::model::relation::delete::Delete;
 use crate::namespace::Namespace;
 use crate::object::error_ext;
 use crate::optionality::Optionality;
-use crate::path::result::IntoPathedValueResult;
 use crate::readwrite::write::Write;
 use crate::utils::ContainsStr;
 
@@ -1741,4 +1740,8 @@ impl ErrorIfNotFound for Result<Option<Object>> {
         }
     }
 }
+
+unsafe impl Send for ObjectInner {}
+unsafe impl Sync for ObjectInner {}
+
 
