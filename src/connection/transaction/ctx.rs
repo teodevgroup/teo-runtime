@@ -163,9 +163,9 @@ impl Ctx {
         }
     }
 
-    pub async fn find_many_internal(&self, model: &'static Model, finder: &Value, mutation_mode: bool, action: Action, req_ctx: Option<request::Ctx>, path: KeyPath) -> crate::path::Result<Vec<model::Object>> {
+    pub async fn find_many_internal(&self, model: &'static Model, finder: &Value, ignore_select_and_include: bool, action: Action, req_ctx: Option<request::Ctx>, path: KeyPath) -> crate::path::Result<Vec<model::Object>> {
         let transaction = self.transaction_for_model_or_create(model).await?;
-        transaction.find_many(model, finder, mutation_mode, action, self.clone(), req_ctx, path).await
+        transaction.find_many(model, finder, ignore_select_and_include, action, self.clone(), req_ctx, path).await
     }
 
     pub async fn batch<F, Fut>(&self, model: &'static Model, finder: &Value, action: Action, req_ctx: Option<request::Ctx>, path: KeyPath, f: F) -> Result<()> where
