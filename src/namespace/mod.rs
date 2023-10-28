@@ -27,6 +27,7 @@ use crate::middleware::middleware::{empty_middleware, Middleware};
 use crate::pipeline;
 use crate::stdlib::load::load;
 use educe::Educe;
+use crate::handler::Handler;
 
 #[derive(Educe)]
 #[educe(Debug)]
@@ -48,6 +49,7 @@ pub struct Namespace {
     pub handler_decorators: BTreeMap<String, handler::Decorator>,
     pub pipeline_items: BTreeMap<String, pipeline::Item>,
     pub middlewares: BTreeMap<String, middleware::Definition>,
+    pub model_handler_groups: BTreeMap<String, handler::Group>,
     pub handler_groups: BTreeMap<String, handler::Group>,
     pub server: Option<Server>,
     pub connector: Option<Connector>,
@@ -89,6 +91,7 @@ impl Namespace {
             handler_decorators: btreemap! {},
             pipeline_items: btreemap!{},
             middlewares: btreemap! {},
+            model_handler_groups: btreemap! {},
             handler_groups: btreemap! {},
             server: None,
             connector: None,
@@ -188,10 +191,19 @@ impl Namespace {
         });
     }
 
+    pub fn define_model_handler_group<T>(&mut self, name: &str, builder: T) where T: Fn(&mut handler::Group) {
+        let mut handler_group = handler::Group {
+            path: next_path(&self.path, name),
+            handlers: btreemap!{},
+        };
+        builder(&mut handler_group);
+        self.model_handler_groups.insert(name.to_owned(), handler_group);
+    }
+
     pub fn define_handler_group<T>(&mut self, name: &str, builder: T) where T: Fn(&mut handler::Group) {
         let mut handler_group = handler::Group {
             path: next_path(&self.path, name),
-            handlers: vec![],
+            handlers: btreemap!{},
         };
         builder(&mut handler_group);
         self.handler_groups.insert(name.to_owned(), handler_group);
@@ -355,6 +367,35 @@ impl Namespace {
             ns.middlewares.get(middleware_name)
         } else {
             None
+        }
+    }
+
+    pub fn handler_at_path(&self, path: &Vec<&str>) -> Option<&Handler> {
+        let handler_name = path.last().unwrap().deref();
+        let group_name = path.get(path.len() - 2).unwrap().deref();
+        let namespace_path: Vec<&str> = path.into_iter().rev().skip(2).rev().map(|i| *i).collect();
+        if let Some(dest_namespace) = self.namespace_at_path(&namespace_path) {
+            if let Some(group) = dest_namespace.handler_groups.get(group_name) {
+                group.handlers.get(handler_name)
+            } else if let Some(group) = dest_namespace.model_handler_groups.get(group_name) {
+                group.handlers.get(handler_name)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    pub fn replace_handler_at_path(&mut self, path: &Vec<&str>, handler: Handler) {
+        let handler_name = path.last().unwrap().deref();
+        let group_name = path.get(path.len() - 2).unwrap().deref();
+        let namespace_path: Vec<&str> = path.into_iter().rev().skip(2).rev().map(|i| *i).collect();
+        let dest_namespace = self.namespace_mut_or_create_at_path(&namespace_path);
+        if let Some(group) = dest_namespace.handler_groups.get_mut(group_name) {
+            group.handlers.insert(handler_name.to_string(), handler);
+        } else if let Some(group) = dest_namespace.model_handler_groups.get_mut(group_name) {
+            group.handlers.insert(handler_name.to_string(), handler);
         }
     }
 

@@ -2,11 +2,12 @@ use std::future::Future;
 use educe::Educe;
 use futures_util::future::BoxFuture;
 use serde::Serialize;
+use teo_parser::ast::handler::HandlerInputFormat;
 use crate::request::ctx::Ctx;
 use crate::response::Response;
 use teo_result::Result;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Copy, Clone)]
 pub enum Method {
     Get,
     Post,
@@ -17,9 +18,10 @@ pub enum Method {
 
 #[derive(Educe)]
 #[educe(Debug)]
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct Handler {
     pub path: Vec<String>,
+    pub format: HandlerInputFormat,
     pub method: Method,
     pub url: Option<String>,
     pub ignore_namespace: bool,

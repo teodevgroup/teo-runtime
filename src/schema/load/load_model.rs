@@ -10,6 +10,7 @@ use crate::model::field::is_optional::IsOptional;
 use crate::optionality::Optionality;
 use crate::schema::fetch::fetch_decorator_arguments::fetch_decorator_arguments;
 use crate::schema::load::load_comment::load_comment;
+use crate::schema::load::load_handler::load_handler;
 
 pub fn load_model(main_namespace: &mut Namespace, schema: &Schema, model_declaration: &teo_parser::ast::model::Model, diagnostics: &mut Diagnostics) -> Result<()> {
     let mut model = Model::new();
@@ -50,6 +51,9 @@ pub fn load_model(main_namespace: &mut Namespace, schema: &Schema, model_declara
     model.finalize()?;
     let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&model_declaration.namespace_str_path());
     dest_namespace.models.insert(model_declaration.identifier.name().to_owned(), model);
+    for handler_declaration in &model_declaration.handlers {
+        load_handler(main_namespace, schema, handler_declaration, diagnostics)?;
+    }
     Ok(())
 }
 

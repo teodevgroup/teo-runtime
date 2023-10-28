@@ -1,3 +1,4 @@
+use teo_parser::ast::handler::HandlerInputFormat;
 use teo_parser::ast::identifiable::Identifiable;
 use teo_parser::ast::reference::ReferenceType;
 use teo_parser::ast::schema::Schema;
@@ -5,12 +6,14 @@ use teo_parser::ast::span::Span;
 use teo_parser::diagnostics::diagnostics::{Diagnostics, DiagnosticsError};
 use crate::namespace::Namespace;
 use teo_result::Result;
+use crate::schema::fetch::fetch_decorator_arguments::fetch_decorator_arguments;
 use crate::schema::load::load_client::load_client;
 use crate::schema::load::load_connector::load_connector;
 use crate::schema::load::load_database_information::load_database_information;
 use crate::schema::load::load_debug::load_debug;
 use crate::schema::load::load_entity::load_entity;
 use crate::schema::load::load_enum::load_enum;
+use crate::schema::load::load_handler_group::load_handler_group;
 use crate::schema::load::load_interface::load_interface;
 use crate::schema::load::load_model::load_model;
 use crate::schema::load::load_server::load_server;
@@ -178,9 +181,23 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_load
         }
     }
 
+    // validate handler groups
+    for handler_group_declaration in schema.handler_group_declarations() {
+        let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&handler_group_declaration.namespace_str_path());
+        if dest_namespace.handler_groups.get(handler_group_declaration.identifier.name()).is_none() {
+            diagnostics.insert(DiagnosticsError::new(handler_group_declaration.identifier.span, "handler group implementation is not found", schema.source(handler_group_declaration.source_id()).unwrap().file_path.clone()));
+        }
+        let group = dest_namespace.handler_groups.get_mut(handler_group_declaration.identifier.name()).unwrap();
+        for handler_declaration in &handler_group_declaration.handler_declarations {
+            if group.handlers.get(handler_declaration.name()).is_none() {
+                diagnostics.insert(DiagnosticsError::new(handler_declaration.identifier.span, "handler implementation is not found", schema.source(handler_group_declaration.source_id()).unwrap().file_path.clone()));
+            }
+        }
+    }
+
     // load handler groups
     for handler_group_declaration in schema.handler_group_declarations() {
-
+        load_handler_group(main_namespace, schema, handler_group_declaration, &mut diagnostics)?;
     }
 
     // load data set
