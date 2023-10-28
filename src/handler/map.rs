@@ -1,6 +1,5 @@
 use indexmap::{IndexMap, indexmap};
 use regex::Regex;
-use teo_teon::Value;
 use crate::handler::handler::Method;
 
 #[derive(Debug)]
@@ -78,5 +77,25 @@ impl Map {
         let catch_regex = Regex::new("\\*[^/]+").unwrap();
         let replaced = catch_regex.replace(replaced.as_ref(), "(.+)");
         replaced.as_ref().to_string()
+    }
+
+    pub fn default_match(&self, method: Method, url: &str) -> Option<(Vec<String>, String)> {
+        if method != Method::Post {
+            return None;
+        }
+        let mut url = url;
+        if url.starts_with("/") {
+            url = url.trim_start_matches("/");
+        }
+        if url.ends_with("/") {
+            url = url.trim_end_matches("/");
+        }
+        let parts = url.split("/");
+        if parts.count() < 2 {
+            return None;
+        }
+        let mut result: Vec<String> = parts.map(|p| p.to_string()).collect();
+        let action = result.pop().unwrap().to_string();
+        Some((result, action))
     }
 }
