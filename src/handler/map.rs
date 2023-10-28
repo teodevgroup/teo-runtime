@@ -9,18 +9,28 @@ pub struct Map {
 
 impl Map {
 
-    pub fn add_record(&mut self, namespace_path: &Vec<&str>, group_name: &str, action_name: &str, method: Method, custom_url: &str, ignore_prefix: bool) {
+    pub fn new() -> Self {
+        Self {
+            records: indexmap!{}
+        }
+    }
+
+    pub fn add_record(&mut self, namespace_path: &Vec<&str>, group_name: &str, action_name: &str, method: Method, custom_url: Option<&str>, ignore_prefix: bool) {
         let url = if ignore_prefix {
-            if custom_url.starts_with("/") {
-                custom_url.to_owned()
+            if custom_url.unwrap().starts_with("/") {
+                custom_url.unwrap().to_owned()
             } else {
-                "/".to_owned() + custom_url
+                "/".to_owned() + custom_url.unwrap()
             }
         } else {
-            "/".to_owned() + &namespace_path.join(".") + "/" + group_name + &if custom_url.starts_with("/") {
-                custom_url.to_owned()
+            "/".to_owned() + &namespace_path.join(".") + "/" + group_name + &if let Some(custom_url) = custom_url {
+                if custom_url.starts_with("/") {
+                    custom_url.to_owned()
+                } else {
+                    "/".to_owned() + custom_url
+                }
             } else {
-                "/".to_owned() + custom_url
+                action_name.to_owned()
             }
         };
         let mut result: Vec<String> = namespace_path.iter().map(|i| i.to_string()).collect();
@@ -91,7 +101,7 @@ impl Map {
             url = url.trim_end_matches("/");
         }
         let parts = url.split("/");
-        if parts.count() < 2 {
+        if parts.clone().count() < 2 {
             return None;
         }
         let mut result: Vec<String> = parts.map(|p| p.to_string()).collect();

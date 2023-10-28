@@ -63,6 +63,8 @@ pub struct Namespace {
     pub connection: Option<Arc<dyn Connection>>,
     #[educe(Debug(ignore))]
     pub middleware_stack: &'static dyn Middleware,
+    #[educe(Debug(ignore))]
+    pub handler_map: handler::Map,
 }
 
 impl Namespace {
@@ -104,6 +106,7 @@ impl Namespace {
             connector_reference: None,
             connection: None,
             middleware_stack: empty_middleware(),
+            handler_map: handler::Map::new(),
         }
     }
 
