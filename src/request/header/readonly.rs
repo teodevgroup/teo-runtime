@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct HeaderMap {
-    inner: Arc<dyn r#trait::HeaderMap>
+    pub inner: Arc<dyn r#trait::HeaderMap>
 }
 
 impl HeaderMap {
