@@ -14,6 +14,7 @@ pub enum Method {
     Patch,
     Put,
     Delete,
+    Options,
 }
 
 #[derive(Educe)]

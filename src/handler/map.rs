@@ -1,6 +1,7 @@
 use indexmap::{IndexMap, indexmap};
 use regex::Regex;
 use crate::handler::handler::Method;
+use crate::handler::r#match::HandlerMatch;
 
 #[derive(Debug)]
 pub struct Map {
@@ -38,7 +39,7 @@ impl Map {
         self.records.insert((method, url), (result, action_name.to_owned()));
     }
 
-    pub fn r#match(&self, method: Method, url: &str) -> Option<(Vec<String>, String, IndexMap<String, String>)> {
+    pub fn r#match(&self, method: Method, url: &str) -> Option<HandlerMatch> {
         for record in &self.records {
             if let Some(result) = self.try_match(method, url, record) {
                 return Some(result);
@@ -47,8 +48,8 @@ impl Map {
         None
     }
 
-    fn try_match(&self, method: Method, url: &str, record: (&(Method, String), &(Vec<String>, String))) -> Option<(Vec<String>, String, IndexMap<String, String>)> {
-        if record.0.0 != method {
+    fn try_match(&self, method: Method, url: &str, record: (&(Method, String), &(Vec<String>, String))) -> Option<HandlerMatch> {
+        if method != Method::Options && record.0.0 != method {
             return None;
         }
         let define = &record.0.1;
@@ -63,9 +64,17 @@ impl Map {
                         retval.insert(arg_names.get(index).unwrap().to_owned(), r#match.as_str().to_owned());
                     }
                 }
-                return Some((record.1.0.clone(), record.1.1.clone(), retval));
+                return Some(HandlerMatch {
+                    path: record.1.0.clone(),
+                    name: record.1.1.clone(),
+                    captures: retval
+                })
             } else {
-                return Some((record.1.0.clone(), record.1.1.clone(), indexmap!{}));
+                return Some(HandlerMatch {
+                    path: record.1.0.clone(),
+                    name: record.1.1.clone(),
+                    captures: indexmap!{},
+                })
             }
         }
         None
@@ -89,8 +98,8 @@ impl Map {
         replaced.as_ref().to_string()
     }
 
-    pub fn default_match(&self, method: Method, url: &str) -> Option<(Vec<String>, String)> {
-        if method != Method::Post {
+    pub fn default_match(&self, method: Method, url: &str) -> Option<HandlerMatch> {
+        if method != Method::Options && method != Method::Post {
             return None;
         }
         let mut url = url;
@@ -106,6 +115,25 @@ impl Map {
         }
         let mut result: Vec<String> = parts.map(|p| p.to_string()).collect();
         let action = result.pop().unwrap().to_string();
-        Some((result, action))
+        Some(HandlerMatch {
+            path: result,
+            name: action,
+            captures: indexmap! {}
+        })
+    }
+
+    pub fn remove_path_prefix<'a>(&self, path: &'a str, prefix: Option<&'a str>) -> &'a str {
+        if let Some(prefix) = prefix {
+            let mut prefix = prefix;
+            prefix = prefix.trim_end_matches("/");
+            let result = path.strip_prefix(prefix).unwrap();
+            if result == "" {
+                "/"
+            } else {
+                result
+            }
+        } else {
+            path
+        }
     }
 }

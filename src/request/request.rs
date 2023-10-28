@@ -9,6 +9,10 @@ pub struct Request {
 
 impl Request {
 
+    pub fn new(inner: Arc<dyn r#trait::Request>) -> Self {
+        Self { inner }
+    }
+
     pub fn method(&self) -> &str {
         self.inner.method()
     }

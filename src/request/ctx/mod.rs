@@ -26,6 +26,18 @@ struct CtxInner {
 
 impl Ctx {
 
+    pub fn new(request: Request, body: Arc<Value>, transaction_ctx: transaction::Ctx, handler_match: HandlerMatch) -> Self {
+        Self {
+            inner: Arc::new(CtxInner {
+                request,
+                body,
+                                                transaction_ctx,
+                handler_match,
+                data: RefCell::new(Data::new())
+            })
+        }
+    }
+
     pub fn request(&self) -> &Request {
         &self.inner.request
     }

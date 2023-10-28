@@ -25,6 +25,15 @@ impl Error {
         }
     }
 
+    pub fn value_error_message_only(message: impl Into<String>) -> Self {
+        Self {
+            title: "ValueError",
+            message: message.into(),
+                        fields: None,
+            code: 400
+        }
+    }
+
     pub fn unique_error(path: KeyPath, constraint: impl AsRef<str>) -> Self {
         Self {
             title: "UniqueError",
@@ -63,6 +72,15 @@ impl Error {
             fields: Some(indexmap!{
                 path.to_string() => "not found".to_owned()
             }),
+            code: 404
+        }
+    }
+
+    pub fn not_found_message_only() -> Self {
+        Self {
+            title: "NotFound",
+            message: "not found".to_owned(),
+                        fields: None,
             code: 404
         }
     }
