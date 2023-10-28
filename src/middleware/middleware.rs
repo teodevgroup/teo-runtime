@@ -3,16 +3,16 @@ use futures_util::future::BoxFuture;
 use crate::middleware::next::Next;
 use crate::request::ctx::Ctx;
 use crate::response::Response;
-use teo_result::Result;
+use crate::response::error::IntoResponseWithPathedError;
 
 pub trait Middleware: Send + Sync {
-    fn call(&self, ctx: Ctx, next: &'static dyn Next) -> BoxFuture<'static, Result<Response>>;
+    fn call(&self, ctx: Ctx, next: &'static dyn Next) -> BoxFuture<'static, crate::path::Result<Response>>;
 }
 
 impl<F, Fut> Middleware for F where
     F: Fn(Ctx, &'static dyn Next) -> Fut + Sync + Send,
-    Fut: Future<Output = Result<Response>> + Send + 'static {
-    fn call(&self, ctx: Ctx, next: &'static dyn Next) -> BoxFuture<'static, Result<Response>> {
+    Fut: Future<Output = crate::path::Result<Response>> + Send + 'static {
+    fn call(&self, ctx: Ctx, next: &'static dyn Next) -> BoxFuture<'static, crate::path::Result<Response>> {
         Box::pin(self(ctx, next))
     }
 }

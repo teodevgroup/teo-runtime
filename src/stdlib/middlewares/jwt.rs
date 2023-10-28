@@ -40,20 +40,19 @@ pub(in crate::stdlib) fn load_jwt_middleware(namespace: &mut Namespace) {
         Ok(Box::leak(Box::new(move |ctx: Ctx, next: &'static dyn Next| async move {
             if let Some(authorization) = ctx.request().headers().get("authorization") {
                 if authorization.len() < 7 {
-                    return Err(Error::new("invalid jwt token"));
+                    return Err(crate::path::Error::value_error_message_only("invalid jwt token"));
                 }
                 let token = &authorization[7..];
                 if let Ok(claims) = decode_token(&token.to_string(), &secret) {
                     let json_identifier = &claims.id;
                     // fetch object and set to ctx
                     ctx.data_mut().insert("identity", 2);
-
                 } else {
-                    return Err(Error::new("invalid jwt token"));
+                    return Err(crate::path::Error::value_error_message_only("invalid jwt token"));
                 }
             }
-            let res = next.call(ctx).await;
-            return res;
+            let res = next.call(ctx).await?;
+            return Ok(res);
         })) as &dyn Middleware)
     });
 }
