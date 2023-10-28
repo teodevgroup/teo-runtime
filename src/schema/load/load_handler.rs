@@ -1,7 +1,9 @@
 use teo_parser::ast::identifiable::Identifiable;
+use teo_parser::ast::info_provider::InfoProvider;
 use teo_parser::ast::schema::Schema;
 use teo_parser::diagnostics::diagnostics::Diagnostics;
 use teo_result::Result;
+use crate::handler::handler::Method;
 use crate::namespace::Namespace;
 use crate::schema::fetch::fetch_decorator_arguments::fetch_decorator_arguments;
 
@@ -15,6 +17,17 @@ pub fn load_handler(main_namespace: &mut Namespace, schema: &Schema, handler_dec
             (decorator_implementation.call)(args, &mut handler)?;
         }
     }
+    if (handler.method != Method::Post) || handler.url.is_some() {
+        main_namespace.handler_map.add_record(
+            &handler_declaration.namespace_str_path(),
+            handler_declaration.handler_group_name(),
+            handler_declaration.name(),
+            handler.method,
+            handler.url.as_ref().map(|u| u.as_str()),
+            handler.ignore_prefix,
+        );
+    }
     main_namespace.replace_handler_at_path(&handler_declaration.str_path(), handler);
+
     Ok(())
 }
