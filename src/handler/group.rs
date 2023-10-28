@@ -17,7 +17,7 @@ impl Group {
         let handler = Handler {
             format: HandlerInputFormat::Json,
             path: next_path(&self.path, name),
-            ignore_namespace: false,
+            ignore_prefix: false,
             method: Method::Post,
             url: None,
             call: Box::leak(Box::new(call)),

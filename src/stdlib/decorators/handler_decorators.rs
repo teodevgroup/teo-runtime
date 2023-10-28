@@ -11,9 +11,9 @@ pub(in crate::stdlib) fn load_handler_decorators(namespace: &mut Namespace) {
 
     namespace.define_handler_decorator("path", |arguments, handler| {
         let path: String = arguments.get("path")?;
-        let ignore_namespace_prefix: Option<bool> = arguments.get_optional("ignoreNamespacePrefix")?;
+        let ignore_prefix: Option<bool> = arguments.get_optional("ignorePrefix")?;
         handler.url = Some(path);
-        handler.ignore_namespace = ignore_namespace_prefix.unwrap_or(false);
+        handler.ignore_prefix = ignore_prefix.unwrap_or(false);
         Ok(())
     });
 }

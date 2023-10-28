@@ -3,7 +3,9 @@ pub mod handler;
 pub mod decorator;
 pub mod default;
 pub mod r#match;
+pub mod map;
 
 pub use group::Group;
 pub use handler::Handler;
 pub use decorator::Decorator;
+pub use map::Map;
