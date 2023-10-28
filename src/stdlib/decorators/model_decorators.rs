@@ -4,7 +4,6 @@ use crate::namespace::Namespace;
 use teo_result::Result;
 use crate::action::Action;
 use crate::pipeline::pipeline::Pipeline;
-use crate::stdlib::decorators::indexable_decorators::{id_decorator, index_decorator, unique_decorator};
 
 pub(in crate::stdlib) fn load_model_decorators(namespace: &mut Namespace) {
 

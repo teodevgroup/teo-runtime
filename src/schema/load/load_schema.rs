@@ -148,6 +148,20 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_load
             }
         }
 
+        // validate handler groups
+        for handler_group_declaration in schema.handler_group_declarations() {
+            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&handler_group_declaration.namespace_str_path());
+            if dest_namespace.handler_groups.get(handler_group_declaration.identifier.name()).is_none() {
+                diagnostics.insert(DiagnosticsError::new(handler_group_declaration.identifier.span, "handler group implementation is not found", schema.source(handler_group_declaration.source_id()).unwrap().file_path.clone()));
+            }
+            let group = dest_namespace.handler_groups.get_mut(handler_group_declaration.identifier.name()).unwrap();
+            for handler_declaration in &handler_group_declaration.handler_declarations {
+                if group.handlers.get(handler_declaration.name()).is_none() {
+                    diagnostics.insert(DiagnosticsError::new(handler_declaration.identifier.span, "handler implementation is not found", schema.source(handler_group_declaration.source_id()).unwrap().file_path.clone()));
+                }
+            }
+        }
+
         // validate middleware declarations
         for middleware_declaration in schema.middleware_declarations() {
             let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&middleware_declaration.namespace_str_path());
@@ -178,20 +192,6 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_load
     for model_declaration in schema.models() {
         if model_declaration.is_available() {
             load_model(main_namespace, schema, model_declaration, &mut diagnostics)?;
-        }
-    }
-
-    // validate handler groups
-    for handler_group_declaration in schema.handler_group_declarations() {
-        let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&handler_group_declaration.namespace_str_path());
-        if dest_namespace.handler_groups.get(handler_group_declaration.identifier.name()).is_none() {
-            diagnostics.insert(DiagnosticsError::new(handler_group_declaration.identifier.span, "handler group implementation is not found", schema.source(handler_group_declaration.source_id()).unwrap().file_path.clone()));
-        }
-        let group = dest_namespace.handler_groups.get_mut(handler_group_declaration.identifier.name()).unwrap();
-        for handler_declaration in &handler_group_declaration.handler_declarations {
-            if group.handlers.get(handler_declaration.name()).is_none() {
-                diagnostics.insert(DiagnosticsError::new(handler_declaration.identifier.span, "handler implementation is not found", schema.source(handler_group_declaration.source_id()).unwrap().file_path.clone()));
-            }
         }
     }
 

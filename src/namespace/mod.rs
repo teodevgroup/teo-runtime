@@ -177,6 +177,10 @@ impl Namespace {
         self.enum_member_decorators.insert(name.to_owned(), r#enum::member::Decorator { path: next_path(&self.path, name), call });
     }
 
+    pub fn define_handler_decorator(&mut self, name: &str, call: fn(Arguments, &mut Handler) -> Result<()>) {
+        self.handler_decorators.insert(name.to_owned(), handler::Decorator { path: next_path(&self.path, name), call });
+    }
+
     pub fn define_pipeline_item<T>(&mut self, name: &str, call: T) where T: pipeline::item::Call + 'static {
         self.pipeline_items.insert(name.to_owned(), pipeline::Item {
             path: next_path(&self.path, name),
