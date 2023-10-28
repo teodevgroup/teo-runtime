@@ -1,6 +1,6 @@
 use indexmap::IndexMap;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct HandlerMatch {
     pub path: Vec<String>,
     pub name: String,

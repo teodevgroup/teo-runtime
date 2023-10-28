@@ -6,6 +6,7 @@ use teo_parser::ast::handler::HandlerInputFormat;
 use crate::request::ctx::Ctx;
 use crate::response::Response;
 use teo_result::Result;
+use crate::middleware::next::Next;
 
 #[derive(Debug, Serialize, Copy, Clone, Hash, Eq, PartialEq)]
 pub enum Method {
@@ -27,17 +28,6 @@ pub struct Handler {
     pub url: Option<String>,
     pub ignore_prefix: bool,
     #[serde(skip)] #[educe(Debug(ignore))]
-    pub call: &'static dyn Call,
+    pub call: &'static dyn Next,
 }
 
-pub trait Call: Send + Sync {
-    fn call(&self, ctx: Ctx) -> BoxFuture<'static, crate::path::Result<Response>>;
-}
-
-impl<F, Fut> Call for F where
-    F: Fn(Ctx) -> Fut + Sync + Send,
-    Fut: Future<Output = crate::path::Result<Response>> + Send + 'static {
-    fn call(&self, ctx: Ctx) -> BoxFuture<'static, crate::path::Result<Response>> {
-        Box::pin(self(ctx))
-    }
-}

@@ -141,6 +141,13 @@ impl IntoPathedValueError for teo_result::Error {
     }
 }
 
+impl From<&teo_result::Error> for Error {
+
+    fn from(value: &teo_result::Error) -> Self {
+        Self::internal_server_error_message_only(value.message.clone())
+    }
+}
+
 impl From<teo_result::Error> for Error {
 
     fn from(value: teo_result::Error) -> Self {
@@ -151,10 +158,17 @@ impl From<teo_result::Error> for Error {
 impl From<Error> for teo_result::Error {
 
     fn from(value: Error) -> Self {
+        Self::from(&value)
+    }
+}
+
+impl From<&Error> for teo_result::Error {
+
+    fn from(value: &Error) -> Self {
         let message = if let Some(fields) = &value.fields {
             fields.iter().map(|(k, v)| format!("{}: {}", k, v)).join("; ")
         } else {
-            value.message
+            value.message.clone()
         };
         teo_result::Error::new(message)
     }
@@ -163,16 +177,23 @@ impl From<Error> for teo_result::Error {
 impl From<Error> for Value {
 
     fn from(value: Error) -> Self {
-        let fields = value.fields.map(|f| {
+        Self::from(&value)
+    }
+}
+
+impl From<&Error> for Value {
+
+    fn from(value: &Error) -> Self {
+        let fields = value.fields.as_ref().map(|f| {
             let mut result = indexmap! {};
             for (k, v) in f {
-                result.insert(k, Value::String(v));
+                result.insert(k.to_string(), Value::String(v.to_string()));
             }
             Value::Dictionary(result)
         }) ;
         let mut retval = Value::Dictionary(indexmap! {
             "type".to_string() => Value::String(value.title.to_string()),
-            "message".to_string() => Value::String(value.message),
+            "message".to_string() => Value::String(value.message.clone()),
         });
         if fields.is_some() {
             retval.as_dictionary_mut().unwrap().insert("fields".to_owned(), fields.unwrap());

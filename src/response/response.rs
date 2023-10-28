@@ -23,7 +23,7 @@ impl Response {
         let mut inner = ResponseInner::new();
         let json_value = serde_json::Value::try_from(value)?;
         let string_value = serde_json::to_string(&json_value).unwrap();
-        inner.body = Body::String(string_value);
+        inner.body = Body::string(string_value);
         Ok(Self {
             inner: Arc::new(Mutex::new(inner)),
         })
@@ -48,7 +48,7 @@ impl Response {
 
     pub fn file(path: PathBuf) -> Response {
         let mut res = Self::empty();
-        res.inner.lock().unwrap().body = Body::File(path);
+        res.inner.lock().unwrap().body = Body::file(path);
         res
     }
 
@@ -70,6 +70,10 @@ impl Response {
     pub fn headers(&self) -> HeaderMap {
         self.inner.lock().unwrap().headers.clone()
     }
+
+    pub fn body(&self) -> Body {
+        self.inner.lock().unwrap().body.clone()
+    }
 }
 
 pub struct ResponseInner {
@@ -84,7 +88,7 @@ impl ResponseInner {
         Self {
             code: 200,
             headers: HeaderMap::new(),
-            body: Body::Empty,
+            body: Body::empty(),
         }
     }
 }
