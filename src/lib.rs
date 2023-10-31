@@ -25,3 +25,4 @@ pub mod optionality;
 pub mod previous;
 pub mod readwrite;
 pub mod path;
+pub mod coder;
