@@ -1,5 +1,5 @@
 use std::borrow::Cow;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
 use bigdecimal::{BigDecimal, FromPrimitive};
 use bson::oid::ObjectId;
@@ -15,6 +15,7 @@ use teo_parser::shape::r#static::{STATIC_TYPES, STATIC_WHERE_INPUT_FOR_TYPE};
 use teo_parser::shape::shape::Shape;
 use teo_teon::Value;
 use teo_teon::types::file::File;
+use crate::interface::Interface;
 use crate::namespace::Namespace;
 use crate::path::Error;
 use crate::utils::ContainsStr;
@@ -416,9 +417,8 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
         }
         Type::InterfaceObject(_, gens, k) => {
             let i = main_namespace.interface_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            let shape = i.cache.shape.map.get(gens).unwrap();
-            //i.extends
-            Err(Error::value_error(path.clone(), "interface will later be supported"))
+            let shapes = collect_interface_shapes(i, gens, main_namespace);
+            json_to_teon_with_shapes(json, path, shapes, main_namespace)
         }
         Type::ModelObject(_, _) => Err(Error::value_error(path.clone(), "unexpected type"))?,
         Type::StructObject(_, _) => Err(Error::value_error(path.clone(), "unexpected type"))?,
@@ -508,4 +508,28 @@ pub fn json_to_teon(json: &serde_json::Value, path: &KeyPath, input: &Input, mai
             }
         }
     }
+}
+
+fn collect_interface_shapes<'a>(interface: &'a Interface, gens: &Vec<Type>, namespace: &'a Namespace) -> Vec<&'a Shape> {
+    let mut result = vec![];
+    let shape = interface.cache.shape.map.get(gens).unwrap().as_shape().unwrap();
+    result.push(shape);
+    let map = calculate_generics_map(&interface.generic_names, gens);
+    for extend in &interface.extends {
+        if let Some((_, inner_gens, path)) = extend.as_interface_object() {
+            let inner_interface = namespace.interface_at_path(&path.iter().map(AsRef::as_ref).collect()).unwrap();
+            result.extend(collect_interface_shapes(inner_interface, &inner_gens.iter().map(|t| t.replace_generics(&map)).collect(), namespace));
+        }
+    }
+    result
+}
+
+fn calculate_generics_map(
+    generics_names: &Vec<String>,
+    types: &Vec<Type>,
+) -> BTreeMap<String, Type> {
+    if generics_names.len() == types.len() {
+        return generics_names.iter().enumerate().map(|(index, identifier)| (identifier.to_owned(), types.get(index).unwrap().clone())).collect();
+    }
+    btreemap!{}
 }
