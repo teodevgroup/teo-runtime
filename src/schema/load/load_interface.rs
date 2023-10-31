@@ -19,6 +19,7 @@ pub fn load_interface(main_namespace: &mut Namespace, schema: &Schema, interface
             );
         }
     }
+    interface.cache.shape = interface_declaration.shape_resolved().clone();
     Ok(())
 }
 
