@@ -646,7 +646,7 @@ impl Object {
             }
         }
         // real delete
-        self.transaction_ctx().transaction_for_model(self.model()).unwrap().delete_object(self, path.clone()).await?;
+        self.transaction_ctx().transaction_for_model(self.model()).await.unwrap().delete_object(self, path.clone()).await?;
         // nullify and cascade
         for relation in model.relations() {
             if relation.through_path().is_some() {
@@ -685,7 +685,7 @@ impl Object {
 
     #[async_recursion]
     async fn save_to_database(&self, path: &KeyPath) -> Result<()> {
-        self.transaction_ctx().transaction_for_model(self.model()).unwrap().save_object(self, path.clone()).await?;
+        self.transaction_ctx().transaction_for_model(self.model()).await.unwrap().save_object(self, path.clone()).await?;
         self.clear_new_state();
         Ok(())
     }

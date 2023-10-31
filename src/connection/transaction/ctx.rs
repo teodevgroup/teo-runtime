@@ -22,7 +22,7 @@ pub struct Ctx {
 #[derive(Debug)]
 struct CtxInner {
     connection_ctx: connection::Ctx,
-    transactions: Mutex<BTreeMap<Vec<String>, Arc<dyn Transaction>>>
+    transactions: tokio::sync::Mutex<BTreeMap<Vec<String>, Arc<dyn Transaction>>>
 }
 
 impl Ctx {
@@ -31,7 +31,7 @@ impl Ctx {
         Self {
             inner: Arc::new(CtxInner {
                 connection_ctx,
-                transactions: Mutex::new(btreemap!{})
+                transactions: tokio::sync::Mutex::new(btreemap!{})
             })
         }
     }
@@ -56,36 +56,36 @@ impl Ctx {
         self.inner.connection_ctx.connections()
     }
 
-    fn set_transaction_for_model(&self, model: &Model, transaction: Arc<dyn Transaction>) {
-        self.set_transaction_for_namespace_path(&model.namespace_path(), transaction)
+    async fn set_transaction_for_model(&self, model: &Model, transaction: Arc<dyn Transaction>) {
+        self.set_transaction_for_namespace_path(&model.namespace_path(), transaction).await
     }
 
-    fn set_transaction_for_namespace(&self, namespace: &Namespace, transaction: Arc<dyn Transaction>) {
-        self.set_transaction_for_namespace_path(&namespace.path(), transaction)
+    async fn set_transaction_for_namespace(&self, namespace: &Namespace, transaction: Arc<dyn Transaction>) {
+        self.set_transaction_for_namespace_path(&namespace.path(), transaction).await
     }
 
-    fn set_transaction_for_namespace_path(&self, path: &Vec<&str>, transaction: Arc<dyn Transaction>) {
-        self.inner.transactions.lock().unwrap().insert(
+    async fn set_transaction_for_namespace_path(&self, path: &Vec<&str>, transaction: Arc<dyn Transaction>) {
+        self.inner.transactions.lock().await.insert(
             path.iter().map(ToString::to_string).collect(),
             transaction
         );
     }
 
-    pub(crate) fn transaction_for_model(&self, model: &Model) -> Option<Arc<dyn Transaction>> {
-        self.transaction_for_namespace_path(&model.namespace_path())
+    pub(crate) async fn transaction_for_model(&self, model: &Model) -> Option<Arc<dyn Transaction>> {
+        self.transaction_for_namespace_path(&model.namespace_path()).await
     }
 
-    fn transaction_for_namespace(&self, namespace: &Namespace) -> Option<Arc<dyn Transaction>> {
-        self.transaction_for_namespace_path(&namespace.path())
+    async fn transaction_for_namespace(&self, namespace: &Namespace) -> Option<Arc<dyn Transaction>> {
+        self.transaction_for_namespace_path(&namespace.path()).await
     }
 
-    fn transaction_for_namespace_path(&self, path: &Vec<&str>) -> Option<Arc<dyn Transaction>> {
+    async fn transaction_for_namespace_path(&self, path: &Vec<&str>) -> Option<Arc<dyn Transaction>> {
         let path: Vec<String> = path.iter().map(ToString::to_string).collect();
-        self.inner.transactions.lock().unwrap().get(&path).cloned()
+        self.inner.transactions.lock().await.get(&path).cloned()
     }
 
     async fn transaction_for_model_or_create(&self, model: &Model) -> Result<Arc<dyn Transaction>> {
-        if let Some(transaction) = self.transaction_for_namespace_path(&model.namespace_path()) {
+        if let Some(transaction) = self.transaction_for_namespace_path(&model.namespace_path()).await {
             Ok(transaction)
         } else {
             self.connection_for_model(model).unwrap().transaction().await
@@ -93,7 +93,7 @@ impl Ctx {
     }
 
     async fn transaction_for_model_or_no_transaction(&self, model: &Model) -> Result<Arc<dyn Transaction>> {
-        if let Some(transaction) = self.transaction_for_namespace_path(&model.namespace_path()) {
+        if let Some(transaction) = self.transaction_for_namespace_path(&model.namespace_path()).await {
             Ok(transaction)
         } else {
             self.connection_for_model(model).unwrap().no_transaction().await
@@ -101,7 +101,7 @@ impl Ctx {
     }
 
     async fn transaction_for_namespace_or_create(&self, namespace: &Namespace) -> Result<Arc<dyn Transaction>> {
-        if let Some(transaction) = self.transaction_for_namespace_path(&namespace.path()) {
+        if let Some(transaction) = self.transaction_for_namespace_path(&namespace.path()).await {
             Ok(transaction)
         } else {
             self.connection_for_namespace(namespace).unwrap().transaction().await
@@ -109,7 +109,7 @@ impl Ctx {
     }
 
     async fn transaction_for_namespace_or_no_transaction(&self, namespace: &Namespace) -> Result<Arc<dyn Transaction>> {
-        if let Some(transaction) = self.transaction_for_namespace_path(&namespace.path()) {
+        if let Some(transaction) = self.transaction_for_namespace_path(&namespace.path()).await {
             Ok(transaction)
         } else {
             self.connection_for_namespace(namespace).unwrap().no_transaction().await
@@ -134,7 +134,7 @@ impl Ctx {
     }
 
     async fn abort(&self) -> Result<()> {
-        for transaction in self.inner.transactions.lock().unwrap().values() {
+        for transaction in self.inner.transactions.lock().await.values() {
             if transaction.is_transaction() {
                 transaction.abort().await?;
             }
@@ -143,7 +143,7 @@ impl Ctx {
     }
 
     async fn commit(&self) -> Result<()> {
-        for transaction in self.inner.transactions.lock().unwrap().values() {
+        for transaction in self.inner.transactions.lock().await.values() {
             if transaction.is_transaction() {
                 transaction.commit().await?;
             }
