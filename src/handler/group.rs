@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 use serde::Serialize;
 use teo_parser::ast::handler::HandlerInputFormat;
+use teo_parser::r#type::Type;
 use crate::handler::Handler;
 use crate::handler::handler::{Method};
 use crate::middleware::next::Next;
@@ -16,6 +17,7 @@ impl Group {
 
     pub fn define_handler<F>(&mut self, name: &str, call: F) where F: 'static + Next {
         let handler = Handler {
+            input_type: Type::Undetermined,
             format: HandlerInputFormat::Json,
             path: next_path(&self.path, name),
             ignore_prefix: false,

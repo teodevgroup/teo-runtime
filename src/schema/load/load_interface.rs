@@ -11,6 +11,14 @@ pub fn load_interface(main_namespace: &mut Namespace, schema: &Schema, interface
     let mut interface = Interface::new();
     interface.path = interface_declaration.string_path.clone();
     interface.comment = load_comment(interface_declaration.comment.as_ref());
+    if let Some(generics_declaration) = &interface_declaration.generics_declaration {
+        for gen in &generics_declaration.identifiers {
+            interface.generic_names.push(gen.name.clone());
+        }
+    }
+    for t in interface_declaration.extends() {
+        interface.extends.push(t.resolved().clone());
+    }
     for field_declaration in &interface_declaration.fields {
         if field_declaration.is_available() {
             interface.fields.insert(

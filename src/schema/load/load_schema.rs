@@ -154,10 +154,11 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_load
             if dest_namespace.handler_groups.get(handler_group_declaration.identifier.name()).is_none() {
                 diagnostics.insert(DiagnosticsError::new(handler_group_declaration.identifier.span, "handler group implementation is not found", schema.source(handler_group_declaration.source_id()).unwrap().file_path.clone()));
             }
-            let group = dest_namespace.handler_groups.get_mut(handler_group_declaration.identifier.name()).unwrap();
-            for handler_declaration in &handler_group_declaration.handler_declarations {
-                if group.handlers.get(handler_declaration.name()).is_none() {
-                    diagnostics.insert(DiagnosticsError::new(handler_declaration.identifier.span, "handler implementation is not found", schema.source(handler_group_declaration.source_id()).unwrap().file_path.clone()));
+            if let Some(group) = dest_namespace.handler_groups.get_mut(handler_group_declaration.identifier.name()) {
+                for handler_declaration in &handler_group_declaration.handler_declarations {
+                    if group.handlers.get(handler_declaration.name()).is_none() {
+                        diagnostics.insert(DiagnosticsError::new(handler_declaration.identifier.span, "handler implementation is not found", schema.source(handler_group_declaration.source_id()).unwrap().file_path.clone()));
+                    }
                 }
             }
         }

@@ -3,6 +3,7 @@ use educe::Educe;
 use futures_util::future::BoxFuture;
 use serde::Serialize;
 use teo_parser::ast::handler::HandlerInputFormat;
+use teo_parser::r#type::Type;
 use crate::request::ctx::Ctx;
 use crate::response::Response;
 use teo_result::Result;
@@ -23,6 +24,7 @@ pub enum Method {
 #[derive(Serialize, Clone)]
 pub struct Handler {
     pub path: Vec<String>,
+    pub input_type: Type,
     pub format: HandlerInputFormat,
     pub method: Method,
     pub url: Option<String>,
