@@ -88,7 +88,9 @@ impl Ctx {
         if let Some(transaction) = self.transaction_for_namespace_path(&model.namespace_path()).await {
             Ok(transaction)
         } else {
-            self.connection_for_model(model).unwrap().transaction().await
+            let tran = self.connection_for_model(model).unwrap().transaction().await?;
+            self.set_transaction_for_namespace_path(&model.namespace_path(), tran.clone()).await;
+            Ok(tran)
         }
     }
 
@@ -96,7 +98,9 @@ impl Ctx {
         if let Some(transaction) = self.transaction_for_namespace_path(&model.namespace_path()).await {
             Ok(transaction)
         } else {
-            self.connection_for_model(model).unwrap().no_transaction().await
+            let tran = self.connection_for_model(model).unwrap().no_transaction().await?;
+            self.set_transaction_for_namespace_path(&model.namespace_path(), tran.clone()).await;
+            Ok(tran)
         }
     }
 
@@ -104,7 +108,9 @@ impl Ctx {
         if let Some(transaction) = self.transaction_for_namespace_path(&namespace.path()).await {
             Ok(transaction)
         } else {
-            self.connection_for_namespace(namespace).unwrap().transaction().await
+            let tran = self.connection_for_namespace(namespace).unwrap().transaction().await?;
+            self.set_transaction_for_namespace_path(&namespace.path(), tran.clone()).await;
+            Ok(tran)
         }
     }
 
@@ -112,7 +118,9 @@ impl Ctx {
         if let Some(transaction) = self.transaction_for_namespace_path(&namespace.path()).await {
             Ok(transaction)
         } else {
-            self.connection_for_namespace(namespace).unwrap().no_transaction().await
+            let tran = self.connection_for_namespace(namespace).unwrap().no_transaction().await?;
+            self.set_transaction_for_namespace_path(&namespace.path(), tran.clone()).await;
+            Ok(tran)
         }
     }
 
