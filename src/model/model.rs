@@ -3,6 +3,7 @@ use std::ops::BitOr;
 use indexmap::IndexMap;
 use maplit::{btreemap, btreeset};
 use serde::Serialize;
+use teo_parser::ast::model::ModelShapeResolved;
 use teo_result::{Result, Error};
 use crate::action::Action;
 use crate::comment::Comment;
@@ -329,6 +330,7 @@ pub struct Cache {
     pub relation_output_keys: Vec<String>,
     pub field_property_map: BTreeMap<String, Vec<String>>,
     pub has_virtual_fields: bool,
+    pub shape: ModelShapeResolved,
 }
 
 impl Cache {
@@ -351,6 +353,7 @@ impl Cache {
             relation_output_keys: vec![],
             field_property_map: Default::default(),
             has_virtual_fields: false,
+            shape: ModelShapeResolved::new(),
         }
     }
 }
