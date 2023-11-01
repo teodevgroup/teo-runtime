@@ -28,6 +28,7 @@ use crate::pipeline;
 use crate::stdlib::load::load;
 use educe::Educe;
 use crate::handler::Handler;
+use crate::traits::named::Named;
 
 #[derive(Educe)]
 #[educe(Debug)]
@@ -479,6 +480,17 @@ impl Namespace {
             }
         }
         result
+    }
+}
+
+impl Named for Namespace {
+
+    fn name(&self) -> &str {
+        if self.path().is_empty() {
+            "main"
+        } else {
+            *self.path().last().unwrap()
+        }
     }
 }
 
