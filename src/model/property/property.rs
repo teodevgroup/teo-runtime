@@ -14,6 +14,7 @@ use crate::model::field::typed::Typed;
 use crate::object::Object;
 use crate::optionality::Optionality;
 use crate::pipeline::pipeline::Pipeline;
+use crate::traits::documentable::Documentable;
 
 #[derive(Debug, Serialize)]
 pub struct Property {
@@ -118,5 +119,16 @@ impl Typed for Property {
 
     fn r#type(&self) -> &Type {
         &self.r#type
+    }
+}
+
+impl Documentable for Property {
+
+    fn comment(&self) -> Option<&Comment> {
+        self.comment.as_ref()
+    }
+
+    fn kind(&self) -> &'static str {
+        "property"
     }
 }

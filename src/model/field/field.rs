@@ -20,6 +20,7 @@ use crate::pipeline::pipeline::Pipeline;
 use crate::previous::Previous;
 use crate::readwrite::read::Read;
 use crate::readwrite::write::Write;
+use crate::traits::documentable::Documentable;
 
 #[derive(Debug, Serialize)]
 pub struct Field {
@@ -163,5 +164,16 @@ impl Typed for Field {
 
     fn r#type(&self) -> &Type {
         &self.r#type
+    }
+}
+
+impl Documentable for Field {
+
+    fn comment(&self) -> Option<&Comment> {
+        self.comment.as_ref()
+    }
+
+    fn kind(&self) -> &'static str {
+        "field"
     }
 }

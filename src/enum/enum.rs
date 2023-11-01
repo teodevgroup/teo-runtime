@@ -1,6 +1,8 @@
 use serde::Serialize;
 use crate::comment::Comment;
 use crate::r#enum::member::Member;
+use crate::traits::documentable::Documentable;
+use crate::traits::named::Named;
 
 #[derive(Debug, Serialize)]
 pub struct Enum {
@@ -31,4 +33,22 @@ impl Enum {
 #[derive(Debug, Serialize)]
 pub struct Cache {
     pub member_names: Vec<String>,
+}
+
+impl Named for Enum {
+
+    fn name(&self) -> &str {
+        self.path.last().unwrap().as_str()
+    }
+}
+
+impl Documentable for Enum {
+
+    fn comment(&self) -> Option<&Comment> {
+        self.comment.as_ref()
+    }
+
+    fn kind(&self) -> &'static str {
+        "enum"
+    }
 }

@@ -21,6 +21,7 @@ use crate::model::relation::Relation;
 use crate::object::Object;
 use crate::pipeline::pipeline::Pipeline;
 use crate::previous::Previous;
+use crate::traits::documentable::Documentable;
 
 #[derive(Debug, Serialize)]
 pub struct Model {
@@ -362,5 +363,16 @@ impl Named for Model {
 
     fn name(&self) -> &str {
         self.path.last().map(|s| s.as_str()).unwrap()
+    }
+}
+
+impl Documentable for Model {
+
+    fn comment(&self) -> Option<&Comment> {
+        self.comment.as_ref()
+    }
+
+    fn kind(&self) -> &'static str {
+        "model"
     }
 }

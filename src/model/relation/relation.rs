@@ -10,6 +10,7 @@ use crate::model::relation::delete::Delete;
 use crate::model::relation::update::Update;
 use crate::object::Object;
 use crate::optionality::Optionality;
+use crate::traits::documentable::Documentable;
 
 #[derive(Debug, Serialize)]
 pub struct Relation {
@@ -137,5 +138,16 @@ impl<'a> Iterator for RelationIter<'a> {
         } else {
             None
         }
+    }
+}
+
+impl Documentable for Relation {
+
+    fn comment(&self) -> Option<&Comment> {
+        self.comment.as_ref()
+    }
+
+    fn kind(&self) -> &'static str {
+        "relation"
     }
 }

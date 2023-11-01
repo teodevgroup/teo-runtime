@@ -14,7 +14,11 @@ pub fn load_enum(main_namespace: &mut Namespace, schema: &Schema, enum_declarati
     for enum_member in &enum_declaration.members {
         if enum_member.is_available() {
             r#enum.members.push(
-                Member::new(enum_member.identifier.name().to_owned(), enum_member.resolved().value.clone())
+                Member::new(
+                    enum_member.identifier.name().to_owned(),
+                    enum_member.resolved().value.clone(),
+                    load_comment(enum_member.comment.as_ref())
+                )
             );
         }
     }
