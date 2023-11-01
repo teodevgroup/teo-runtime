@@ -36,6 +36,17 @@ impl Ctx {
         }
     }
 
+    pub fn model_ctx_for_model_at_path(&self, path: &Vec<&str>) -> Option<model::Ctx> {
+        if let Some(model) = self.namespace().model_at_path(path) {
+            Some(model::Ctx {
+                transaction_ctx: self.clone(),
+                model,
+            })
+        } else {
+            None
+        }
+    }
+
     pub fn namespace(&self) -> &'static Namespace {
         self.inner.connection_ctx.namespace()
     }
