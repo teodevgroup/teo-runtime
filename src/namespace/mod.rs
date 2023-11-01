@@ -118,6 +118,14 @@ impl Namespace {
         Ok(())
     }
 
+    pub fn is_main(&self) -> bool {
+        self.path.is_empty()
+    }
+
+    pub fn is_std(&self) -> bool {
+        self.path() == vec!["std"]
+    }
+
     pub fn path(&self) -> Vec<&str> {
         self.path.iter().map(|s| s.as_str()).collect()
     }

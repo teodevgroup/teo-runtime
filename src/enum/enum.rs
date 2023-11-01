@@ -28,6 +28,10 @@ impl Enum {
     pub fn finalize(&mut self) {
         self.cache.member_names = self.members.iter().map(|m| m.name.clone()).collect();
     }
+
+    pub fn members(&self) -> &Vec<Member> {
+        &self.members
+    }
 }
 
 #[derive(Debug, Serialize)]
