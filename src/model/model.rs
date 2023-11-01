@@ -11,7 +11,7 @@ use crate::model;
 use crate::model::field::column_named::ColumnNamed;
 use crate::model::field::Field;
 use crate::model::field::indexable::Indexable;
-use crate::model::field::named::Named;
+use crate::traits::named::Named;
 use crate::model::Index;
 use crate::model::index::Item;
 use crate::model::migration::Migration;

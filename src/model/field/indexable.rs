@@ -1,5 +1,5 @@
 use crate::model::field;
-use crate::model::field::named::Named;
+use crate::traits::named::Named;
 
 pub trait Indexable: Named {
 

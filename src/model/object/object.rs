@@ -13,7 +13,7 @@ use crate::action::Action;
 use crate::connection::transaction;
 use crate::model::{Field, Model};
 use key_path::{path, KeyPath};
-use crate::model::field::named::Named;
+use crate::traits::named::Named;
 use async_recursion::async_recursion;
 use futures_util::StreamExt;
 use indexmap::{IndexMap, indexmap};

@@ -12,7 +12,7 @@ use crate::model::field::Index;
 use crate::model::field::indexable::{Indexable};
 use crate::model::field::is_optional::IsOptional;
 use crate::model::field::Migration;
-use crate::model::field::named::Named;
+use crate::traits::named::Named;
 use crate::model::field::typed::Typed;
 use crate::object::Object;
 use crate::optionality::Optionality;

@@ -5,7 +5,7 @@ use crate::comment::Comment;
 use crate::database::database::Database;
 use crate::model::Field;
 use crate::model::field::is_optional::IsOptional;
-use crate::model::field::named::Named;
+use crate::traits::named::Named;
 use crate::model::relation::delete::Delete;
 use crate::model::relation::update::Update;
 use crate::object::Object;

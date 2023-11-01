@@ -26,3 +26,4 @@ pub mod previous;
 pub mod readwrite;
 pub mod path;
 pub mod coder;
+pub mod traits;
