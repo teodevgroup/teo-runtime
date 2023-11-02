@@ -4,6 +4,8 @@ use teo_parser::ast::interface::InterfaceDeclarationShapeResolved;
 use teo_parser::r#type::Type;
 use crate::comment::Comment;
 use crate::interface::field::Field;
+use crate::traits::documentable::Documentable;
+use crate::traits::named::Named;
 
 #[derive(Debug, Serialize)]
 pub struct Interface {
@@ -27,6 +29,10 @@ impl Interface {
             cache: InterfaceCache::new()
         }
     }
+
+    pub fn generic_names(&self) -> Vec<&str> {
+        self.generic_names.iter().map(|g| g.as_str()).collect()
+    }
 }
 
 #[derive(Debug, Serialize)]
@@ -40,5 +46,23 @@ impl InterfaceCache {
         Self {
             shape: InterfaceDeclarationShapeResolved::new(),
         }
+    }
+}
+
+impl Named for Interface {
+
+    fn name(&self) -> &str {
+        self.path.last().map(|s| s.as_str()).unwrap()
+    }
+}
+
+impl Documentable for Interface {
+
+    fn comment(&self) -> Option<&Comment> {
+        self.comment.as_ref()
+    }
+
+    fn kind(&self) -> &'static str {
+        "interface"
     }
 }

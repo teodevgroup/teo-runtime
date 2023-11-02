@@ -2,7 +2,10 @@ use serde::Serialize;
 use teo_parser::r#type::Type;
 use crate::comment::Comment;
 use crate::model::field::is_optional::{IsOptional};
+use crate::model::field::typed::Typed;
 use crate::optionality::Optionality;
+use crate::traits::documentable::Documentable;
+use crate::traits::named::Named;
 
 #[derive(Debug, Serialize)]
 pub struct Field {
@@ -40,5 +43,30 @@ impl IsOptional for Field {
 
     fn set_required(&mut self) {
         self.optionality = Optionality::Required;
+    }
+}
+
+impl Named for Field {
+
+    fn name(&self) -> &str {
+        self.name.as_str()
+    }
+}
+
+impl Documentable for Field {
+
+    fn comment(&self) -> Option<&Comment> {
+        self.comment.as_ref()
+    }
+
+    fn kind(&self) -> &'static str {
+        "interface field"
+    }
+}
+
+impl Typed for Field {
+
+    fn r#type(&self) -> &Type {
+        &self.r#type
     }
 }
