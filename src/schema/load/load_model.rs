@@ -84,6 +84,7 @@ fn load_model_relation(main_namespace: &mut Namespace, field_declaration: &teo_p
     relation.name = field_declaration.identifier.name().to_owned();
     relation.comment = load_comment(field_declaration.comment.as_ref());
     let mut r#type = field_declaration.type_expr.resolved();
+    relation.r#type = r#type.clone();
     if r#type.is_optional() {
         relation.optionality = Optionality::Optional;
     } else {

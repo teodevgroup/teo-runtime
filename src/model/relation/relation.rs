@@ -1,10 +1,12 @@
 use std::collections::{BTreeMap, BTreeSet};
 use maplit::{btreemap, btreeset};
 use serde::Serialize;
+use teo_parser::r#type::Type;
 use crate::comment::Comment;
 use crate::database::database::Database;
 use crate::model::Field;
 use crate::model::field::is_optional::IsOptional;
+use crate::model::field::typed::Typed;
 use crate::traits::named::Named;
 use crate::model::relation::delete::Delete;
 use crate::model::relation::update::Update;
@@ -16,6 +18,7 @@ use crate::traits::documentable::Documentable;
 pub struct Relation {
     pub name: String,
     pub comment: Option<Comment>,
+    pub r#type: Type,
     pub optionality: Optionality,
     pub model: Vec<String>,
     pub through: Option<Vec<String>>,
@@ -36,6 +39,7 @@ impl Relation {
         Self {
             name: "".to_string(),
             comment: None,
+            r#type: Type::Undetermined,
             optionality: Optionality::Optional,
             model: vec![],
             through: None,
@@ -149,5 +153,12 @@ impl Documentable for Relation {
 
     fn kind(&self) -> &'static str {
         "relation"
+    }
+}
+
+impl Typed for Relation {
+
+    fn r#type(&self) -> &Type {
+        &self.r#type
     }
 }
