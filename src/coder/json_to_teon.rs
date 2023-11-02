@@ -303,6 +303,38 @@ pub fn fetch_input<'a>(reference: &ShapeReference, main_namespace: &'a Namespace
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
             Ok(Cow::Borrowed(model.cache.shape.map.get("OrderByInput").unwrap()))
         }
+        ShapeReference::Result(_, k) => {
+            let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
+            Ok(Cow::Borrowed(model.cache.shape.map.get("Result").unwrap()))
+        }
+        ShapeReference::CountAggregateResult(_, k) => {
+            let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
+            Ok(Cow::Borrowed(model.cache.shape.map.get("CountAggregateResult").unwrap()))
+        }
+        ShapeReference::SumAggregateResult(_, k) => {
+            let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
+            Ok(Cow::Borrowed(model.cache.shape.map.get("SumAggregateResult").unwrap()))
+        }
+        ShapeReference::AvgAggregateResult(_, k) => {
+            let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
+            Ok(Cow::Borrowed(model.cache.shape.map.get("AvgAggregateResult").unwrap()))
+        }
+        ShapeReference::MinAggregateResult(_, k) => {
+            let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
+            Ok(Cow::Borrowed(model.cache.shape.map.get("MinAggregateResult").unwrap()))
+        }
+        ShapeReference::MaxAggregateResult(_, k) => {
+            let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
+            Ok(Cow::Borrowed(model.cache.shape.map.get("MaxAggregateResult").unwrap()))
+        }
+        ShapeReference::AggregateResult(_, k) => {
+            let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
+            Ok(Cow::Borrowed(model.cache.shape.map.get("AggregateResult").unwrap()))
+        }
+        ShapeReference::GroupByResult(_, k) => {
+            let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
+            Ok(Cow::Borrowed(model.cache.shape.map.get("GroupByResult").unwrap()))
+        }
     }
 }
 
