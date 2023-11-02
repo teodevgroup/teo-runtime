@@ -163,6 +163,10 @@ impl Model {
         self.indexes.values().find(|i| i.r#type().is_primary())
     }
 
+    pub fn path(&self) -> Vec<&str> {
+        self.path.iter().map(AsRef::as_ref).collect()
+    }
+
     pub fn finalize(&mut self) -> Result<()> {
 
         // set default table name
