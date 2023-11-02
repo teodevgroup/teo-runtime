@@ -67,7 +67,7 @@ fn load_model_field(main_namespace: &mut Namespace, field_declaration: &teo_pars
     } else {
         field.set_required();
     }
-    field.r#type = field_declaration.type_expr.resolved().unwrap_optional().clone();
+    field.r#type = field_declaration.type_expr.resolved().clone();
     for decorator in &field_declaration.decorators {
         let decorator_declaration = schema.find_top_by_path(&decorator.resolved().path).unwrap().as_decorator_declaration().unwrap();
         if let Some(decorator_implementation) = main_namespace.model_field_decorator_at_path(&decorator_declaration.str_path()) {
