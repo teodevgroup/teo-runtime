@@ -33,6 +33,10 @@ impl Interface {
     pub fn generic_names(&self) -> Vec<&str> {
         self.generic_names.iter().map(|g| g.as_str()).collect()
     }
+
+    pub fn extends(&self) -> &Vec<Type> {
+        &self.extends
+    }
 }
 
 #[derive(Debug, Serialize)]
