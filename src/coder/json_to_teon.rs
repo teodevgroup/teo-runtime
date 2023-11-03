@@ -105,235 +105,235 @@ pub fn fetch_input<'a>(reference: &ShapeReference, main_namespace: &'a Namespace
         }
         ShapeReference::Args(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("Args").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("Args").unwrap()))
         }
         ShapeReference::FindManyArgs(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("FindManyArgs").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("FindManyArgs").unwrap()))
         }
         ShapeReference::FindFirstArgs(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("FindFirstArgs").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("FindFirstArgs").unwrap()))
         }
         ShapeReference::FindUniqueArgs(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("FindUniqueArgs").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("FindUniqueArgs").unwrap()))
         }
         ShapeReference::CreateArgs(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("CreateArgs").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("CreateArgs").unwrap()))
         }
         ShapeReference::UpdateArgs(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("UpdateArgs").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("UpdateArgs").unwrap()))
         }
         ShapeReference::UpsertArgs(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("UpsertArgs").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("UpsertArgs").unwrap()))
         }
         ShapeReference::CopyArgs(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("CopyArgs").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("CopyArgs").unwrap()))
         }
         ShapeReference::DeleteArgs(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("DeleteArgs").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("DeleteArgs").unwrap()))
         }
         ShapeReference::CreateManyArgs(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("CreateManyArgs").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("CreateManyArgs").unwrap()))
         }
         ShapeReference::UpdateManyArgs(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("UpdateManyArgs").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("UpdateManyArgs").unwrap()))
         }
         ShapeReference::CopyManyArgs(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("CopyManyArgs").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("CopyManyArgs").unwrap()))
         }
         ShapeReference::DeleteManyArgs(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("DeleteManyArgs").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("DeleteManyArgs").unwrap()))
         }
         ShapeReference::CountArgs(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("CountArgs").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("CountArgs").unwrap()))
         }
         ShapeReference::AggregateArgs(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("AggregateArgs").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("AggregateArgs").unwrap()))
         }
         ShapeReference::GroupByArgs(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("GroupByArgs").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("GroupByArgs").unwrap()))
         }
         ShapeReference::RelationFilter(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("RelationFilter").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("RelationFilter").unwrap()))
         }
         ShapeReference::ListRelationFilter(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("ListRelationFilter").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("ListRelationFilter").unwrap()))
         }
         ShapeReference::WhereInput(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("WhereInput").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("WhereInput").unwrap()))
         }
         ShapeReference::WhereUniqueInput(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("WhereUniqueInput").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("WhereUniqueInput").unwrap()))
         }
         ShapeReference::ScalarFieldEnum(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("ScalarFieldEnum").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("ScalarFieldEnum").unwrap()))
         }
         ShapeReference::ScalarWhereWithAggregatesInput(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("ScalarWhereWithAggregatesInput").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("ScalarWhereWithAggregatesInput").unwrap()))
         }
         ShapeReference::CountAggregateInputType(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("CountAggregateInputType").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("CountAggregateInputType").unwrap()))
         }
         ShapeReference::SumAggregateInputType(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("SumAggregateInputType").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("SumAggregateInputType").unwrap()))
         }
         ShapeReference::AvgAggregateInputType(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("AvgAggregateInputType").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("AvgAggregateInputType").unwrap()))
         }
         ShapeReference::MaxAggregateInputType(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("MaxAggregateInputType").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("MaxAggregateInputType").unwrap()))
         }
         ShapeReference::MinAggregateInputType(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("MinAggregateInputType").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("MinAggregateInputType").unwrap()))
         }
         ShapeReference::CreateInput(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("CreateInput").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("CreateInput").unwrap()))
         }
         ShapeReference::CreateInputWithout(_, k, _) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("CreateInputWithout").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("CreateInputWithout").unwrap()))
         }
         ShapeReference::CreateNestedOneInput(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("CreateNestedOneInput").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("CreateNestedOneInput").unwrap()))
         }
         ShapeReference::CreateNestedOneInputWithout(_, k, without) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.without_map.get(&vec!["CreateNestedOneInputWithout".to_owned(), without.clone()]).unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.map.get(&("CreateNestedOneInputWithout".to_owned(), Some(without.clone()))).unwrap()))
         }
         ShapeReference::CreateNestedManyInput(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("CreateNestedManyInput").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("CreateNestedManyInput").unwrap()))
         }
         ShapeReference::CreateNestedManyInputWithout(_, k, without) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.without_map.get(&vec!["CreateNestedManyInputWithout".to_owned(), without.clone()]).unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.map.get(&("CreateNestedManyInputWithout".to_owned(), Some(without.clone()))).unwrap()))
         }
         ShapeReference::UpdateInput(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("UpdateInput").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("UpdateInput").unwrap()))
         }
         ShapeReference::UpdateInputWithout(_, k, without) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.without_map.get(&vec!["UpdateInputWithout".to_owned(), without.clone()]).unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.map.get(&("UpdateInputWithout".to_owned(), Some(without.clone()))).unwrap()))
         }
         ShapeReference::UpdateNestedOneInput(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("UpdateNestedOneInput").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("UpdateNestedOneInput").unwrap()))
         }
         ShapeReference::UpdateNestedOneInputWithout(_, k, without) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.without_map.get(&vec!["UpdateNestedOneInputWithout".to_owned(), without.clone()]).unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.map.get(&("UpdateNestedOneInputWithout".to_owned(), Some(without.clone()))).unwrap()))
         }
         ShapeReference::UpdateNestedManyInput(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("UpdateNestedManyInput").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("UpdateNestedManyInput").unwrap()))
         }
         ShapeReference::UpdateNestedManyInputWithout(_, k, without) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.without_map.get(&vec!["UpdateNestedManyInputWithout".to_owned(), without.clone()]).unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.map.get(&("UpdateNestedManyInputWithout".to_owned(), Some(without.clone()))).unwrap()))
         }
         ShapeReference::ConnectOrCreateInput(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("ConnectOrCreateInput").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("ConnectOrCreateInput").unwrap()))
         }
         ShapeReference::ConnectOrCreateInputWithout(_, k, without) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.without_map.get(&vec!["ConnectOrCreateInputWithout".to_owned(), without.clone()]).unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.map.get(&("ConnectOrCreateInputWithout".to_owned(), Some(without.clone()))).unwrap()))
         }
         ShapeReference::UpdateWithWhereUniqueInput(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("UpdateWithWhereUniqueInput").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("UpdateWithWhereUniqueInput").unwrap()))
         }
         ShapeReference::UpdateWithWhereUniqueInputWithout(_, k, without) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.without_map.get(&vec!["UpdateWithWhereUniqueInputWithout".to_owned(), without.clone()]).unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.map.get(&("UpdateWithWhereUniqueInputWithout".to_owned(), Some(without.clone()))).unwrap()))
         }
         ShapeReference::UpsertWithWhereUniqueInput(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("UpsertWithWhereUniqueInput").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("UpsertWithWhereUniqueInput").unwrap()))
         }
         ShapeReference::UpsertWithWhereUniqueInputWithout(_, k, without) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.without_map.get(&vec!["UpsertWithWhereUniqueInputWithout".to_owned(), without.clone()]).unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.map.get(&("UpsertWithWhereUniqueInputWithout".to_owned(), Some(without.clone()))).unwrap()))
         }
         ShapeReference::UpdateManyWithWhereInput(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("UpdateManyWithWhereInput").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("UpdateManyWithWhereInput").unwrap()))
         }
         ShapeReference::UpdateManyWithWhereInputWithout(_, k, without) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.without_map.get(&vec!["UpdateManyWithWhereInputWithout".to_owned(), without.clone()]).unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.map.get(&("UpdateManyWithWhereInputWithout".to_owned(), Some(without.clone()))).unwrap()))
         }
         ShapeReference::Select(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("Select").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("Select").unwrap()))
         }
         ShapeReference::Include(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("Include").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("Include").unwrap()))
         }
         ShapeReference::OrderByInput(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("OrderByInput").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("OrderByInput").unwrap()))
         }
         ShapeReference::Result(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("Result").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("Result").unwrap()))
         }
         ShapeReference::CountAggregateResult(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("CountAggregateResult").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("CountAggregateResult").unwrap()))
         }
         ShapeReference::SumAggregateResult(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("SumAggregateResult").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("SumAggregateResult").unwrap()))
         }
         ShapeReference::AvgAggregateResult(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("AvgAggregateResult").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("AvgAggregateResult").unwrap()))
         }
         ShapeReference::MinAggregateResult(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("MinAggregateResult").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("MinAggregateResult").unwrap()))
         }
         ShapeReference::MaxAggregateResult(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("MaxAggregateResult").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("MaxAggregateResult").unwrap()))
         }
         ShapeReference::AggregateResult(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("AggregateResult").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("AggregateResult").unwrap()))
         }
         ShapeReference::GroupByResult(_, k) => {
             let model = main_namespace.model_at_path(&k.iter().map(AsRef::as_ref).collect()).unwrap();
-            Ok(Cow::Borrowed(model.cache.shape.map.get("GroupByResult").unwrap()))
+            Ok(Cow::Borrowed(model.cache.shape.get("GroupByResult").unwrap()))
         }
     }
 }
