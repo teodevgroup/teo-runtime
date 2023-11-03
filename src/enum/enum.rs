@@ -8,6 +8,8 @@ use crate::traits::named::Named;
 pub struct Enum {
     pub path: Vec<String>,
     pub comment: Option<Comment>,
+    pub option: bool,
+    pub interface: bool,
     pub members: Vec<Member>,
     pub cache: Cache,
 }
@@ -18,6 +20,8 @@ impl Enum {
         Self {
             path: vec![],
             comment: None,
+            option: false,
+            interface: false,
             members: vec![],
             cache: Cache {
                 member_names: vec![]

@@ -11,6 +11,8 @@ pub fn load_enum(main_namespace: &mut Namespace, schema: &Schema, enum_declarati
     let mut r#enum = Enum::new();
     r#enum.path = enum_declaration.string_path.clone();
     r#enum.comment = load_comment(enum_declaration.comment.as_ref());
+    r#enum.option = enum_declaration.option;
+    r#enum.interface = enum_declaration.interface;
     for enum_member in &enum_declaration.members {
         if enum_member.is_available() {
             r#enum.members.push(
