@@ -252,7 +252,7 @@ impl Ctx {
         transaction.aggregate(model, finder, self.clone(), path).await
     }
 
-    pub async fn group_by(&self, model: &'static Model, finder: &Value, path: KeyPath) -> crate::path::Result<Value> {
+    pub async fn group_by(&self, model: &'static Model, finder: &Value, path: KeyPath) -> crate::path::Result<Vec<Value>> {
         let transaction = self.transaction_for_model_or_no_transaction(model).await?;
         transaction.group_by(model, finder, self.clone(), path).await
     }

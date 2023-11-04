@@ -104,12 +104,6 @@ impl Object {
     }
 }
 
-
-
-
-
-
-
 impl<'a> TryFrom<&'a Object> for &'a model::Object {
 
     type Error = Error;

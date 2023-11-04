@@ -31,8 +31,8 @@ impl Ctx {
         Ok(self.transaction_ctx.aggregate(self.model, finder, path![]).await?.into())
     }
 
-    pub async fn group_by<T>(&self, finder: &Value) -> crate::path::Result<T> where T: From<Value> {
-        Ok(self.transaction_ctx.group_by(self.model, finder, path![]).await?.into())
+    pub async fn group_by<T>(&self, finder: &Value) -> crate::path::Result<Vec<T>> where T: From<Value> {
+        Ok(self.transaction_ctx.group_by(self.model, finder, path![]).await?.into_iter().map(|t| t.into()).collect())
     }
 
     pub async fn create_object<T>(&self, input: &Value) -> crate::path::Result<T> where T: From<model::Object> {

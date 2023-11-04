@@ -387,11 +387,15 @@ impl Object {
         }
     }
 
-    pub async fn get_property<T>(&self, key: &str) -> Result<T> where T: From<Value> {
+    pub async fn get_property<T>(&self, key: &str) -> Result<T> where T: TryFrom<Value, Error = Error> {
+        Ok(self.get_property_value(key).await?.try_into()?)
+    }
+
+    pub async fn get_property_value(&self, key: &str) -> Result<Value> {
         let property = self.model().property(key.as_ref()).unwrap();
         if property.cached {
             if let Some(value) = self.inner.cached_property_map.lock().unwrap().get(key) {
-                return Ok(value.clone().into());
+                return Ok(value.clone());
             }
         }
         let getter = property.getter.as_ref().unwrap();
@@ -400,13 +404,13 @@ impl Object {
         if property.cached {
             self.inner.cached_property_map.lock().unwrap().insert(key.to_string(), value.clone());
         }
-        Ok(value.into())
+        Ok(value)
     }
 
-    pub fn get<T>(&self, key: impl AsRef<str>) -> Result<T> where T: From<Value> {
+    pub fn get<T>(&self, key: impl AsRef<str>) -> Result<T> where T: TryFrom<Value, Error = Error> {
         match self.get_value(key) {
             Ok(optional_value) => {
-                Ok(optional_value.into())
+                Ok(optional_value.try_into()?)
             }
             Err(err) => {
                 Err(err)

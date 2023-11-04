@@ -14,3 +14,4 @@ pub mod database_type;
 pub mod enum_variant;
 pub mod sort;
 pub mod method;
+pub mod model_object;

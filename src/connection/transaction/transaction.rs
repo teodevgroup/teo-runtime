@@ -39,7 +39,7 @@ pub trait Transaction: Send + Sync + Debug {
 
     async fn aggregate(&self, model: &'static Model, finder: &Value, transaction_ctx: transaction::Ctx, path: KeyPath) -> crate::path::Result<Value>;
 
-    async fn group_by(&self, model: &'static Model, finder: &Value, transaction_ctx: transaction::Ctx, path: KeyPath) -> crate::path::Result<Value>;
+    async fn group_by(&self, model: &'static Model, finder: &Value, transaction_ctx: transaction::Ctx, path: KeyPath) -> crate::path::Result<Vec<Value>>;
 
     // Transaction
 
