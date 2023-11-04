@@ -455,6 +455,7 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
         }
         Type::ModelObject(_, _) => Err(Error::value_error(path.clone(), "unexpected type"))?,
         Type::StructObject(_, _) => Err(Error::value_error(path.clone(), "unexpected type"))?,
+        Type::DataSetObject(_, _) => Err(Error::value_error(path.clone(), "unexpected type"))?,
         Type::ModelScalarFields(_, _) => Err(Error::value_error(path.clone(), "unexpected type"))?,
         Type::ModelScalarFieldsWithoutVirtuals(_, _) => Err(Error::value_error(path.clone(), "unexpected type"))?,
         Type::ModelScalarFieldsAndCachedPropertiesWithoutVirtuals(_, _) => Err(Error::value_error(path.clone(), "unexpected type"))?,
