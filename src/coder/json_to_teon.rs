@@ -403,6 +403,7 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
         Type::Regex => Err(Error::value_error(path.clone(), "unexpected type"))?,
         Type::Model => Err(Error::value_error(path.clone(), "unexpected type"))?,
         Type::DataSet => Err(Error::value_error(path.clone(), "unexpected type"))?,
+        Type::DataSetRecord(_, _) => Err(Error::value_error(path.clone(), "unexpected type"))?,
         Type::Enumerable(inner) => {
             if let Some(json_array) = json.as_array() {
                 let values: Vec<Value> = json_array.iter().enumerate().map(|(i, j)| Ok(json_to_teon_with_type(j, &(path + i), inner.as_ref(), main_namespace)?)).collect::<crate::path::Result<Vec<Value>>>()?;
