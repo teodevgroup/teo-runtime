@@ -11,6 +11,7 @@ use crate::utils::next_path;
 #[derive(Debug, Serialize)]
 pub struct Struct {
     pub path: Vec<String>,
+    #[serde(rename = "staticFunctions")]
     pub static_functions: BTreeMap<String, static_function::Definition>,
     pub functions: BTreeMap<String, instance_function::Definition>,
 }

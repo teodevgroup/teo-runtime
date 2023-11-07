@@ -27,21 +27,32 @@ use crate::traits::documentable::Documentable;
 pub struct Model {
     pub path: Vec<String>,
     pub comment: Option<Comment>,
+    #[serde(rename = "tableName")]
     pub table_name: String,
     pub actions: Vec<Action>,
+    #[serde(rename = "generateClient")]
     pub generate_client: bool,
+    #[serde(rename = "generateEntity")]
     pub generate_entity: bool,
+    #[serde(rename = "showInStudio")]
     pub show_in_studio: bool,
     pub fields: IndexMap<String, Field>,
     pub relations: IndexMap<String, Relation>,
     pub properties: IndexMap<String, Property>,
     pub indexes: IndexMap<String, Index>,
+    #[serde(rename = "primaryIndex")]
     pub primary_index: String,
+    #[serde(rename = "beforeSave")]
     pub before_save: Pipeline,
+    #[serde(rename = "afterSave")]
     pub after_save: Pipeline,
+    #[serde(rename = "beforeDelete")]
     pub before_delete: Pipeline,
+    #[serde(rename = "afterDelete")]
     pub after_delete: Pipeline,
+    #[serde(rename = "canRead")]
     pub can_read: Pipeline,
+    #[serde(rename = "canMutate")]
     pub can_mutate: Pipeline,
     pub migration: Migration,
     pub data: BTreeMap<String, Object>,
