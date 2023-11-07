@@ -27,11 +27,13 @@ use crate::middleware::middleware::{empty_middleware, Middleware};
 use crate::pipeline;
 use crate::stdlib::load::load;
 use educe::Educe;
+use serde::Serialize;
 use crate::handler::Handler;
 use crate::traits::named::Named;
 
 #[derive(Educe)]
 #[educe(Debug)]
+#[derive(Serialize)]
 pub struct Namespace {
     pub path: Vec<String>,
     pub namespaces: BTreeMap<String, Namespace>,
@@ -61,10 +63,11 @@ pub struct Namespace {
     pub middlewares_block: Option<middleware::Block>,
     pub database: Option<Database>,
     pub connector_reference: Option<Vec<String>>,
+    #[serde(skip)]
     pub connection: Option<Arc<dyn Connection>>,
-    #[educe(Debug(ignore))]
+    #[educe(Debug(ignore))] #[serde(skip)]
     pub middleware_stack: &'static dyn Middleware,
-    #[educe(Debug(ignore))]
+    #[educe(Debug(ignore))] #[serde(skip)]
     pub handler_map: handler::Map,
 }
 

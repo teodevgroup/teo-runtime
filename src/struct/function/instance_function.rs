@@ -1,15 +1,16 @@
 use educe::Educe;
 use std::future::Future;
 use std::sync::Arc;
+use serde::Serialize;
 use crate::arguments::Arguments;
 use crate::object::Object;
 use teo_result::Result;
 
-#[derive(Educe)]
+#[derive(Educe, Serialize)]
 #[educe(Debug)]
 pub struct Definition {
     pub path: Vec<String>,
-    #[educe(Debug(ignore))]
+    #[educe(Debug(ignore))] #[serde(skip)]
     pub body: Arc<dyn Function>,
 }
 

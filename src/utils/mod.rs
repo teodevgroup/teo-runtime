@@ -1,3 +1,7 @@
+pub mod find_main_schema_file;
+
+pub use find_main_schema_file::find_main_schema_file;
+
 pub(crate) fn next_path(path: &Vec<String>, name: &str) -> Vec<String> {
     let mut new_path = path.clone();
     new_path.push(name.to_string());

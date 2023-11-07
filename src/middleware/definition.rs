@@ -1,11 +1,12 @@
 use std::sync::Arc;
 use educe::Educe;
+use serde::Serialize;
 use super::creator::Creator;
 
-#[derive(Educe)]
+#[derive(Educe, Serialize)]
 #[educe(Debug)]
 pub struct Definition {
     pub path: Vec<String>,
-    #[educe(Debug(ignore))]
+    #[educe(Debug(ignore))] #[serde(skip)]
     pub creator: Arc<dyn Creator>,
 }

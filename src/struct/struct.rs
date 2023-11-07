@@ -1,13 +1,14 @@
 use std::collections::BTreeMap;
 use std::fmt::Debug;
 use std::sync::Arc;
+use serde::Serialize;
 use crate::r#struct::function::instance_function;
 use crate::r#struct::function::instance_function::Function;
 use crate::r#struct::function::static_function;
 use crate::r#struct::function::static_function::StaticFunction;
 use crate::utils::next_path;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Struct {
     pub path: Vec<String>,
     pub static_functions: BTreeMap<String, static_function::Definition>,

@@ -10,9 +10,10 @@ use crate::object::Object;
 
 #[derive(Educe)]
 #[educe(Debug)]
+#[derive(Serialize)]
 pub struct Item {
     pub path: Vec<String>,
-    #[educe(Debug(ignore))]
+    #[educe(Debug(ignore))] #[serde(skip)]
     pub(crate) call: Arc<dyn Call>,
 }
 
