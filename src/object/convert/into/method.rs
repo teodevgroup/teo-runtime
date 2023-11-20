@@ -28,16 +28,13 @@ impl TryFrom<&Value> for Method {
 
     fn try_from(value: &Value) -> std::result::Result<Self, Self::Error> {
         let enum_variant: &EnumVariant = value.try_into()?;
-        if !enum_variant.value.is_string() {
-            Err(Error::new(format!("value is not enum variant: {:?}", value)))?
-        }
-        let val = enum_variant.value.as_str().unwrap();
-        Ok(match val {
+        Ok(match enum_variant.value.as_str() {
             "post" => Method::Post,
             "get" => Method::Get,
             "patch" => Method::Patch,
             "put" => Method::Put,
             "delete" => Method::Delete,
+            "options" => Method::Options,
             _ => unreachable!(),
         })
     }

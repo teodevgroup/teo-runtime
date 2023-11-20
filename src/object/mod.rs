@@ -16,6 +16,7 @@ use indexmap::IndexMap;
 use regex::Regex;
 use teo_teon::types::enum_variant::EnumVariant;
 use teo_teon::types::range::Range;
+use crate::interface_enum_variant::InterfaceEnumVariant;
 
 #[derive(Debug, Clone)]
 pub struct Object {
@@ -28,6 +29,7 @@ pub enum ObjectInner {
     ModelObject(model::Object),
     StructObject(r#struct::Object),
     Pipeline(Pipeline),
+    InterfaceEnumVariant(InterfaceEnumVariant),
 }
 
 impl AsRef<Object> for Object {
@@ -83,6 +85,17 @@ impl Object {
         }
     }
 
+    pub fn is_interface_enum_variant(&self) -> bool {
+        self.as_interface_enum_variant().is_some()
+    }
+
+    pub fn as_interface_enum_variant(&self) -> Option<&InterfaceEnumVariant> {
+        match self.inner.as_ref() {
+            ObjectInner::InterfaceEnumVariant(n) => Some(n),
+            _ => None
+        }
+    }
+
     pub fn is_null(&self) -> bool {
         self.is_teon() && self.as_teon().unwrap().is_null()
     }
@@ -103,222 +116,3 @@ impl Object {
         }
     }
 }
-
-impl<'a> TryFrom<&'a Object> for &'a model::Object {
-
-    type Error = Error;
-
-    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
-        match value.as_model_object() {
-            Some(o) => Ok(o),
-            None => Err(Error::new(format!("object is not model object: {:?}", value)))
-        }
-    }
-}
-
-impl TryFrom<&Object> for model::Object {
-
-    type Error = Error;
-
-    fn try_from(value: &Object) -> std::result::Result<Self, Self::Error> {
-        match value.as_model_object() {
-            Some(o) => Ok(o.clone()),
-            None => Err(Error::new(format!("object is not model object: {:?}", value)))
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a Object> for &'a r#struct::Object {
-
-    type Error = Error;
-
-    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
-        match value.as_struct_object() {
-            Some(o) => Ok(o),
-            None => Err(Error::new(format!("object is not struct object: {:?}", value)))
-        }
-    }
-}
-
-impl TryFrom<&Object> for r#struct::Object {
-
-    type Error = Error;
-
-    fn try_from(value: &Object) -> std::result::Result<Self, Self::Error> {
-        match value.as_struct_object() {
-            Some(o) => Ok(o.clone()),
-            None => Err(Error::new(format!("object is not struct object: {:?}", value)))
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a Object> for &'a Value {
-
-    type Error = Error;
-
-    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
-        match value.as_teon() {
-            Some(o) => Ok(o),
-            None => Err(Error::new(format!("object is not teon: {:?}", value)))
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a Object> for Value {
-
-    type Error = Error;
-
-    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
-        match value.as_teon() {
-            Some(o) => Ok(o.clone()),
-            None => Err(Error::new(format!("object is not teon: {:?}", value)))
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a Object> for i32 {
-
-    type Error = Error;
-
-    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
-        let teon: &'a Value = value.try_into()?;
-        match teon.try_into() {
-            Ok(v) => Ok(v),
-            Err(_) => Err(Error::new(format!("object is not i32: {:?}", value)))
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a Object> for usize {
-
-    type Error = Error;
-
-    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
-        let teon: &'a Value = value.try_into()?;
-        match teon.to_usize() {
-            Some(v) => Ok(v),
-            None => Err(Error::new(format!("object cannot convert to usize: {:?}", value)))
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a Object> for bool {
-
-    type Error = Error;
-
-    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
-        let teon: &'a Value = value.try_into()?;
-        match teon.try_into() {
-            Ok(v) => Ok(v),
-            Err(_) => Err(Error::new(format!("object is not bool: {:?}", value)))
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a Object> for &'a str {
-
-    type Error = Error;
-
-    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
-        let teon: &'a Value = value.try_into()?;
-        match teon.try_into() {
-            Ok(v) => Ok(v),
-            Err(_) => Err(Error::new(format!("object is not &str: {:?}", value)))
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a Object> for String {
-
-    type Error = Error;
-
-    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
-        let teon: &'a Value = value.try_into()?;
-        match teon.try_into() {
-            Ok(v) => Ok(v),
-            Err(_) => Err(Error::new(format!("object is not String: {:?}", value)))
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a Object> for Vec<i32> {
-
-    type Error = Error;
-
-    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
-        let teon: &'a Value = value.try_into()?;
-        match teon.try_into() {
-            Ok(v) => Ok(v),
-            Err(_) => Err(Error::new(format!("object is not Vec<&str>: {:?}", value)))
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a Object> for Vec<&'a str> {
-
-    type Error = Error;
-
-    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
-        let teon: &'a Value = value.try_into()?;
-        match teon.try_into() {
-            Ok(v) => Ok(v),
-            Err(_) => Err(Error::new(format!("object is not Vec<&str>: {:?}", value)))
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a Object> for Vec<String> {
-
-    type Error = Error;
-
-    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
-        let teon: &'a Value = value.try_into()?;
-        match teon.try_into() {
-            Ok(v) => Ok(v),
-            Err(_) => Err(Error::new(format!("object is not Vec<String>: {:?}", value)))
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a Object> for &'a Range {
-
-    type Error = Error;
-
-    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
-        let teon: &'a Value = value.try_into()?;
-        match teon.try_into() {
-            Ok(v) => Ok(v),
-            Err(_) => Err(Error::new(format!("object is not Range: {:?}", value)))
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a Object> for &'a Regex {
-
-    type Error = Error;
-
-    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
-        let teon: &'a Value = value.try_into()?;
-        match teon.try_into() {
-            Ok(v) => Ok(v),
-            Err(_) => Err(Error::new(format!("object is not Regex: {:?}", value)))
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a Object> for &'a DateTime<Utc> {
-
-    type Error = Error;
-
-    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
-        let teon: &'a Value = value.try_into()?;
-        match teon.try_into() {
-            Ok(v) => Ok(v),
-            Err(_) => Err(Error::new(format!("object is not DateTime<Utc>: {:?}", value)))
-        }
-    }
-}
-
-
-
-

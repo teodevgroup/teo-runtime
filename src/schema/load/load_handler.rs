@@ -22,7 +22,7 @@ pub fn load_handler(main_namespace: &mut Namespace, schema: &Schema, handler_dec
         if (handler.method != Method::Post) || handler.url.is_some() {
             main_namespace.handler_map.add_record(
                 &handler_declaration.namespace_str_path(),
-                handler_declaration.handler_group_name(),
+                handler_declaration.parent_string_path().last().unwrap().as_str(),
                 handler_declaration.name(),
                 handler.method,
                 handler.url.as_ref().map(|u| u.as_str()),

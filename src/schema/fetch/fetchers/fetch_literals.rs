@@ -1,14 +1,18 @@
+use std::hint::unreachable_unchecked;
 use indexmap::indexmap;
 use teo_parser::ast::literals::{TupleLiteral, ArrayLiteral, DictionaryLiteral, EnumVariantLiteral};
 use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::ast::schema::Schema;
 use teo_parser::r#type::Type;
+use teo_parser::traits::named_identifiable::NamedIdentifiable;
+use teo_parser::traits::resolved::Resolve;
 use teo_result::Result;
 use teo_teon::types::enum_variant::EnumVariant;
 use teo_teon::Value;
 use crate::namespace::Namespace;
 use crate::object::Object;
-use crate::schema::fetch::fetch_expression::fetch_expression;
+use crate::schema::fetch::fetch_argument_list::fetch_argument_list;
+use crate::schema::fetch::fetch_expression::{fetch_dictionary_key_expression, fetch_expression};
 
 pub fn fetch_tuple_literal<I>(tuple_literal: &TupleLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
     let mut result = vec![];
@@ -29,7 +33,7 @@ pub fn fetch_array_literal<I>(array_literal: &ArrayLiteral, schema: &Schema, inf
 pub fn fetch_dictionary_literal<I>(dictionary_literal: &DictionaryLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
     let mut result = indexmap!{};
     for named_expression in dictionary_literal.expressions() {
-        let k = fetch_dictionary_key_expression(named_expression.key(), schema, info_provider, &Type::String, namespace)?.as_teon().unwrap().as_str().unwrap().to_owned();
+        let k = fetch_dictionary_key_expression(named_expression.key(), schema, info_provider, namespace)?.as_teon().unwrap().as_str().unwrap().to_owned();
         let v = fetch_expression(named_expression.value(), schema, info_provider, expect.unwrap_optional().unwrap_dictionary(), namespace)?.as_teon().unwrap().clone();
         result.insert(k, v);
     }
@@ -39,19 +43,19 @@ pub fn fetch_dictionary_literal<I>(dictionary_literal: &DictionaryLiteral, schem
 pub fn fetch_enum_variant_literal<I>(e: &EnumVariantLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
     let expect = expect.unwrap_optional().unwrap_union_enum().unwrap();
     match expect {
-        Type::EnumVariant(enum_path, enum_string_path) => {
-            let r#enum = schema.find_top_by_path(enum_path).unwrap().as_enum().unwrap();
-            if let Some(member) = r#enum.members.iter().find(|m| m.identifier().name() == e.identifier().name()) {
-                if let Some(argument_list_declaration) = &member.argument_list_declaration {
+        Type::EnumVariant(reference) => {
+            let r#enum = schema.find_top_by_path(reference.path()).unwrap().as_enum().unwrap();
+            if let Some(member) = r#enum.members().find(|m| m.identifier().name() == e.identifier().name()) {
+                let mut args = None;
+                if let Some(argument_list) = e.argument_list() {
+                    let arg_list_result = fetch_argument_list(argument_list, schema, info_provider, namespace)?;
                 }
                 Ok(Object::from(Value::EnumVariant(EnumVariant {
-                    value: Box::new(member.resolved().value.clone()),
-                    display: format!(".{}", member.identifier().name()),
-                    path: enum_string_path.clone(),
-                    args: None,
+                    value: member.identifier().name().to_owned(),
+                    args,
                 })))
             } else {
-                panic!()
+                unreachable!()
             }
         },
         Type::ModelScalarFields(t, _) => {

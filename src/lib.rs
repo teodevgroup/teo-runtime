@@ -28,3 +28,4 @@ pub mod path;
 pub mod coder;
 pub mod traits;
 pub mod data_set;
+pub mod interface_enum_variant;

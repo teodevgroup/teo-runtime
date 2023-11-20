@@ -32,3 +32,11 @@ pub fn fetch_expression_or_null<I>(expression: Option<&Expression>, schema: &Sch
         Ok(Object::from(Value::Null))
     }
 }
+
+pub fn fetch_dictionary_key_expression<I>(expression: &Expression, schema: &Schema, info_provider: &I, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
+    if let Some(value) = expression.resolved().value() {
+        Ok(Object::from(value.clone()))
+    } else {
+        fetch_expression_kind(expression, schema, info_provider, &Type::String, namespace)
+    }
+}
