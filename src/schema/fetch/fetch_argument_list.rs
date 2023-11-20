@@ -1,6 +1,6 @@
 use maplit::btreemap;
 use teo_parser::ast::argument_list::ArgumentList;
-use teo_parser::ast::info_provider::InfoProvider;
+use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::ast::schema::Schema;
 use teo_result::Result;
 use crate::arguments::Arguments;
@@ -12,7 +12,7 @@ pub fn fetch_argument_list<I>(argument_list: &ArgumentList, schema: &Schema, inf
     for argument in argument_list.arguments() {
         map.insert(
             argument.resolved_name().unwrap().to_owned(),
-            fetch_expression(&argument.value, schema, info_provider, &argument.resolved().expect, namespace)?,
+            fetch_expression(argument.value(), schema, info_provider, &argument.resolved().expect, namespace)?,
         );
     }
     Ok(Arguments::new(map))

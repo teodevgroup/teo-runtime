@@ -148,7 +148,7 @@ impl<'a> Iterator for RelationIter<'a> {
 impl Documentable for Relation {
 
     fn comment(&self) -> Option<&Comment> {
-        self.comment.as_ref()
+        self.comment()
     }
 
     fn kind(&self) -> &'static str {

@@ -33,7 +33,7 @@ pub fn load_data_sets(namespace: &Namespace, names: Option<&Vec<String>>, all: b
                 let group = data_set.groups.iter_mut().find(|g| g.name == schema_group.resolved().model_string_path).unwrap();
                 for schema_record in &schema_group.records {
                     let record = Record {
-                        name: schema_record.identifier.name().to_owned(),
+                        name: schema_record.identifier().name().to_owned(),
                         value: fetch_dictionary_literal(&schema_record.dictionary, schema, schema_record, &Type::Undetermined, namespace)?.as_teon().unwrap().clone(),
                     };
                     group.records.push(record);

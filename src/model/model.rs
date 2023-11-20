@@ -3,7 +3,7 @@ use std::ops::BitOr;
 use indexmap::IndexMap;
 use maplit::{btreemap, btreeset};
 use serde::Serialize;
-use teo_parser::ast::model::ModelShapeResolved;
+use teo_parser::ast::model::ModelResolved;
 use teo_result::{Result, Error};
 use crate::action::Action;
 use crate::comment::Comment;
@@ -330,23 +330,39 @@ impl Model {
 
 #[derive(Debug, Serialize)]
 pub struct Cache {
+    #[serde(rename = "allKeys")]
     pub all_keys: Vec<String>,
+    #[serde(rename = "inputKeys")]
     pub input_keys: Vec<String>,
+    #[serde(rename = "saveKeys")]
     pub save_keys: Vec<String>,
+    #[serde(rename = "saveKeysAndVirtualKeys")]
     pub save_keys_and_virtual_keys: Vec<String>,
+    #[serde(rename = "outputKeys")]
     pub output_keys: Vec<String>,
+    #[serde(rename = "queryKeys")]
     pub query_keys: Vec<String>,
+    #[serde(rename = "uniqueQueryKeys")]
     pub unique_query_keys: Vec<BTreeSet<String>>,
+    #[serde(rename = "sortKeys")]
     pub sort_keys: Vec<String>,
+    #[serde(rename = "autoKeys")]
     pub auto_keys: Vec<String>,
+    #[serde(rename = "denyRelationKeys")]
     pub deny_relation_keys: Vec<String>,
+    #[serde(rename = "scalarKeys")]
     pub scalar_keys: Vec<String>,
+    #[serde(rename = "scalarNumberKeys")]
     pub scalar_number_keys: Vec<String>,
+    #[serde(rename = "localOutputKeys")]
     pub local_output_keys: Vec<String>,
+    #[serde(rename = "relationOutputKeys")]
     pub relation_output_keys: Vec<String>,
+    #[serde(rename = "fieldPropertyMap")]
     pub field_property_map: BTreeMap<String, Vec<String>>,
+    #[serde(rename = "hasVirtualFields")]
     pub has_virtual_fields: bool,
-    pub shape: ModelShapeResolved,
+    pub shape: ModelResolved,
 }
 
 impl Cache {
@@ -369,7 +385,7 @@ impl Cache {
             relation_output_keys: vec![],
             field_property_map: Default::default(),
             has_virtual_fields: false,
-            shape: ModelShapeResolved::new(),
+            shape: ModelResolved::new(),
         }
     }
 }
@@ -384,7 +400,7 @@ impl Named for Model {
 impl Documentable for Model {
 
     fn comment(&self) -> Option<&Comment> {
-        self.comment.as_ref()
+        self.comment()
     }
 
     fn kind(&self) -> &'static str {

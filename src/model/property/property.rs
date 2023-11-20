@@ -125,7 +125,7 @@ impl Typed for Property {
 impl Documentable for Property {
 
     fn comment(&self) -> Option<&Comment> {
-        self.comment.as_ref()
+        self.comment()
     }
 
     fn kind(&self) -> &'static str {

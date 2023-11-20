@@ -53,7 +53,7 @@ impl Named for Enum {
 impl Documentable for Enum {
 
     fn comment(&self) -> Option<&Comment> {
-        self.comment.as_ref()
+        self.comment()
     }
 
     fn kind(&self) -> &'static str {

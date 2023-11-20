@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 use serde::Serialize;
-use teo_parser::ast::interface::InterfaceDeclarationShapeResolved;
+use teo_parser::ast::interface::InterfaceDeclarationResolved;
 use teo_parser::r#type::Type;
 use crate::comment::Comment;
 use crate::interface::field::Field;
@@ -41,14 +41,14 @@ impl Interface {
 
 #[derive(Debug, Serialize)]
 pub struct InterfaceCache {
-    pub shape: InterfaceDeclarationShapeResolved,
+    pub shape: InterfaceDeclarationResolved,
 }
 
 impl InterfaceCache {
 
     pub fn new() -> Self {
         Self {
-            shape: InterfaceDeclarationShapeResolved::new(),
+            shape: InterfaceDeclarationResolved::new(),
         }
     }
 }
@@ -63,7 +63,7 @@ impl Named for Interface {
 impl Documentable for Interface {
 
     fn comment(&self) -> Option<&Comment> {
-        self.comment.as_ref()
+        self.comment()
     }
 
     fn kind(&self) -> &'static str {

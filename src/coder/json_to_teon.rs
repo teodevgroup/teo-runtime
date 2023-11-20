@@ -8,8 +8,8 @@ use indexmap::{indexmap, IndexMap};
 use itertools::Itertools;
 use key_path::KeyPath;
 use maplit::btreemap;
-use teo_parser::r#type::shape_reference::ShapeReference;
 use teo_parser::r#type::Type;
+use teo_parser::r#type::Type::SynthesizedShapeReference;
 use teo_parser::shape::input::Input;
 use teo_parser::shape::r#static::{STATIC_TYPES, STATIC_WHERE_INPUT_FOR_TYPE};
 use teo_parser::shape::shape::Shape;
@@ -20,9 +20,9 @@ use crate::namespace::Namespace;
 use crate::path::Error;
 use crate::utils::ContainsStr;
 
-pub fn fetch_input<'a>(reference: &ShapeReference, main_namespace: &'a Namespace) -> crate::path::Result<Cow<'a, Input>> {
+pub fn fetch_input<'a>(reference: &SynthesizedShapeReference, main_namespace: &'a Namespace) -> crate::path::Result<Cow<'a, Input>> {
     match reference {
-        ShapeReference::BoolFilter => Ok(Cow::Borrowed(STATIC_TYPES.get("BoolFilter").unwrap())),
+        SynthesizedShapeReference::BoolFilter => Ok(Cow::Borrowed(STATIC_TYPES.get("BoolFilter").unwrap())),
         ShapeReference::BoolNullableFilter => Ok(Cow::Borrowed(STATIC_TYPES.get("BoolNullableFilter").unwrap())),
         ShapeReference::IntFilter => Ok(Cow::Borrowed(STATIC_TYPES.get("IntFilter").unwrap())),
         ShapeReference::IntNullableFilter => Ok(Cow::Borrowed(STATIC_TYPES.get("IntNullableFilter").unwrap())),

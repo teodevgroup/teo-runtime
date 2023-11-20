@@ -1,5 +1,5 @@
 use teo_parser::ast::expression::{Expression, ExpressionKind};
-use teo_parser::ast::info_provider::InfoProvider;
+use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::ast::schema::Schema;
 use teo_parser::r#type::Type;
 use teo_result::Result;
@@ -14,7 +14,7 @@ use crate::schema::fetch::fetchers::fetch_unit::fetch_unit;
 
 pub fn fetch_expression_kind<I>(expression: &Expression, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
     match &expression.kind {
-        ExpressionKind::Group(g) => fetch_expression(&g.expression.as_ref(), schema, info_provider, expect, namespace),
+        ExpressionKind::Group(g) => fetch_expression(g.expression(), schema, info_provider, expect, namespace),
         ExpressionKind::ArithExpr(a) => fetch_arith_expr(a, schema, info_provider, expect, namespace),
         ExpressionKind::NumericLiteral(n) => unreachable!(),
         ExpressionKind::StringLiteral(s) => unreachable!(),
@@ -28,7 +28,6 @@ pub fn fetch_expression_kind<I>(expression: &Expression, schema: &Schema, info_p
         ExpressionKind::Identifier(i) => fetch_identifier(i, schema, info_provider, expect, namespace),
         ExpressionKind::ArgumentList(_) => unreachable!(),
         ExpressionKind::Subscript(_) => unreachable!(),
-        ExpressionKind::Call(_) => unreachable!(),
         ExpressionKind::Unit(u) => fetch_unit(u, schema, info_provider, expect, namespace),
         ExpressionKind::Pipeline(p) => fetch_pipeline(p, schema, info_provider, expect, namespace),
     }

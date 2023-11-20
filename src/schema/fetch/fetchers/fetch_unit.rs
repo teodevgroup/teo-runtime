@@ -1,8 +1,8 @@
 use teo_parser::ast::expression::{Expression, ExpressionKind};
 use teo_parser::ast::identifiable::Identifiable;
 use teo_parser::ast::unit::Unit;
-use teo_parser::ast::info_provider::InfoProvider;
-use teo_parser::ast::reference::ReferenceType;
+use teo_parser::traits::info_provider::InfoProvider;
+use teo_parser::ast::reference::ReferenceSpace;
 use teo_parser::ast::schema::Schema;
 use teo_parser::ast::top::Top;
 use teo_parser::r#type::Type;
@@ -84,7 +84,7 @@ fn fetch_current_item_for_unit<I>(current: &UnitFetchResult, item: &Expression, 
                 }
                 ExpressionKind::Call(call) => {
                     let r#struct = namespace.struct_at_path(&path).unwrap();
-                    let function = r#struct.function(call.identifier.name()).unwrap();
+                    let function = r#struct.function(call.identifier().name()).unwrap();
                     let arguments = fetch_argument_list(&call.argument_list, schema, info_provider, namespace)?;
                     let result = function.body.call(current_value.clone(), arguments)?;
                     return Ok(UnitFetchResult::Object(result));
@@ -114,7 +114,7 @@ fn fetch_current_item_for_unit<I>(current: &UnitFetchResult, item: &Expression, 
                         }
                         ExpressionKind::Call(call) => {
                             let r#struct = namespace.struct_at_path(&struct_declaration.str_path()).unwrap();
-                            let function = r#struct.static_function(call.identifier.name()).unwrap();
+                            let function = r#struct.static_function(call.identifier().name()).unwrap();
                             let arguments = fetch_argument_list(&call.argument_list, schema, info_provider, namespace)?;
                             let result = function.body.call(arguments)?;
                             return Ok(UnitFetchResult::Object(result));
@@ -131,7 +131,7 @@ fn fetch_current_item_for_unit<I>(current: &UnitFetchResult, item: &Expression, 
                 Top::Config(config) => {
                     match &item.kind {
                         ExpressionKind::Identifier(identifier) => {
-                            if let Some(item) = config.items.iter().find(|i| i.identifier.name() == identifier.name()) {
+                            if let Some(item) = config.items.iter().find(|i| i.identifier().name() == identifier.name()) {
                                 return Ok(UnitFetchResult::Object(fetch_expression(&item.expression, schema, info_provider, expect, namespace)?));
                             } else {
                                 Err(Error::new("config item not found"))?
@@ -164,8 +164,8 @@ fn fetch_current_item_for_unit<I>(current: &UnitFetchResult, item: &Expression, 
                         }
                         ExpressionKind::Call(c) => {
                             return Ok(UnitFetchResult::Object(Object::from(Value::EnumVariant(EnumVariant {
-                                value: Box::new(Value::String(c.identifier.name().to_owned())),
-                                display: format!(".{}", c.identifier.name()),
+                                value: Box::new(Value::String(c.identifier().name().to_owned())),
+                                display: format!(".{}", c.identifier().name()),
                                 path: r#enum.string_path.clone(),
                                 args: None,
                             }))));
@@ -212,7 +212,7 @@ fn fetch_current_item_for_unit<I>(current: &UnitFetchResult, item: &Expression, 
                 Top::Namespace(namespace) => {
                     match &item.kind {
                         ExpressionKind::Identifier(identifier) => {
-                            if let Some(top) = namespace.find_top_by_name(identifier.name(), &top_filter_for_reference_type(ReferenceType::Default), info_provider.availability()) {
+                            if let Some(top) = namespace.find_top_by_name(identifier.name(), &top_filter_for_reference_type(ReferenceSpace::Default), info_provider.availability()) {
                                 return Ok(UnitFetchResult::Reference(top.path().clone()))
                             } else {
                                 Err(Error::new("invalid reference"))?

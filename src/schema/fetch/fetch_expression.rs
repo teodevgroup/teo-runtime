@@ -1,7 +1,8 @@
 use teo_parser::ast::expression::Expression;
-use teo_parser::ast::info_provider::InfoProvider;
 use teo_parser::ast::schema::Schema;
 use teo_parser::r#type::Type;
+use teo_parser::traits::info_provider::InfoProvider;
+use teo_parser::traits::resolved::Resolve;
 use teo_teon::Value;
 use teo_result::Result;
 use crate::namespace::Namespace;
