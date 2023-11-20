@@ -3,6 +3,7 @@ use teo_parser::ast::schema::Schema;
 use teo_parser::diagnostics::diagnostics::Diagnostics;
 use teo_parser::traits::has_availability::HasAvailability;
 use teo_parser::traits::info_provider::InfoProvider;
+use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::traits::resolved::Resolve;
 use crate::config::entity::{Entity, Runtime};
 use crate::namespace::Namespace;

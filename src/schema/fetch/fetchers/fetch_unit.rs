@@ -1,11 +1,11 @@
 use teo_parser::ast::expression::{Expression, ExpressionKind};
-use teo_parser::ast::identifiable::Identifiable;
+use teo_parser::ast::reference_space::ReferenceSpace;
+
 use teo_parser::ast::unit::Unit;
 use teo_parser::traits::info_provider::InfoProvider;
-use teo_parser::ast::reference::ReferenceSpace;
 use teo_parser::ast::schema::Schema;
-use teo_parser::ast::top::Top;
 use teo_parser::r#type::Type;
+use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::utils::top_filter::{top_filter_for_pipeline, top_filter_for_reference_type};
 use teo_result::{Error, Result};
 use teo_teon::types::enum_variant::EnumVariant;
@@ -32,9 +32,9 @@ impl UnitFetchResult {
             UnitFetchResult::Reference(r) => {
                 let top = schema.find_top_by_path(&r).unwrap();
                 if top.is_model() {
-                    Ok(Object::from(Value::from(top.as_model().unwrap().string_path.clone())))
+                    Ok(Object::from(Value::from(top.as_model().unwrap().string_path().clone())))
                 } else if top.is_data_set() {
-                    Ok(Object::from(Value::from(top.as_data_set().unwrap().string_path.clone())))
+                    Ok(Object::from(Value::from(top.as_data_set().unwrap().string_path().clone())))
                 } else {
                     Err(Error::new("cannot convert reference into object"))?
                 }
@@ -44,10 +44,10 @@ impl UnitFetchResult {
 }
 
 pub fn fetch_unit<I>(unit: &Unit, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
-    if unit.expressions.len() == 1 {
-        fetch_expression(unit.expressions.get(0).unwrap(), schema, info_provider, expect, namespace)
+    if unit.expressions().count() == 1 {
+        fetch_expression(unit.expression_at(0).unwrap(), schema, info_provider, expect, namespace)
     } else {
-        let first_expression = unit.expressions.get(0).unwrap();
+        let first_expression = unit.expression_at(0).unwrap();
         let expected = Type::Undetermined;
         let mut current = if let Some(identifier) = first_expression.kind.as_identifier() {
             let reference = fetch_identifier_path(identifier, schema, info_provider, &expected, namespace, &top_filter_for_pipeline())?;
@@ -60,9 +60,9 @@ pub fn fetch_unit<I>(unit: &Unit, schema: &Schema, info_provider: &I, expect: &T
         } else {
             UnitFetchResult::Object(fetch_expression(first_expression, schema, info_provider, &expected, namespace)?)
         };
-        for (index, item) in unit.expressions.iter().enumerate() {
+        for (index, item) in unit.expressions().enumerate() {
             if index == 0 { continue }
-            current = fetch_current_item_for_unit(&current, unit.expressions.get(index - 1).unwrap(), schema, info_provider, &expected, namespace)?;
+            current = fetch_current_item_for_unit(&current, unit.expression_at(index - 1).unwrap(), schema, info_provider, &expected, namespace)?;
         }
         Ok(current.into_object(schema)?)
     }
@@ -81,13 +81,6 @@ fn fetch_current_item_for_unit<I>(current: &UnitFetchResult, item: &Expression, 
             match &item.kind {
                 ExpressionKind::Identifier(_) => {
                     Err(Error::new("not implemented"))
-                }
-                ExpressionKind::Call(call) => {
-                    let r#struct = namespace.struct_at_path(&path).unwrap();
-                    let function = r#struct.function(call.identifier().name()).unwrap();
-                    let arguments = fetch_argument_list(&call.argument_list, schema, info_provider, namespace)?;
-                    let result = function.body.call(current_value.clone(), arguments)?;
-                    return Ok(UnitFetchResult::Object(result));
                 }
                 ExpressionKind::Subscript(subscript) => {
                     let r#struct = namespace.struct_at_path(&path).unwrap();

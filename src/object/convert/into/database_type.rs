@@ -16,9 +16,6 @@ impl TryFrom<&Object> for DatabaseType {
     fn try_from(value: &Object) -> std::result::Result<Self, Self::Error> {
         let teon: Value = value.try_into()?;
         let enum_variant: EnumVariant = teon.try_into()?;
-        if !enum_variant.value.is_string() {
-            Err(Error::new(format!("object is not enum variant: {:?}", value)))?
-        }
         match enum_variant.path.last().unwrap().as_str() {
             "MySQLDatabaseType" => {
                 match enum_variant.value.as_str().unwrap() {

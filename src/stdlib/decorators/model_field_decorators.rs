@@ -75,8 +75,8 @@ pub(in crate::stdlib) fn load_model_field_decorators(namespace: &mut Namespace) 
     namespace.define_model_field_decorator("presentWith", |arguments, field| {
         let fields: Value = arguments.get("fields")?;
         match fields {
-            Value::EnumVariant(e) => field.optionality = Optionality::PresentWith(vec![e.value.as_str().unwrap().to_owned()]),
-            Value::Array(a) => field.optionality = Optionality::PresentWith(a.iter().map(|d| d.as_enum_variant().unwrap().value.as_str().unwrap().to_owned()).collect()),
+            Value::EnumVariant(e) => field.optionality = Optionality::PresentWith(vec![e.value.to_owned()]),
+            Value::Array(a) => field.optionality = Optionality::PresentWith(a.iter().map(|d| d.as_enum_variant().unwrap().value.to_owned()).collect()),
             _ => panic!()
         }
         Ok(())
@@ -85,8 +85,8 @@ pub(in crate::stdlib) fn load_model_field_decorators(namespace: &mut Namespace) 
     namespace.define_model_field_decorator("presentWithout", |arguments, field| {
         let fields: Value = arguments.get("fields")?;
         match fields {
-            Value::EnumVariant(e) => field.optionality = Optionality::PresentWithout(vec![e.value.as_str().unwrap().to_owned()]),
-            Value::Array(a) => field.optionality = Optionality::PresentWithout(a.iter().map(|d| d.as_enum_variant().unwrap().value.as_str().unwrap().to_owned()).collect()),
+            Value::EnumVariant(e) => field.optionality = Optionality::PresentWithout(vec![e.value.to_owned()]),
+            Value::Array(a) => field.optionality = Optionality::PresentWithout(a.iter().map(|d| d.as_enum_variant().unwrap().value.to_owned()).collect()),
             _ => panic!()
         }
         Ok(())

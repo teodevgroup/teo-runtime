@@ -52,7 +52,7 @@ pub fn load_model(main_namespace: &mut Namespace, schema: &Schema, model_declara
         }
     }
     model.finalize()?;
-    model.cache.shape = model_declaration.shape_resolved().clone();
+    model.cache.shape = model_declaration.resolved().clone();
     let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&model_declaration.namespace_str_path());
     dest_namespace.models.insert(model_declaration.identifier().name().to_owned(), model);
     for handler_declaration in model_declaration.handlers() {

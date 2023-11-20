@@ -11,10 +11,7 @@ impl TryFrom<Object> for ResetDataSets {
     fn try_from(ref value: Object) -> std::result::Result<Self, Self::Error> {
         let teon: Value = value.try_into()?;
         let enum_variant: EnumVariant = teon.try_into()?;
-        if !enum_variant.value.is_string() {
-            Err(Error::new(format!("object is not enum variant: {:?}", value)))?
-        }
-        match enum_variant.value.as_str().unwrap() {
+        match enum_variant.value.as_str() {
             "auto" => Ok(ResetDataSets::Auto),
             "dataSets" => {
                 let map = enum_variant.args.unwrap();

@@ -5,6 +5,7 @@ use teo_parser::ast::schema::Schema;
 use teo_parser::ast::node::Node;
 use teo_parser::ast::reference_space::ReferenceSpace;
 use teo_parser::r#type::Type;
+use teo_parser::search::search_identifier_path::search_identifier_path_names_with_filter_to_path;
 use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::utils::top_filter::top_filter_for_reference_type;
 use teo_result::{Error, Result};
@@ -29,12 +30,12 @@ pub fn fetch_identifier<I>(identifier: &Identifier, schema: &Schema, info_provid
 }
 
 pub fn fetch_identifier_path<I>(identifier: &Identifier, schema: &Schema, info_provider: &I, _expect: &Type, namespace: &Namespace, filter: &Arc<dyn Fn(&Node) -> bool>) -> Result<Vec<usize>> where I: InfoProvider {
-    Ok(search_identifier_path_in_source(
+    Ok(search_identifier_path_names_with_filter_to_path(
+        &vec![identifier.name()],
         schema,
         schema.source(info_provider.source_id()).unwrap(),
         &info_provider.namespace_str_path(),
-        &vec![identifier.name()],
         filter,
-        info_provider.availability()
+        info_provider.availability(),
     ).unwrap())
 }

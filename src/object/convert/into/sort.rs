@@ -11,11 +11,7 @@ impl TryFrom<&Object> for Sort {
     fn try_from(value: &Object) -> std::result::Result<Self, Self::Error> {
         let teon: Value = value.try_into()?;
         let enum_variant: EnumVariant = teon.try_into()?;
-        if !enum_variant.value.is_string() {
-            Err(Error::new(format!("object is not enum variant: {:?}", value)))?
-        }
-        let val = enum_variant.value.as_str().unwrap();
-        Ok(match val {
+        Ok(match enum_variant.value.as_str() {
             "asc" => Sort::Asc,
             "desc" => Sort::Desc,
             _ => unreachable!(),
