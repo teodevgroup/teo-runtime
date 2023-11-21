@@ -1,12 +1,12 @@
 use teo_parser::ast::expression::{Expression, ExpressionKind};
 use teo_parser::ast::reference_space::ReferenceSpace;
-
 use teo_parser::ast::unit::Unit;
 use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::ast::schema::Schema;
 use teo_parser::r#type::Type;
 use teo_parser::traits::named_identifiable::NamedIdentifiable;
-use teo_parser::utils::top_filter::{top_filter_for_pipeline, top_filter_for_reference_type};
+use teo_parser::traits::resolved::Resolve;
+use teo_parser::utils::top_filter::top_filter_for_reference_type;
 use teo_result::{Error, Result};
 use teo_teon::types::enum_variant::EnumVariant;
 use teo_teon::Value;
@@ -14,9 +14,7 @@ use crate::namespace::Namespace;
 use crate::object::Object;
 use crate::object::traits::PrimitiveStruct;
 use crate::schema::fetch::fetch_argument_list::fetch_argument_list;
-use crate::schema::fetch::fetch_decorator_arguments::fetch_decorator_arguments;
 use crate::schema::fetch::fetch_expression::fetch_expression;
-use crate::schema::fetch::fetchers::fetch_identifier::{fetch_identifier, fetch_identifier_to_node};
 
 #[derive(Debug)]
 pub(super) enum UnitFetchResult {
@@ -47,28 +45,19 @@ pub fn fetch_unit<I>(unit: &Unit, schema: &Schema, info_provider: &I, expect: &T
     if unit.expressions().count() == 1 {
         fetch_expression(unit.expression_at(0).unwrap(), schema, info_provider, expect, namespace)
     } else {
-        let first_expression = unit.expression_at(0).unwrap();
-        let expected = Type::Undetermined;
-        let mut current = if let Some(identifier) = first_expression.kind.as_identifier() {
-            let reference = fetch_identifier_to_node(identifier, schema, info_provider, &expected, namespace, &top_filter_for_pipeline())?;
-            let top = schema.find_top_by_path(&reference).unwrap();
-            if let Some(constant) = top.as_constant() {
-                UnitFetchResult::Object(fetch_expression(&constant.expression, schema, info_provider, &expected, namespace)?)
-            } else {
-                UnitFetchResult::Reference(reference)
-            }
-        } else {
-            UnitFetchResult::Object(fetch_expression(first_expression, schema, info_provider, &expected, namespace)?)
-        };
-        for (index, item) in unit.expressions().enumerate() {
-            if index == 0 { continue }
-            current = fetch_current_item_for_unit(&current, unit.expression_at(index - 1).unwrap(), schema, info_provider, &expected, namespace)?;
+        let mut current = None;
+        for expression in unit.expressions() {
+            current = Some(fetch_current_item_for_unit(current, expression, schema, info_provider, &Type::Undetermined, namespace)?);
         }
+        // here should add coerce
         Ok(current.into_object(schema)?)
     }
 }
 
-fn fetch_current_item_for_unit<I>(current: &UnitFetchResult, item: &Expression, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<UnitFetchResult> where I: InfoProvider {
+fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, item: &Expression, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<UnitFetchResult> where I: InfoProvider {
+    let Some(current) = current else {
+
+    };
     match current {
         UnitFetchResult::Object(current_value) => {
             let path = if current_value.is_teon() {
