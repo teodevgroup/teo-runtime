@@ -16,7 +16,7 @@ use crate::object::traits::PrimitiveStruct;
 use crate::schema::fetch::fetch_argument_list::fetch_argument_list;
 use crate::schema::fetch::fetch_decorator_arguments::fetch_decorator_arguments;
 use crate::schema::fetch::fetch_expression::fetch_expression;
-use crate::schema::fetch::fetchers::fetch_identifier::{fetch_identifier, fetch_identifier_path};
+use crate::schema::fetch::fetchers::fetch_identifier::{fetch_identifier, fetch_identifier_to_node};
 
 #[derive(Debug)]
 pub(super) enum UnitFetchResult {
@@ -50,7 +50,7 @@ pub fn fetch_unit<I>(unit: &Unit, schema: &Schema, info_provider: &I, expect: &T
         let first_expression = unit.expression_at(0).unwrap();
         let expected = Type::Undetermined;
         let mut current = if let Some(identifier) = first_expression.kind.as_identifier() {
-            let reference = fetch_identifier_path(identifier, schema, info_provider, &expected, namespace, &top_filter_for_pipeline())?;
+            let reference = fetch_identifier_to_node(identifier, schema, info_provider, &expected, namespace, &top_filter_for_pipeline())?;
             let top = schema.find_top_by_path(&reference).unwrap();
             if let Some(constant) = top.as_constant() {
                 UnitFetchResult::Object(fetch_expression(&constant.expression, schema, info_provider, &expected, namespace)?)
