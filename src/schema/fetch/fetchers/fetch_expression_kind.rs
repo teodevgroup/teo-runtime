@@ -16,11 +16,11 @@ pub fn fetch_expression_kind<I>(expression: &Expression, schema: &Schema, info_p
     match &expression.kind {
         ExpressionKind::Group(g) => fetch_expression(g.expression(), schema, info_provider, expect, namespace),
         ExpressionKind::ArithExpr(a) => fetch_arith_expr(a, schema, info_provider, expect, namespace),
-        ExpressionKind::NumericLiteral(n) => unreachable!(),
-        ExpressionKind::StringLiteral(s) => unreachable!(),
-        ExpressionKind::RegexLiteral(r) => unreachable!(),
-        ExpressionKind::BoolLiteral(b) => unreachable!(),
-        ExpressionKind::NullLiteral(n) => unreachable!(),
+        ExpressionKind::NumericLiteral(_) => unreachable!(),
+        ExpressionKind::StringLiteral(_) => unreachable!(),
+        ExpressionKind::RegexLiteral(_) => unreachable!(),
+        ExpressionKind::BoolLiteral(_) => unreachable!(),
+        ExpressionKind::NullLiteral(_) => unreachable!(),
         ExpressionKind::EnumVariantLiteral(e) => fetch_enum_variant_literal(e, schema, info_provider, expect, namespace),
         ExpressionKind::TupleLiteral(t) => fetch_tuple_literal(t, schema, info_provider, expect, namespace),
         ExpressionKind::ArrayLiteral(a) => fetch_array_literal(a, schema, info_provider, expect, namespace),
@@ -30,8 +30,8 @@ pub fn fetch_expression_kind<I>(expression: &Expression, schema: &Schema, info_p
         ExpressionKind::Subscript(_) => unreachable!(),
         ExpressionKind::Unit(u) => fetch_unit(u, schema, info_provider, expect, namespace),
         ExpressionKind::Pipeline(p) => fetch_pipeline(p, schema, info_provider, expect, namespace),
-        ExpressionKind::IntSubscript(_) => {}
-        ExpressionKind::NamedExpression(_) => {}
+        ExpressionKind::IntSubscript(_) => unreachable!(),
+        ExpressionKind::NamedExpression(_) => unreachable!(),
         ExpressionKind::BracketExpression(e) => fetch_expression(e.expression(), schema, info_provider, expect, namespace),
     }
 }

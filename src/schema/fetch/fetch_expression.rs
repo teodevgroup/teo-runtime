@@ -11,7 +11,19 @@ use crate::schema::fetch::fetchers::fetch_expression_kind::fetch_expression_kind
 
 pub fn fetch_expression<I>(expression: &Expression, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
     if let Some(value) = expression.resolved().value() {
-        Ok(Object::from(value.clone()))
+        // we separate enum variants and interface enum variants
+        // so that resolved value in parser might be incorrect type
+        // fetch expression value
+        if let Some(enum_reference) = expression.resolved().r#type().as_enum_variant() {
+            let enum_definition = schema.find_top_by_path(enum_reference.path()).unwrap().as_enum().unwrap();
+            if enum_definition.interface {
+                fetch_expression_kind(expression, schema, info_provider, expect, namespace)
+            } else {
+                Ok(Object::from(value.clone()))
+            }
+        } else {
+            Ok(Object::from(value.clone()))
+        }
     } else {
         fetch_expression_kind(expression, schema, info_provider, expect, namespace)
     }
