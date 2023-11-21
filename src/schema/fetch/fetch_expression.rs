@@ -17,7 +17,7 @@ pub fn fetch_expression<I>(expression: &Expression, schema: &Schema, info_provid
         if let Some(enum_reference) = expression.resolved().r#type().as_enum_variant() {
             let enum_definition = schema.find_top_by_path(enum_reference.path()).unwrap().as_enum().unwrap();
             if enum_definition.interface {
-                fetch_expression_kind(expression, schema, info_provider, expect, namespace)
+                fetch_expression_kind(expression, schema, info_provider, &expect.expect_for_enum_variant_literal(), namespace)
             } else {
                 Ok(Object::from(value.clone()))
             }

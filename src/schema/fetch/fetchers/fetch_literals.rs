@@ -41,7 +41,6 @@ pub fn fetch_dictionary_literal<I>(dictionary_literal: &DictionaryLiteral, schem
 }
 
 pub fn fetch_enum_variant_literal<I>(e: &EnumVariantLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
-    let expect = expect.unwrap_optional().unwrap_union_enum().unwrap();
     match expect {
         Type::EnumVariant(reference) => {
             let r#enum = schema.find_top_by_path(reference.path()).unwrap().as_enum().unwrap();
