@@ -33,7 +33,7 @@ pub(super) enum UnitFetchResult {
 
 impl UnitFetchResult {
 
-    pub(super) fn into_object(self, schema: &Schema, expect: &Type) -> Result<Object> {
+    pub(super) fn into_object(self) -> Result<Object> {
         match self {
             UnitFetchResult::Object(o) => Ok(o),
             UnitFetchResult::Reference(reference_info, _) => {
@@ -64,7 +64,7 @@ pub fn fetch_unit<I>(unit: &Unit, schema: &Schema, info_provider: &I, expect: &T
             current = Some(fetch_current_item_for_unit(current, expression, schema, info_provider, &Type::Undetermined, namespace)?);
         }
         // here should add coerce
-        Ok(current.into_object(schema)?)
+        Ok(current.unwrap().into_object()?)
     }
 }
 
@@ -85,36 +85,40 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
     };
     match current {
         UnitFetchResult::Object(current_value) => {
-            let path = if current_value.is_teon() {
-                current_value.as_teon().unwrap().default_struct_path()?
-            } else if current_value.is_struct_object() {
-                current_value.as_struct_object().unwrap().struct_path()
+            if current_value.is_interface_enum_variant() {
+                todo!()
             } else {
-                Err(Error::new("not supported"))?
-            };
-            let r#struct = namespace.struct_at_path(&path).unwrap();
-            let struct_definition = schema.std_source().find_node_by_string_path(&path).unwrap().as_struct_declaration().unwrap();
-            match &expression.kind {
-                ExpressionKind::Identifier(identifier) => {
-                    let instance_function = r#struct.function(identifier.name()).unwrap();
-                    let instance_function_definition = struct_definition.instance_function(identifier.name()).unwrap();
-                    Ok(UnitFetchResult::Reference(ReferenceInfo::new(
-                        ReferenceType::StructInstanceFunction,
-                        Reference::new(instance_function_definition.path().clone(), instance_function_definition.string_path().clone()),
-                        None,
-                    ), Some(current_value)))
+                let path = if current_value.is_teon() {
+                    current_value.as_teon().unwrap().default_struct_path()?
+                } else if current_value.is_struct_object() {
+                    current_value.as_struct_object().unwrap().struct_path()
+                } else {
+                    Err(Error::new("not supported"))?
+                };
+                let r#struct = namespace.struct_at_path(&path).unwrap();
+                let struct_definition = schema.std_source().find_node_by_string_path(&path, &top_filter_for_reference_type(ReferenceSpace::Default), info_provider.availability()).unwrap().as_struct_declaration().unwrap();
+                match &expression.kind {
+                    ExpressionKind::Identifier(identifier) => {
+                        let instance_function = r#struct.function(identifier.name()).unwrap();
+                        let instance_function_definition = struct_definition.instance_function(identifier.name()).unwrap();
+                        Ok(UnitFetchResult::Reference(ReferenceInfo::new(
+                            ReferenceType::StructInstanceFunction,
+                            Reference::new(instance_function_definition.path().clone(), instance_function_definition.string_path().clone()),
+                            None,
+                        ), Some(current_value)))
+                    }
+                    ExpressionKind::Subscript(subscript) => {
+                        let instance_function = r#struct.function("subscript").unwrap();
+                        let instance_function_definition = struct_definition.instance_function("subscript").unwrap();
+                        let only_argument_declaration = instance_function_definition.argument_list_declaration().argument_declarations().next().unwrap();
+                        let expected = only_argument_declaration.type_expr().resolved();
+                        let only_argument = fetch_expression(subscript.expression(), schema, info_provider, expected, namespace)?;
+                        let only_argument_name = only_argument_declaration.name().name();
+                        let arguments = Arguments::new(btreemap! {only_argument_name.to_owned() => only_argument});
+                        return Ok(UnitFetchResult::Object(instance_function.body.call(current_value, arguments)?));
+                    }
+                    _ => unreachable!(),
                 }
-                ExpressionKind::Subscript(subscript) => {
-                    let instance_function = r#struct.function("subscript").unwrap();
-                    let instance_function_definition = struct_definition.instance_function("subscript").unwrap();
-                    let only_argument_declaration = instance_function_definition.argument_list_declaration().argument_declarations().next().unwrap();
-                    let expected = only_argument_declaration.type_expr().resolved();
-                    let only_argument = fetch_expression(subscript.expression(), schema, info_provider, expected, namespace)?;
-                    let only_argument_name = only_argument_declaration.name().name();
-                    let arguments = Arguments::new(btreemap! {only_argument_name.to_owned() => only_argument});
-                    return Ok(UnitFetchResult::Object(instance_function.body.call(current_value, arguments)?));
-                }
-                _ => unreachable!(),
             }
         }
         UnitFetchResult::Reference(reference_info, this) => {
@@ -200,23 +204,50 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
                 }
                 ReferenceType::Middleware => todo!("accept argument list into middleware"),
                 ReferenceType::StructDeclaration => {
-                    let struct_object = Type::StructObject(struct_declaration.path.clone(), struct_declaration.string_path.clone());
-                    match &item.kind {
+                    let r#struct = namespace.struct_at_path(&reference_info.reference().str_path()).unwrap();
+                    let struct_definition = schema.std_source().find_node_by_string_path(&reference_info.reference().str_path(), &top_filter_for_reference_type(ReferenceSpace::Default), info_provider.availability()).unwrap().as_struct_declaration().unwrap();
+                    match &expression.kind {
                         ExpressionKind::ArgumentList(argument_list) => {
-                            let r#struct = namespace.struct_at_path(&struct_declaration.str_path()).unwrap();
                             let function = r#struct.static_function("new").unwrap();
                             let arguments = fetch_argument_list(argument_list, schema, info_provider, namespace)?;
                             let result = function.body.call(arguments)?;
                             return Ok(UnitFetchResult::Object(result));
                         }
                         ExpressionKind::Identifier(i) => {
-                            Err(Error::new("not implemented"))
+                            let static_function_definition = struct_definition.static_function(i.name()).unwrap();
+                            return Ok(UnitFetchResult::Reference(ReferenceInfo::new(
+                                ReferenceType::StructStaticFunction,
+                                Reference::new(static_function_definition.path().clone(), static_function_definition.string_path().clone()),
+                                None,
+                            ), None));
                         }
                         _ => unreachable!()
                     }
                 }
-                ReferenceType::StructInstanceFunction => {}
-                ReferenceType::StructStaticFunction => {}
+                ReferenceType::StructInstanceFunction => {
+                    let r#struct = namespace.struct_at_path(&reference_info.reference().str_path_without_last(1)).unwrap();
+                    match &expression.kind {
+                        ExpressionKind::ArgumentList(argument_list) => {
+                            let function = r#struct.function(reference_info.reference().str_path().last().unwrap()).unwrap();
+                            let arguments = fetch_argument_list(argument_list, schema, info_provider, namespace)?;
+                            let result = function.body.call(this.unwrap(), arguments)?;
+                            return Ok(UnitFetchResult::Object(result));
+                        }
+                        _ => unreachable!()
+                    }
+                }
+                ReferenceType::StructStaticFunction => {
+                    let r#struct = namespace.struct_at_path(&reference_info.reference().str_path_without_last(1)).unwrap();
+                    match &expression.kind {
+                        ExpressionKind::ArgumentList(argument_list) => {
+                            let function = r#struct.static_function(reference_info.reference().str_path().last().unwrap()).unwrap();
+                            let arguments = fetch_argument_list(argument_list, schema, info_provider, namespace)?;
+                            let result = function.body.call(arguments)?;
+                            return Ok(UnitFetchResult::Object(result));
+                        }
+                        _ => unreachable!()
+                    }
+                }
                 ReferenceType::FunctionDeclaration => unreachable!(),
                 ReferenceType::Namespace => {
                     match &expression.kind {

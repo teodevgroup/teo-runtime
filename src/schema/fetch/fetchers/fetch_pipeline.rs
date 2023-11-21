@@ -25,8 +25,7 @@ fn fetch_pipeline_unit<I>(unit: &Unit, schema: &Schema, info_provider: &I, expec
             if let Some(this_top) = if current_space.is_some() {
                 current_space.unwrap().find_top_by_name(identifier.name(), &top_filter_for_pipeline(), info_provider.availability())
             } else {
-                let path = fetch_identifier_to_node(identifier, schema, info_provider, expect, namespace, &top_filter_for_pipeline()).unwrap();
-                schema.find_top_by_path(&path)
+                Some(fetch_identifier_to_node(identifier, schema, info_provider, expect, &top_filter_for_pipeline()).unwrap())
             } {
                 match this_top {
                     Node::Namespace(namespace) => {
