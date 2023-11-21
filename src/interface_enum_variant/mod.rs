@@ -1,6 +1,6 @@
 use crate::arguments::Arguments;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct InterfaceEnumVariant {
     pub value: String,
     pub args: Option<Arguments>,

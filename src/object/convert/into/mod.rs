@@ -25,3 +25,4 @@ pub mod regex;
 pub mod datetime;
 pub mod decimal;
 pub mod date;
+pub mod interface_enum_variant;

@@ -13,6 +13,9 @@ pub mod usize;
 pub mod index_map;
 pub mod vec;
 pub mod value;
+pub mod enum_variant;
+pub mod option_variant;
+pub mod interface_enum_variant;
 
 pub mod struct_object;
 pub mod model_object;
