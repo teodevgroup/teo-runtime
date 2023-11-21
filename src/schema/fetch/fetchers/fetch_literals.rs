@@ -1,18 +1,22 @@
-use std::hint::unreachable_unchecked;
 use indexmap::indexmap;
 use teo_parser::ast::literals::{TupleLiteral, ArrayLiteral, DictionaryLiteral, EnumVariantLiteral};
 use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::ast::schema::Schema;
+use teo_parser::r#type::synthesized_enum::SynthesizedEnum;
 use teo_parser::r#type::Type;
 use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::traits::resolved::Resolve;
 use teo_result::Result;
 use teo_teon::types::enum_variant::EnumVariant;
+use teo_teon::types::option_variant::OptionVariant;
 use teo_teon::Value;
+use crate::coder::json_to_teon::fetch_synthesized_enum;
+use crate::interface_enum_variant::InterfaceEnumVariant;
 use crate::namespace::Namespace;
 use crate::object::Object;
 use crate::schema::fetch::fetch_argument_list::fetch_argument_list;
 use crate::schema::fetch::fetch_expression::{fetch_dictionary_key_expression, fetch_expression};
+use crate::utils::ContainsStr;
 
 pub fn fetch_tuple_literal<I>(tuple_literal: &TupleLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
     let mut result = vec![];
@@ -47,101 +51,46 @@ pub fn fetch_enum_variant_literal<I>(e: &EnumVariantLiteral, schema: &Schema, in
             if let Some(member) = r#enum.members().find(|m| m.identifier().name() == e.identifier().name()) {
                 let mut args = None;
                 if let Some(argument_list) = e.argument_list() {
-                    let arg_list_result = fetch_argument_list(argument_list, schema, info_provider, namespace)?;
+                    args = Some(fetch_argument_list(argument_list, schema, info_provider, namespace)?);
                 }
-                Ok(Object::from(Value::EnumVariant(EnumVariant {
-                    value: member.identifier().name().to_owned(),
-                    args,
-                })))
+                if r#enum.option {
+                    Ok(Object::from(Value::OptionVariant(OptionVariant {
+                        value: member.resolved().try_into()?,
+                        display: format!(".{}", member.identifier().name()),
+                    })))
+                } else if r#enum.interface {
+                    Ok(Object::from(InterfaceEnumVariant {
+                        value: member.identifier().name().to_owned(),
+                        args,
+                    }))
+                } else {
+                    Ok(Object::from(Value::EnumVariant(EnumVariant {
+                        value: member.identifier().name().to_owned(),
+                        args: None,
+                    })))
+                }
             } else {
                 unreachable!()
             }
         },
-        Type::ModelScalarFields(t, _) => {
-            if let Some((model_object, model_name)) = t.as_model_object() {
-                let model = schema.find_top_by_path(model_object).unwrap().as_model().unwrap();
-                if model.resolved().scalar_fields.contains(&e.identifier().name) {
-                    Ok(Object::from(Value::EnumVariant(EnumVariant {
-                        value: Box::new(Value::String(e.identifier().name().to_owned())),
-                        display: format!(".{}", e.identifier().name()),
-                        path: model_name.clone(),
-                        args: None,
-                    })))
-                } else {
-                    panic!()
-                }
-            } else {
-                panic!()
-            }
+        Type::SynthesizedEnum(synthesized_enum) => {
+            fetch_enum_variant_literal_from_synthesized_enum(e, schema, info_provider, synthesized_enum, namespace)
         },
-        Type::ModelScalarFieldsWithoutVirtuals(t, _) => {
-            if let Some((model_object, model_name)) = t.as_model_object() {
-                let model = schema.find_top_by_path(model_object).unwrap().as_model().unwrap();
-                if model.resolved().scalar_fields_without_virtuals.contains(&e.identifier().name) {
-                    Ok(Object::from(Value::EnumVariant(EnumVariant {
-                        value: Box::new(Value::String(e.identifier().name().to_owned())),
-                        display: format!(".{}", e.identifier().name()),
-                        path: model_name.clone(),
-                        args: None,
-                    })))
-                } else {
-                    panic!()
-                }
-            } else {
-                panic!()
-            }
+        Type::SynthesizedEnumReference(synthesized_enum_reference) => {
+            let synthesized_enum = fetch_synthesized_enum(synthesized_enum_reference, namespace);
+            fetch_enum_variant_literal_from_synthesized_enum(e, schema, info_provider, synthesized_enum, namespace)
         }
-        Type::ModelScalarFieldsAndCachedPropertiesWithoutVirtuals(t, _) => {
-            if let Some((model_object, model_name)) = t.as_model_object() {
-                let model = schema.find_top_by_path(model_object).unwrap().as_model().unwrap();
-                if model.resolved().scalar_fields_and_cached_properties_without_virtuals.contains(&e.identifier().name) {
-                    Ok(Object::from(Value::EnumVariant(EnumVariant {
-                        value: Box::new(Value::String(e.identifier().name().to_owned())),
-                        display: format!(".{}", e.identifier().name()),
-                        path: model_name.clone(),
-                        args: None,
-                    })))
-                } else {
-                    panic!()
-                }
-            } else {
-                panic!()
-            }
-        }
-        Type::ModelRelations(t, _) => {
-            if let Some((model_object, model_name)) = t.as_model_object() {
-                let model = schema.find_top_by_path(model_object).unwrap().as_model().unwrap();
-                if model.resolved().relations.contains(&e.identifier().name) {
-                    Ok(Object::from(Value::EnumVariant(EnumVariant {
-                        value: Box::new(Value::String(e.identifier().name().to_owned())),
-                        display: format!(".{}", e.identifier().name()),
-                        path: model_name.clone(),
-                        args: None,
-                    })))
-                } else {
-                    panic!()
-                }
-            } else {
-                panic!()
-            }
-        }
-        Type::ModelDirectRelations(t, _) => {
-            if let Some((model_object, model_name)) = t.as_model_object() {
-                let model = schema.find_top_by_path(model_object).unwrap().as_model().unwrap();
-                if model.resolved().direct_relations.contains(&e.identifier().name) {
-                    Ok(Object::from(Value::EnumVariant(EnumVariant {
-                        value: Box::new(Value::String(e.identifier().name().to_owned())),
-                        display: format!(".{}", e.identifier().name()),
-                        path: model_name.clone(),
-                        args: None,
-                    })))
-                } else {
-                    panic!()
-                }
-            } else {
-                panic!()
-            }
-        },
         _ => panic!()
+    }
+}
+
+fn fetch_enum_variant_literal_from_synthesized_enum<I>(e: &EnumVariantLiteral, schema: &Schema, info_provider: &I, synthesized_enum: &SynthesizedEnum, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
+    if synthesized_enum.keys.contains_str(e.identifier().name()) {
+        Ok(Object::from(Value::EnumVariant(EnumVariant {
+            value: e.identifier().name().to_owned(),
+            args: None,
+        })))
+    } else {
+        unreachable!()
     }
 }
