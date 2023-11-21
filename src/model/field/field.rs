@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 use maplit::btreemap;
 use serde::Serialize;
+use teo_parser::availability::Availability;
 use teo_result::Result;
 use teo_parser::r#type::Type;
 pub use super::decorator::Decorator;
@@ -53,6 +54,7 @@ pub struct Field {
     pub can_mutate: Pipeline,
     pub can_read: Pipeline,
     pub data: BTreeMap<String, Object>,
+    pub availability: Availability,
 }
 
 impl Field {
@@ -88,6 +90,7 @@ impl Field {
             can_mutate: Pipeline::new(),
             can_read: Pipeline::new(),
             data: btreemap! {},
+            availability: Availability::none(),
         }
     }
 

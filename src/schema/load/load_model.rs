@@ -63,6 +63,7 @@ pub fn load_model(main_namespace: &mut Namespace, schema: &Schema, model_declara
 
 fn load_model_field(main_namespace: &mut Namespace, field_declaration: &teo_parser::ast::field::Field, schema: &Schema, database: Option<Database>, diagnostics: &mut Diagnostics) -> Result<model::Field> {
     let mut field = model::Field::new();
+    field.availability = field_declaration.availability();
     field.name = field_declaration.identifier().name().to_owned();
     field.comment = load_comment(field_declaration.comment());
     if field_declaration.type_expr().resolved().is_optional() {

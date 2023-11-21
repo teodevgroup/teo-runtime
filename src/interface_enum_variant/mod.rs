@@ -1,6 +1,7 @@
+use serde::Serialize;
 use crate::arguments::Arguments;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct InterfaceEnumVariant {
     pub value: String,
     pub args: Option<Arguments>,

@@ -26,6 +26,11 @@ impl Serialize for Object {
                 map.serialize_entry("$pipeline", pipeline)?;
                 map.end()
             }
+            ObjectInner::InterfaceEnumVariant(interface_enum_variant) => {
+                let mut map = serializer.serialize_map(Some(1))?;
+                map.serialize_entry("$interfaceEnumVariant", interface_enum_variant)?;
+                map.end()
+            }
         }
     }
 }

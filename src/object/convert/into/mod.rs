@@ -10,7 +10,6 @@ pub mod runtime;
 pub mod client_language;
 pub mod action;
 pub mod pipeline;
-pub mod database_type;
 pub mod enum_variant;
 pub mod option_variant;
 pub mod sort;

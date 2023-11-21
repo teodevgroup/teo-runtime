@@ -1,5 +1,6 @@
 use teo_teon::Value;
 use crate::database::r#type::DatabaseType;
+use crate::interface_enum_variant::InterfaceEnumVariant;
 use crate::namespace::Namespace;
 use crate::object::Object;
 use crate::optionality::Optionality;
@@ -18,7 +19,8 @@ pub(in crate::stdlib) fn load_model_field_decorators(namespace: &mut Namespace) 
     });
 
     namespace.define_model_field_decorator("db", |arguments, field| {
-        let database_type: DatabaseType = arguments.get("type")?;
+        let interface_enum_variant: &InterfaceEnumVariant = arguments.get("type")?;
+        let database_type = DatabaseType::from_interface_enum_variant(interface_enum_variant, field.availability)?;
         field.database_type = database_type;
         Ok(())
     });

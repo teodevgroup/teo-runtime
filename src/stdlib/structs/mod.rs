@@ -116,6 +116,7 @@ pub(in crate::stdlib) fn load_structs(namespace: &mut Namespace) {
                 Value::EnumVariant(_) => Err(Error::new("String.new: enum variant is not valid"))?,
                 Value::Regex(_) => Err(Error::new("String.new: regex is not valid"))?,
                 Value::File(_) => Err(Error::new("String.new: file is not valid"))?,
+                Value::OptionVariant(_) => Err(Error::new("String.new: option variant is not valid"))?,
             }))
         });
     });
