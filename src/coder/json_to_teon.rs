@@ -7,15 +7,23 @@ use chrono::{DateTime, NaiveDate, Utc};
 use indexmap::{indexmap, IndexMap};
 use key_path::KeyPath;
 use maplit::btreemap;
+use teo_parser::r#type::synthesized_enum::SynthesizedEnum;
+use teo_parser::r#type::synthesized_enum_reference::SynthesizedEnumReference;
 use teo_parser::r#type::synthesized_shape::SynthesizedShape;
-use teo_parser::r#type::synthesized_shape_reference::{SynthesizedShapeReference, SynthesizedShapeReferenceKind};
+use teo_parser::r#type::synthesized_shape_reference::SynthesizedShapeReference;
 use teo_parser::r#type::Type;
+use teo_teon::types::enum_variant::EnumVariant;
 use teo_teon::Value;
 use teo_teon::types::file::File;
 use crate::interface::Interface;
 use crate::namespace::Namespace;
 use crate::path::Error;
 use crate::utils::ContainsStr;
+
+pub fn fetch_synthesized_enum<'a>(reference: &SynthesizedEnumReference, main_namespace: &'a Namespace) -> &'a SynthesizedEnum {
+    let model = main_namespace.model_at_path(&reference.owner.as_model_object().unwrap().str_path()).unwrap();
+    model.cache.shape.enums.get(&reference.kind).unwrap()
+}
 
 pub fn fetch_input<'a>(reference: &SynthesizedShapeReference, main_namespace: &'a Namespace) -> &'a Type {
     let model = main_namespace.model_at_path(&reference.owner.as_model_object().unwrap().str_path()).unwrap();
@@ -145,15 +153,33 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
             }
         },
         Type::SynthesizedShapeReference(shape_reference) => {
-            let input = fetch_input(shape_reference, main_namespace).unwrap();
-            json_to_teon(json, path, input.as_ref(), main_namespace)
+            let input = fetch_input(shape_reference, main_namespace);
+            json_to_teon(json, path, input, main_namespace)
         },
+        Type::SynthesizedEnumReference(enum_reference) => {
+            let synthesized_enum = fetch_synthesized_enum(enum_reference, main_namespace);
+            json_to_teon_with_synthesized_enum(json, path, synthesized_enum)
+        },
+        Type::SynthesizedEnum(synthesized_enum) => json_to_teon_with_synthesized_enum(json, path, synthesized_enum),
+        Type::SynthesizedShape(synthesized_shape) => json_to_teon_with_shapes(json, path, vec![synthesized_shape], main_namespace),
         _ => Err(Error::value_error(path.clone(), "unexpected type"))?,
     }
 }
 
-pub fn json_to_teon_with_shapes(json: &serde_json::Value, path: &KeyPath, shapes: Vec<&SynthesizedShape>, main_namespace: &Namespace) -> crate::path::Result<Value> {
+fn json_to_teon_with_synthesized_enum(json: &serde_json::Value, path: &KeyPath, synthesized_enum: &SynthesizedEnum) -> crate::path::Result<Value> {
+    if json.is_string() {
+        let name = json.as_str().unwrap();
+        if synthesized_enum.keys.contains_str(name) {
+            return Ok(Value::EnumVariant(EnumVariant {
+                value: name.to_owned(),
+                args: None,
+            }));
+        }
+    }
+    Err(Error::value_error(path.clone(), "expect string enum variant"))
+}
 
+pub fn json_to_teon_with_shapes(json: &serde_json::Value, path: &KeyPath, shapes: Vec<&SynthesizedShape>, main_namespace: &Namespace) -> crate::path::Result<Value> {
     if let Some(object) = json.as_object() {
         let combined = if shapes.len() == 1 {
             Cow::Borrowed(*shapes.first().unwrap())
@@ -188,34 +214,6 @@ pub fn json_to_teon_with_shapes(json: &serde_json::Value, path: &KeyPath, shapes
 
 pub fn json_to_teon(json: &serde_json::Value, path: &KeyPath, input: &Type, main_namespace: &Namespace) -> crate::path::Result<Value> {
     json_to_teon_with_type(json, path, input, main_namespace)
-    // match input {
-    //     Input::Undetermined => Ok(Value::from(json)),
-    //     Input::Or(inputs) => {
-    //         for i in inputs {
-    //             if let Ok(result) = json_to_teon(json, path, i, main_namespace) {
-    //                 return Ok(result);
-    //             }
-    //         }
-    //         Err(Error::value_error(path.clone(), "unexpected value"))
-    //     }
-    //     Input::Shape(shape) => {
-    //         json_to_teon_with_shapes(json, path, vec![shape], main_namespace)
-    //     }
-    //     Input::Type(t) => {
-    //         json_to_teon_with_type(json, path, t, main_namespace)
-    //     }
-    //     Input::SynthesizedEnum(e) => {
-    //         if let Some(str) = json.as_str() {
-    //             if e.members.keys().contains(&str.to_owned()) {
-    //                 Ok(Value::String(str.to_owned()))
-    //             } else {
-    //                 Err(Error::value_error(path.clone(), "unexpected value"))
-    //             }
-    //         } else {
-    //             Err(Error::value_error(path.clone(), "unexpected value"))
-    //         }
-    //     }
-    // }
 }
 
 fn collect_interface_shapes<'a>(interface: &'a Interface, gens: &Vec<Type>, namespace: &'a Namespace) -> Vec<&'a SynthesizedShape> {
