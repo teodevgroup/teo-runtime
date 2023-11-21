@@ -7,18 +7,21 @@ use teo_parser::ast::schema::Schema;
 use teo_parser::expr::{ExprInfo, ReferenceInfo, ReferenceType};
 use teo_parser::r#type::reference::Reference;
 use teo_parser::r#type::Type;
+use teo_parser::search::search_identifier_path::{search_identifier_path_names_with_filter_to_expr_info, search_identifier_path_names_with_filter_to_top_multiple};
 use teo_parser::traits::identifiable::Identifiable;
 use teo_parser::traits::named_identifiable::NamedIdentifiable;
+use teo_parser::traits::node_trait::NodeTrait;
 use teo_parser::traits::resolved::Resolve;
 use teo_parser::utils::top_filter::top_filter_for_reference_type;
 use teo_result::{Error, Result};
 use teo_teon::types::enum_variant::EnumVariant;
 use teo_teon::Value;
 use crate::arguments::Arguments;
+use crate::interface_enum_variant::InterfaceEnumVariant;
 use crate::namespace::Namespace;
 use crate::object::Object;
 use crate::object::traits::PrimitiveStruct;
-use crate::schema::fetch::fetch_argument_list::fetch_argument_list;
+use crate::schema::fetch::fetch_argument_list::{fetch_argument_list, fetch_argument_list_or_empty};
 use crate::schema::fetch::fetch_expression::fetch_expression;
 use crate::schema::fetch::fetchers::fetch_identifier::{fetch_identifier_to_expr_info, fetch_identifier_to_node};
 
@@ -95,11 +98,11 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
                 ExpressionKind::Identifier(identifier) => {
                     let instance_function = r#struct.function(identifier.name()).unwrap();
                     let instance_function_definition = struct_definition.instance_function(identifier.name()).unwrap();
-                    UnitFetchResult::Reference(ReferenceInfo::new(
+                    Ok(UnitFetchResult::Reference(ReferenceInfo::new(
                         ReferenceType::StructInstanceFunction,
                         Reference::new(instance_function_definition.path().clone(), instance_function_definition.string_path().clone()),
                         None,
-                    ), Some(current_value))
+                    ), Some(current_value)))
                 }
                 ExpressionKind::Subscript(subscript) => {
                     let instance_function = r#struct.function("subscript").unwrap();
@@ -115,8 +118,88 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
             }
         }
         UnitFetchResult::Reference(reference_info, this) => {
-            match schema.find_top_by_path(path).unwrap() {
-                Top::StructDeclaration(struct_declaration) => {
+            match reference_info.r#type {
+                ReferenceType::Config => {
+                    let config = schema.find_top_by_path(reference_info.reference().path()).unwrap().as_config().unwrap();
+                    match &expression.kind {
+                        ExpressionKind::Identifier(identifier) => {
+                            if let Some((_, v)) = config.items().iter().find(|(k, v)| k.named_key_without_resolving().unwrap() == identifier.name()) {
+                                return Ok(UnitFetchResult::Object(fetch_expression(v, schema, info_provider, expect, namespace)?));
+                            } else {
+                                Err(Error::new("config item not found"))?
+                            }
+                        }
+                        _ => unreachable!()
+                    }
+                }
+                ReferenceType::DictionaryField => unreachable!(),
+                ReferenceType::Constant => unreachable!(),
+                ReferenceType::Enum => {
+                    let r#enum = schema.find_top_by_path(reference_info.reference().path()).unwrap().as_enum().unwrap();
+                    match &expression.kind {
+                        ExpressionKind::Identifier(i) => {
+                            if r#enum.option {
+                                Ok(UnitFetchResult::Object(Object::from(Value::EnumVariant(EnumVariant {
+                                    value: i.name().to_owned(),
+                                    args: None,
+                                }))))
+                            } else if r#enum.interface {
+                                let member_definition = r#enum.members().find(|m| m.identifier().name() == i.name()).unwrap();
+                                if member_definition.argument_list_declaration().is_some() {
+                                    Ok(UnitFetchResult::Reference(ReferenceInfo::new(
+                                        ReferenceType::EnumMember,
+                                        Reference::new(member_definition.path().clone(), member_definition.string_path().clone()),
+                                        None,
+                                    ), None))
+                                } else {
+                                    Ok(UnitFetchResult::Object(Object::from(InterfaceEnumVariant {
+                                        value: i.name().to_owned(),
+                                        args: None
+                                    })))
+                                }
+                            } else {
+                                Ok(UnitFetchResult::Object(Object::from(Value::EnumVariant(EnumVariant {
+                                    value: i.name().to_owned(),
+                                    args: None,
+                                }))))
+                            }
+                        }
+                        _ => unreachable!()
+                    }
+                }
+                ReferenceType::EnumMember => {
+                    let r#enum = schema.find_top_by_path(&reference_info.reference().path_without_last(1)).unwrap().as_enum().unwrap();
+                    let member = r#enum.child(*reference_info.reference().path().last().unwrap()).unwrap().as_enum_member().unwrap();
+                    match &expression.kind {
+                        ExpressionKind::ArgumentList(argument_list) => {
+                            let args = fetch_argument_list_or_empty(Some(argument_list), schema, info_provider, namespace)?;
+                            Ok(UnitFetchResult::Object(Object::from(InterfaceEnumVariant {
+                                value: member.identifier().name().to_owned(),
+                                args: Some(args)
+                            })))
+                        },
+                        _ => unreachable!()
+                    }
+                }
+                ReferenceType::Model => {
+                    let model = schema.find_top_by_path(reference_info.reference().path()).unwrap().as_model().unwrap();
+                    match &expression.kind {
+                        ExpressionKind::Identifier(identifier) => {
+                            if let Some(field) = model.fields().find(|f| f.identifier().name() == identifier.name()) {
+                                Ok(UnitFetchResult::Reference(ReferenceInfo::new(
+                                    ReferenceType::ModelField,
+                                    Reference::new(field.path().clone(), field.string_path().clone()),
+                                    None,
+                                ), None))
+                            } else {
+                                Err(Error::new("model field not found"))
+                            }
+                        },
+                        _ => unreachable!()
+                    }
+                }
+                ReferenceType::Middleware => todo!("accept argument list into middleware"),
+                ReferenceType::StructDeclaration => {
                     let struct_object = Type::StructObject(struct_declaration.path.clone(), struct_declaration.string_path.clone());
                     match &item.kind {
                         ExpressionKind::ArgumentList(argument_list) => {
@@ -126,125 +209,34 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
                             let result = function.body.call(arguments)?;
                             return Ok(UnitFetchResult::Object(result));
                         }
-                        ExpressionKind::Call(call) => {
-                            let r#struct = namespace.struct_at_path(&struct_declaration.str_path()).unwrap();
-                            let function = r#struct.static_function(call.identifier().name()).unwrap();
-                            let arguments = fetch_argument_list(&call.argument_list, schema, info_provider, namespace)?;
-                            let result = function.body.call(arguments)?;
-                            return Ok(UnitFetchResult::Object(result));
-                        }
-                        ExpressionKind::Subscript(s) => {
-                            Err(Error::new("not implemented"))
-                        }
                         ExpressionKind::Identifier(i) => {
                             Err(Error::new("not implemented"))
                         }
+                        _ => unreachable!()
+                    }
+                }
+                ReferenceType::StructInstanceFunction => {}
+                ReferenceType::StructStaticFunction => {}
+                ReferenceType::FunctionDeclaration => unreachable!(),
+                ReferenceType::Namespace => {
+                    match &expression.kind {
+                        ExpressionKind::Identifier(identifier) => {
+                            let mut str_path = reference_info.reference().str_path();
+                            str_path.push(identifier.name());
+                            let expr_info = search_identifier_path_names_with_filter_to_expr_info(
+                                &str_path,
+                                schema,
+                                schema.source(*info_provider.path().first().unwrap()).unwrap(),
+                                &info_provider.namespace_str_path(),
+                                &top_filter_for_reference_type(ReferenceSpace::Default),
+                                info_provider.availability(),
+                            ).unwrap();
+                            return Ok(UnitFetchResult::Reference(expr_info.reference_info().unwrap().clone(), None))
+                        },
                         _ => unreachable!()
                     }
                 },
-                Top::Config(config) => {
-                    match &item.kind {
-                        ExpressionKind::Identifier(identifier) => {
-                            if let Some(item) = config.items.iter().find(|i| i.identifier().name() == identifier.name()) {
-                                return Ok(UnitFetchResult::Object(fetch_expression(&item.expression, schema, info_provider, expect, namespace)?));
-                            } else {
-                                Err(Error::new("config item not found"))?
-                            }
-                        },
-                        ExpressionKind::ArgumentList(a) => {
-                            Err(Error::new("config cannot be called"))?
-                        }
-                        ExpressionKind::Call(c) => {
-                            Err(Error::new("config cannot be called"))?
-                        }
-                        ExpressionKind::Subscript(s) => {
-                            Err(Error::new("config cannot be subscript"))?
-                        }
-                        _ => unreachable!()
-                    }
-                }
-                Top::Constant(constant) => {
-                    return Ok(UnitFetchResult::Object(fetch_expression(&constant.expression, schema, info_provider, expect, namespace)?));
-                }
-                Top::Enum(r#enum) => {
-                    match &item.kind {
-                        ExpressionKind::Identifier(i) => {
-                            return Ok(UnitFetchResult::Object(Object::from(Value::EnumVariant(EnumVariant {
-                                value: Box::new(Value::String(i.name().to_owned())),
-                                display: format!(".{}", i.name()),
-                                path: r#enum.string_path.clone(),
-                                args: None,
-                            }))));
-                        }
-                        ExpressionKind::Call(c) => {
-                            return Ok(UnitFetchResult::Object(Object::from(Value::EnumVariant(EnumVariant {
-                                value: Box::new(Value::String(c.identifier().name().to_owned())),
-                                display: format!(".{}", c.identifier().name()),
-                                path: r#enum.string_path.clone(),
-                                args: None,
-                            }))));
-                        }
-                        ExpressionKind::ArgumentList(a) => {
-                            Err(Error::new("enum cannot be called"))?
-                        }
-                        ExpressionKind::Subscript(s) => {
-                            Err(Error::new("enum cannot be subscript"))?
-                        }
-                        _ => unreachable!()
-                    }
-                }
-                Top::Model(_) => {
-                    match &item.kind {
-                        ExpressionKind::Identifier(_) => todo!("return model field enum here"),
-                        ExpressionKind::ArgumentList(a) => {
-                            Err(Error::new("model cannot be called"))?
-                        }
-                        ExpressionKind::Call(c) => {
-                            Err(Error::new("model cannot be called"))?
-                        }
-                        ExpressionKind::Subscript(s) => {
-                            Err(Error::new("model cannot be subscript"))?
-                        }
-                        _ => unreachable!()
-                    }
-                }
-                Top::Interface(_) => {
-                    match &item.kind {
-                        ExpressionKind::Identifier(_) => todo!("return interface field enum here"),
-                        ExpressionKind::ArgumentList(a) => {
-                            Err(Error::new("interface cannot be called"))?
-                        }
-                        ExpressionKind::Call(c) => {
-                            Err(Error::new("interface cannot be called"))?
-                        }
-                        ExpressionKind::Subscript(s) => {
-                            Err(Error::new("interface cannot be subscript"))?
-                        }
-                        _ => unreachable!()
-                    }
-                }
-                Top::Namespace(namespace) => {
-                    match &item.kind {
-                        ExpressionKind::Identifier(identifier) => {
-                            if let Some(top) = namespace.find_top_by_name(identifier.name(), &top_filter_for_reference_type(ReferenceSpace::Default), info_provider.availability()) {
-                                return Ok(UnitFetchResult::Reference(top.path().clone()))
-                            } else {
-                                Err(Error::new("invalid reference"))?
-                            }
-                        },
-                        ExpressionKind::Call(c) => {
-                            todo!("resolve and call")
-                        }
-                        ExpressionKind::ArgumentList(a) => {
-                            Err(Error::new("namespace cannot be called"))?
-                        }
-                        ExpressionKind::Subscript(s) => {
-                            Err(Error::new("namespace cannot be subscript"))?
-                        }
-                        _ => unreachable!()
-                    }
-                }
-                _ => unreachable!()
+                _ => unreachable!(),
             }
         }
     }
