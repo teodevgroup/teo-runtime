@@ -264,3 +264,17 @@ impl From<Action> for u32 {
         value.0
     }
 }
+
+impl From<i32> for Action {
+
+    fn from(value: i32) -> Self {
+        Self(value as u32)
+    }
+}
+
+impl From<Action> for i32 {
+
+    fn from(value: Action) -> Self {
+        value.0 as i32
+    }
+}

@@ -27,7 +27,7 @@ pub(in crate::stdlib) fn load_model_property_decorators(namespace: &mut Namespac
     namespace.define_model_property_decorator("deps", |arguments, property| {
         let deps: Value = arguments.get("deps")?;
         let deps: Vec<EnumVariant> = deps.into_vec()?;
-        let deps: Vec<String> = deps.iter().map(|f| f.clone().into_string()).collect::<Result<Vec<_>>>()?;
+        let deps: Vec<String> = deps.iter().map(|f| f.clone().into_string()).collect::<Vec<_>>();
         property.dependencies = deps;
         Ok(())
     });

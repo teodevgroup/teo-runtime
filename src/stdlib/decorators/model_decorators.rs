@@ -95,22 +95,22 @@ pub(in crate::stdlib) fn load_model_decorators(namespace: &mut Namespace) {
             if enable.is_array() {
                 let mut results = vec![];
                 for a in enable.as_array().unwrap() {
-                    results.push(a.as_option_variant().unwrap().value.try_into()?);
+                    results.push(a.as_option_variant().unwrap().value.into());
                 }
                 model.actions = results;
             } else if enable.is_enum_variant() {
-                model.actions = vec![enable.as_option_variant().unwrap().value.try_into()?];
+                model.actions = vec![enable.as_option_variant().unwrap().value.into()];
             }
         } else if let Ok(disable) = disable {
             if disable.is_array() {
                 let mut results = vec![];
                 for a in disable.as_array().unwrap() {
-                    let action: Action = a.as_option_variant().unwrap().value.try_into()?;
+                    let action: Action = a.as_option_variant().unwrap().value.into();
                     results.push(action.not());
                 }
                 model.actions = results;
             } else if disable.is_enum_variant() {
-                let action: Action = disable.as_option_variant().unwrap().value.try_into()?;
+                let action: Action = disable.as_option_variant().unwrap().value.into();
                 model.actions = vec![action.not()];
             }
         }
