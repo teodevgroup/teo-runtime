@@ -1,7 +1,7 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 use std::future::Future;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use key_path::KeyPath;
 use maplit::btreemap;
 use teo_result::Result;
