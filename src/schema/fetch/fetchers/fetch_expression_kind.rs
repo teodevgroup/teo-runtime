@@ -33,5 +33,6 @@ pub fn fetch_expression_kind<I>(expression: &Expression, schema: &Schema, info_p
         ExpressionKind::IntSubscript(_) => unreachable!(),
         ExpressionKind::NamedExpression(_) => unreachable!(),
         ExpressionKind::BracketExpression(e) => fetch_expression(e.expression(), schema, info_provider, expect, namespace),
+        ExpressionKind::EmptyPipeline(_) => unreachable!(),
     }
 }

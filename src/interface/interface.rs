@@ -1,6 +1,8 @@
 use std::collections::BTreeMap;
+use indexmap::indexmap;
 use serde::Serialize;
 use teo_parser::ast::interface::InterfaceDeclarationResolved;
+use teo_parser::r#type::synthesized_shape::SynthesizedShape;
 use teo_parser::r#type::Type;
 use crate::comment::Comment;
 use crate::interface::field::Field;
@@ -14,7 +16,7 @@ pub struct Interface {
     pub fields: BTreeMap<String, Field>,
     pub generic_names: Vec<String>,
     pub extends: Vec<Type>,
-    pub cache: InterfaceCache,
+    pub resolved: InterfaceDeclarationResolved,
 }
 
 impl Interface {
@@ -26,7 +28,7 @@ impl Interface {
             fields: Default::default(),
             generic_names: vec![],
             extends: vec![],
-            cache: InterfaceCache::new()
+            resolved: InterfaceDeclarationResolved::new(SynthesizedShape::new(indexmap! {})),
         }
     }
 
@@ -36,20 +38,6 @@ impl Interface {
 
     pub fn extends(&self) -> &Vec<Type> {
         &self.extends
-    }
-}
-
-#[derive(Debug, Serialize)]
-pub struct InterfaceCache {
-    pub shape: InterfaceDeclarationResolved,
-}
-
-impl InterfaceCache {
-
-    pub fn new() -> Self {
-        Self {
-            shape: InterfaceDeclarationResolved::new(),
-        }
     }
 }
 

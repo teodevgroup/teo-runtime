@@ -218,7 +218,7 @@ pub fn json_to_teon(json: &serde_json::Value, path: &KeyPath, input: &Type, main
 
 fn collect_interface_shapes<'a>(interface: &'a Interface, gens: &Vec<Type>, namespace: &'a Namespace) -> Vec<&'a SynthesizedShape> {
     let mut result = vec![];
-    let shape = interface.cache.shape.map.get(gens).unwrap().as_synthesized_shape().unwrap();
+    let shape = interface.resolved.caches.get(gens).unwrap().as_synthesized_shape().unwrap();
     result.push(shape);
     let map = calculate_generics_map(&interface.generic_names, gens);
     for extend in &interface.extends {
