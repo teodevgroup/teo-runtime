@@ -12,7 +12,6 @@ impl<T0, T1> TryFrom<Object> for (T0, T1) where (T0, T1): TryFrom<Value>, <(T0, 
         match teon.try_into() {
             Ok(v) => Ok(v),
             Err(e) => Err(Error::new(format!("{}", e))),
-                //Err(Error::new(format!("object is not Tuple or in wrong type: {:?}", value)))
         }
     }
 }
