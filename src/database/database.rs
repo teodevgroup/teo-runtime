@@ -31,6 +31,15 @@ impl Display for Database {
 
 impl Database {
 
+    pub fn lowercase_desc(&self) -> &'static str {
+        match self {
+            Database::MongoDB => "mongo",
+            Database::MySQL => "mysql",
+            Database::PostgreSQL => "postgres",
+            Database::SQLite => "sqlite",
+        }
+    }
+
     pub fn is_mongo(&self) -> bool {
         match self {
             Database::MongoDB => true,
