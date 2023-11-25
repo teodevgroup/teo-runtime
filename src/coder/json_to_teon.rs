@@ -1,10 +1,9 @@
-use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
 use bigdecimal::{BigDecimal, FromPrimitive};
 use bson::oid::ObjectId;
 use chrono::{DateTime, NaiveDate, Utc};
-use indexmap::{indexmap, IndexMap};
+use indexmap::IndexMap;
 use key_path::KeyPath;
 use maplit::btreemap;
 use teo_parser::r#type::synthesized_enum::SynthesizedEnum;
