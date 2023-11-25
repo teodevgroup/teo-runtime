@@ -31,7 +31,7 @@ pub fn load_interface(main_namespace: &mut Namespace, schema: &Schema, interface
             );
         }
     }
-    interface.resolved = interface_declaration.resolved().clone();
+    interface.shape = interface_declaration.resolved().shape().clone();
     let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&interface_declaration.namespace_str_path());
     dest_namespace.interfaces.insert(interface_declaration.identifier().name().to_owned(), interface);
 

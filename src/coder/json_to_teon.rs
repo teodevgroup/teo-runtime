@@ -142,8 +142,8 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
         }
         Type::InterfaceObject(reference, gens) => {
             let i = main_namespace.interface_at_path(&reference.str_path()).unwrap();
-            let shapes = collect_interface_shapes(i, gens, main_namespace);
-            json_to_teon_with_shapes(json, path, shapes, main_namespace)
+            let shape = collect_interface_shape(i, gens);
+            json_to_teon_with_shape(json, path, &shape, main_namespace)
         }
         Type::Optional(inner) => {
             if json.is_null() {
@@ -161,7 +161,7 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
             json_to_teon_with_synthesized_enum(json, path, synthesized_enum)
         },
         Type::SynthesizedEnum(synthesized_enum) => json_to_teon_with_synthesized_enum(json, path, synthesized_enum),
-        Type::SynthesizedShape(synthesized_shape) => json_to_teon_with_shapes(json, path, vec![synthesized_shape], main_namespace),
+        Type::SynthesizedShape(synthesized_shape) => json_to_teon_with_shape(json, path, synthesized_shape, main_namespace),
         _ => Err(Error::value_error(path.clone(), "unexpected type"))?,
     }
 }
@@ -179,22 +179,14 @@ fn json_to_teon_with_synthesized_enum(json: &serde_json::Value, path: &KeyPath, 
     Err(Error::value_error(path.clone(), "expect string enum variant"))
 }
 
-pub fn json_to_teon_with_shapes(json: &serde_json::Value, path: &KeyPath, shapes: Vec<&SynthesizedShape>, main_namespace: &Namespace) -> crate::path::Result<Value> {
+pub fn json_to_teon_with_shape(json: &serde_json::Value, path: &KeyPath, shape: &SynthesizedShape, main_namespace: &Namespace) -> crate::path::Result<Value> {
     if let Some(object) = json.as_object() {
-        let combined = if shapes.len() == 1 {
-            Cow::Borrowed(*shapes.first().unwrap())
-        } else {
-            Cow::Owned(shapes.iter().fold(SynthesizedShape::new(indexmap! {}), |mut item1, item2| {
-                item1.extend((*item2).clone().into_iter());
-                item1
-            }))
-        };
-        let required_keys: BTreeSet<&str> = combined.as_ref().iter().filter_map(|(k, v)| if !v.is_optional() {
+        let required_keys: BTreeSet<&str> = shape.iter().filter_map(|(k, v)| if !v.is_optional() {
             Some(k.as_str())
         } else {
             None
         }).collect();
-        let all_keys: BTreeSet<&str> = combined.as_ref().keys().map(AsRef::as_ref).collect();
+        let all_keys: BTreeSet<&str> = shape.keys().map(AsRef::as_ref).collect();
         let passed_in_keys: BTreeSet<&str> = object.keys().map(AsRef::as_ref).collect();
         let unallowed_keys: Vec<&str> = passed_in_keys.difference(&all_keys).map(|s| *s).collect();
         if let Some(unallowed) = unallowed_keys.first() {
@@ -204,7 +196,7 @@ pub fn json_to_teon_with_shapes(json: &serde_json::Value, path: &KeyPath, shapes
         if let Some(not_provided) = not_provided_keys.first() {
             return Err(Error::value_error(path + *not_provided, "expect value"));
         }
-        let map: IndexMap<String, Value> = object.iter().map(|(k, v)| Ok((k.to_owned(), json_to_teon(v, &(path + k), combined.as_ref().get(k).unwrap(), main_namespace)?))).collect::<crate::path::Result<IndexMap<String, Value>>>()?;
+        let map: IndexMap<String, Value> = object.iter().map(|(k, v)| Ok((k.to_owned(), json_to_teon(v, &(path + k), shape.get(k).unwrap(), main_namespace)?))).collect::<crate::path::Result<IndexMap<String, Value>>>()?;
         Ok(Value::Dictionary(map))
     } else {
         Err(Error::value_error(path.clone(), "unexpected value"))
@@ -216,18 +208,8 @@ pub fn json_to_teon(json: &serde_json::Value, path: &KeyPath, input: &Type, main
     json_to_teon_with_type(json, path, input, main_namespace)
 }
 
-fn collect_interface_shapes<'a>(interface: &'a Interface, gens: &Vec<Type>, namespace: &'a Namespace) -> Vec<&'a SynthesizedShape> {
-    let mut result = vec![];
-    let shape = interface.resolved.caches.get(gens).unwrap().as_synthesized_shape().unwrap();
-    result.push(shape);
-    let map = calculate_generics_map(&interface.generic_names, gens);
-    for extend in &interface.extends {
-        if let Some((reference, inner_gens)) = extend.as_interface_object() {
-            let inner_interface = namespace.interface_at_path(&reference.string_path().iter().map(AsRef::as_ref).collect()).unwrap();
-            result.extend(collect_interface_shapes(inner_interface, &inner_gens.iter().map(|t| t.replace_generics(&map)).collect(), namespace));
-        }
-    }
-    result
+fn collect_interface_shape(interface: &Interface, gens: &Vec<Type>) -> SynthesizedShape {
+    interface.shape_from_generics(gens)
 }
 
 fn calculate_generics_map(
