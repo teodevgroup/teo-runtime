@@ -173,7 +173,7 @@ impl Typed for Field {
 impl Documentable for Field {
 
     fn comment(&self) -> Option<&Comment> {
-        self.comment()
+        self.comment.as_ref()
     }
 
     fn kind(&self) -> &'static str {

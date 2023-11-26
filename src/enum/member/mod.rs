@@ -31,7 +31,7 @@ impl Named for Member {
 impl Documentable for Member {
 
     fn comment(&self) -> Option<&Comment> {
-        self.comment()
+        self.comment.as_ref()
     }
 
     fn kind(&self) -> &'static str {
