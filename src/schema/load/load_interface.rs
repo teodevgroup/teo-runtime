@@ -47,6 +47,6 @@ fn load_interface_field(main_namespace: &mut Namespace, field_declaration: &teo_
     } else {
         field.set_required();
     }
-    field.r#type = field_declaration.type_expr().resolved().unwrap_optional().clone();
+    field.r#type = field_declaration.type_expr().resolved().clone();
     Ok(field)
 }
