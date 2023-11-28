@@ -28,7 +28,10 @@ use crate::pipeline;
 use crate::stdlib::load::load;
 use educe::Educe;
 use serde::Serialize;
+use teo_teon::Value;
 use crate::handler::Handler;
+use crate::object::Object;
+use crate::pipeline::item::transform::{TransformArgument, TransformResult};
 use crate::traits::named::Named;
 
 #[derive(Educe)]
@@ -197,6 +200,72 @@ impl Namespace {
     }
 
     pub fn define_pipeline_item<T>(&mut self, name: &str, call: T) where T: pipeline::item::Call + 'static {
+        self.pipeline_items.insert(name.to_owned(), pipeline::Item {
+            path: next_path(&self.path, name),
+            call: Arc::new(call)
+        });
+    }
+
+    pub fn define_transform_pipeline_item<A, O, F, R>(&mut self, name: &str, call: F) where
+        A: Send + Sync + 'static,
+        O: Into<Object> + Send + Sync + 'static,
+        R: Into<TransformResult<O>> + Send + Sync + 'static,
+        F: TransformArgument<A, O, R> + 'static {
+        let wrap_call = Box::leak(Box::new(call));
+        self.pipeline_items.insert(name.to_owned(), pipeline::Item {
+            path: next_path(&self.path, name),
+            call: Arc::new(|args: Arguments, ctx: pipeline::Ctx| async {
+                let transform_result: TransformResult<O> = wrap_call.call(ctx).await.into();
+                match transform_result {
+                    TransformResult::Object(t) => Ok(t.into()),
+                    TransformResult::Result(r) => match r {
+                        Ok(t) => Ok(t.into()),
+                        Err(e) => Err(e.into()),
+                    }
+                }
+            })
+        });
+    }
+    //
+    // pub fn callback<T, F, O>(&self, name: &'static str, f: F) -> Result<&Self> where
+    //     T: Send + Sync + 'static,
+    //     F: CallbackArgument<T, O> + 'static,
+    //     O: Into<CallbackResult> + Send + Sync + 'static {
+    //     AppCtx::get()?.callbacks_mut().add_callback(name, Arc::new(CallbackItem::new(f)));
+    //     Ok(self)
+    // }
+    //
+    // pub fn validate<T, O, F>(&self, name: &'static str, f: F) -> Result<&Self> where
+    //     T: Send + Sync + 'static,
+    //     O: Into<ValidateResult> + Send + Sync + 'static,
+    //     F: ValidateArgument<T, O> + 'static {
+    //     AppCtx::get()?.callbacks_mut().add_validator(name, Arc::new(ValidateItem::new(f)));
+    //     Ok(self)
+    // }
+    //
+    // pub fn compare<T, O, F>(&self, name: &'static str, f: F) -> Result<&Self> where
+    //     T: Send + Sync + 'static,
+    //     O: Into<ValidateResult> + Send + Sync + 'static,
+    //     F: CompareArgument<T, O> + 'static {
+    //     AppCtx::get()?.callbacks_mut().add_compare(name, Arc::new(CompareItem::new(f)));
+    //     Ok(self)
+    // }
+
+    pub fn define_validator_pipeline_item<T>(&mut self, name: &str, call: T) where T: pipeline::item::Call + 'static {
+        self.pipeline_items.insert(name.to_owned(), pipeline::Item {
+            path: next_path(&self.path, name),
+            call: Arc::new(call)
+        });
+    }
+
+    pub fn define_callback_pipeline_item<T>(&mut self, name: &str, call: T) where T: pipeline::item::Call + 'static {
+        self.pipeline_items.insert(name.to_owned(), pipeline::Item {
+            path: next_path(&self.path, name),
+            call: Arc::new(call)
+        });
+    }
+
+    pub fn define_compare_pipeline_item<T>(&mut self, name: &str, call: T) where T: pipeline::item::Call + 'static {
         self.pipeline_items.insert(name.to_owned(), pipeline::Item {
             path: next_path(&self.path, name),
             call: Arc::new(call)

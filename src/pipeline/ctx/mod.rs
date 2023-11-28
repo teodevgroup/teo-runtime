@@ -1,3 +1,5 @@
+pub mod extract;
+
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 use key_path::KeyPath;
