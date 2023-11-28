@@ -8,7 +8,7 @@ use teo_result::Result;
 use teo_teon::Value;
 use crate::{connection, model, request};
 use crate::connection::connection::Connection;
-use crate::connection::transaction::Transaction;
+use crate::connection::transaction::{ExtractFromTransactionCtx, Transaction};
 use crate::model::Model;
 use crate::namespace::Namespace;
 use crate::action::*;
@@ -280,5 +280,11 @@ impl From<&Ctx> for Ctx {
 
     fn from(value: &Ctx) -> Self {
         value.clone()
+    }
+}
+
+impl ExtractFromTransactionCtx for Ctx {
+    fn extract(ctx: &Ctx) -> Self {
+        ctx.clone()
     }
 }
