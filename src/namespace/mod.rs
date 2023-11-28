@@ -32,6 +32,7 @@ use teo_teon::Value;
 use crate::handler::Handler;
 use crate::object::Object;
 use crate::pipeline::item::callback::{CallbackArgument, CallbackResult};
+use crate::pipeline::item::compare::CompareArgument;
 use crate::pipeline::item::transform::{TransformArgument, TransformResult};
 use crate::pipeline::item::validator::{ValidateArgument, ValidateResult, Validity};
 use crate::traits::named::Named;
@@ -258,7 +259,6 @@ impl Namespace {
                         Err(err) => Err(err),
                     }
                 }
-
             })
         });
     }
@@ -283,19 +283,48 @@ impl Namespace {
         });
     }
 
-    //
-    // pub fn compare<T, O, F>(&self, name: &'static str, f: F) -> Result<&Self> where
-    //     T: Send + Sync + 'static,
-    //     O: Into<ValidateResult> + Send + Sync + 'static,
-    //     F: CompareArgument<T, O> + 'static {
-    //     AppCtx::get()?.callbacks_mut().add_compare(name, Arc::new(CompareItem::new(f)));
-    //     Ok(self)
-    // }
-
-    pub fn define_compare_pipeline_item<T>(&mut self, name: &str, call: T) where T: pipeline::item::Call + 'static {
+    pub fn define_compare_pipeline_item<T, O, F>(&mut self, name: &str, call: F) where
+        T: Send + Sync + 'static,
+        O: Into<ValidateResult> + Send + Sync + 'static,
+        F: CompareArgument<T, O> + 'static {
+        let wrap_call = Box::leak(Box::new(call));
         self.pipeline_items.insert(name.to_owned(), pipeline::Item {
             path: next_path(&self.path, name),
-            call: Arc::new(call)
+            call: Arc::new(|args: Arguments, ctx: pipeline::Ctx| async {
+                if ctx.object().is_new() {
+                    return Ok(ctx.value().clone());
+                }
+                let key = ctx.path()[ctx.path().len() - 1].as_key().unwrap();
+                if !ctx.object().model().field(key).unwrap().previous.is_keep() {
+                    return Ok(ctx.value().clone());
+                }
+                let previous_value = ctx.object().get_previous_value(key)?;
+                let current_value = ctx.value().clone().as_teon().unwrap().clone();
+                if previous_value == current_value {
+                    return Ok(ctx.value().clone());
+                }
+                let ctx_value = ctx.value().clone();
+                let validate_result: ValidateResult = wrap_call.call(previous_value, current_value, ctx).await.into();
+                match validate_result {
+                    ValidateResult::Validity(validity) => if validity.is_valid() {
+                        Ok(ctx_value)
+                    } else if let Some(reason) = validity.invalid_reason() {
+                        Err(Error::new(reason))
+                    } else {
+                        Err(Error::new("value is invalid"))
+                    },
+                    ValidateResult::Result(result) => match result {
+                        Ok(validity) => if validity.is_valid() {
+                            Ok(ctx_value)
+                        } else if let Some(reason) = validity.invalid_reason() {
+                            Err(Error::new(reason))
+                        } else {
+                            Err(Error::new("value is invalid"))
+                        },
+                        Err(err) => Err(err),
+                    }
+                }
+            })
         });
     }
 
