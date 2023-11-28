@@ -1,5 +1,7 @@
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
+use crate::request::Ctx;
+use crate::request::ctx::extract::ExtractFromRequestCtx;
 use crate::request::header::readonly::HeaderMap;
 
 #[derive(Clone)]
@@ -55,5 +57,11 @@ pub mod r#trait {
         fn query_string(&self) -> &str;
         fn content_type(&self) -> &str;
         fn headers(&self) -> &HeaderMap;
+    }
+}
+
+impl ExtractFromRequestCtx for Request {
+    fn extract(ctx: &Ctx) -> Self {
+        ctx.request().clone()
     }
 }

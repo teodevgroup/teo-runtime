@@ -1,12 +1,8 @@
 use std::future::Future;
 use futures_util::future::BoxFuture;
-use crate::middleware::next::Next;
 use crate::request::Ctx;
+use crate::request::ctx::extract::ExtractFromRequestCtx;
 use crate::response::Response;
-
-pub trait ExtractFromRequestCtx {
-    fn extract(ctx: &Ctx) -> Self;
-}
 
 pub trait HandlerCtxArgument<A>: Send + Sync + 'static {
     fn call(&self, ctx: Ctx) -> BoxFuture<'static, crate::path::Result<Response>>;

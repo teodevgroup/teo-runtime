@@ -1,3 +1,5 @@
+pub mod extract;
+
 use std::cell::{Ref, RefCell, RefMut};
 use std::sync::Arc;
 use teo_teon::Value;
@@ -5,6 +7,7 @@ use crate::request::Request;
 use crate::connection::transaction;
 use crate::handler::r#match::HandlerMatch;
 use crate::namespace::Namespace;
+use crate::request::ctx::extract::ExtractFromRequestCtx;
 use super::local::Data;
 
 #[derive(Debug, Clone)]
@@ -31,7 +34,7 @@ impl Ctx {
             inner: Arc::new(CtxInner {
                 request,
                 body,
-                                                transaction_ctx,
+                transaction_ctx,
                 handler_match,
                 data: RefCell::new(Data::new())
             })
@@ -67,3 +70,8 @@ impl Ctx {
     }
 }
 
+impl ExtractFromRequestCtx for Ctx {
+    fn extract(ctx: &Ctx) -> Self {
+        ctx.clone()
+    }
+}
