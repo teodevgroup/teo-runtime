@@ -65,3 +65,6 @@ impl ExtractFromRequestCtx for Request {
         ctx.request().clone()
     }
 }
+
+unsafe impl Send for Request { }
+unsafe impl Sync for Request { }
