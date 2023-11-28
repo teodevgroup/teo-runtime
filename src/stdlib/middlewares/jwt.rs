@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
 use crate::arguments::Arguments;
-use crate::middleware::middleware::Middleware;
+use crate::middleware::middleware::{Middleware, middleware_wrap_fn};
 use crate::middleware::next::Next;
 use crate::namespace::Namespace;
 use crate::request::ctx::Ctx;
@@ -37,7 +37,7 @@ pub(in crate::stdlib) fn load_jwt_middleware(namespace: &mut Namespace) {
     namespace.define_middleware("jwt", |arguments: Arguments| {
         let secret_string: String = arguments.get("secret")?;
         let secret = Box::leak(Box::new(secret_string)).as_str();
-        Ok(Box::leak(Box::new(move |ctx: Ctx, next: &'static dyn Next| async move {
+        Ok(middleware_wrap_fn(move |ctx: Ctx, next: &'static dyn Next| async move {
             if let Some(authorization) = ctx.request().headers().get("authorization") {
                 if authorization.len() < 7 {
                     return Err(crate::path::Error::value_error_message_only("invalid jwt token"));
@@ -53,6 +53,6 @@ pub(in crate::stdlib) fn load_jwt_middleware(namespace: &mut Namespace) {
             }
             let res = next.call(ctx).await?;
             return Ok(res);
-        })) as &dyn Middleware)
+        }))
     });
 }
