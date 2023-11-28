@@ -4,7 +4,6 @@ use crate::middleware::next::Next;
 use crate::request::ctx::Ctx;
 use crate::request::ctx::extract::ExtractFromRequestCtx;
 use crate::response::Response;
-use crate::response::error::IntoResponseWithPathedError;
 
 pub trait Middleware: Send + Sync {
     fn call(&self, ctx: Ctx, next: &'static dyn Next) -> BoxFuture<'static, crate::path::Result<Response>>;
