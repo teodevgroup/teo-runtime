@@ -28,7 +28,6 @@ use crate::pipeline;
 use crate::stdlib::load::load;
 use educe::Educe;
 use serde::Serialize;
-use teo_teon::Value;
 use crate::handler::Handler;
 use crate::object::Object;
 use crate::pipeline::item::callback::{CallbackArgument, CallbackResult};
