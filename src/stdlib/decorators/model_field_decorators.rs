@@ -1,6 +1,7 @@
 use teo_teon::Value;
 use crate::database::r#type::DatabaseType;
 use crate::interface_enum_variant::InterfaceEnumVariant;
+use crate::model::field::Migration;
 use crate::namespace::Namespace;
 use crate::object::Object;
 use crate::optionality::Optionality;
@@ -223,17 +224,35 @@ pub(in crate::stdlib) fn load_model_field_decorators(namespace: &mut Namespace) 
     });
 
     namespace.define_model_field_decorator("migration", |arguments, field| {
-
+        let mut migration = Migration {
+            renamed: vec![],
+            version: None,
+            default: None,
+            priority: None,
+        };
+        let renamed: Option<Value> = arguments.get_optional("renamed")?;
+        let version: Option<String> = arguments.get_optional("version")?;
+        let default: Option<Value> = arguments.get_optional("value")?;
+        let priority: Option<i32> = arguments.get_optional("priority")?;
+        if let Some(renamed) = renamed {
+            match renamed {
+                Value::String(s) => migration.renamed.push(s),
+                Value::Array(ss) => for s in ss {
+                    migration.renamed.push(s.as_str().unwrap().to_string());
+                },
+                _ => unreachable!(),
+            }
+        }
+        if let Some(version) = version {
+            migration.version = Some(version);
+        }
+        if let Some(default) = default {
+            migration.default = Some(default);
+        }
+        if let Some(priority) = priority {
+            migration.priority = Some(priority as i64);
+        }
+        field.migration = Some(migration);
         Ok(())
     });
-
-    // /// @name Migration
-    // /// Specify the migration operation for this field
-    // declare unique model field decorator migration(
-    //     renamed: (String | Array<String>)?,
-    // version: String?,
-    // default: ThisFieldType?,
-    // priority: Int?
-    // )
-
 }
