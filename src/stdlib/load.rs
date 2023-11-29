@@ -19,6 +19,7 @@ use crate::stdlib::pipeline_items::value::load_pipeline_value_items;
 use crate::stdlib::pipeline_items::array::load_pipeline_array_items;
 use crate::stdlib::pipeline_items::vector::load_pipeline_vector_items;
 use crate::stdlib::pipeline_items::datetime::load_pipeline_datetime_items;
+use crate::stdlib::pipeline_items::debug::load_debug_items;
 use crate::stdlib::structs::load_structs;
 
 pub fn load(namespace: &mut Namespace) {
@@ -48,6 +49,7 @@ pub fn load(namespace: &mut Namespace) {
     load_pipeline_array_items(std_namespace);
     load_pipeline_vector_items(std_namespace);
     load_pipeline_datetime_items(std_namespace);
+    load_debug_items(std_namespace);
     // middlewares
     load_log_request_middleware(std_namespace);
     load_jwt_middleware(std_namespace);

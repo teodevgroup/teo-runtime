@@ -24,10 +24,10 @@ pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &mut Namesp
         let dictionary: Result<&IndexMap<String, Value>> = ctx.value().try_into_err_prefix("get");
         if let Ok(model_object) = model_object {
             let key: &EnumVariant = args.get("key").err_prefix("get(key)")?;
-            // key.value.as_ref().as_str()
+            let key_value = key.value.as_str();
             // get value and return here
-            //model_object.get()
-            Ok(Object::from(ctx.object()))
+            let value: Value = model_object.get_value(key_value)?;
+            Ok(Object::from(value))
         } else if let Ok(dictionary) = dictionary {
             let key: &str = args.get("key").err_prefix("get(key)")?;
             Ok(Object::from(dictionary.get(key).cloned().unwrap_or(Value::Null)))
