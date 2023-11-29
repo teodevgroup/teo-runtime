@@ -1,8 +1,10 @@
 use indexmap::indexmap;
+use maplit::btreemap;
 use teo_parser::ast::literals::{TupleLiteral, ArrayLiteral, DictionaryLiteral, EnumVariantLiteral};
 use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::ast::schema::Schema;
 use teo_parser::r#type::synthesized_enum::SynthesizedEnum;
+use teo_parser::r#type::synthesized_interface_enum::SynthesizedInterfaceEnum;
 use teo_parser::r#type::Type;
 use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::traits::resolved::Resolve;
@@ -10,7 +12,8 @@ use teo_result::Result;
 use teo_teon::types::enum_variant::EnumVariant;
 use teo_teon::types::option_variant::OptionVariant;
 use teo_teon::Value;
-use crate::coder::json_to_teon::fetch_synthesized_enum;
+use crate::arguments::Arguments;
+use crate::coder::json_to_teon::{fetch_synthesized_enum, fetch_synthesized_interface_enum};
 use crate::interface_enum_variant::InterfaceEnumVariant;
 use crate::namespace::Namespace;
 use crate::object::Object;
@@ -79,8 +82,33 @@ pub fn fetch_enum_variant_literal<I>(e: &EnumVariantLiteral, schema: &Schema, in
         Type::SynthesizedEnumReference(synthesized_enum_reference) => {
             let synthesized_enum = fetch_synthesized_enum(synthesized_enum_reference, namespace);
             fetch_enum_variant_literal_from_synthesized_enum(e, schema, info_provider, synthesized_enum, namespace)
-        }
+        },
+        Type::SynthesizedInterfaceEnumReference(synthesized_interface_enum_reference) => {
+            let synthesized_enum = fetch_synthesized_interface_enum(synthesized_interface_enum_reference, namespace);
+            fetch_enum_variant_literal_from_synthesized_interface_enum(e, schema, info_provider, synthesized_enum, namespace)
+        },
         _ => panic!()
+    }
+}
+
+fn fetch_enum_variant_literal_from_synthesized_interface_enum<I>(e: &EnumVariantLiteral, schema: &Schema, info_provider: &I, synthesized_enum: &SynthesizedInterfaceEnum, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
+    if synthesized_enum.keys.contains_str(e.identifier().name()) {
+        let args = if let Some(argument_list) = e.argument_list() {
+            let mut map = btreemap! {};
+            for argument in argument_list.arguments() {
+                map.insert(argument.name().unwrap().name().to_owned(), Object::from(argument.value().resolved().value().unwrap().to_owned()));
+            }
+            let arguments = Arguments::new(map);
+            Some(arguments)
+        } else {
+            None
+        };
+        Ok(Object::from(InterfaceEnumVariant {
+            value: e.identifier().name().to_owned(),
+            args,
+        }))
+    } else {
+        unreachable!()
     }
 }
 

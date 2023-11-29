@@ -8,6 +8,8 @@ use key_path::KeyPath;
 use maplit::btreemap;
 use teo_parser::r#type::synthesized_enum::SynthesizedEnum;
 use teo_parser::r#type::synthesized_enum_reference::SynthesizedEnumReference;
+use teo_parser::r#type::synthesized_interface_enum::SynthesizedInterfaceEnum;
+use teo_parser::r#type::synthesized_interface_enum_reference::SynthesizedInterfaceEnumReference;
 use teo_parser::r#type::synthesized_shape::SynthesizedShape;
 use teo_parser::r#type::synthesized_shape_reference::SynthesizedShapeReference;
 use teo_parser::r#type::Type;
@@ -18,6 +20,11 @@ use crate::interface::Interface;
 use crate::namespace::Namespace;
 use crate::path::Error;
 use crate::utils::ContainsStr;
+
+pub fn fetch_synthesized_interface_enum<'a>(reference: &SynthesizedInterfaceEnumReference, main_namespace: &'a Namespace) -> &'a SynthesizedInterfaceEnum {
+    let model = main_namespace.model_at_path(&reference.owner.as_model_object().unwrap().str_path()).unwrap();
+    model.cache.shape.interface_enums.get(&reference.kind).unwrap()
+}
 
 pub fn fetch_synthesized_enum<'a>(reference: &SynthesizedEnumReference, main_namespace: &'a Namespace) -> &'a SynthesizedEnum {
     let model = main_namespace.model_at_path(&reference.owner.as_model_object().unwrap().str_path()).unwrap();

@@ -6,3 +6,4 @@ pub(super) mod enum_decorators;
 pub(super) mod enum_member_decorators;
 pub(super) mod handler_decorators;
 pub(super) mod indexable_decorators;
+pub(super) mod model_indexable_decorators;

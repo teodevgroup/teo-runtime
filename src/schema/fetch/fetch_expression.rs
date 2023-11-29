@@ -21,6 +21,8 @@ pub fn fetch_expression<I>(expression: &Expression, schema: &Schema, info_provid
             } else {
                 Ok(Object::from(value.clone()))
             }
+        } else if let Some(_) = expression.resolved().r#type().as_synthesized_interface_enum_reference() {
+            fetch_expression_kind(expression, schema, info_provider, &expect.expect_for_enum_variant_literal(), namespace)
         } else {
             Ok(Object::from(value.clone()))
         }
