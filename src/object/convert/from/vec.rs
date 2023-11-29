@@ -10,3 +10,11 @@ impl From<Vec<Value>> for Object {
         }
     }
 }
+
+impl From<Vec<Object>> for Object {
+    fn from(value: Vec<Object>) -> Self {
+        Object {
+            inner: Arc::new(ObjectInner::Array(value))
+        }
+    }
+}

@@ -30,11 +30,21 @@ pub fn fetch_tuple_literal<I>(tuple_literal: &TupleLiteral, schema: &Schema, inf
 }
 
 pub fn fetch_array_literal<I>(array_literal: &ArrayLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
-    let mut result = vec![];
+    let mut teon_result = vec![];
+    let mut array_result = vec![];
     for expression in array_literal.expressions() {
-        result.push(fetch_expression(expression, schema, info_provider, expect.unwrap_optional().unwrap_array(), namespace)?.as_teon().unwrap().clone());
+        let expression_result = fetch_expression(expression, schema, info_provider, expect.unwrap_optional().unwrap_array(), namespace)?;
+        if expression_result.is_interface_enum_variant() {
+            array_result.push(expression_result);
+        } else {
+            teon_result.push(expression_result.as_teon().unwrap().clone());
+        }
     }
-    Ok(Object::from(Value::Array(result)))
+    if !array_result.is_empty() {
+        Ok(Object::from(array_result))
+    } else {
+        Ok(Object::from(Value::Array(teon_result)))
+    }
 }
 
 pub fn fetch_dictionary_literal<I>(dictionary_literal: &DictionaryLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
