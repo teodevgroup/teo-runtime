@@ -134,4 +134,10 @@ pub(in crate::stdlib) fn load_model_decorators(namespace: &mut Namespace) {
         model.show_in_studio = show;
         Ok(())
     });
+
+    namespace.define_model_decorator("synthesizeShapes", |arguments, model| {
+        let synthesize: bool = arguments.get("synthesize")?;
+        model.synthesize_shapes = synthesize;
+        Ok(())
+    });
 }

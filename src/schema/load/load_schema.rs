@@ -1,7 +1,9 @@
+use std::process::exit;
 use teo_parser::ast::reference_space::ReferenceSpace;
 use teo_parser::ast::schema::Schema;
 use teo_parser::ast::span::Span;
 use teo_parser::diagnostics::diagnostics::{Diagnostics, DiagnosticsError};
+use teo_parser::diagnostics::printer::print_diagnostics;
 use teo_parser::traits::has_availability::HasAvailability;
 use teo_parser::traits::identifiable::Identifiable;
 use teo_parser::traits::info_provider::InfoProvider;
@@ -206,6 +208,14 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_load
     // load data set
     for data_set_declaration in schema.data_sets() {
 
+    }
+
+    // diagnostics
+    if !ignores_loading {
+        print_diagnostics(&diagnostics, true);
+        if diagnostics.has_errors() {
+            exit(1);
+        }
     }
 
     Ok(())

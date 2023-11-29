@@ -64,7 +64,7 @@ pub(in crate::stdlib) fn load_structs(namespace: &mut Namespace) {
         });
     });
 
-    namespace.define_struct("Float", |path, r#struct| {
+    namespace.define_struct("Float32", |path, r#struct| {
         r#struct.define_static_function("new", move |arguments: Arguments| {
             let from: &str = arguments.get("from")?;
             Ok(Object::from(match f32::from_str(from) {
@@ -74,7 +74,7 @@ pub(in crate::stdlib) fn load_structs(namespace: &mut Namespace) {
         });
     });
 
-    namespace.define_struct("Float64", |path, r#struct| {
+    namespace.define_struct("Float", |path, r#struct| {
         r#struct.define_static_function("new", move |arguments: Arguments| {
             let from: &str = arguments.get("from")?;
             Ok(Object::from(match f64::from_str(from) {
@@ -150,6 +150,12 @@ pub(in crate::stdlib) fn load_structs(namespace: &mut Namespace) {
             }
         });
     });
+
+    namespace.define_struct("File", |path, r#struct| { });
+
+    namespace.define_struct("Regex", |path, r#struct| { });
+
+    namespace.define_struct("Range", |path, r#struct| { });
 
     namespace.define_struct("Array", |path, r#struct| {
         r#struct.define_static_function("new", move |arguments: Arguments| {

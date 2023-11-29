@@ -36,6 +36,8 @@ pub struct Model {
     pub generate_entity: bool,
     #[serde(rename = "showInStudio")]
     pub show_in_studio: bool,
+    #[serde(rename = "synthesizeShapes")]
+    pub synthesize_shapes: bool,
     pub fields: IndexMap<String, Field>,
     pub relations: IndexMap<String, Relation>,
     pub properties: IndexMap<String, Property>,
