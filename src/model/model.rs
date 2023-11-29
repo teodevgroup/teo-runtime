@@ -77,6 +77,7 @@ impl Model {
             generate_client: true,
             generate_entity: true,
             show_in_studio: true,
+            synthesize_shapes: true,
             comment: None,
             fields: Default::default(),
             relations: Default::default(),

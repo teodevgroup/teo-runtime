@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::fmt::{Display, Formatter};
 use std::sync::{Arc, Mutex};
 use serde::{Serialize, Serializer};
 
@@ -34,5 +35,11 @@ impl Serialize for Object {
 struct ObjectInner {
     struct_path: Vec<String>,
     fields: Mutex<BTreeMap<String, crate::object::Object>>
+}
+
+impl Display for Object {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.inner.struct_path.join("."))
+    }
 }
 

@@ -3,7 +3,7 @@ pub mod convert;
 pub mod traits;
 pub mod error_ext;
 
-use std::fmt::Display;
+use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 use chrono::{Utc, DateTime};
 use teo_teon::Value;
@@ -113,6 +113,18 @@ impl Object {
         match result {
             Ok(t) => Ok(t),
             Err(_) => Err(Error::new(message.as_ref())),
+        }
+    }
+}
+
+impl Display for Object {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self.inner.as_ref() {
+            ObjectInner::Teon(teon) => Display::fmt(teon, f),
+            ObjectInner::ModelObject(m) => Display::fmt(m, f),
+            ObjectInner::StructObject(s) => Display::fmt(s, f),
+            ObjectInner::Pipeline(p) => Display::fmt(p, f),
+            ObjectInner::InterfaceEnumVariant(i) => Display::fmt(i, f),
         }
     }
 }

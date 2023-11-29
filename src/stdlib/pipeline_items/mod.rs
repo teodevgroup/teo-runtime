@@ -7,3 +7,4 @@ pub(super) mod logical;
 pub(super) mod array;
 pub(super) mod vector;
 pub(super) mod datetime;
+pub(super) mod debug;

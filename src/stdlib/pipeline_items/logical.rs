@@ -5,6 +5,7 @@ use crate::object::Object;
 use crate::pipeline::Ctx;
 use crate::pipeline::pipeline::Pipeline;
 use teo_result::{Result, ResultExt};
+use crate::action::Action;
 
 pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) {
 
@@ -48,6 +49,22 @@ pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) 
                     Ok(ctx.value().clone())
                 }
             },
+        }
+    });
+
+    namespace.define_pipeline_item("when", |args: Arguments, ctx: Ctx| async move {
+        let action: Action = args.get("action")?;
+        let pipeline: Pipeline = args.get("pipeline")?;
+        let object_action = if ctx.action().is_empty() {
+            ctx.object().action()
+        } else {
+            ctx.action()
+        };
+        if object_action.passes(&vec![action]) {
+            let result = ctx.run_pipeline(&pipeline).await?;
+            Ok(result)
+        } else {
+            Ok(ctx.value().clone())
         }
     });
 }

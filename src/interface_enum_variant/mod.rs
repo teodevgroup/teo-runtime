@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter};
 use serde::Serialize;
 use crate::arguments::Arguments;
 
@@ -23,5 +24,11 @@ impl InterfaceEnumVariant {
 
     pub fn value(&self) -> &str {
         self.value.as_str()
+    }
+}
+
+impl Display for InterfaceEnumVariant {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.value())
     }
 }
