@@ -35,4 +35,43 @@ pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &mut Namesp
             Err(Error::new("get: input is not model object or dictionary"))
         }
     });
+
+    namespace.define_pipeline_item("set", |args: Arguments, ctx: Ctx| async move {
+        let model_object: Result<&model::Object> = ctx.value().try_into_err_prefix("set");
+        let dictionary: Result<&IndexMap<String, Value>> = ctx.value().try_into_err_prefix("set");
+        let value: Value = args.get("value")?;
+        if let Ok(model_object) = model_object {
+            let key: &EnumVariant = args.get("key").err_prefix("set(key)")?;
+            let key_value = key.value.as_str();
+            // get value and return here
+            model_object.set_value(key_value, value)?;
+            Ok(ctx.value().clone())
+        } else if let Ok(dictionary) = dictionary {
+            let key: &str = args.get("key").err_prefix("set(key)")?;
+            let mut new_dictionary = dictionary.clone();
+            new_dictionary.insert(key.to_owned(), value);
+            Ok(Object::from(Value::Dictionary(new_dictionary)))
+        } else {
+            Err(Error::new("set: input is not model object or dictionary"))
+        }
+    });
+
+    namespace.define_pipeline_item("assign", |args: Arguments, ctx: Ctx| async move {
+        let model_object = ctx.object();
+        let value: Value = args.get("value")?;
+        let key: &EnumVariant = args.get("key").err_prefix("assign(key)")?;
+        let key_value = key.value.as_str();
+        // get value and return here
+        model_object.set_value(key_value, value)?;
+        Ok(ctx.value().clone())
+    });
+
+    namespace.define_pipeline_item("previous", |args: Arguments, ctx: Ctx| async move {
+        let model_object = ctx.object();
+        let key: &EnumVariant = args.get("key").err_prefix("previous(key)")?;
+        let key_value = key.value.as_str();
+        // get value and return here
+        let result = model_object.get_previous_value(key_value)?;
+        Ok(Object::from(result))
+    });
 }
