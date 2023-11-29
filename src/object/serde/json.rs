@@ -31,6 +31,10 @@ impl Serialize for Object {
                 map.serialize_entry("$interfaceEnumVariant", interface_enum_variant)?;
                 map.end()
             }
+            ObjectInner::Array(vec) => {
+                let mut map = serializer.serialize_map(Some(1))?;
+                map.end()
+            }
         }
     }
 }

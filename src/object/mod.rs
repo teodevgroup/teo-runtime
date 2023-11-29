@@ -5,17 +5,13 @@ pub mod error_ext;
 
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
-use chrono::{Utc, DateTime};
 use teo_teon::Value;
 use teo_result::Error;
 use crate::model;
 use crate::pipeline::pipeline::Pipeline;
 use crate::r#struct;
 use teo_result::Result;
-use indexmap::IndexMap;
-use regex::Regex;
-use teo_teon::types::enum_variant::EnumVariant;
-use teo_teon::types::range::Range;
+use crate::config::debug::Debug;
 use crate::interface_enum_variant::InterfaceEnumVariant;
 
 #[derive(Debug, Clone)]
@@ -30,6 +26,7 @@ pub enum ObjectInner {
     StructObject(r#struct::Object),
     Pipeline(Pipeline),
     InterfaceEnumVariant(InterfaceEnumVariant),
+    Array(Vec<Object>),
 }
 
 impl AsRef<Object> for Object {
@@ -96,6 +93,17 @@ impl Object {
         }
     }
 
+    pub fn is_array(&self) -> bool {
+        self.as_array().is_some()
+    }
+
+    pub fn as_array(&self) -> Option<&Vec<Object>> {
+        match self.inner.as_ref() {
+            ObjectInner::Array(a) => Some(a),
+            _ => None,
+        }
+    }
+
     pub fn is_null(&self) -> bool {
         self.is_teon() && self.as_teon().unwrap().is_null()
     }
@@ -125,6 +133,11 @@ impl Display for Object {
             ObjectInner::StructObject(s) => Display::fmt(s, f),
             ObjectInner::Pipeline(p) => Display::fmt(p, f),
             ObjectInner::InterfaceEnumVariant(i) => Display::fmt(i, f),
+            ObjectInner::Array(objects) => {
+                f.write_str("[")?;
+                objects.iter().map(|o| format!("{}", o)).collect::<Vec<String>>().join(", ");
+                f.write_str("]")
+            }
         }
     }
 }

@@ -4,6 +4,7 @@ use crate::namespace::Namespace;
 use teo_result::Result;
 use crate::action::Action;
 use crate::pipeline::pipeline::Pipeline;
+use crate::stdlib::decorators::model_indexable_decorators::{model_id_decorator, model_index_decorator, model_unique_decorator};
 
 pub(in crate::stdlib) fn load_model_decorators(namespace: &mut Namespace) {
 
@@ -18,18 +19,15 @@ pub(in crate::stdlib) fn load_model_decorators(namespace: &mut Namespace) {
     });
 
     namespace.define_model_decorator("id", |arguments, model| {
-        Ok(())
-        //id_decorator(arguments, model)
+        model_id_decorator(arguments, model)
     });
 
     namespace.define_model_decorator("index", |arguments, model| {
-        Ok(())
-        //index_decorator(arguments, model)
+        model_index_decorator(arguments, model)
     });
 
     namespace.define_model_decorator("unique", |arguments, model| {
-        Ok(())
-        //unique_decorator(arguments, model)
+        model_unique_decorator(arguments, model)
     });
 
     namespace.define_model_decorator("migration", |arguments, model| {
