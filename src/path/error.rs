@@ -80,7 +80,7 @@ impl Error {
         Self {
             title: "NotFound",
             message: "not found".to_owned(),
-                        fields: None,
+            fields: None,
             code: 404
         }
     }
