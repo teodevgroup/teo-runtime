@@ -207,7 +207,7 @@ impl Ctx {
     pub async fn find_first_internal(&self, model: &'static Model, finder: &Value, ignore_select_and_include: bool, action: Action, req_ctx: Option<request::Ctx>, path: KeyPath) -> crate::path::Result<Option<model::Object>> {
         let transaction = self.transaction_for_model_or_no_transaction(model).await?;
         let mut finder = finder.as_dictionary().clone().unwrap().clone();
-        finder.insert("take".to_string(), 1.into());
+        finder.insert("take".to_string(), Value::Int64(1));
         let finder = Value::Dictionary(finder);
         let result = transaction.find_many(model, &finder, ignore_select_and_include, action, self.clone(), req_ctx, path).await?;
         if result.is_empty() {
