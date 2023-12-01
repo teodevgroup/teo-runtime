@@ -14,12 +14,26 @@ pub enum Method {
     Options,
 }
 
+impl Method {
+    pub fn capitalized_name(&self) -> &'static str {
+        match self {
+            Method::Get => "GET",
+            Method::Post => "POST",
+            Method::Patch => "PATCH",
+            Method::Put => "PUT",
+            Method::Delete => "DELETE",
+            Method::Options => "OPTIONS",
+        }
+    }
+}
+
 #[derive(Educe)]
 #[educe(Debug)]
 #[derive(Serialize, Clone)]
 pub struct Handler {
     pub path: Vec<String>,
     pub input_type: Type,
+    pub output_type: Type,
     pub format: HandlerInputFormat,
     pub method: Method,
     pub url: Option<String>,

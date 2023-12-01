@@ -12,6 +12,7 @@ pub fn load_handler(main_namespace: &mut Namespace, schema: &Schema, handler_dec
     if let Some(mut handler) = main_namespace.handler_at_path(&handler_declaration.str_path()).cloned() {
         handler.format = handler_declaration.input_format;
         handler.input_type = handler_declaration.input_type().resolved().clone();
+        handler.output_type = handler_declaration.output_type().resolved().clone();
         for decorator in handler_declaration.decorators() {
             let decorator_declaration = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration().unwrap();
             if let Some(decorator_implementation) = main_namespace.handler_decorator_at_path(&decorator_declaration.str_path()) {

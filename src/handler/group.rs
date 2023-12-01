@@ -21,6 +21,7 @@ impl Group {
         let wrapped_call = Box::leak(Box::new(call));
         let handler = Handler {
             input_type: Type::Undetermined,
+            output_type: Type::Undetermined,
             format: HandlerInputFormat::Json,
             path: next_path(&self.path, name),
             ignore_prefix: false,
