@@ -6,6 +6,7 @@ use chrono::{DateTime, NaiveDate, Utc};
 use indexmap::IndexMap;
 use key_path::KeyPath;
 use maplit::btreemap;
+use teo_parser::ast::schema::Schema;
 use teo_parser::r#type::synthesized_enum::SynthesizedEnum;
 use teo_parser::r#type::synthesized_enum_reference::SynthesizedEnumReference;
 use teo_parser::r#type::synthesized_interface_enum::SynthesizedInterfaceEnum;
@@ -13,6 +14,7 @@ use teo_parser::r#type::synthesized_interface_enum_reference::SynthesizedInterfa
 use teo_parser::r#type::synthesized_shape::SynthesizedShape;
 use teo_parser::r#type::synthesized_shape_reference::SynthesizedShapeReference;
 use teo_parser::r#type::Type;
+use teo_parser::traits::resolved::Resolve;
 use teo_teon::types::enum_variant::EnumVariant;
 use teo_teon::Value;
 use teo_teon::types::file::File;
@@ -21,9 +23,9 @@ use crate::namespace::Namespace;
 use crate::path::Error;
 use crate::utils::ContainsStr;
 
-pub fn fetch_synthesized_interface_enum<'a>(reference: &SynthesizedInterfaceEnumReference, main_namespace: &'a Namespace) -> &'a SynthesizedInterfaceEnum {
-    let model = main_namespace.model_at_path(&reference.owner.as_model_object().unwrap().str_path()).unwrap();
-    model.cache.shape.interface_enums.get(&reference.kind).unwrap()
+pub fn fetch_synthesized_interface_enum<'a>(reference: &SynthesizedInterfaceEnumReference, schema: &'a Schema) -> &'a SynthesizedInterfaceEnum {
+    let model = schema.find_top_by_path(reference.owner.as_model_object().unwrap().path()).unwrap().as_model().unwrap();
+    model.resolved().interface_enums.get(&reference.kind).unwrap()
 }
 
 pub fn fetch_synthesized_enum<'a>(reference: &SynthesizedEnumReference, main_namespace: &'a Namespace) -> &'a SynthesizedEnum {

@@ -93,9 +93,12 @@ pub fn fetch_enum_variant_literal<I>(e: &EnumVariantLiteral, schema: &Schema, in
             let synthesized_enum = fetch_synthesized_enum(synthesized_enum_reference, namespace);
             fetch_enum_variant_literal_from_synthesized_enum(e, schema, info_provider, synthesized_enum, namespace)
         },
+        Type::SynthesizedInterfaceEnum(synthesized_interface_enum) => {
+            fetch_enum_variant_literal_from_synthesized_interface_enum(e, schema, info_provider, synthesized_interface_enum, namespace)
+        },
         Type::SynthesizedInterfaceEnumReference(synthesized_interface_enum_reference) => {
-            let synthesized_enum = fetch_synthesized_interface_enum(synthesized_interface_enum_reference, namespace);
-            fetch_enum_variant_literal_from_synthesized_interface_enum(e, schema, info_provider, synthesized_enum, namespace)
+            let synthesized_interface_enum = fetch_synthesized_interface_enum(synthesized_interface_enum_reference, schema);
+            fetch_enum_variant_literal_from_synthesized_interface_enum(e, schema, info_provider, synthesized_interface_enum, namespace)
         },
         _ => panic!()
     }

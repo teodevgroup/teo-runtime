@@ -192,6 +192,17 @@ impl Model {
             self.table_name = namespace_prefix + self.path.last().unwrap();
         }
 
+        // set primary index if it is set through model decorator
+        let mut primary_index_name = "".to_owned();
+        for index in self.indexes() {
+            if index.r#type().is_primary() {
+                primary_index_name = index.name.clone();
+            }
+        }
+        if !primary_index_name.is_empty() {
+            self.primary_index = primary_index_name;
+        }
+
         // load index and set primary index
         let mut indexes_from_fields = vec![];
         for field in self.fields.values() {
