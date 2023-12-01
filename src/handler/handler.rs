@@ -3,6 +3,8 @@ use serde::Serialize;
 use teo_parser::ast::handler::HandlerInputFormat;
 use teo_parser::r#type::Type;
 use crate::middleware::next::Next;
+use crate::model::Model;
+use crate::traits::named::Named;
 
 #[derive(Debug, Serialize, Copy, Clone, Hash, Eq, PartialEq)]
 pub enum Method {
@@ -42,3 +44,9 @@ pub struct Handler {
     pub call: &'static dyn Next,
 }
 
+impl Named for Handler {
+
+    fn name(&self) -> &str {
+        self.path.last().map(|s| s.as_str()).unwrap()
+    }
+}

@@ -7,6 +7,7 @@ use crate::handler::Handler;
 use crate::handler::handler::{Method};
 use crate::middleware::next::Next;
 use crate::request;
+use crate::traits::named::Named;
 use crate::utils::next_path;
 
 #[derive(Serialize, Debug)]
@@ -32,5 +33,11 @@ impl Group {
             })),
         };
         self.handlers.insert(name.to_owned(), handler);
+    }
+}
+
+impl Named for Group {
+    fn name(&self) -> &str {
+        self.path.last().unwrap().as_str()
     }
 }
