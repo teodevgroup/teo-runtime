@@ -53,6 +53,10 @@ impl Handler {
             false
         }
     }
+
+    pub fn has_body_input(&self) -> bool {
+        !(self.method == Method::Get || self.method == Method::Delete)
+    }
 }
 
 impl Named for Handler {

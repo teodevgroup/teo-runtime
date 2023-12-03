@@ -360,7 +360,7 @@ impl Model {
         result
     }
 
-    fn input_type_for_builtin_handler(&self, handler: Action) -> Type {
+    pub fn input_type_for_builtin_handler(&self, handler: Action) -> Type {
         match handler {
             FIND_UNIQUE_HANDLER => Type::SynthesizedShapeReference(SynthesizedShapeReference::find_unique_args(self.as_type_reference())),
             FIND_FIRST_HANDLER => Type::SynthesizedShapeReference(SynthesizedShapeReference::find_first_args(self.as_type_reference())),
@@ -381,7 +381,7 @@ impl Model {
         }
     }
 
-    fn output_type_for_builtin_handler(&self, handler: Action, namespace: &Namespace) -> Type {
+    pub fn output_type_for_builtin_handler(&self, handler: Action, namespace: &Namespace) -> Type {
         let data = namespace.interface_at_path(&vec!["std", "Data"]).unwrap().as_type_reference();
         let data_meta = namespace.interface_at_path(&vec!["std", "DataMeta"]).unwrap().as_type_reference();
         let paging_info = namespace.interface_at_path(&vec!["std", "PagingInfo"]).unwrap().as_type_reference();
@@ -397,7 +397,7 @@ impl Model {
                 ])
             },
             FIND_MANY_HANDLER => {
-                Type::InterfaceObject(data, vec![
+                Type::InterfaceObject(data_meta, vec![
                     Type::Array(Box::new(Type::SynthesizedShapeReference(SynthesizedShapeReference::result(self.as_type_reference())))),
                     Type::InterfaceObject(paging_info, vec![])
                 ])
@@ -428,25 +428,25 @@ impl Model {
                 ])
             },
             CREATE_MANY_HANDLER => {
-                Type::InterfaceObject(data, vec![
+                Type::InterfaceObject(data_meta, vec![
                     Type::Array(Box::new(Type::SynthesizedShapeReference(SynthesizedShapeReference::result(self.as_type_reference())))),
                     Type::InterfaceObject(paging_info, vec![])
                 ])
             },
             UPDATE_MANY_HANDLER => {
-                Type::InterfaceObject(data, vec![
+                Type::InterfaceObject(data_meta, vec![
                     Type::Array(Box::new(Type::SynthesizedShapeReference(SynthesizedShapeReference::result(self.as_type_reference())))),
                     Type::InterfaceObject(paging_info, vec![])
                 ])
             },
             COPY_MANY_HANDLER => {
-                Type::InterfaceObject(data, vec![
+                Type::InterfaceObject(data_meta, vec![
                     Type::Array(Box::new(Type::SynthesizedShapeReference(SynthesizedShapeReference::result(self.as_type_reference())))),
                     Type::InterfaceObject(paging_info, vec![])
                 ])
             },
             DELETE_MANY_HANDLER => {
-                Type::InterfaceObject(data, vec![
+                Type::InterfaceObject(data_meta, vec![
                     Type::Array(Box::new(Type::SynthesizedShapeReference(SynthesizedShapeReference::result(self.as_type_reference())))),
                     Type::InterfaceObject(paging_info, vec![])
                 ])
