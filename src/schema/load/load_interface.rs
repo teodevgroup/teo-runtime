@@ -1,6 +1,7 @@
 use teo_parser::ast::schema::Schema;
 use teo_parser::diagnostics::diagnostics::Diagnostics;
 use teo_parser::traits::has_availability::HasAvailability;
+use teo_parser::traits::identifiable::Identifiable;
 use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::traits::resolved::Resolve;
@@ -14,6 +15,7 @@ use crate::schema::load::load_comment::load_comment;
 pub fn load_interface(main_namespace: &mut Namespace, schema: &Schema, interface_declaration: &teo_parser::ast::interface::InterfaceDeclaration, diagnostics: &mut Diagnostics) -> Result<()> {
     let mut interface = Interface::new();
     interface.path = interface_declaration.string_path().clone();
+    interface.parser_path = interface_declaration.path().clone();
     interface.comment = load_comment(interface_declaration.comment());
     if let Some(generics_declaration) = interface_declaration.generics_declaration() {
         for gen in generics_declaration.identifiers() {

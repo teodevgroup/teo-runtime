@@ -4,8 +4,12 @@ use indexmap::IndexMap;
 use maplit::{btreemap, btreeset};
 use serde::Serialize;
 use teo_parser::ast::model::ModelResolved;
+use teo_parser::r#type::reference::Reference;
+use teo_parser::r#type::synthesized_shape_reference::SynthesizedShapeReference;
+use teo_parser::r#type::Type;
 use teo_result::{Result, Error};
 use crate::action::Action;
+use crate::action::action::{AGGREGATE_HANDLER, COPY_HANDLER, COPY_MANY_HANDLER, COUNT_HANDLER, CREATE_HANDLER, CREATE_MANY_HANDLER, DELETE_HANDLER, DELETE_MANY_HANDLER, FIND_FIRST_HANDLER, FIND_MANY_HANDLER, FIND_UNIQUE_HANDLER, GROUP_BY_HANDLER, UPDATE_HANDLER, UPDATE_MANY_HANDLER, UPSERT_HANDLER};
 use crate::comment::Comment;
 use crate::model;
 use crate::model::field::column_named::ColumnNamed;
@@ -18,6 +22,7 @@ use crate::model::migration::Migration;
 use crate::model::property::Property;
 use crate::model::relation::delete::Delete;
 use crate::model::relation::Relation;
+use crate::namespace::Namespace;
 use crate::object::Object;
 use crate::pipeline::pipeline::Pipeline;
 use crate::previous::Previous;
@@ -26,6 +31,7 @@ use crate::traits::documentable::Documentable;
 #[derive(Debug, Serialize)]
 pub struct Model {
     pub path: Vec<String>,
+    pub parser_path: Vec<usize>,
     pub comment: Option<Comment>,
     #[serde(rename = "tableName")]
     pub table_name: String,
@@ -59,6 +65,7 @@ pub struct Model {
     pub migration: Migration,
     pub data: BTreeMap<String, Object>,
     pub cache: Cache,
+    pub builtin_handlers: Vec<Action>,
 }
 
 impl PartialEq for Model {
@@ -73,6 +80,7 @@ impl Model {
     pub fn new() -> Self {
         Self {
             path: vec![],
+            parser_path: vec![],
             table_name: "".to_string(),
             generate_client: true,
             generate_entity: true,
@@ -94,6 +102,7 @@ impl Model {
             migration: Default::default(),
             data: btreemap! {},
             cache: Cache::new(),
+            builtin_handlers: vec![],
         }
     }
 
@@ -338,7 +347,131 @@ impl Model {
             }
             map
         };
+        self.builtin_handlers = self.figure_out_builtin_handlers();
         Ok(())
+    }
+
+    fn figure_out_builtin_handlers(&self) -> Vec<Action> {
+        // TODO: filter
+        let mut result = vec![];
+        for action in Action::builtin_handlers() {
+            result.push(*action);
+        }
+        result
+    }
+
+    fn input_type_for_builtin_handler(&self, handler: Action) -> Type {
+        match handler {
+            FIND_UNIQUE_HANDLER => Type::SynthesizedShapeReference(SynthesizedShapeReference::find_unique_args(self.as_type_reference())),
+            FIND_FIRST_HANDLER => Type::SynthesizedShapeReference(SynthesizedShapeReference::find_first_args(self.as_type_reference())),
+            FIND_MANY_HANDLER => Type::SynthesizedShapeReference(SynthesizedShapeReference::find_many_args(self.as_type_reference())),
+            CREATE_HANDLER => Type::SynthesizedShapeReference(SynthesizedShapeReference::create_args(self.as_type_reference())),
+            UPDATE_HANDLER => Type::SynthesizedShapeReference(SynthesizedShapeReference::update_args(self.as_type_reference())),
+            COPY_HANDLER => Type::SynthesizedShapeReference(SynthesizedShapeReference::copy_args(self.as_type_reference())),
+            UPSERT_HANDLER => Type::SynthesizedShapeReference(SynthesizedShapeReference::upsert_args(self.as_type_reference())),
+            DELETE_HANDLER => Type::SynthesizedShapeReference(SynthesizedShapeReference::delete_args(self.as_type_reference())),
+            CREATE_MANY_HANDLER => Type::SynthesizedShapeReference(SynthesizedShapeReference::create_many_args(self.as_type_reference())),
+            UPDATE_MANY_HANDLER => Type::SynthesizedShapeReference(SynthesizedShapeReference::update_many_args(self.as_type_reference())),
+            COPY_MANY_HANDLER => Type::SynthesizedShapeReference(SynthesizedShapeReference::copy_many_args(self.as_type_reference())),
+            DELETE_MANY_HANDLER => Type::SynthesizedShapeReference(SynthesizedShapeReference::delete_many_args(self.as_type_reference())),
+            COUNT_HANDLER => Type::SynthesizedShapeReference(SynthesizedShapeReference::count_args(self.as_type_reference())),
+            AGGREGATE_HANDLER => Type::SynthesizedShapeReference(SynthesizedShapeReference::aggregate_args(self.as_type_reference())),
+            GROUP_BY_HANDLER => Type::SynthesizedShapeReference(SynthesizedShapeReference::group_by_args(self.as_type_reference())),
+            _ => unreachable!()
+        }
+    }
+
+    fn output_type_for_builtin_handler(&self, handler: Action, namespace: &Namespace) -> Type {
+        let data = namespace.interface_at_path(&vec!["std", "Data"]).unwrap().as_type_reference();
+        let data_meta = namespace.interface_at_path(&vec!["std", "DataMeta"]).unwrap().as_type_reference();
+        let paging_info = namespace.interface_at_path(&vec!["std", "PagingInfo"]).unwrap().as_type_reference();
+        match handler {
+            FIND_UNIQUE_HANDLER => {
+                Type::InterfaceObject(data, vec![
+                    Type::SynthesizedShapeReference(SynthesizedShapeReference::result(self.as_type_reference()))
+                ])
+            },
+            FIND_FIRST_HANDLER => {
+                Type::InterfaceObject(data, vec![
+                    Type::SynthesizedShapeReference(SynthesizedShapeReference::result(self.as_type_reference()))
+                ])
+            },
+            FIND_MANY_HANDLER => {
+                Type::InterfaceObject(data, vec![
+                    Type::Array(Box::new(Type::SynthesizedShapeReference(SynthesizedShapeReference::result(self.as_type_reference())))),
+                    Type::InterfaceObject(paging_info, vec![])
+                ])
+            },
+            CREATE_HANDLER => {
+                Type::InterfaceObject(data, vec![
+                    Type::SynthesizedShapeReference(SynthesizedShapeReference::result(self.as_type_reference()))
+                ])
+            },
+            UPDATE_HANDLER => {
+                Type::InterfaceObject(data, vec![
+                    Type::SynthesizedShapeReference(SynthesizedShapeReference::result(self.as_type_reference()))
+                ])
+            },
+            COPY_HANDLER => {
+                Type::InterfaceObject(data, vec![
+                    Type::SynthesizedShapeReference(SynthesizedShapeReference::result(self.as_type_reference()))
+                ])
+            },
+            UPSERT_HANDLER => {
+                Type::InterfaceObject(data, vec![
+                    Type::SynthesizedShapeReference(SynthesizedShapeReference::result(self.as_type_reference()))
+                ])
+            },
+            DELETE_HANDLER => {
+                Type::InterfaceObject(data, vec![
+                    Type::SynthesizedShapeReference(SynthesizedShapeReference::result(self.as_type_reference()))
+                ])
+            },
+            CREATE_MANY_HANDLER => {
+                Type::InterfaceObject(data, vec![
+                    Type::Array(Box::new(Type::SynthesizedShapeReference(SynthesizedShapeReference::result(self.as_type_reference())))),
+                    Type::InterfaceObject(paging_info, vec![])
+                ])
+            },
+            UPDATE_MANY_HANDLER => {
+                Type::InterfaceObject(data, vec![
+                    Type::Array(Box::new(Type::SynthesizedShapeReference(SynthesizedShapeReference::result(self.as_type_reference())))),
+                    Type::InterfaceObject(paging_info, vec![])
+                ])
+            },
+            COPY_MANY_HANDLER => {
+                Type::InterfaceObject(data, vec![
+                    Type::Array(Box::new(Type::SynthesizedShapeReference(SynthesizedShapeReference::result(self.as_type_reference())))),
+                    Type::InterfaceObject(paging_info, vec![])
+                ])
+            },
+            DELETE_MANY_HANDLER => {
+                Type::InterfaceObject(data, vec![
+                    Type::Array(Box::new(Type::SynthesizedShapeReference(SynthesizedShapeReference::result(self.as_type_reference())))),
+                    Type::InterfaceObject(paging_info, vec![])
+                ])
+            },
+            COUNT_HANDLER => {
+                Type::InterfaceObject(data, vec![
+                    Type::Int64
+                ])
+            },
+            AGGREGATE_HANDLER => {
+                Type::InterfaceObject(data, vec![
+                    Type::SynthesizedShapeReference(SynthesizedShapeReference::aggregate_result(self.as_type_reference()))
+                ])
+            },
+            GROUP_BY_HANDLER => {
+                Type::InterfaceObject(data, vec![
+                    Type::SynthesizedShapeReference(SynthesizedShapeReference::group_by_result(self.as_type_reference()))
+                ])
+            },
+            _ => unreachable!()
+        }
+    }
+
+    fn as_type_reference(&self) -> Reference {
+        Reference::new(self.parser_path.clone(), self.path.clone())
     }
 }
 

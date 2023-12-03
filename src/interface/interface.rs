@@ -3,6 +3,7 @@ use indexmap::indexmap;
 use maplit::btreemap;
 use serde::Serialize;
 use teo_parser::ast::interface::InterfaceDeclarationResolved;
+use teo_parser::r#type::reference::Reference;
 use teo_parser::r#type::synthesized_shape::SynthesizedShape;
 use teo_parser::r#type::Type;
 use crate::comment::Comment;
@@ -13,6 +14,7 @@ use crate::traits::named::Named;
 #[derive(Debug, Serialize)]
 pub struct Interface {
     pub path: Vec<String>,
+    pub parser_path: Vec<usize>,
     pub comment: Option<Comment>,
     pub fields: BTreeMap<String, Field>,
     pub generic_names: Vec<String>,
@@ -25,6 +27,7 @@ impl Interface {
     pub fn new() -> Self {
         Self {
             path: vec![],
+            parser_path: vec![],
             comment: None,
             fields: Default::default(),
             generic_names: vec![],
@@ -51,6 +54,10 @@ impl Interface {
             return self.generic_names().iter().enumerate().map(|(index, name)| (name.to_string(), types.get(index).unwrap().clone())).collect();
         }
         btreemap!{}
+    }
+
+    pub fn as_type_reference(&self) -> Reference {
+        Reference::new(self.parser_path.clone(), self.path.clone())
     }
 }
 

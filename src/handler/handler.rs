@@ -44,6 +44,17 @@ pub struct Handler {
     pub call: &'static dyn Next,
 }
 
+impl Handler {
+
+    pub fn has_custom_url_args(&self) -> bool {
+        if self.url.is_some() {
+            self.url.as_ref().unwrap().contains("*") || self.url.as_ref().unwrap().contains(":")
+        } else {
+            false
+        }
+    }
+}
+
 impl Named for Handler {
 
     fn name(&self) -> &str {

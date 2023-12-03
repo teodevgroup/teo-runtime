@@ -1,4 +1,5 @@
 use std::ops::{BitAnd, BitOr, BitXor, Neg, Not};
+use std::slice::Iter;
 use serde::Serialize;
 use super::const_values::*;
 use teo_result::Error;
@@ -248,6 +249,48 @@ impl Action {
                 ((result & ALL_AMOUNTS).0 != 0)
         }
         false
+    }
+
+    pub fn builtin_handlers() -> Iter<'static, Action> {
+        static HANDLER_TYPES: [Action; 15] = [
+            FIND_UNIQUE_HANDLER,
+            FIND_FIRST_HANDLER,
+            FIND_MANY_HANDLER,
+            CREATE_HANDLER,
+            UPDATE_HANDLER,
+            UPSERT_HANDLER,
+            COPY_HANDLER,
+            DELETE_HANDLER,
+            CREATE_MANY_HANDLER,
+            UPDATE_MANY_HANDLER,
+            COPY_MANY_HANDLER,
+            DELETE_MANY_HANDLER,
+            COUNT_HANDLER,
+            AGGREGATE_HANDLER,
+            GROUP_BY_HANDLER,
+        ];
+        HANDLER_TYPES.iter()
+    }
+
+    pub fn as_handler_str(&self) -> &'static str {
+        match *self {
+            FIND_UNIQUE_HANDLER => "findUnique",
+            FIND_FIRST_HANDLER => "findFirst",
+            FIND_MANY_HANDLER => "findMany",
+            CREATE_HANDLER => "create",
+            UPDATE_HANDLER => "update",
+            COPY_HANDLER => "copy",
+            UPSERT_HANDLER => "upsert",
+            DELETE_HANDLER => "delete",
+            CREATE_MANY_HANDLER => "createMany",
+            UPDATE_MANY_HANDLER => "updateMany",
+            COPY_MANY_HANDLER => "copyMany",
+            DELETE_MANY_HANDLER => "deleteMany",
+            COUNT_HANDLER => "count",
+            AGGREGATE_HANDLER => "aggregate",
+            GROUP_BY_HANDLER => "groupBy",
+            _ => unreachable!()
+        }
     }
 }
 
