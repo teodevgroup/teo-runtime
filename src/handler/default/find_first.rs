@@ -18,7 +18,7 @@ pub async fn find_first(ctx: &request::Ctx) -> crate::path::Result<Response> {
     match result {
         None => Ok(Response::data(Value::Null)?),
         Some(obj) => {
-            let obj_data = obj.to_json_internal(&path!["data"]).await?;
+            let obj_data = obj.to_teon_internal(&path!["data"]).await?;
             Ok(Response::data(obj_data)?)
         }
     }

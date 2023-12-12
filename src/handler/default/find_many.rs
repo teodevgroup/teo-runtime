@@ -36,7 +36,7 @@ pub async fn find_many(ctx: &request::Ctx) -> crate::path::Result<Response> {
 
     let mut result_json: Vec<Value> = vec![];
     for (index, result) in results.iter().enumerate() {
-        match result.to_json_internal(&path!["data", index]).await {
+        match result.to_teon_internal(&path!["data", index]).await {
             Ok(result) => result_json.push(result),
             Err(_) => return Err(crate::path::Error::unauthorized_error(path!["data", index], "not allowed to read")),
         }

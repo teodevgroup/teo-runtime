@@ -12,7 +12,7 @@ pub async fn delete(req_ctx: &request::Ctx) -> crate::path::Result<Response> {
     let value: Value = req_ctx.transaction_ctx().run_transaction(vec![model], |ctx: transaction::Ctx| async move {
         let object = ctx.find_unique_internal(model, req_ctx.body(), true, action, Some(req_ctx.clone()), path![]).await.into_not_found_error(path![])?;
         object.delete_internal(path!["delete"]).await?;
-        Ok(object.to_json_internal(&path!["data"]).await?)
+        Ok(object.to_teon_internal(&path!["data"]).await?)
     }).await?;
     Ok(Response::data(value)?)
 }

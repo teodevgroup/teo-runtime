@@ -786,8 +786,12 @@ impl Object {
         self.trigger_after_delete_callbacks(path.as_ref()).await
     }
 
+    pub async fn to_teon(&self) -> crate::path::Result<Value> {
+        self.to_teon_internal(&path![]).await
+    }
+
     #[async_recursion]
-    pub async fn to_json_internal<'a>(&self, path: &KeyPath) -> crate::path::Result<Value> {
+    pub async fn to_teon_internal<'a>(&self, path: &KeyPath) -> crate::path::Result<Value> {
         // check read permission
         self.check_model_read_permission(path.as_ref()).await?;
         // output
@@ -802,7 +806,7 @@ impl Object {
                         let o = self.get_query_relation_object(key, &(path + key)).unwrap();
                         match o {
                             Some(o) => {
-                                map.insert(key.to_string(), o.to_json_internal(&(path.as_ref() + relation.name())).await.unwrap());
+                                map.insert(key.to_string(), o.to_teon_internal(&(path.as_ref() + relation.name())).await.unwrap());
                             },
                             None => ()
                         };
@@ -810,7 +814,7 @@ impl Object {
                         let mut result_vec = vec![];
                         let vec = self.get_relation_vec(key).unwrap();
                         for (index, o) in vec.iter().enumerate() {
-                            result_vec.push(o.to_json_internal(&(path.as_ref() + relation.name() + index)).await?);
+                            result_vec.push(o.to_teon_internal(&(path.as_ref() + relation.name() + index)).await?);
                         }
                         map.insert(key.to_string(), Value::Array(result_vec));
                     }

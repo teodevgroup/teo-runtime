@@ -24,7 +24,7 @@ pub async fn copy(req_ctx: &request::Ctx) -> crate::path::Result<Response> {
         }
         new.save_with_session_and_path(&path!["copy"]).await?;
         let refreshed = new.refreshed(include, select).await?;
-        refreshed.to_json_internal(&path!["data"]).await
+        refreshed.to_teon_internal(&path!["data"]).await
     }).await?;
     Ok(Response::data(value)?)
 }

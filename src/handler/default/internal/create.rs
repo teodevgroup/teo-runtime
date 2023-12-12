@@ -22,5 +22,5 @@ pub(in crate::handler) async fn create_internal<'a>(transaction_ctx: transaction
     }?;
     obj.save_with_session_and_path(path).await?;
     let refreshed = obj.refreshed(include, select).await?;
-    refreshed.to_json_internal(&path!["data"]).await
+    refreshed.to_teon_internal(&path!["data"]).await
 }

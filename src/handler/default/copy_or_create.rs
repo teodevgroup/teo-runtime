@@ -23,7 +23,7 @@ pub async fn copy_or_create(req_ctx: &request::Ctx) -> crate::path::Result<Respo
                 }
                 new.save_with_session_and_path(&path!["copy"]).await?;
                 let refreshed = new.refreshed(include, select).await?;
-                refreshed.to_json_internal(&path!["data"]).await
+                refreshed.to_teon_internal(&path!["data"]).await
             }
             None => {
                 let create = req_ctx.body().get("create");
@@ -33,7 +33,7 @@ pub async fn copy_or_create(req_ctx: &request::Ctx) -> crate::path::Result<Respo
                 }
                 new.save_with_session_and_path(&path!["create"]).await?;
                 let refreshed = new.refreshed(include, select).await?;
-                refreshed.to_json_internal(&path!["data"]).await
+                refreshed.to_teon_internal(&path!["data"]).await
             }
         }
     }).await?;

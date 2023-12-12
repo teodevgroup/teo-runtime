@@ -14,7 +14,7 @@ pub async fn delete_many(req_ctx: &request::Ctx) -> crate::path::Result<Response
         let mut ret_data: Vec<Value> = vec![];
         for (index, object) in objects.iter().enumerate() {
             object.delete_internal(path!["data", index]).await?;
-            ret_data.push(object.to_json_internal(&path!["data", index]).await?);
+            ret_data.push(object.to_teon_internal(&path!["data", index]).await?);
             count += 1;
         }
         Ok((ret_data, count))

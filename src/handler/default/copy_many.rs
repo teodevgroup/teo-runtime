@@ -25,7 +25,7 @@ pub async fn copy_many(req_ctx: &request::Ctx) -> crate::path::Result<Response> 
             }
             new.save_with_session_and_path(&path!["copy"]).await?;
             let refreshed = new.refreshed(include, select).await?;
-            retval.push(refreshed.to_json_internal(&path!["data", index]).await?);
+            retval.push(refreshed.to_teon_internal(&path!["data", index]).await?);
             count += 1;
         }
         Ok((retval, count))

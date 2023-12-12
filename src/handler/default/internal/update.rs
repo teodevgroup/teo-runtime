@@ -9,5 +9,5 @@ pub(in crate::handler) async fn update_internal<'a>(object: Object, update: Opti
     object.set_teon_with_path(updater, &path).await?;
     object.save_with_session_and_path(path).await?;
     let refreshed = object.refreshed(include, select).await?;
-    refreshed.to_json_internal(&path!["data"]).await
+    refreshed.to_teon_internal(&path!["data"]).await
 }
