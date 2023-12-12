@@ -24,4 +24,8 @@ impl HandlerMatch {
     pub fn handler_name(&self) -> &str {
         self.name.as_str()
     }
+
+    pub fn captures(&self) -> &IndexMap<String, String> {
+        &self.captures
+    }
 }

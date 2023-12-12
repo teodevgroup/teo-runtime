@@ -14,10 +14,9 @@ pub(super) fn load_use_middlewares(main_namespace: &mut Namespace, schema: &Sche
         let use_middlewares_block = schema.find_top_by_path(&path).unwrap().as_use_middlewares_block().unwrap();
         let mut block = Block { uses: vec![] };
         for expression in use_middlewares_block.array_literal().expressions() {
-            if expression.resolved().value.as_ref().unwrap().is_array() {
+            if let Some(reference_info) = expression.resolved().reference_info() {
+                let path = reference_info.reference.str_path();
                 let mut arguments = Arguments::default();
-                let array = expression.resolved().value.as_ref().unwrap();
-                let path: Vec<&str> = array.as_array().unwrap().iter().map(|v| v.as_str().unwrap()).collect();
                 if let Some(middleware) = main_namespace.middleware_at_path(&path) {
                     let creator = middleware.creator.clone();
                     if expression.kind.is_unit() {
