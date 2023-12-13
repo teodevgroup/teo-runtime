@@ -139,6 +139,10 @@ impl Namespace {
         self.path.iter().map(|s| s.as_str()).collect()
     }
 
+    pub fn namespace(&self, name: &str) -> Option<&Namespace> {
+        self.namespaces.get(name)
+    }
+
     pub fn namespace_mut(&mut self, name: &str) -> Option<&mut Namespace> {
         self.namespaces.get_mut(name)
     }
@@ -150,18 +154,6 @@ impl Namespace {
         self.namespaces.get_mut(name).unwrap()
     }
 
-    pub fn namespace_mut_or_create_at_path(&mut self, path: &Vec<&str>) -> &mut Namespace {
-        let mut current = self;
-        for item in path {
-            current = current.namespace_mut_or_create(*item)
-        }
-        current
-    }
-
-    pub fn namespace(&self, name: &str) -> Option<&Namespace> {
-        self.namespaces.get(name)
-    }
-
     pub fn namespace_at_path(&self, path: &Vec<&str>) -> Option<&Namespace> {
         let mut current = Some(self);
         for item in path {
@@ -169,6 +161,14 @@ impl Namespace {
                 return None;
             }
             current = current.unwrap().namespace(item);
+        }
+        current
+    }
+
+    pub fn namespace_mut_or_create_at_path(&mut self, path: &Vec<&str>) -> &mut Namespace {
+        let mut current = self;
+        for item in path {
+            current = current.namespace_mut_or_create(*item)
         }
         current
     }

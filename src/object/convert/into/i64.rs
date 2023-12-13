@@ -2,7 +2,7 @@ use teo_teon::Value;
 use crate::object::Object;
 use teo_result::Error;
 
-impl<'a> TryFrom<&'a Object> for i32 {
+impl<'a> TryFrom<&'a Object> for i64 {
 
     type Error = Error;
 
@@ -10,12 +10,12 @@ impl<'a> TryFrom<&'a Object> for i32 {
         let teon: &'a Value = value.try_into()?;
         match teon.try_into() {
             Ok(v) => Ok(v),
-            Err(_) => Err(Error::new(format!("object is not i32: {:?}", value)))
+            Err(_) => Err(Error::new(format!("object is not i64: {:?}", value)))
         }
     }
 }
 
-impl TryFrom<Object> for i32 {
+impl TryFrom<Object> for i64 {
 
     type Error = Error;
 
@@ -23,7 +23,7 @@ impl TryFrom<Object> for i32 {
         let teon: Value = value.try_into()?;
         match teon.try_into() {
             Ok(v) => Ok(v),
-            Err(_) => Err(Error::new(format!("object is not i32: {:?}", value)))
+            Err(_) => Err(Error::new(format!("object is not i64: {:?}", value)))
         }
     }
 }

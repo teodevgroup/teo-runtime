@@ -17,6 +17,7 @@ pub mod method;
 pub mod model_object;
 pub mod struct_object;
 pub mod i32;
+pub mod i64;
 pub mod usize;
 pub mod str;
 pub mod range;
