@@ -135,7 +135,7 @@ impl Ctx {
         }
     }
 
-    pub async fn run_transaction<F, Fut, C, R>(&self, models: Vec<&'static Model>, f: F) -> Result<R> where
+    pub async fn run_transaction<F, Fut, C, R>(&self, models: Vec<&'static Model>, f: F) -> crate::path::Result<R> where
         F: Fn(C) -> Fut,
         C: for <'a> From<&'a Ctx>,
         Fut: Future<Output = crate::path::Result<R>> {
