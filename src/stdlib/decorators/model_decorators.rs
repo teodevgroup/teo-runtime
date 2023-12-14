@@ -31,13 +31,15 @@ pub(in crate::stdlib) fn load_model_decorators(namespace: &mut Namespace) {
     });
 
     namespace.define_model_decorator("migration", |arguments, model| {
-        let table_name: Value = arguments.get("tableName")?;
+        let table_name: Result<Value> = arguments.get("renamed");
         let version: Result<String> = arguments.get("version");
         let drop: Result<bool> = arguments.get("drop");
-        if table_name.is_string() {
-            model.migration.renamed = Some(vec![table_name.as_str().unwrap().to_owned()]);
-        } else if table_name.is_array() {
-            model.migration.renamed = Some(table_name.as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_owned()).collect());
+        if let Ok(table_name) = table_name {
+            if table_name.is_string() {
+                model.migration.renamed = Some(vec![table_name.as_str().unwrap().to_owned()]);
+            } else if table_name.is_array() {
+                model.migration.renamed = Some(table_name.as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_owned()).collect());
+            }
         }
         if let Ok(version) = version {
             model.migration.version = Some(version);
