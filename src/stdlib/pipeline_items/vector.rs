@@ -4,6 +4,7 @@ use crate::pipeline::Ctx;
 use teo_result::ResultExt;
 use crate::object::Object;
 use teo_result::Error;
+use teo_teon::types::range::Range;
 use teo_teon::Value;
 
 pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {
@@ -65,14 +66,14 @@ pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {
 
     namespace.define_pipeline_item("hasLength", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_into_err_prefix("hasLength")?;
-        let (lower , upper , closed) = if input.is_any_int(){
-            let n = input.to_usize().unwrap();
-            (n ,n ,true)
-        } else if input.is_range() {
-            let r = input.as_range().unwrap();
-            let start = r.start.to_usize().unwrap();
-            let end = r.end.to_usize().unwrap();
-            (start, end, r.closed)
+        let len_arg: Option<usize> = args.get_optional("len").err_prefix("hasLength(len)")?.try_into()?;
+        let range_arg: Option<&Range> = args.get_optional("range").err_prefix("hasLength(range)")?.try_into()?;
+        let (lower , upper , closed) = if let Some(len) = len_arg {
+            (len, len, true)
+        } else if let Some(range) = range_arg {
+            let start = range.start.to_usize().unwrap();
+            let end = range.end.to_usize().unwrap();
+            (start, end, range.closed)
         } else {
             unreachable!()
         };
