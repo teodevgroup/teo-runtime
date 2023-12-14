@@ -89,13 +89,13 @@ pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {
             if len > upper {
                 Err(Error::new(format!("input length is not between {lower} and {upper}")))?
             } else {
-                Ok(Object::from(input.as_int().unwrap()))
+                Ok(ctx.value().clone())
             }
         } else {
             if len >= upper {
                 Err(Error::new(format!("input length is not between {lower} and {upper}")))?
             } else {
-                Ok(Object::from(input.as_int().unwrap()))
+                Ok(ctx.value().clone())
             }
         }
     });
