@@ -19,14 +19,23 @@ impl Response {
         }
     }
 
-    pub fn json(value: Value) -> Result<Response> {
+    pub fn string(content: String, content_type: &str) -> Response {
         let mut inner = ResponseInner::new();
+        inner.body = Body::string(content);
+        inner.headers.set("content-type", content_type);
+        Self {
+            inner: Arc::new(Mutex::new(inner)),
+        }
+    }
+
+    pub fn json(value: Value) -> Result<Response> {
         let json_value = serde_json::Value::try_from(value)?;
         let string_value = serde_json::to_string(&json_value).unwrap();
-        inner.body = Body::string(string_value);
-        Ok(Self {
-            inner: Arc::new(Mutex::new(inner)),
-        })
+        Ok(Self::string(string_value, "application/json"))
+    }
+
+    pub fn html(content: String) -> Result<Response> {
+        Ok(Self::string(content, "text/html"))
     }
 
     pub fn data(value: Value) -> Result<Response> {
