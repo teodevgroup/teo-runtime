@@ -22,6 +22,7 @@ pub struct Ctx {
 #[derive(Debug)]
 struct CtxInner {
     connection_ctx: connection::Ctx,
+    is_transaction: bool,
     transactions: tokio::sync::Mutex<BTreeMap<Vec<String>, Arc<dyn Transaction>>>
 }
 
@@ -31,6 +32,27 @@ impl Ctx {
         Self {
             inner: Arc::new(CtxInner {
                 connection_ctx,
+                is_transaction: false,
+                transactions: tokio::sync::Mutex::new(btreemap!{})
+            })
+        }
+    }
+
+    pub fn transaction_copy(&self) -> Self {
+        Self {
+            inner: Arc::new(CtxInner {
+                connection_ctx: self.inner.connection_ctx.clone(),
+                is_transaction: true,
+                transactions: tokio::sync::Mutex::new(btreemap!{})
+            })
+        }
+    }
+
+    pub fn no_transaction_copy(&self) -> Self {
+        Self {
+            inner: Arc::new(CtxInner {
+                connection_ctx: self.inner.connection_ctx.clone(),
+                is_transaction: false,
                 transactions: tokio::sync::Mutex::new(btreemap!{})
             })
         }
@@ -82,8 +104,16 @@ impl Ctx {
         );
     }
 
-    pub(crate) async fn transaction_for_model(&self, model: &Model) -> Option<Arc<dyn Transaction>> {
-        self.transaction_for_namespace_path(&model.namespace_path()).await
+    pub(crate) async fn transaction_for_model(&self, model: &Model) -> Arc<dyn Transaction> {
+        if let Some(transaction) = self.transaction_for_namespace_path(&model.namespace_path()).await {
+            transaction
+        } else {
+            if self.inner.is_transaction {
+                self.transaction_for_model_or_create(model).await.unwrap()
+            } else {
+                self.transaction_for_model_or_no_transaction(model).await.unwrap()
+            }
+        }
     }
 
     async fn transaction_for_namespace(&self, namespace: &Namespace) -> Option<Arc<dyn Transaction>> {
@@ -135,19 +165,17 @@ impl Ctx {
         }
     }
 
-    pub async fn run_transaction<F, Fut, C, R>(&self, models: Vec<&'static Model>, f: F) -> crate::path::Result<R> where
+    pub async fn run_transaction<F, Fut, C, R>(&self, f: F) -> crate::path::Result<R> where
         F: Fn(C) -> Fut,
         C: for <'a> From<&'a Ctx>,
         Fut: Future<Output = crate::path::Result<R>> {
-        for model in models {
-            let transaction = self.transaction_for_model_or_create(model).await?;
-            self.set_transaction_for_model(model, transaction);
-        }
-        let result = f(self.into()).await;
+        let ctx = self.transaction_copy();
+        let ctx_clone = ctx.clone();
+        let result = f((&ctx_clone).into()).await;
         if result.is_ok() {
-            self.commit().await?;
+            ctx.commit().await?;
         } else {
-            self.abort().await?;
+            ctx.abort().await?;
         }
         Ok(result?)
     }
@@ -200,12 +228,12 @@ impl Ctx {
     }
 
     pub async fn find_unique_internal(&self, model: &'static Model, finder: &Value, ignore_select_and_include: bool, action: Action, req_ctx: Option<request::Ctx>, path: KeyPath) -> crate::path::Result<Option<model::Object>> {
-        let transaction = self.transaction_for_model_or_no_transaction(model).await?;
+        let transaction = self.transaction_for_model(model).await;
         transaction.find_unique(model, finder, ignore_select_and_include, action, self.clone(), req_ctx, path).await
     }
 
     pub async fn find_first_internal(&self, model: &'static Model, finder: &Value, ignore_select_and_include: bool, action: Action, req_ctx: Option<request::Ctx>, path: KeyPath) -> crate::path::Result<Option<model::Object>> {
-        let transaction = self.transaction_for_model_or_no_transaction(model).await?;
+        let transaction = self.transaction_for_model(model).await;
         let mut finder = finder.as_dictionary().clone().unwrap().clone();
         finder.insert("take".to_string(), Value::Int64(1));
         let finder = Value::Dictionary(finder);
@@ -218,7 +246,7 @@ impl Ctx {
     }
 
     pub async fn find_many_internal(&self, model: &'static Model, finder: &Value, ignore_select_and_include: bool, action: Action, req_ctx: Option<request::Ctx>, path: KeyPath) -> crate::path::Result<Vec<model::Object>> {
-        let transaction = self.transaction_for_model_or_no_transaction(model).await?;
+        let transaction = self.transaction_for_model(model).await;
         transaction.find_many(model, finder, ignore_select_and_include, action, self.clone(), req_ctx, path).await
     }
 
@@ -243,17 +271,17 @@ impl Ctx {
     }
 
     pub async fn count(&self, model: &'static Model, finder: &Value, path: KeyPath) -> crate::path::Result<usize> {
-        let transaction = self.transaction_for_model_or_no_transaction(model).await?;
+        let transaction = self.transaction_for_model(model).await;
         transaction.count(model, finder, self.clone(), path).await
     }
 
     pub async fn aggregate(&self, model: &'static Model, finder: &Value, path: KeyPath) -> crate::path::Result<Value> {
-        let transaction = self.transaction_for_model_or_no_transaction(model).await?;
+        let transaction = self.transaction_for_model(model).await;
         transaction.aggregate(model, finder, self.clone(), path).await
     }
 
     pub async fn group_by(&self, model: &'static Model, finder: &Value, path: KeyPath) -> crate::path::Result<Vec<Value>> {
-        let transaction = self.transaction_for_model_or_no_transaction(model).await?;
+        let transaction = self.transaction_for_model(model).await;
         transaction.group_by(model, finder, self.clone(), path).await
     }
 

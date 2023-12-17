@@ -10,7 +10,7 @@ use crate::object::error_ext;
 pub async fn create_many(req_ctx: &request::Ctx) -> crate::path::Result<Response> {
     let model = req_ctx.namespace().model_at_path(&req_ctx.handler_match().path()).unwrap();
     let action = CREATE | MANY | ENTRY;
-    let (objects, count) = req_ctx.transaction_ctx().run_transaction(vec![model], |ctx: transaction::Ctx| async move {
+    let (objects, count) = req_ctx.transaction_ctx().run_transaction(|ctx: transaction::Ctx| async move {
         let input = req_ctx.body().as_dictionary().unwrap();
         let create = input.get("create");
         let include = input.get("include");

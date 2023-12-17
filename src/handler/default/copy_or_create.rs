@@ -8,7 +8,7 @@ use crate::connection::transaction;
 pub async fn copy_or_create(req_ctx: &request::Ctx) -> crate::path::Result<Response> {
     let model = req_ctx.namespace().model_at_path(&req_ctx.handler_match().path()).unwrap();
     let action = COPY | SINGLE | ENTRY;
-    let value: Value = req_ctx.transaction_ctx().run_transaction(vec![model], |ctx: transaction::Ctx| async move {
+    let value: Value = req_ctx.transaction_ctx().run_transaction(|ctx: transaction::Ctx| async move {
         let include = req_ctx.body().get("include");
         let select = req_ctx.body().get("select");
         let object = ctx.find_unique_internal(model, req_ctx.body(), true, action, Some(req_ctx.clone()), path![]).await?;
