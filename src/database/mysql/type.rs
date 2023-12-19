@@ -9,6 +9,7 @@ pub enum MySQLType {
     MediumText,
     LongText,
     Bit(Option<i32>),
+    // second parameter is signed
     TinyInt(Option<i32>, bool),
     Int(Option<i32>, bool),
     SmallInt(Option<i32>, bool),
