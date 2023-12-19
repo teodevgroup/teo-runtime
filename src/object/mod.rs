@@ -16,7 +16,7 @@ use crate::interface_enum_variant::InterfaceEnumVariant;
 
 #[derive(Debug, Clone)]
 pub struct Object {
-    inner: Arc<ObjectInner>,
+    pub inner: Arc<ObjectInner>,
 }
 
 #[derive(Debug)]
