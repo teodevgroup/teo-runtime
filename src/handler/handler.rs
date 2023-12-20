@@ -36,6 +36,7 @@ pub struct Handler {
     pub path: Vec<String>,
     pub input_type: Type,
     pub output_type: Type,
+    pub nonapi: bool,
     pub format: HandlerInputFormat,
     pub method: Method,
     pub url: Option<String>,

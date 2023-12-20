@@ -23,6 +23,7 @@ impl Group {
         let handler = Handler {
             input_type: Type::Undetermined,
             output_type: Type::Undetermined,
+            nonapi: false,
             format: HandlerInputFormat::Json,
             path: next_path(&self.path, name),
             ignore_prefix: false,
