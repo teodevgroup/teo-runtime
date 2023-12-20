@@ -81,7 +81,7 @@ fn load_model_field(main_namespace: &mut Namespace, field_declaration: &teo_pars
             (decorator_implementation.call)(args, &mut field)?;
         }
     }
-    field.finalize(database.unwrap())?;
+    field.finalize(database.unwrap(), schema)?;
     Ok(field)
 }
 
@@ -130,6 +130,6 @@ fn load_model_property(main_namespace: &mut Namespace, field_declaration: &teo_p
             (decorator_implementation.call)(args, &mut property)?;
         }
     }
-    property.finalize(database.unwrap())?;
+    property.finalize(database.unwrap(), schema)?;
     Ok(property)
 }

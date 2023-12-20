@@ -1,4 +1,20 @@
 use serde::Serialize;
+use teo_parser::ast::schema::Schema;
+use teo_parser::r#type::reference::Reference;
+
+#[derive(Debug, Serialize, Clone, PartialEq, Eq, Hash)]
+pub struct MySQLEnum {
+    pub variants: Vec<String>,
+}
+
+impl MySQLEnum {
+    pub fn build(schema: &Schema, reference: &Reference) -> Self {
+        let e = schema.find_top_by_path(reference.path()).unwrap().as_enum().unwrap();
+        MySQLEnum {
+            variants: e.members().map(|m| m.identifier().name().to_string()).collect()
+        }
+    }
+}
 
 #[derive(Debug, Serialize, Clone, PartialEq, Eq, Hash)]
 pub enum MySQLType {
@@ -30,6 +46,7 @@ pub enum MySQLType {
     TinyBlob,
     Blob,
     MediumBlob,
+    Enum(MySQLEnum),
 }
 
 impl MySQLType {
@@ -269,6 +286,17 @@ impl MySQLType {
         match self {
             MySQLType::LongBlob => true,
             _ => false,
+        }
+    }
+
+    pub fn is_enum(&self) -> bool {
+        self.as_enum().is_some()
+    }
+
+    pub fn as_enum(&self) -> Option<&MySQLEnum> {
+        match self {
+            MySQLType::Enum(e) => Some(e),
+            _ => None,
         }
     }
 }

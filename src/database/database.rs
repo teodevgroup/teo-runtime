@@ -1,9 +1,11 @@
 use std::fmt::{Display, Formatter};
 use serde::Serialize;
+use teo_parser::ast::namespace::Namespace;
+use teo_parser::ast::schema::Schema;
 use teo_parser::r#type::Type;
 use teo_result::{Error, Result};
 use crate::database::mongo::r#type::MongoDBType;
-use crate::database::mysql::r#type::MySQLType;
+use crate::database::mysql::r#type::{MySQLEnum, MySQLType};
 use crate::database::postgres::r#type::PostgreSQLType;
 use crate::database::sqlite::r#type::SQLiteType;
 use crate::database::r#type::DatabaseType;
@@ -47,10 +49,10 @@ impl Database {
         }
     }
 
-    pub fn default_database_type(&self, r#type: &Type) -> Result<DatabaseType> {
+    pub fn default_database_type(&self, r#type: &Type, parser_namespace: &Schema) -> Result<DatabaseType> {
         match self {
             Database::MongoDB => self.default_mongo_database_type(r#type),
-            Database::MySQL => self.default_mysql_database_type(r#type),
+            Database::MySQL => self.default_mysql_database_type(r#type, parser_namespace),
             Database::PostgreSQL => self.default_postgres_database_type(r#type),
             Database::SQLite => self.default_sqlite_database_type(r#type),
         }
@@ -74,7 +76,7 @@ impl Database {
         }
     }
 
-    fn default_mysql_database_type(&self, r#type: &Type) -> Result<DatabaseType> {
+    fn default_mysql_database_type(&self, r#type: &Type, parser_namespace: &Schema) -> Result<DatabaseType> {
         match r#type {
             Type::Bool => Ok(DatabaseType::MySQLType(MySQLType::TinyInt(Some(1), false))),
             Type::Int => Ok(DatabaseType::MySQLType(MySQLType::Int(None, false))),
@@ -85,7 +87,8 @@ impl Database {
             Type::String => Ok(DatabaseType::MySQLType(MySQLType::VarChar(191))),
             Type::Date => Ok(DatabaseType::MySQLType(MySQLType::Date)),
             Type::DateTime => Ok(DatabaseType::MySQLType(MySQLType::DateTime(3))),
-            Type::Optional(inner) => self.default_mysql_database_type(inner.as_ref()),
+            Type::EnumVariant(reference) => Ok(DatabaseType::MySQLType(MySQLType::Enum(MySQLEnum::build(parser_namespace, reference)))),
+            Type::Optional(inner) => self.default_mysql_database_type(inner.as_ref(), parser_namespace),
             _ => Err(Error::new(format!("unsupported mysql database type {}", r#type))),
         }
     }
@@ -102,6 +105,7 @@ impl Database {
             Type::Date => Ok(DatabaseType::PostgreSQLType(PostgreSQLType::Date)),
             Type::DateTime => Ok(DatabaseType::PostgreSQLType(PostgreSQLType::Timestamp(3,true))),
             Type::Array(inner) => Ok(DatabaseType::PostgreSQLType(self.default_postgres_database_type(inner.as_ref())?.as_postgres().unwrap().clone())),
+            Type::EnumVariant(_) => Ok(DatabaseType::PostgreSQLType(PostgreSQLType::Text)),
             Type::Optional(inner) => self.default_postgres_database_type(inner.as_ref()),
             _ => Err(Error::new(format!("unsupported postgres database type {}", r#type))),
         }
@@ -118,6 +122,7 @@ impl Database {
             Type::String => Ok(DatabaseType::SQLiteType(SQLiteType::Text)),
             Type::Date => Ok(DatabaseType::SQLiteType(SQLiteType::Text)),
             Type::DateTime => Ok(DatabaseType::SQLiteType(SQLiteType::Text)),
+            Type::EnumVariant(_) => Ok(DatabaseType::SQLiteType(SQLiteType::Text)),
             Type::Optional(inner) => self.default_sqlite_database_type(inner.as_ref()),
             _ => Err(Error::new(format!("unsupported sqlite database type {}", r#type))),
         }

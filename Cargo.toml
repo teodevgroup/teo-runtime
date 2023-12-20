@@ -1,6 +1,6 @@
 [package]
 name = "teo-runtime"
-version = "0.0.61"
+version = "0.0.62"
 edition = "2021"
 description = "Runtime for Teo"
 license = "Apache-2.0"
@@ -13,31 +13,31 @@ repository = "https://github.com/teocloud/teo-runtime"
 [dependencies]
 teo-result = { version = "0.0.61" }
 teo-teon = { version = "0.0.61" }
-teo-parser = { version = "0.0.61" }
+teo-parser = { path = "../teo-parser" }
 maplit = "1.0.2"
 indexmap = { version = "2.1.0", features = ["serde"] }
 serde = { version = "1.0.190", features = ["derive"] }
 serde_json = { version = "1.0", features = ["preserve_order"] }
-educe = "0.4.23"
+educe = "0.5.9"
 key-path = "0.2.0"
 async-trait = "0.1.74"
 async-recursion = "1.0.5"
-uuid = { version = "1.5.0", features = ["v4", "fast-rng"] }
+uuid = { version = "1.6", features = ["v4", "fast-rng"] }
 cuid2 = "0.1.2"
 cuid = "=1.2.0"
 regex = "1.10.2"
 random-string = "1.0"
-futures = "0.3.28"
-futures-util = "0.3.28"
+futures = "0.3"
+futures-util = "0.3"
 bigdecimal = "=0.3.1"
 num-integer = "0.1.45"
 rand = "0.8.5"
-once_cell = "1.18.0"
+once_cell = "1.19"
 inflector-plus = "0.11.7"
 pad = "0.1.6"
 chrono = { version = "0.4.31", features = ["serde"] }
-jsonwebtoken = "9.1"
+jsonwebtoken = "9.2"
 log = "0.4.20"
 bson = { version = "2.7.0", features = ["chrono-0_4", "serde_with"] }
 tokio = { version = "1.0", features = ["full"] }
-itertools = "0.11.0"
+itertools = "0.12.0"

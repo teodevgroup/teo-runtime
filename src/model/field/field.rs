@@ -1,6 +1,8 @@
 use std::collections::BTreeMap;
 use maplit::btreemap;
 use serde::Serialize;
+use teo_parser::ast::namespace::Namespace;
+use teo_parser::ast::schema::Schema;
 use teo_parser::availability::Availability;
 use teo_result::Result;
 use teo_parser::r#type::Type;
@@ -98,7 +100,7 @@ impl Field {
         self.migration.as_ref()
     }
 
-    pub fn finalize(&mut self, database: Database) -> Result<()> {
+    pub fn finalize(&mut self, database: Database, schema: &Schema) -> Result<()> {
 
         // do not copy primary field and unique field
         if self.index.is_some() && self.index().unwrap().r#type.is_unique_or_primary() {
@@ -110,7 +112,7 @@ impl Field {
         }
         // set default database type
         if self.database_type.is_undetermined() {
-            self.database_type = database.default_database_type(&self.r#type)?;
+            self.database_type = database.default_database_type(&self.r#type, schema)?;
         }
         Ok(())
     }
