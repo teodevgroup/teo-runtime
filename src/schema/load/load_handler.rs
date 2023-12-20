@@ -1,5 +1,6 @@
 use teo_parser::ast::schema::Schema;
 use teo_parser::diagnostics::diagnostics::Diagnostics;
+use teo_parser::r#type::Type;
 use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::traits::resolved::Resolve;
@@ -11,7 +12,7 @@ use crate::schema::fetch::fetch_decorator_arguments::fetch_decorator_arguments;
 pub fn load_handler(main_namespace: &mut Namespace, schema: &Schema, handler_declaration: &teo_parser::ast::handler::HandlerDeclaration, diagnostics: &mut Diagnostics) -> Result<()> {
     if let Some(mut handler) = main_namespace.handler_at_path(&handler_declaration.str_path()).cloned() {
         handler.format = handler_declaration.input_format;
-        handler.input_type = handler_declaration.input_type().resolved().clone();
+        handler.input_type = handler_declaration.input_type().map_or(Type::Any, |t| t.resolved().clone());
         handler.output_type = handler_declaration.output_type().resolved().clone();
         for decorator in handler_declaration.decorators() {
             let decorator_declaration = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration().unwrap();
