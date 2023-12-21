@@ -36,6 +36,7 @@ impl Map {
                 action_name.to_owned()
             }
         };
+        let url = url.replace("//", "/");
         let mut result: Vec<String> = namespace_path.iter().map(|i| i.to_string()).collect();
         if let Some(group_name) = group_name {
             result.push(group_name.to_owned());
@@ -59,13 +60,17 @@ impl Map {
         let define = &record.0.1;
         let arg_names = self.fetch_arg_names(define);
         let regex_string = self.replace_arg_names(define);
+        let regex_string = format!("^{regex_string}$");
         let regex = Regex::new(&regex_string).unwrap();
         if regex.is_match(url) {
             if let Some(captures) = regex.captures(url) {
                 let mut retval = indexmap!{};
                 for (index, r#match) in captures.iter().enumerate() {
+                    if index == 0 {
+                        continue
+                    }
                     if let Some(r#match) = r#match {
-                        retval.insert(arg_names.get(index).unwrap().to_owned(), r#match.as_str().to_owned());
+                        retval.insert(arg_names.get(index - 1).unwrap().to_owned(), r#match.as_str().to_owned());
                     }
                 }
                 return Some(HandlerMatch {

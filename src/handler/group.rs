@@ -28,6 +28,7 @@ impl Group {
             path: next_path(&self.path, name),
             ignore_prefix: false,
             method: Method::Post,
+            interface: None,
             url: None,
             call: Box::leak(Box::new(|ctx: request::Ctx| async {
                 wrapped_call.call(ctx).await

@@ -40,6 +40,7 @@ pub struct Handler {
     pub format: HandlerInputFormat,
     pub method: Method,
     pub url: Option<String>,
+    pub interface: Option<String>,
     pub ignore_prefix: bool,
     #[serde(skip)] #[educe(Debug(ignore))]
     pub call: &'static dyn Next,
