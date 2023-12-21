@@ -23,16 +23,21 @@ pub fn load_handler(main_namespace: &mut Namespace, schema: &Schema, handler_dec
             }
         }
         if (handler.method != Method::Post) || handler.url.is_some() {
+            let parent_string_path = handler_declaration.parent_string_path();
             main_namespace.handler_map.add_record(
                 &handler_declaration.namespace_str_path(),
-                handler_declaration.parent_string_path().last().unwrap().as_str(),
+                if handler_declaration.namespace_skip() == 2 {
+                    Some(parent_string_path.last().unwrap().as_str())
+                } else {
+                    None
+                },
                 handler_declaration.name(),
                 handler.method,
                 handler.url.as_ref().map(|u| u.as_str()),
                 handler.ignore_prefix,
             );
         }
-        main_namespace.replace_handler_at_path(&handler_declaration.str_path(), handler);
+        main_namespace.replace_handler_at_path(&handler_declaration.str_path(), handler, handler_declaration.inside_group);
     }
     Ok(())
 }

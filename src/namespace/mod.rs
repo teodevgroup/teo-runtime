@@ -539,30 +539,50 @@ impl Namespace {
 
     pub fn handler_at_path(&self, path: &Vec<&str>) -> Option<&Handler> {
         let handler_name = path.last().unwrap().deref();
-        let group_name = path.get(path.len() - 2).unwrap().deref();
-        let namespace_path: Vec<&str> = path.into_iter().rev().skip(2).rev().map(|i| *i).collect();
-        if let Some(dest_namespace) = self.namespace_at_path(&namespace_path) {
-            if let Some(group) = dest_namespace.handler_groups.get(group_name) {
-                group.handlers.get(handler_name)
-            } else if let Some(group) = dest_namespace.model_handler_groups.get(group_name) {
-                group.handlers.get(handler_name)
-            } else {
-                None
-            }
+        if path.len() == 1 {
+            self.handlers.get(handler_name)
         } else {
-            None
+            // try find a namespace first
+            let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+            if let Some(dest_namespace) = self.namespace_at_path(&namespace_path) {
+                dest_namespace.handlers.get(handler_name)
+            } else {
+                // try find in group
+                let handler_name = path.last().unwrap().deref();
+                let group_name = path.get(path.len() - 2).unwrap().deref();
+                let namespace_path: Vec<&str> = path.into_iter().rev().skip(2).rev().map(|i| *i).collect();
+                if let Some(dest_namespace) = self.namespace_at_path(&namespace_path) {
+                    if let Some(group) = dest_namespace.handler_groups.get(group_name) {
+                        group.handlers.get(handler_name)
+                    } else if let Some(group) = dest_namespace.model_handler_groups.get(group_name) {
+                        group.handlers.get(handler_name)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
         }
     }
 
-    pub fn replace_handler_at_path(&mut self, path: &Vec<&str>, handler: Handler) {
+    pub fn replace_handler_at_path(&mut self, path: &Vec<&str>, handler: Handler, inside_group: bool) {
         let handler_name = path.last().unwrap().deref();
-        let group_name = path.get(path.len() - 2).unwrap().deref();
-        let namespace_path: Vec<&str> = path.into_iter().rev().skip(2).rev().map(|i| *i).collect();
+        let group_name = if inside_group {
+            Some(path.get(path.len() - 2).unwrap().deref())
+        } else {
+            None
+        };
+        let namespace_path: Vec<&str> = path.into_iter().rev().skip(if inside_group { 2 } else { 1 }).rev().map(|i| *i).collect();
         let dest_namespace = self.namespace_mut_or_create_at_path(&namespace_path);
-        if let Some(group) = dest_namespace.handler_groups.get_mut(group_name) {
-            group.handlers.insert(handler_name.to_string(), handler);
-        } else if let Some(group) = dest_namespace.model_handler_groups.get_mut(group_name) {
-            group.handlers.insert(handler_name.to_string(), handler);
+        if let Some(group_name) = group_name {
+            if let Some(group) = dest_namespace.handler_groups.get_mut(group_name) {
+                group.handlers.insert(handler_name.to_string(), handler);
+            } else if let Some(group) = dest_namespace.model_handler_groups.get_mut(group_name) {
+                group.handlers.insert(handler_name.to_string(), handler);
+            }
+        } else {
+            dest_namespace.handlers.insert(handler_name.to_string(), handler);
         }
     }
 

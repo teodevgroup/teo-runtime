@@ -16,7 +16,7 @@ impl Map {
         }
     }
 
-    pub fn add_record(&mut self, namespace_path: &Vec<&str>, group_name: &str, action_name: &str, method: Method, custom_url: Option<&str>, ignore_prefix: bool) {
+    pub fn add_record(&mut self, namespace_path: &Vec<&str>, group_name: Option<&str>, action_name: &str, method: Method, custom_url: Option<&str>, ignore_prefix: bool) {
         let url = if ignore_prefix {
             if custom_url.unwrap().starts_with("/") {
                 custom_url.unwrap().to_owned()
@@ -24,7 +24,9 @@ impl Map {
                 "/".to_owned() + custom_url.unwrap()
             }
         } else {
-            "/".to_owned() + &namespace_path.join(".") + "/" + group_name + &if let Some(custom_url) = custom_url {
+            "/".to_owned() + &namespace_path.join(".") + &if let Some(group_name) = group_name {
+                "/".to_owned() + group_name
+            } else { "".to_owned() } + &if let Some(custom_url) = custom_url {
                 if custom_url.starts_with("/") {
                     custom_url.to_owned()
                 } else {
@@ -35,7 +37,9 @@ impl Map {
             }
         };
         let mut result: Vec<String> = namespace_path.iter().map(|i| i.to_string()).collect();
-        result.push(group_name.to_owned());
+        if let Some(group_name) = group_name {
+            result.push(group_name.to_owned());
+        }
         self.records.insert((method, url), (result, action_name.to_owned()));
     }
 

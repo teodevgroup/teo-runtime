@@ -9,7 +9,7 @@ pub struct HandlerMatch {
 
 impl HandlerMatch {
 
-    pub fn namespace_path(&self) -> Vec<&str> {
+    pub fn path_without_last(&self) -> Vec<&str> {
         self.path.iter().rev().skip(1).rev().map(AsRef::as_ref).collect()
     }
 
