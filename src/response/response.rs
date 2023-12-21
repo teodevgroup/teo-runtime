@@ -34,8 +34,8 @@ impl Response {
         Ok(Self::string(string_value, "application/json"))
     }
 
-    pub fn html(content: String) -> Result<Response> {
-        Ok(Self::string(content, "text/html"))
+    pub fn html(content: impl Into<String>) -> Result<Response> {
+        Ok(Self::string(content.into(), "text/html"))
     }
 
     pub fn data(value: Value) -> Result<Response> {

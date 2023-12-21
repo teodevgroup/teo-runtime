@@ -204,7 +204,8 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_load
 
     // load models
     for model_declaration in schema.models() {
-        if model_declaration.is_available() {
+        let database = main_namespace.namespace_mut_or_create_at_path(&model_declaration.namespace_str_path()).database;
+        if database.is_some() && model_declaration.is_available() {
             load_model(main_namespace, schema, model_declaration, &mut diagnostics)?;
         }
     }

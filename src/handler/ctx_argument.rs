@@ -8,6 +8,14 @@ pub trait HandlerCtxArgument<A>: Send + Sync + 'static {
     fn call(&self, ctx: Ctx) -> BoxFuture<'static, crate::path::Result<Response>>;
 }
 
+impl<F, Fut> HandlerCtxArgument<()> for F where
+    F: Fn() -> Fut + Sync + Send + Clone + 'static,
+    Fut: Future<Output = crate::path::Result<Response>> + Send + 'static {
+    fn call(&self, ctx: Ctx) -> BoxFuture<'static, crate::path::Result<Response>> {
+        Box::pin(self())
+    }
+}
+
 impl<A0, F, Fut> HandlerCtxArgument<(A0,)> for F where
     A0: ExtractFromRequestCtx + Send + Sync,
     F: Fn(A0) -> Fut + Sync + Send + Clone + 'static,
