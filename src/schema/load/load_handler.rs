@@ -11,9 +11,7 @@ use crate::handler::handler::Method;
 use crate::namespace::Namespace;
 use crate::path::Error;
 use crate::request;
-use crate::response::Response;
 use crate::schema::fetch::fetch_decorator_arguments::fetch_decorator_arguments;
-use crate::utils::next_path;
 
 pub fn load_handler(main_namespace: &mut Namespace, schema: &Schema, handler_declaration: &teo_parser::ast::handler::HandlerDeclaration, diagnostics: &mut Diagnostics) -> Result<()> {
     let mut handler = if let Some(handler) = main_namespace.handler_at_path(&handler_declaration.str_path()).cloned() {
