@@ -100,10 +100,12 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
         } else {
             Err(Error::value_error(path.clone(), "expect string represents datetime"))
         }
-        Type::File => Ok(Value::File(match File::try_from(json) {
-            Ok(f) => f,
-            Err(_) => Err(Error::value_error(path.clone(), "invalid file input"))?,
-        })),
+        Type::File => {
+            Ok(Value::File(match File::try_from(json) {
+                Ok(f) => f,
+                Err(err) => Err(Error::value_error(path.clone(), err.message()))?,
+            }))
+        },
         Type::Enumerable(inner) => {
             if let Some(json_array) = json.as_array() {
                 let values: Vec<Value> = json_array.iter().enumerate().map(|(i, j)| Ok(json_to_teon_with_type(j, &(path + i), inner.as_ref(), main_namespace)?)).collect::<crate::path::Result<Vec<Value>>>()?;
