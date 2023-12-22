@@ -93,7 +93,7 @@ impl Map {
         let regex = Regex::new("[:*]([^/]+)").unwrap();
         let captures = regex.captures(define);
         if let Some(captures) = captures {
-            captures.iter().map(|m| m.unwrap().as_str().to_owned()).collect()
+            captures.iter().map(|m| m.unwrap().as_str()[1..].to_string()).collect()
         } else {
             vec![]
         }

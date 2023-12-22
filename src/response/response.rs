@@ -19,9 +19,9 @@ impl Response {
         }
     }
 
-    pub fn string(content: String, content_type: &str) -> Response {
+    pub fn string(content: impl Into<String>, content_type: &str) -> Response {
         let mut inner = ResponseInner::new();
-        inner.body = Body::string(content);
+        inner.body = Body::string(content.into());
         inner.headers.set("content-type", content_type);
         Self {
             inner: Arc::new(Mutex::new(inner)),
