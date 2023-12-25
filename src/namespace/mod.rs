@@ -79,6 +79,7 @@ pub struct Namespace {
     pub middleware_stack: &'static dyn Middleware,
     #[educe(Debug(ignore))] #[serde(skip)]
     pub handler_map: handler::Map,
+    pub model_opposite_relations_map: BTreeMap<Vec<String>, Vec<(Vec<String>, String)>> // model path, relation name
 }
 
 impl Namespace {
@@ -122,6 +123,7 @@ impl Namespace {
             connection: None,
             middleware_stack: empty_middleware(),
             handler_map: handler::Map::new(),
+            model_opposite_relations_map: btreemap! {},
         }
     }
 
@@ -652,6 +654,16 @@ impl Namespace {
             }
         }
         result
+    }
+
+    /// Get relations of model defined by related model
+    pub fn model_opposite_relations(&self, model: &Model) -> Vec<(&Model, &Relation)> {
+        let result = self.model_opposite_relations_map.get(&model.path).unwrap();
+        result.iter().map(|result| {
+            let model = self.model_at_path(&result.0.iter().map(AsRef::as_ref).collect()).unwrap();
+            let relation = model.relation(result.1.as_str()).unwrap();
+            (model, relation)
+        }).collect()
     }
 }
 

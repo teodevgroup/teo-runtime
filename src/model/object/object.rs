@@ -634,53 +634,62 @@ impl Object {
         let model = self.model();
         let namespace = self.namespace();
         // check deny first
-        for relation in model.relations() {
-            if relation.through_path().is_some() {
-                continue
-            }
-            let (opposite_model, opposite_relation) = namespace.opposite_relation(relation);
-            if let Some(opposite_relation) = opposite_relation {
-                if opposite_relation.delete == Delete::Deny {
-                    let finder = self.intrinsic_where_unique_for_relation(relation);
-                    let count = self.transaction_ctx().count(opposite_model, &finder, path.clone()).await.unwrap();
-                    if count > 0 {
-                        return Err(error_ext::deletion_denied(path.clone(), relation.name()));
-                    }
+        for (opposite_model, opposite_relation) in namespace.model_opposite_relations(model) {
+            if opposite_relation.delete == Delete::Deny {
+                let finder = self.intrinsic_where_unique_for_opposite_relation(opposite_relation);
+                let count = self.transaction_ctx().count(opposite_model, &finder, path.clone()).await.unwrap();
+                if count > 0 {
+                    return Err(error_ext::deletion_denied(path.clone(), &format!("{}.{}", opposite_model.path().join("."), opposite_relation.name())));
                 }
             }
         }
         // real delete
         self.transaction_ctx().transaction_for_model(self.model()).await.delete_object(self, path.clone()).await?;
         // nullify and cascade
-        for relation in model.relations() {
-            if relation.through_path().is_some() {
-                continue
-            }
-            let (opposite_model, opposite_relation) = namespace.opposite_relation(relation);
-            if let Some(opposite_relation) = opposite_relation {
-                match opposite_relation.delete {
-                    Delete::Default => {}, // do nothing
-                    Delete::Deny => {}, // done before
-                    Delete::Nullify => {
-                        if !opposite_relation.has_foreign_key {
-                            continue
-                        }
-                        let finder = self.intrinsic_where_unique_for_relation(relation);
-                        self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | (if relation.is_vec { MANY } else { SINGLE }), self.request_ctx(), path.clone(), |object| async move {
-                            for key in &opposite_relation.fields {
-                                object.set_value(key, Value::Null)?;
-                            }
-                            object.save_with_session_and_path( &path![]).await?;
-                            Ok(())
-                        }).await?;
-                    },
-                    Delete::Cascade => {
-                        let finder = self.intrinsic_where_unique_for_relation(relation);
-                        self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DELETE | if relation.is_vec { MANY } else { SINGLE }, self.request_ctx(), path.clone(), |object| async move {
-                            object.delete_from_database(path).await?;
-                            Ok(())
-                        }).await?;
+        for (opposite_model, opposite_relation) in namespace.model_opposite_relations(model) {
+            match opposite_relation.delete {
+                Delete::NoAction => {} // do nothing
+                Delete::Deny => {}, // done before
+                Delete::Nullify => {
+                    if !opposite_relation.has_foreign_key {
+                        continue
                     }
+                    let finder = self.intrinsic_where_unique_for_opposite_relation(opposite_relation);
+                    self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | SINGLE, self.request_ctx(), path.clone(), |object| async move {
+                        for key in &opposite_relation.fields {
+                            object.set_value(key, Value::Null)?;
+                        }
+                        object.save_with_session_and_path( &path![]).await?;
+                        Ok(())
+                    }).await?;
+                },
+                Delete::Cascade => {
+                    let finder = self.intrinsic_where_unique_for_opposite_relation(opposite_relation);
+                    self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DELETE | SINGLE, self.request_ctx(), path.clone(), |object| async move {
+                        object.delete_from_database(path).await?;
+                        Ok(())
+                    }).await?;
+                }
+                Delete::Default => {
+                    let finder = self.intrinsic_where_unique_for_opposite_relation(opposite_relation);
+                    self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | SINGLE, self.request_ctx(), path.clone(), |object| async move {
+                        for key in &opposite_relation.fields {
+                            let field = opposite_model.field(key).unwrap();
+                            if let Some(default) = &field.default {
+                                if let Some(value) = default.as_teon() {
+                                    object.set_value(key, value.clone())?;
+                                } else if let Some(pipeline) = default.as_pipeline() {
+                                    let pipeline_ctx = pipeline::Ctx::new(Value::Null.into(), object.clone(), path![], CODE_NAME | DISCONNECT | SINGLE, self.transaction_ctx(), self.request_ctx());
+                                    let value_object = pipeline_ctx.run_pipeline(pipeline).await?;
+                                    let value = value_object.as_teon().unwrap();
+                                    object.set_value(key, value.clone())?;
+                                }
+                            } else {
+                                Err(Error::new(format!("default value is not defined: {}.{}", opposite_model.path.join("."), key)))?;
+                            }
+                        }
+                        Ok(())
+                    }).await?;
                 }
             }
         }
@@ -1122,7 +1131,11 @@ impl Object {
     }
 
     fn intrinsic_where_unique_for_relation(&self, relation: &'static Relation) -> Value {
-        Value::Dictionary(relation.iter().map(|(f, r)| (r.to_owned(), self.get_value(f).unwrap())).collect())
+        Value::Dictionary(relation.iter().map(|(l, f)| (f.to_owned(), self.get_value(l).unwrap())).collect())
+    }
+
+    fn intrinsic_where_unique_for_opposite_relation(&self, relation: &'static Relation) -> Value {
+        Value::Dictionary(relation.iter().map(|(l, f)| (l.to_owned(), self.get_value(f).unwrap())).collect())
     }
 
     async fn nested_disconnect_relation_object_object(&self, relation: &'static Relation, object: &Object, path: &KeyPath) -> crate::path::Result<()> {

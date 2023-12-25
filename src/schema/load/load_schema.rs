@@ -21,6 +21,7 @@ use crate::schema::load::load_handler::load_handler;
 use crate::schema::load::load_handler_group::load_handler_group;
 use crate::schema::load::load_interface::load_interface;
 use crate::schema::load::load_model::load_model;
+use crate::schema::load::load_model_opposite_relations::load_model_opposite_relations;
 use crate::schema::load::load_server::load_server;
 use crate::schema::load::load_test::load_test;
 use crate::schema::load::load_use_middlewares::load_use_middlewares;
@@ -209,6 +210,8 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_load
             load_model(main_namespace, schema, model_declaration, &mut diagnostics)?;
         }
     }
+    // load model opposite relations
+    load_model_opposite_relations(main_namespace);
 
     // load handlers
     for handler_declaration in schema.handler_declarations() {

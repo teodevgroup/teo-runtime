@@ -48,8 +48,8 @@ impl Relation {
             references: vec![],
             foreign: None,
             local: None,
-            delete: Delete::Default,
-            update: Update::Default,
+            delete: Delete::Nullify,
+            update: Update::Nullify,
             has_foreign_key: false,
             data: btreemap! {},
         }
