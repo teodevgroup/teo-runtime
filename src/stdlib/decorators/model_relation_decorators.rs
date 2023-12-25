@@ -30,6 +30,12 @@ pub(in crate::stdlib) fn load_model_relation_decorators(namespace: &mut Namespac
             relation.local = Some(local);
             relation.foreign = Some(foreign);
         }
+        if let Some(update) = update {
+            relation.update = update;
+        }
+        if let Some(delete) = delete {
+            relation.delete = delete;
+        }
         Ok(())
     });
 }
