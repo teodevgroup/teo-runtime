@@ -20,6 +20,9 @@ fn add_model_opposite_relations_from_namespace(namespace: &Namespace, result: &m
             install_entry_for_model(&relation.model, result, &model.path, &relation.name);
         }
     }
+    for namespace in namespace.namespaces.values() {
+        add_model_opposite_relations_from_namespace(namespace, result);
+    }
 }
 
 fn ensure_entry_for_model(model_path: &Vec<String>, result: &mut BTreeMap<Vec<String>, Vec<(Vec<String>, String)>>) {
