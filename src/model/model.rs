@@ -25,7 +25,6 @@ use crate::model::relation::Relation;
 use crate::namespace::Namespace;
 use crate::object::Object;
 use crate::pipeline::pipeline::Pipeline;
-use crate::previous::Previous;
 use crate::traits::documentable::Documentable;
 
 #[derive(Debug, Serialize)]
@@ -236,15 +235,6 @@ impl Model {
         }
         if self.primary_index.is_empty() {
             Err(Error::new("model must have a primary index"))?;
-        }
-
-        // install previous for primary field
-
-        let primary_index = self.indexes.get(&self.primary_index).unwrap();
-        for item in primary_index.items() {
-            if let Some(field) = self.fields.get_mut(&item.field) {
-                field.previous = Previous::Keep;
-            }
         }
 
         // load caches

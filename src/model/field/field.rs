@@ -20,7 +20,6 @@ use crate::model::field::typed::Typed;
 use crate::object::Object;
 use crate::optionality::Optionality;
 use crate::pipeline::pipeline::Pipeline;
-use crate::previous::Previous;
 use crate::readwrite::read::Read;
 use crate::readwrite::write::Write;
 use crate::traits::documentable::Documentable;
@@ -39,7 +38,6 @@ pub struct Field {
     pub copy: bool,
     pub read: Read,
     pub write: Write,
-    pub previous: Previous,
     pub atomic: bool,
     pub r#virtual: bool,
     pub input_omissible: bool,
@@ -72,7 +70,6 @@ impl Field {
             r#type: Type::Undetermined,
             database_type: DatabaseType::Undetermined,
             optionality: Optionality::Optional,
-            previous: Previous::DontKeep,
             atomic: false,
             copy: true,
             read: Read::Read,

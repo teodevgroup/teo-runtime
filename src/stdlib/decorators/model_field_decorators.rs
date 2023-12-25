@@ -6,7 +6,6 @@ use crate::namespace::Namespace;
 use crate::object::Object;
 use crate::optionality::Optionality;
 use crate::pipeline::pipeline::Pipeline;
-use crate::previous::Previous;
 use crate::readwrite::read::Read;
 use crate::readwrite::write::Write;
 use crate::stdlib::decorators::indexable_decorators::{id_decorator, index_decorator, unique_decorator};
@@ -125,11 +124,6 @@ pub(in crate::stdlib) fn load_model_field_decorators(namespace: &mut Namespace) 
 
     namespace.define_model_field_decorator("virtual", |arguments, field| {
         field.r#virtual = true;
-        Ok(())
-    });
-
-    namespace.define_model_field_decorator("recordPrevious", |arguments, field| {
-        field.previous = Previous::Keep;
         Ok(())
     });
 

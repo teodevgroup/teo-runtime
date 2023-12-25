@@ -29,6 +29,10 @@ pub fn deletion_denied(path: KeyPath, relation_name: &str) -> crate::path::Error
     crate::path::Error::value_error(path, format!("deletion denied {}", relation_name))
 }
 
+pub fn updation_denied(path: KeyPath, relation_name: &str) -> crate::path::Error {
+    crate::path::Error::value_error(path, format!("updation denied {}", relation_name))
+}
+
 pub fn invalid_operation(path: KeyPath, reason: impl AsRef<str>) -> crate::path::Error {
     crate::path::Error::internal_server_error(path, reason.as_ref().to_string())
 }

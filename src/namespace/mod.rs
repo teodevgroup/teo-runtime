@@ -302,9 +302,6 @@ impl Namespace {
                     return Ok(ctx.value().clone());
                 }
                 let key = ctx.path()[ctx.path().len() - 1].as_key().unwrap();
-                if !ctx.object().model().field(key).unwrap().previous.is_keep() {
-                    return Ok(ctx.value().clone());
-                }
                 let previous_value = ctx.object().get_previous_value(key)?;
                 let current_value = ctx.value().clone().as_teon().unwrap().clone();
                 if previous_value == current_value {

@@ -27,6 +27,7 @@ use crate::{object, pipeline, request};
 use crate::model::field::column_named::ColumnNamed;
 use crate::model::field::is_optional::IsOptional;
 use crate::model::relation::delete::Delete;
+use crate::model::relation::update::Update;
 use crate::namespace::Namespace;
 use crate::object::error_ext;
 use crate::optionality::Optionality;
@@ -231,7 +232,7 @@ impl Object {
 
     fn record_previous_value_for_field_if_needed(&self, key: &str) {
         let field = self.model().field(key).unwrap();
-        if !self.is_new() && field.previous.is_keep() {
+        if !self.is_new() {
             if self.inner.previous_value_map.lock().unwrap().get(field.name()).is_none() {
                 self.inner.previous_value_map.lock().unwrap().insert(field.name().to_string(), self.get_value(field.name()).unwrap());
             }
@@ -429,6 +430,15 @@ impl Object {
         match map.get(key) {
             Some(value) => Ok(value.clone()),
             None => Ok(Value::Null),
+        }
+    }
+
+    pub fn get_previous_value_or_current_value(&self, key: impl AsRef<str>) -> Result<Value> {
+        match self.get_previous_value(key.as_ref()) {
+            Ok(v) => Ok(v),
+            Err(_) => {
+                self.get_value(key.as_ref())
+            }
         }
     }
 
@@ -651,9 +661,6 @@ impl Object {
                 Delete::NoAction => {} // do nothing
                 Delete::Deny => {}, // done before
                 Delete::Nullify => {
-                    if !opposite_relation.has_foreign_key {
-                        continue
-                    }
                     let finder = self.intrinsic_where_unique_for_opposite_relation(opposite_relation);
                     self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | SINGLE, self.request_ctx(), path.clone(), |object| async move {
                         for key in &opposite_relation.fields {
@@ -699,6 +706,93 @@ impl Object {
 
     #[async_recursion]
     async fn save_to_database(&self, path: &KeyPath) -> crate::path::Result<()> {
+        if self.is_modified() {
+            let modified_fields = self.inner.modified_fields.lock().unwrap().clone();
+            let namespace = self.namespace();
+            let model = self.model();
+            // check deny first
+            for (opposite_model, opposite_relation) in namespace.model_opposite_relations(model) {
+                if opposite_relation.update == Update::Deny {
+                    let mut contains = false;
+                    for f_name in modified_fields.iter() {
+                        if opposite_relation.references.contains(f_name) {
+                            contains = true;
+                        }
+                    }
+                    if contains {
+                        let finder = self.intrinsic_where_unique_for_opposite_relation_with_prev_value(opposite_relation);
+                        let count = self.transaction_ctx().count(opposite_model, &finder, path.clone()).await.unwrap();
+                        if count > 0 {
+                            return Err(error_ext::updation_denied(path.clone(), &format!("{}.{}", opposite_model.path().join("."), opposite_relation.name())));
+                        }
+                    }
+                }
+            }
+            // nullify and cascade
+            for (opposite_model, opposite_relation) in namespace.model_opposite_relations(model) {
+                let mut contains = false;
+                for f_name in modified_fields.iter() {
+                    if opposite_relation.references.contains(f_name) {
+                        contains = true;
+                    }
+                }
+                if contains {
+                    match opposite_relation.update {
+                        Update::NoAction => {} // do nothing
+                        Update::Deny => {}, // done before
+                        Update::Nullify => {
+                            let finder = self.intrinsic_where_unique_for_opposite_relation_with_prev_value(opposite_relation);
+                            self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | SINGLE, self.request_ctx(), path.clone(), |object| async move {
+                                for key in &opposite_relation.fields {
+                                    object.set_value(key, Value::Null)?;
+                                }
+                                object.save_with_session_and_path( &path![]).await?;
+                                Ok(())
+                            }).await?;
+                        },
+                        Update::Update => {
+                            let finder = self.intrinsic_where_unique_for_opposite_relation_with_prev_value(opposite_relation);
+                            self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | SINGLE, self.request_ctx(), path.clone(), |object| async move {
+                                for key in &opposite_relation.fields {
+                                    object.set_value(key, Value::Null)?;
+                                }
+                                object.save_with_session_and_path( &path![]).await?;
+                                Ok(())
+                            }).await?;
+                        }
+                        Update::Delete => {
+                            let finder = self.intrinsic_where_unique_for_opposite_relation_with_prev_value(opposite_relation);
+                            self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DELETE | SINGLE, self.request_ctx(), path.clone(), |object| async move {
+                                object.delete_from_database(path).await?;
+                                Ok(())
+                            }).await?;
+                        }
+                        Update::Default => {
+                            let finder = self.intrinsic_where_unique_for_opposite_relation_with_prev_value(opposite_relation);
+                            self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | SINGLE, self.request_ctx(), path.clone(), |object| async move {
+                                for key in &opposite_relation.fields {
+                                    let field = opposite_model.field(key).unwrap();
+                                    if let Some(default) = &field.default {
+                                        if let Some(value) = default.as_teon() {
+                                            object.set_value(key, value.clone())?;
+                                        } else if let Some(pipeline) = default.as_pipeline() {
+                                            let pipeline_ctx = pipeline::Ctx::new(Value::Null.into(), object.clone(), path![], CODE_NAME | DISCONNECT | SINGLE, self.transaction_ctx(), self.request_ctx());
+                                            let value_object = pipeline_ctx.run_pipeline(pipeline).await?;
+                                            let value = value_object.as_teon().unwrap();
+                                            object.set_value(key, value.clone())?;
+                                        }
+                                    } else {
+                                        Err(Error::new(format!("default value is not defined: {}.{}", opposite_model.path.join("."), key)))?;
+                                    }
+                                }
+                                object.save_with_session_and_path(&path![]).await?;
+                                Ok(())
+                            }).await?;
+                        }
+                    }
+                }
+            }
+        }
         self.transaction_ctx().transaction_for_model(self.model()).await.save_object(self, path.clone()).await?;
         self.clear_new_state();
         Ok(())
@@ -1140,6 +1234,12 @@ impl Object {
     fn intrinsic_where_unique_for_opposite_relation(&self, relation: &'static Relation) -> Value {
         teon!({
             "where": Value::Dictionary(relation.iter().map(|(l, f)| (l.to_owned(), self.get_value(f).unwrap())).collect())
+        })
+    }
+
+    fn intrinsic_where_unique_for_opposite_relation_with_prev_value(&self, relation: &'static Relation) -> Value {
+        teon!({
+            "where": Value::Dictionary(relation.iter().map(|(l, f)| (l.to_owned(), self.get_previous_value_or_current_value(f).unwrap())).collect())
         })
     }
 
