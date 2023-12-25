@@ -11,6 +11,8 @@ use crate::namespace::Namespace;
 use teo_result::Result;
 use crate::database::database::Database;
 use crate::model::field::is_optional::IsOptional;
+use crate::model::relation::delete::Delete;
+use crate::model::relation::update::Update;
 use crate::optionality::Optionality;
 use crate::schema::fetch::fetch_decorator_arguments::fetch_decorator_arguments;
 use crate::schema::load::load_comment::load_comment;
@@ -100,6 +102,22 @@ fn load_model_relation(main_namespace: &mut Namespace, field_declaration: &teo_p
     relation.is_vec = r#type.is_array();
     r#type = r#type.unwrap_array();
     relation.model = r#type.as_model_object().unwrap().string_path().clone();
+    // set default delete rule
+    if r#type.is_optional() {
+        relation.delete = Delete::Nullify;
+    } else if r#type.is_array() {
+        relation.delete = Delete::NoAction;
+    } else {
+        relation.delete = Delete::Cascade;
+    }
+    // set default update rule
+    if r#type.is_optional() {
+        relation.update = Update::Nullify;
+    } else if r#type.is_array() {
+        relation.update = Update::NoAction;
+    } else {
+        relation.update = Update::Update;
+    }
     for decorator in field_declaration.decorators() {
         let decorator_declaration = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration().unwrap();
         if let Some(decorator_implementation) = main_namespace.model_relation_decorator_at_path(&decorator_declaration.str_path()) {
