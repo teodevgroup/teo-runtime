@@ -13,8 +13,8 @@ pub(in crate::stdlib) fn load_model_relation_decorators(namespace: &mut Namespac
         let through: Result<Vec<String>> = arguments.get("through");
         let local: Result<EnumVariant> = arguments.get("local");
         let foreign: Result<EnumVariant> = arguments.get("foreign");
-        let update: Option<Update> = arguments.get_optional("update")?;
-        let delete: Option<Delete> = arguments.get_optional("delete")?;
+        let update: Option<Update> = arguments.get_optional("onUpdate")?;
+        let delete: Option<Delete> = arguments.get_optional("onDelete")?;
         if fields.is_ok() {
             let fields: Vec<EnumVariant> = fields.unwrap().into_vec()?;
             let references: Vec<EnumVariant> = references.unwrap().into_vec()?;

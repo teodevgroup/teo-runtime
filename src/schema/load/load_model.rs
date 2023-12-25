@@ -98,10 +98,6 @@ fn load_model_relation(main_namespace: &mut Namespace, field_declaration: &teo_p
     } else {
         relation.optionality = Optionality::Required;
     }
-    r#type = r#type.unwrap_optional();
-    relation.is_vec = r#type.is_array();
-    r#type = r#type.unwrap_array();
-    relation.model = r#type.as_model_object().unwrap().string_path().clone();
     // set default delete rule
     if r#type.is_optional() {
         relation.delete = Delete::Nullify;
@@ -118,6 +114,10 @@ fn load_model_relation(main_namespace: &mut Namespace, field_declaration: &teo_p
     } else {
         relation.update = Update::Update;
     }
+    r#type = r#type.unwrap_optional();
+    relation.is_vec = r#type.is_array();
+    r#type = r#type.unwrap_array();
+    relation.model = r#type.as_model_object().unwrap().string_path().clone();
     for decorator in field_declaration.decorators() {
         let decorator_declaration = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration().unwrap();
         if let Some(decorator_implementation) = main_namespace.model_relation_decorator_at_path(&decorator_declaration.str_path()) {

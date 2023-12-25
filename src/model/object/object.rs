@@ -688,6 +688,7 @@ impl Object {
                                 Err(Error::new(format!("default value is not defined: {}.{}", opposite_model.path.join("."), key)))?;
                             }
                         }
+                        object.save_with_session_and_path(&path![]).await?;
                         Ok(())
                     }).await?;
                 }
@@ -1131,11 +1132,15 @@ impl Object {
     }
 
     fn intrinsic_where_unique_for_relation(&self, relation: &'static Relation) -> Value {
-        Value::Dictionary(relation.iter().map(|(l, f)| (f.to_owned(), self.get_value(l).unwrap())).collect())
+        teon!({
+            "where": Value::Dictionary(relation.iter().map(|(l, f)| (f.to_owned(), self.get_value(l).unwrap())).collect())
+        })
     }
 
     fn intrinsic_where_unique_for_opposite_relation(&self, relation: &'static Relation) -> Value {
-        Value::Dictionary(relation.iter().map(|(l, f)| (l.to_owned(), self.get_value(f).unwrap())).collect())
+        teon!({
+            "where": Value::Dictionary(relation.iter().map(|(l, f)| (l.to_owned(), self.get_value(f).unwrap())).collect())
+        })
     }
 
     async fn nested_disconnect_relation_object_object(&self, relation: &'static Relation, object: &Object, path: &KeyPath) -> crate::path::Result<()> {
