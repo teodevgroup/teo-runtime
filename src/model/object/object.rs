@@ -753,8 +753,8 @@ impl Object {
                         Update::Update => {
                             let finder = self.intrinsic_where_unique_for_opposite_relation_with_prev_value(opposite_relation);
                             self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | SINGLE, self.request_ctx(), path.clone(), |object| async move {
-                                for key in &opposite_relation.fields {
-                                    object.set_value(key, Value::Null)?;
+                                for (local, foreign) in opposite_relation.iter() {
+                                    object.set_value(local, self.get_value(foreign)?)?;
                                 }
                                 object.save_with_session_and_path( &path![]).await?;
                                 Ok(())
