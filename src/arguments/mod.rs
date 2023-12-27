@@ -80,6 +80,10 @@ impl Arguments {
     pub fn get_object(&self, key: impl AsRef<str>) -> Result<Object> {
         self.get_object_ref(key).map(|o| o.clone())
     }
+
+    pub fn iter(&self) -> std::collections::btree_map::Iter<String, Object> {
+        self.inner.map.iter()
+    }
 }
 
 impl Default for Arguments {

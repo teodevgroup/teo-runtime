@@ -14,6 +14,10 @@ pub struct Error {
 
 impl Error {
 
+    pub fn message(&self) -> &str {
+        self.message.as_str()
+    }
+
     pub fn value_error(path: KeyPath, message: impl Into<String>) -> Self {
         Self {
             title: "ValueError",

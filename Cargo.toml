@@ -1,6 +1,6 @@
 [package]
 name = "teo-runtime"
-version = "0.0.64"
+version = "0.0.65"
 edition = "2021"
 description = "Runtime for Teo"
 license = "Apache-2.0"

@@ -4,6 +4,7 @@ use crate::connection::transaction;
 use crate::model;
 use crate::model::Model;
 
+#[derive(Clone)]
 pub struct Ctx {
     pub transaction_ctx: transaction::Ctx,
     pub model: &'static Model,
