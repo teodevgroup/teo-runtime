@@ -4,12 +4,12 @@ use crate::request::Ctx;
 use crate::request::ctx::extract::ExtractFromRequestCtx;
 use crate::response::Response;
 
-pub trait HandlerCtxArgument<A>: Send + Sync + 'static {
+pub trait HandlerCtxArgument<A>: Send + Sync {
     fn call(&self, ctx: Ctx) -> BoxFuture<'static, crate::path::Result<Response>>;
 }
 
 impl<F, Fut> HandlerCtxArgument<()> for F where
-    F: Fn() -> Fut + Sync + Send + Clone + 'static,
+    F: Fn() -> Fut + Sync + Send + Clone,
     Fut: Future<Output = crate::path::Result<Response>> + Send + 'static {
     fn call(&self, ctx: Ctx) -> BoxFuture<'static, crate::path::Result<Response>> {
         Box::pin(self())
@@ -18,7 +18,7 @@ impl<F, Fut> HandlerCtxArgument<()> for F where
 
 impl<A0, F, Fut> HandlerCtxArgument<(A0,)> for F where
     A0: ExtractFromRequestCtx + Send + Sync,
-    F: Fn(A0) -> Fut + Sync + Send + Clone + 'static,
+    F: Fn(A0) -> Fut + Sync + Send + Clone,
     Fut: Future<Output = crate::path::Result<Response>> + Send + 'static {
     fn call(&self, ctx: Ctx) -> BoxFuture<'static, crate::path::Result<Response>> {
         let value: A0 = ExtractFromRequestCtx::extract(&ctx);
@@ -29,7 +29,7 @@ impl<A0, F, Fut> HandlerCtxArgument<(A0,)> for F where
 impl<A0, A1, F, Fut> HandlerCtxArgument<(A0, A1)> for F where
     A0: ExtractFromRequestCtx + Send + Sync,
     A1: ExtractFromRequestCtx + Send + Sync,
-    F: Fn(A0, A1) -> Fut + Sync + Send + Clone + 'static,
+    F: Fn(A0, A1) -> Fut + Sync + Send + Clone,
     Fut: Future<Output = crate::path::Result<Response>> + Send + 'static {
     fn call(&self, ctx: Ctx) -> BoxFuture<'static, crate::path::Result<Response>> {
         let value0: A0 = ExtractFromRequestCtx::extract(&ctx);
@@ -42,7 +42,7 @@ impl<A0, A1, A2, F, Fut> HandlerCtxArgument<(A0, A1, A2)> for F where
     A0: ExtractFromRequestCtx + Send + Sync,
     A1: ExtractFromRequestCtx + Send + Sync,
     A2: ExtractFromRequestCtx + Send + Sync,
-    F: Fn(A0, A1, A2) -> Fut + Sync + Send + Clone + 'static,
+    F: Fn(A0, A1, A2) -> Fut + Sync + Send + Clone,
     Fut: Future<Output = crate::path::Result<Response>> + Send + 'static {
     fn call(&self, ctx: Ctx) -> BoxFuture<'static, crate::path::Result<Response>> {
         let value0: A0 = ExtractFromRequestCtx::extract(&ctx);
@@ -57,7 +57,7 @@ impl<A0, A1, A2, A3, F, Fut> HandlerCtxArgument<(A0, A1, A2, A3)> for F where
     A1: ExtractFromRequestCtx + Send + Sync,
     A2: ExtractFromRequestCtx + Send + Sync,
     A3: ExtractFromRequestCtx + Send + Sync,
-    F: Fn(A0, A1, A2, A3) -> Fut + Sync + Send + Clone + 'static,
+    F: Fn(A0, A1, A2, A3) -> Fut + Sync + Send + Clone,
     Fut: Future<Output = crate::path::Result<Response>> + Send + 'static {
     fn call(&self, ctx: Ctx) -> BoxFuture<'static, crate::path::Result<Response>> {
         let value0: A0 = ExtractFromRequestCtx::extract(&ctx);
@@ -74,7 +74,7 @@ impl<A0, A1, A2, A3, A4, F, Fut> HandlerCtxArgument<(A0, A1, A2, A3, A4)> for F 
     A2: ExtractFromRequestCtx + Send + Sync,
     A3: ExtractFromRequestCtx + Send + Sync,
     A4: ExtractFromRequestCtx + Send + Sync,
-    F: Fn(A0, A1, A2, A3, A4) -> Fut + Sync + Send + Clone + 'static,
+    F: Fn(A0, A1, A2, A3, A4) -> Fut + Sync + Send + Clone,
     Fut: Future<Output = crate::path::Result<Response>> + Send + 'static {
     fn call(&self, ctx: Ctx) -> BoxFuture<'static, crate::path::Result<Response>> {
         let value0: A0 = ExtractFromRequestCtx::extract(&ctx);
