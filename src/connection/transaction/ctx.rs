@@ -2,6 +2,7 @@ use std::borrow::Borrow;
 use std::collections::BTreeMap;
 use std::future::Future;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use key_path::KeyPath;
 use maplit::btreemap;
 use teo_result::Result;
@@ -22,7 +23,7 @@ pub struct Ctx {
 #[derive(Debug)]
 struct CtxInner {
     connection_ctx: connection::Ctx,
-    is_transaction: bool,
+    is_transaction: AtomicBool,
     transactions: tokio::sync::Mutex<BTreeMap<Vec<String>, Arc<dyn Transaction>>>
 }
 
@@ -32,7 +33,7 @@ impl Ctx {
         Self {
             inner: Arc::new(CtxInner {
                 connection_ctx,
-                is_transaction: false,
+                is_transaction: AtomicBool::new(false),
                 transactions: tokio::sync::Mutex::new(btreemap!{})
             })
         }
@@ -42,7 +43,7 @@ impl Ctx {
         Self {
             inner: Arc::new(CtxInner {
                 connection_ctx: self.inner.connection_ctx.clone(),
-                is_transaction: true,
+                is_transaction: AtomicBool::new(true),
                 transactions: tokio::sync::Mutex::new(btreemap!{})
             })
         }
@@ -52,7 +53,7 @@ impl Ctx {
         Self {
             inner: Arc::new(CtxInner {
                 connection_ctx: self.inner.connection_ctx.clone(),
-                is_transaction: false,
+                is_transaction: AtomicBool::new(false),
                 transactions: tokio::sync::Mutex::new(btreemap!{})
             })
         }
@@ -108,7 +109,7 @@ impl Ctx {
         if let Some(transaction) = self.transaction_for_namespace_path(&model.namespace_path()).await {
             transaction
         } else {
-            if self.inner.is_transaction {
+            if self.inner.is_transaction.load(Ordering::SeqCst) {
                 self.transaction_for_model_or_create(model).await.unwrap()
             } else {
                 self.transaction_for_model_or_no_transaction(model).await.unwrap()
@@ -140,7 +141,6 @@ impl Ctx {
             Ok(transaction)
         } else {
             let tran = self.connection_for_model(model).unwrap().no_transaction().await?;
-            self.set_transaction_for_namespace_path(&model.namespace_path(), tran.clone()).await;
             Ok(tran)
         }
     }
@@ -160,7 +160,6 @@ impl Ctx {
             Ok(transaction)
         } else {
             let tran = self.connection_for_namespace(namespace).unwrap().no_transaction().await?;
-            self.set_transaction_for_namespace_path(&namespace.path(), tran.clone()).await;
             Ok(tran)
         }
     }
@@ -186,6 +185,8 @@ impl Ctx {
                 transaction.abort().await?;
             }
         }
+        *self.inner.transactions.lock().await = btreemap! {};
+        self.inner.is_transaction.store(false, Ordering::SeqCst);
         Ok(())
     }
 
@@ -195,6 +196,8 @@ impl Ctx {
                 transaction.commit().await?;
             }
         }
+        *self.inner.transactions.lock().await = btreemap! {};
+        self.inner.is_transaction.store(false, Ordering::SeqCst);
         Ok(())
     }
 
