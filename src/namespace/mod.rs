@@ -192,31 +192,31 @@ impl Namespace {
         current
     }
 
-    pub fn define_model_decorator(&mut self, name: &str, call: impl Fn(Arguments, &mut Model) -> Result<()>) {
+    pub fn define_model_decorator<F>(&mut self, name: &str, call: F) where F: Fn(Arguments, &mut Model) -> Result<()> + 'static {
         self.model_decorators.insert(name.to_owned(), model::Decorator { path: next_path(&self.path, name), call: Arc::new(call) });
     }
 
-    pub fn define_model_field_decorator(&mut self, name: &str, call: impl Fn(Arguments, &mut Field) -> Result<()>) {
+    pub fn define_model_field_decorator(&mut self, name: &str, call: impl Fn(Arguments, &mut Field) -> Result<()> + 'static) {
         self.model_field_decorators.insert(name.to_owned(), model::field::Decorator { path: next_path(&self.path, name), call: Arc::new(call) });
     }
 
-    pub fn define_model_relation_decorator(&mut self, name: &str, call: impl Fn(Arguments, &mut Relation) -> Result<()>) {
+    pub fn define_model_relation_decorator(&mut self, name: &str, call: impl Fn(Arguments, &mut Relation) -> Result<()> + 'static) {
         self.model_relation_decorators.insert(name.to_owned(), model::relation::Decorator { path: next_path(&self.path, name), call: Arc::new(call) });
     }
 
-    pub fn define_model_property_decorator(&mut self, name: &str, call: impl Fn(Arguments, &mut Property) -> Result<()>) {
+    pub fn define_model_property_decorator(&mut self, name: &str, call: impl Fn(Arguments, &mut Property) -> Result<()> + 'static) {
         self.model_property_decorators.insert(name.to_owned(), model::property::Decorator { path: next_path(&self.path, name), call: Arc::new(call) });
     }
 
-    pub fn define_enum_decorator(&mut self, name: &str, call: impl Fn(Arguments, &mut Enum) -> Result<()>) {
+    pub fn define_enum_decorator(&mut self, name: &str, call: impl Fn(Arguments, &mut Enum) -> Result<()> + 'static) {
         self.enum_decorators.insert(name.to_owned(), r#enum::Decorator { path: next_path(&self.path, name), call: Arc::new(call) });
     }
 
-    pub fn define_enum_member_decorator(&mut self, name: &str, call: impl Fn(Arguments, &mut Member) -> Result<()>) {
+    pub fn define_enum_member_decorator(&mut self, name: &str, call: impl Fn(Arguments, &mut Member) -> Result<()> + 'static) {
         self.enum_member_decorators.insert(name.to_owned(), r#enum::member::Decorator { path: next_path(&self.path, name), call: Arc::new(call) });
     }
 
-    pub fn define_handler_decorator(&mut self, name: &str, call: impl Fn(Arguments, &mut Handler) -> Result<()>) {
+    pub fn define_handler_decorator(&mut self, name: &str, call: impl Fn(Arguments, &mut Handler) -> Result<()> + 'static) {
         self.handler_decorators.insert(name.to_owned(), handler::Decorator { path: next_path(&self.path, name), call: Arc::new(call) });
     }
 

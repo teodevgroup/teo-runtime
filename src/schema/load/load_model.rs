@@ -27,7 +27,7 @@ pub fn load_model(main_namespace: &mut Namespace, schema: &Schema, model_declara
         let decorator_declaration = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration().unwrap();
         if let Some(decorator_implementation) = main_namespace.model_decorator_at_path(&decorator_declaration.str_path()) {
             let args = fetch_decorator_arguments(decorator, schema, model_declaration, main_namespace)?;
-            (decorator_implementation.call)(args, &mut model)?;
+            decorator_implementation.call.call(args, &mut model)?;
         }
     }
     let database = main_namespace.namespace_mut_or_create_at_path(&model_declaration.namespace_str_path()).database;
@@ -80,7 +80,7 @@ fn load_model_field(main_namespace: &mut Namespace, field_declaration: &teo_pars
         let decorator_declaration = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration().unwrap();
         if let Some(decorator_implementation) = main_namespace.model_field_decorator_at_path(&decorator_declaration.str_path()) {
             let args = fetch_decorator_arguments(decorator, schema, field_declaration, main_namespace)?;
-            (decorator_implementation.call)(args, &mut field)?;
+            decorator_implementation.call.call(args, &mut field)?;
         }
     }
     field.finalize(database.unwrap(), schema)?;
@@ -122,7 +122,7 @@ fn load_model_relation(main_namespace: &mut Namespace, field_declaration: &teo_p
         let decorator_declaration = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration().unwrap();
         if let Some(decorator_implementation) = main_namespace.model_relation_decorator_at_path(&decorator_declaration.str_path()) {
             let args = fetch_decorator_arguments(decorator, schema, field_declaration, main_namespace)?;
-            (decorator_implementation.call)(args, &mut relation)?;
+            decorator_implementation.call.call(args, &mut relation)?;
         }
     }
     relation.finalize(database.unwrap(), fields);
@@ -145,7 +145,7 @@ fn load_model_property(main_namespace: &mut Namespace, field_declaration: &teo_p
         let decorator_declaration = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration().unwrap();
         if let Some(decorator_implementation) = main_namespace.model_property_decorator_at_path(&decorator_declaration.str_path()) {
             let args = fetch_decorator_arguments(decorator, schema, field_declaration, main_namespace)?;
-            (decorator_implementation.call)(args, &mut property)?;
+            decorator_implementation.call.call(args, &mut property)?;
         }
     }
     property.finalize(database.unwrap(), schema)?;
