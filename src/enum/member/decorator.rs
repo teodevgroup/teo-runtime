@@ -1,11 +1,26 @@
+use std::sync::Arc;
+use educe::Educe;
 use serde::Serialize;
 use crate::arguments::Arguments;
-use crate::r#enum::member::Member;
 use teo_result::Result;
 
-#[derive(Debug, Serialize)]
+use super::Member;
+
+#[derive(Educe, Serialize)]
+#[educe(Debug)]
 pub struct Decorator {
     pub path: Vec<String>,
-    #[serde(skip)]
-    pub(crate) call: fn(Arguments, &mut Member) -> Result<()>
+    #[educe(Debug(ignore))] #[serde(skip)]
+    pub(crate) call: Arc<dyn Call>,
+}
+
+pub trait Call {
+    fn call(&self, args: Arguments, field: &mut Member) -> Result<()>;
+}
+
+impl<F> Call for F where
+        F: Fn(Arguments, &mut Member) -> Result<()> {
+    fn call(&self, args: Arguments, field: &mut Member) -> Result<()> {
+        self(args, field)
+    }
 }

@@ -30,7 +30,7 @@ pub struct Relation {
     pub delete: Delete,
     pub update: Update,
     pub has_foreign_key: bool,
-    data: BTreeMap<String, Object>,
+    pub data: BTreeMap<String, Object>,
 }
 
 impl Relation {
