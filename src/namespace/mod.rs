@@ -173,6 +173,17 @@ impl Namespace {
         current
     }
 
+    pub fn namespace_mut_at_path(&mut self, path: &Vec<&str>) -> Option<&mut Namespace> {
+        let mut current = Some(self);
+        for item in path {
+            if current.is_none() {
+                return None;
+            }
+            current = current.unwrap().namespace_mut(item);
+        }
+        current
+    }
+
     pub fn namespace_mut_or_create_at_path(&mut self, path: &Vec<&str>) -> &mut Namespace {
         let mut current = self;
         for item in path {
