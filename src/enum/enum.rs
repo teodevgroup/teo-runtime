@@ -1,3 +1,6 @@
+use maplit::btreemap;
+use std::collections::BTreeMap;
+use crate::object::Object;
 use serde::Serialize;
 use crate::comment::Comment;
 use crate::r#enum::member::Member;
@@ -11,6 +14,7 @@ pub struct Enum {
     pub option: bool,
     pub interface: bool,
     pub members: Vec<Member>,
+    pub data: BTreeMap<String, Object>,
     pub cache: Cache,
 }
 
@@ -23,6 +27,7 @@ impl Enum {
             option: false,
             interface: false,
             members: vec![],
+            data: btreemap! {},
             cache: Cache {
                 member_names: vec![]
             }

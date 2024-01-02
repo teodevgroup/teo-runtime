@@ -1,5 +1,8 @@
 pub mod decorator;
 
+use maplit::btreemap;
+use std::collections::BTreeMap;
+use crate::object::Object;
 use serde::Serialize;
 use teo_teon::Value;
 pub use decorator::Decorator;
@@ -12,12 +15,13 @@ pub struct Member {
     pub name: String,
     pub comment: Option<Comment>,
     pub value: Value,
+    pub data: BTreeMap<String, Object>,
 }
 
 impl Member {
 
     pub fn new(name: String, value: Value, comment: Option<Comment>) -> Self {
-        Self { name, value, comment }
+        Self { name, value, comment, data: btreemap! {} }
     }
 }
 
