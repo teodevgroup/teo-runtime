@@ -2,15 +2,18 @@ use std::future::Future;
 use futures_util::future::BoxFuture;
 use crate::request::ctx::Ctx;
 use crate::response::Response;
+use async_trait::async_trait;
 
+#[async_trait]
 pub trait Next: Send + Sync {
-    fn call(&self, ctx: Ctx) -> BoxFuture<'static, crate::path::Result<Response>>;
+    async fn call(&self, ctx: Ctx) -> crate::path::Result<Response>;
 }
 
+#[async_trait]
 impl<F, Fut> Next for F where
-    F: Fn(Ctx) -> Fut + Sync + Send,
+    F: Fn(Ctx) -> Fut + Send + Sync,
     Fut: Future<Output = crate::path::Result<Response>> + Send + 'static {
-    fn call(&self, ctx: Ctx) -> BoxFuture<'static, crate::path::Result<Response>> {
-        Box::pin(self(ctx))
+    async fn call(&self, ctx: Ctx) -> crate::path::Result<Response> {
+        self(ctx).await
     }
 }

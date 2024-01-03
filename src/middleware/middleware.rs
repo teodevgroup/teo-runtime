@@ -4,16 +4,19 @@ use crate::middleware::next::Next;
 use crate::request::ctx::Ctx;
 use crate::request::ctx::extract::ExtractFromRequestCtx;
 use crate::response::Response;
+use async_trait::async_trait;
 
+#[async_trait]
 pub trait Middleware: Send + Sync {
-    fn call(&self, ctx: Ctx, next: &'static dyn Next) -> BoxFuture<'static, crate::path::Result<Response>>;
+    async fn call(&self, ctx: Ctx, next: &'static dyn Next) -> crate::path::Result<Response>;
 }
 
+#[async_trait]
 impl<F, Fut> Middleware for F where
     F: Fn(Ctx, &'static dyn Next) -> Fut + Sync + Send,
     Fut: Future<Output = crate::path::Result<Response>> + Send + 'static {
-    fn call(&self, ctx: Ctx, next: &'static dyn Next) -> BoxFuture<'static, crate::path::Result<Response>> {
-        Box::pin(self(ctx, next))
+    async fn call(&self, ctx: Ctx, next: &'static dyn Next) -> crate::path::Result<Response> {
+        self(ctx, next).await
     }
 }
 
