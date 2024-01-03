@@ -26,7 +26,7 @@ use crate::schema::load::load_server::load_server;
 use crate::schema::load::load_test::load_test;
 use crate::schema::load::load_use_middlewares::load_use_middlewares;
 
-pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_loading: bool) -> Result<()> {
+pub async fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_loading: bool) -> Result<()> {
 
     // diagnostics for schema loading
     let mut diagnostics = Diagnostics::new();
@@ -186,7 +186,7 @@ pub fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_load
         }
 
         // load middlewares
-        load_use_middlewares(main_namespace, schema)?;
+        load_use_middlewares(main_namespace, schema).await?;
     }
 
     // load enums

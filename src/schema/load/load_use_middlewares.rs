@@ -2,13 +2,14 @@ use teo_parser::ast::schema::Schema;
 use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::traits::resolved::Resolve;
 use teo_result::Result;
+use async_recursion::async_recursion;
 use crate::arguments::Arguments;
 use crate::middleware::{Block, Use};
 use crate::middleware::middleware::{combine_middleware, empty_middleware, Middleware};
 use crate::namespace::Namespace;
 use crate::schema::fetch::fetch_argument_list::{fetch_argument_list, fetch_argument_list_or_empty};
 
-pub(super) fn load_use_middlewares(main_namespace: &mut Namespace, schema: &Schema) -> Result<()> {
+pub(super) async fn load_use_middlewares(main_namespace: &mut Namespace, schema: &Schema) -> Result<()> {
     // load middleware blocks
     for path in &schema.references.use_middlewares_blocks {
         let use_middlewares_block = schema.find_top_by_path(&path).unwrap().as_use_middlewares_block().unwrap();
@@ -40,11 +41,12 @@ pub(super) fn load_use_middlewares(main_namespace: &mut Namespace, schema: &Sche
     }
 
     // load middleware stack
-    load_middleware_stack(main_namespace, empty_middleware())?;
+    load_middleware_stack(main_namespace, empty_middleware()).await?;
     Ok(())
 }
 
-fn load_middleware_stack(namespace: &mut Namespace, parent_stack: &'static dyn Middleware) -> Result<()> {
+#[async_recursion]
+async fn load_middleware_stack(namespace: &mut Namespace, parent_stack: &'static dyn Middleware) -> Result<()> {
     if let Some(block) = &namespace.middlewares_block {
         let mut middlewares = vec![];
         middlewares.push(parent_stack);
@@ -57,7 +59,7 @@ fn load_middleware_stack(namespace: &mut Namespace, parent_stack: &'static dyn M
         namespace.middleware_stack = parent_stack;
     }
     for child_namespace in namespace.namespaces.values_mut() {
-        load_middleware_stack(child_namespace, namespace.middleware_stack)?;
+        load_middleware_stack(child_namespace, namespace.middleware_stack).await?;
     }
     Ok(())
 }
