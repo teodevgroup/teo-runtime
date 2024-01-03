@@ -34,7 +34,7 @@ pub fn decode_token(token: &String, secret: &str) -> Result<Claims> {
 }
 
 pub(in crate::stdlib) fn load_jwt_middleware(namespace: &mut Namespace) {
-    namespace.define_middleware("jwt", |arguments: Arguments| {
+    namespace.define_middleware("jwt", |arguments: Arguments| async move {
         let secret_string: String = arguments.get("secret")?;
         let secret = Box::leak(Box::new(secret_string)).as_str();
         Ok(middleware_wrap_fn(move |ctx: Ctx, next: &'static dyn Next| async move {

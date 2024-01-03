@@ -13,3 +13,6 @@ pub struct Use {
     pub creator: Arc<dyn Creator>,
     pub arguments: Arguments,
 }
+
+unsafe impl Send for Use { }
+unsafe impl Sync for Use { }

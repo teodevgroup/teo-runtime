@@ -51,7 +51,7 @@ async fn load_middleware_stack(namespace: &mut Namespace, parent_stack: &'static
         let mut middlewares = vec![];
         middlewares.push(parent_stack);
         for r#use in &block.uses {
-            let middleware = r#use.creator.call(r#use.arguments.clone())?;
+            let middleware = r#use.creator.call(r#use.arguments.clone()).await?;
             middlewares.push(middleware);
         }
         namespace.middleware_stack = combine_middleware(middlewares);
