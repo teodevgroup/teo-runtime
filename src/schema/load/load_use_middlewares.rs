@@ -54,6 +54,7 @@ async fn load_middleware_stack(namespace: &mut Namespace, parent_stack: &'static
             let middleware = r#use.creator.call(r#use.arguments.clone()).await?;
             middlewares.push(middleware);
         }
+        middlewares.reverse();
         namespace.middleware_stack = combine_middleware(middlewares);
     } else {
         namespace.middleware_stack = parent_stack;
