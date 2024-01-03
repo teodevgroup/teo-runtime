@@ -2,9 +2,6 @@ use std::future::Future;
 use futures_util::future::BoxFuture;
 use crate::request::ctx::Ctx;
 use crate::response::Response;
-use teo_result::Result;
-use crate::request::ctx::extract::ExtractFromRequestCtx;
-use crate::response::error::IntoResponseWithPathedError;
 
 pub trait Next: Send + Sync {
     fn call(&self, ctx: Ctx) -> BoxFuture<'static, crate::path::Result<Response>>;
