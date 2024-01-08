@@ -1780,7 +1780,7 @@ pub struct ObjectInner {
     inside_after_save_callback: AtomicBool,
     selected_fields: Arc<Mutex<Vec<String>>>,
     modified_fields: Arc<Mutex<BTreeSet<String>>>,
-    value_map: Arc<Mutex<BTreeMap<String, Value>>>,
+    pub value_map: Arc<Mutex<BTreeMap<String, Value>>>,
     previous_value_map: Arc<Mutex<BTreeMap<String, Value>>>,
     pub atomic_updater_map: Arc<Mutex<BTreeMap<String, Value>>>,
     pub relation_mutation_map: Arc<TokioMutex<BTreeMap<String, Value>>>,
