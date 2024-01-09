@@ -2,7 +2,7 @@ use std::fmt::{Debug, Formatter};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use teo_teon::{teon, Value};
-use teo_result::{Result};
+use teo_result::Result;
 use crate::response::body::Body;
 use crate::response::header::readwrite::HeaderMap;
 
@@ -28,41 +28,43 @@ impl Response {
         }
     }
 
-    pub fn json(value: Value) -> Result<Response> {
-        let json_value = serde_json::Value::try_from(value)?;
-        let string_value = serde_json::to_string(&json_value).unwrap();
-        Ok(Self::string(string_value, "application/json"))
+    pub fn teon(value: Value) -> Response {
+        let mut inner = ResponseInner::new();
+        inner.body = Body::teon(value);
+        Self {
+            inner: Arc::new(Mutex::new(inner))
+        }
     }
 
     pub fn html(content: impl Into<String>) -> Result<Response> {
         Ok(Self::string(content.into(), "text/html"))
     }
 
-    pub fn data(value: Value) -> Result<Response> {
-        Self::json(teon!({"data": value}))
+    pub fn data(value: Value) -> Response {
+        Self::teon(teon!({"data": value}))
     }
 
-    pub fn data_meta(data: Value, meta: Value) -> Result<Response> {
-        Self::json(teon!({"data": data, "meta": meta}))
+    pub fn data_meta(data: Value, meta: Value) -> Response {
+        Self::teon(teon!({"data": data, "meta": meta}))
     }
 
-    pub fn error(error: impl Into<crate::path::Error>) -> Result<Response> {
+    pub fn error(error: impl Into<crate::path::Error>) -> Response {
         let path_error = error.into();
         let code = path_error.code;
         let value: Value = path_error.into();
-        let res = Self::json(value)?;
+        let res = Self::teon(value);
         res.set_code(code as u16);
-        Ok(res)
+        res
     }
 
     pub fn file(path: PathBuf) -> Response {
-        let mut res = Self::empty();
+        let res = Self::empty();
         res.inner.lock().unwrap().body = Body::file(path);
         res
     }
 
     pub fn redirect(path: impl Into<String>) -> Response {
-        let mut res = Self::empty();
+        let res = Self::empty();
         res.set_code(301);
         res.headers().set("location", path.into());
         res
