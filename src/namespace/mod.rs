@@ -236,7 +236,7 @@ impl Namespace {
         self.pipeline_items.insert(name.to_owned(), pipeline::Item {
             path: next_path(&self.path, name),
             call: Arc::new(|args: Arguments, ctx: pipeline::Ctx| async {
-                let transform_result: TransformResult<O> = wrap_call.call(ctx).await.into();
+                let transform_result: TransformResult<O> = wrap_call.call(args, ctx).await.into();
                 match transform_result {
                     TransformResult::Object(t) => Ok(t.into()),
                     TransformResult::Result(r) => match r {
@@ -257,7 +257,7 @@ impl Namespace {
             path: next_path(&self.path, name),
             call: Arc::new(|args: Arguments, ctx: pipeline::Ctx| async {
                 let ctx_value = ctx.value().clone();
-                let validate_result: ValidateResult = wrap_call.call(ctx).await.into();
+                let validate_result: ValidateResult = wrap_call.call(args, ctx).await.into();
                 match validate_result {
                     ValidateResult::Validity(validity) => if validity.is_valid() {
                         Ok(ctx_value)
@@ -290,7 +290,7 @@ impl Namespace {
             path: next_path(&self.path, name),
             call: Arc::new(|args: Arguments, ctx: pipeline::Ctx| async {
                 let ctx_value = ctx.value().clone();
-                let callback_result: CallbackResult = wrap_call.call(ctx).await.into();
+                let callback_result: CallbackResult = wrap_call.call(args, ctx).await.into();
                 match callback_result {
                     CallbackResult::Result(t) => match t {
                         Ok(_) => Ok(ctx_value),
@@ -319,7 +319,7 @@ impl Namespace {
                     return Ok(ctx.value().clone());
                 }
                 let ctx_value = ctx.value().clone();
-                let validate_result: ValidateResult = wrap_call.call(previous_value, current_value, ctx).await.into();
+                let validate_result: ValidateResult = wrap_call.call(previous_value, current_value, args, ctx).await.into();
                 match validate_result {
                     ValidateResult::Validity(validity) => if validity.is_valid() {
                         Ok(ctx_value)

@@ -1,6 +1,7 @@
 use futures_util::future::BoxFuture;
 use std::future::Future;
 use teo_result::{Error, Result};
+use crate::arguments::Arguments;
 use crate::object::Object;
 use crate::pipeline::Ctx;
 use super::super::ctx::extract::ExtractFromPipelineCtx;
@@ -26,7 +27,7 @@ impl<T, U> From<std::result::Result<T, U>> for TransformResult<T> where T: Into<
 }
 
 pub trait TransformArgument<A, O: Into<Object>, R: Into<TransformResult<O>>>: Send + Sync + 'static {
-    fn call(&self, ctx: Ctx) -> BoxFuture<'static, R>;
+    fn call(&self, args: Arguments, ctx: Ctx) -> BoxFuture<'static, R>;
 }
 
 impl<A0, O, F, R, Fut> TransformArgument<(A0,), O, R> for F where
@@ -35,7 +36,7 @@ impl<A0, O, F, R, Fut> TransformArgument<(A0,), O, R> for F where
     O: Into<Object> + Sync + Send,
     R: Into<TransformResult<O>> + Send + Sync,
     Fut: Future<Output = R> + Send + 'static {
-    fn call(&self, ctx: Ctx) -> BoxFuture<'static, R> {
+    fn call(&self, args: Arguments, ctx: Ctx) -> BoxFuture<'static, R> {
         let value: A0 = ctx.value().clone().try_into().unwrap();
         Box::pin(self(value))
     }
@@ -48,9 +49,9 @@ impl<A0, A1, O, F, R, Fut> TransformArgument<(A0, A1), O, R> for F where
     O: Into<Object> + Sync + Send,
     R: Into<TransformResult<O>> + Send + Sync,
     Fut: Future<Output = R> + Send + 'static {
-    fn call(&self, ctx: Ctx) -> BoxFuture<'static, R> {
+    fn call(&self, args: Arguments, ctx: Ctx) -> BoxFuture<'static, R> {
         let value: A0 = ctx.value().clone().try_into().unwrap();
-        let arg1: A1 = ExtractFromPipelineCtx::extract(&ctx);
+        let arg1: A1 = ExtractFromPipelineCtx::extract(&args, &ctx);
         Box::pin(self(value, arg1))
     }
 }
@@ -63,10 +64,10 @@ impl<A0, A1, A2, O, F, R, Fut> TransformArgument<(A0, A1, A2), O, R> for F where
     O: Into<Object> + Sync + Send,
     R: Into<TransformResult<O>> + Send + Sync,
     Fut: Future<Output = R> + Send + 'static {
-    fn call(&self, ctx: Ctx) -> BoxFuture<'static, R> {
+    fn call(&self, args: Arguments, ctx: Ctx) -> BoxFuture<'static, R> {
         let value: A0 = ctx.value().clone().try_into().unwrap();
-        let arg1: A1 = ExtractFromPipelineCtx::extract(&ctx);
-        let arg2: A2 = ExtractFromPipelineCtx::extract(&ctx);
+        let arg1: A1 = ExtractFromPipelineCtx::extract(&args, &ctx);
+        let arg2: A2 = ExtractFromPipelineCtx::extract(&args, &ctx);
         Box::pin(self(value, arg1, arg2))
     }
 }
@@ -80,11 +81,11 @@ impl<A0, A1, A2, A3, O, F, R, Fut> TransformArgument<(A0, A1, A2, A3), O, R> for
     O: Into<Object> + Sync + Send,
     R: Into<TransformResult<O>> + Send + Sync,
     Fut: Future<Output = R> + Send + 'static {
-    fn call(&self, ctx: Ctx) -> BoxFuture<'static, R> {
+    fn call(&self, args: Arguments, ctx: Ctx) -> BoxFuture<'static, R> {
         let value: A0 = ctx.value().clone().try_into().unwrap();
-        let arg1: A1 = ExtractFromPipelineCtx::extract(&ctx);
-        let arg2: A2 = ExtractFromPipelineCtx::extract(&ctx);
-        let arg3: A3 = ExtractFromPipelineCtx::extract(&ctx);
+        let arg1: A1 = ExtractFromPipelineCtx::extract(&args, &ctx);
+        let arg2: A2 = ExtractFromPipelineCtx::extract(&args, &ctx);
+        let arg3: A3 = ExtractFromPipelineCtx::extract(&args, &ctx);
         Box::pin(self(value, arg1, arg2, arg3))
     }
 }

@@ -2,6 +2,7 @@ use std::future::Future;
 use futures_util::future::BoxFuture;
 use self::Validity::*;
 use teo_result::{Error, Result};
+use crate::arguments::Arguments;
 use crate::object::Object;
 use crate::pipeline::Ctx;
 use crate::pipeline::ctx::extract::ExtractFromPipelineCtx;
@@ -94,7 +95,7 @@ impl<T, U> From<std::result::Result<T, U>> for ValidateResult where T: Into<Vali
 }
 
 pub trait ValidateArgument<A, O: Into<ValidateResult>>: Send + Sync + 'static {
-    fn call(&self, ctx: Ctx) -> BoxFuture<'static, O>;
+    fn call(&self, args: Arguments, ctx: Ctx) -> BoxFuture<'static, O>;
 }
 
 impl<A0, O, F, Fut> ValidateArgument<(A0,), O> for F where
@@ -102,7 +103,7 @@ impl<A0, O, F, Fut> ValidateArgument<(A0,), O> for F where
     F: Fn(A0) -> Fut + Sync + Send + Clone + 'static,
     O: Into<ValidateResult> + Send + Sync,
     Fut: Future<Output = O> + Send + 'static {
-    fn call(&self, ctx: Ctx) -> BoxFuture<'static, O> {
+    fn call(&self, args: Arguments, ctx: Ctx) -> BoxFuture<'static, O> {
         let value: A0 = ctx.value().clone().try_into().unwrap();
         Box::pin(self(value))
     }
@@ -114,9 +115,9 @@ impl<A0, A1, O, F, Fut> ValidateArgument<(A0, A1), O> for F where
     F: Fn(A0, A1) -> Fut + Sync + Send + 'static,
     O: Into<ValidateResult> + Send + Sync,
     Fut: Future<Output = O> + Send + 'static {
-    fn call(&self, ctx: Ctx) -> BoxFuture<'static, O> {
+    fn call(&self, args: Arguments, ctx: Ctx) -> BoxFuture<'static, O> {
         let value: A0 = ctx.value().clone().try_into().unwrap();
-        let arg1: A1 = ExtractFromPipelineCtx::extract(&ctx);
+        let arg1: A1 = ExtractFromPipelineCtx::extract(&args, &ctx);
         Box::pin(self(value, arg1))
     }
 }
@@ -128,10 +129,10 @@ impl<A0, A1, A2, O, F, Fut> ValidateArgument<(A0, A1, A2), O> for F where
     F: Fn(A0, A1, A2) -> Fut + Sync + Send + 'static,
     O: Into<ValidateResult> + Send + Sync,
     Fut: Future<Output = O> + Send + 'static {
-    fn call(&self, ctx: Ctx) -> BoxFuture<'static, O> {
+    fn call(&self, args: Arguments, ctx: Ctx) -> BoxFuture<'static, O> {
         let value: A0 = ctx.value().clone().try_into().unwrap();
-        let arg1: A1 = ExtractFromPipelineCtx::extract(&ctx);
-        let arg2: A2 = ExtractFromPipelineCtx::extract(&ctx);
+        let arg1: A1 = ExtractFromPipelineCtx::extract(&args, &ctx);
+        let arg2: A2 = ExtractFromPipelineCtx::extract(&args, &ctx);
         Box::pin(self(value, arg1, arg2))
     }
 }
@@ -144,11 +145,11 @@ impl<A0, A1, A2, A3, O, F, Fut> ValidateArgument<(A0, A1, A2, A3), O> for F wher
     F: Fn(A0, A1, A2, A3) -> Fut + Sync + Send + 'static,
     O: Into<ValidateResult> + Send + Sync,
     Fut: Future<Output = O> + Send + 'static {
-    fn call(&self, ctx: Ctx) -> BoxFuture<'static, O> {
+    fn call(&self, args: Arguments, ctx: Ctx) -> BoxFuture<'static, O> {
         let value: A0 = ctx.value().clone().try_into().unwrap();
-        let arg1: A1 = ExtractFromPipelineCtx::extract(&ctx);
-        let arg2: A2 = ExtractFromPipelineCtx::extract(&ctx);
-        let arg3: A3 = ExtractFromPipelineCtx::extract(&ctx);
+        let arg1: A1 = ExtractFromPipelineCtx::extract(&args, &ctx);
+        let arg2: A2 = ExtractFromPipelineCtx::extract(&args, &ctx);
+        let arg3: A3 = ExtractFromPipelineCtx::extract(&args, &ctx);
         Box::pin(self(value, arg1, arg2, arg3))
     }
 }
