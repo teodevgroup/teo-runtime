@@ -26,5 +26,5 @@ pub async fn copy(req_ctx: &request::Ctx) -> crate::path::Result<Response> {
         let refreshed = new.refreshed(include, select).await?;
         refreshed.to_teon_internal(&path!["data"]).await
     }).await?;
-    Ok(Response::data(value)?)
+    Ok(Response::data(value))
 }

@@ -16,10 +16,10 @@ pub async fn find_unique(ctx: &request::Ctx) -> crate::path::Result<Response> {
         path![],
     ).await?;
     match result {
-        None => Ok(Response::data(Value::Null)?),
+        None => Ok(Response::data(Value::Null)),
         Some(obj) => {
             let obj_data = obj.to_teon_internal(&path!["data"]).await?;
-            Ok(Response::data(obj_data)?)
+            Ok(Response::data(obj_data))
         }
     }
 }

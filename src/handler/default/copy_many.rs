@@ -30,5 +30,5 @@ pub async fn copy_many(req_ctx: &request::Ctx) -> crate::path::Result<Response> 
         }
         Ok((retval, count))
     }).await?;
-    Ok(Response::data_meta(Value::Array(retval), teon!({"count": count}))?)
+    Ok(Response::data_meta(Value::Array(retval), teon!({"count": count})))
 }

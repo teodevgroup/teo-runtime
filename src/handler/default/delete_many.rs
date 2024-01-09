@@ -19,5 +19,5 @@ pub async fn delete_many(req_ctx: &request::Ctx) -> crate::path::Result<Response
         }
         Ok((ret_data, count))
     }).await?;
-    Ok(Response::data_meta(Value::Array(objects), teon!({"count": count}))?)
+    Ok(Response::data_meta(Value::Array(objects), teon!({"count": count})))
 }

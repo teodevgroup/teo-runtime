@@ -41,5 +41,5 @@ pub async fn find_many(ctx: &request::Ctx) -> crate::path::Result<Response> {
             Err(_) => return Err(crate::path::Error::unauthorized_error(path!["data", index], "not allowed to read")),
         }
     }
-    Ok(Response::data_meta(Value::Array(result_json), meta)?)
+    Ok(Response::data_meta(Value::Array(result_json), meta))
 }

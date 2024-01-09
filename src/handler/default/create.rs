@@ -15,5 +15,5 @@ pub async fn create(req_ctx: &request::Ctx) -> crate::path::Result<Response> {
         let select = input.get("select");
         Ok(create_internal(ctx.clone(), req_ctx.clone(), create, include, select, model, &path!["create"], action).await?)
     }).await?;
-    Ok(Response::data(value)?)
+    Ok(Response::data(value))
 }

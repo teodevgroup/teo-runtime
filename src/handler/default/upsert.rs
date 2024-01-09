@@ -25,5 +25,5 @@ pub async fn upsert(req_ctx: &request::Ctx) -> crate::path::Result<Response> {
             }
         }
     }).await?;
-    Ok(Response::data(value)?)
+    Ok(Response::data(value))
 }

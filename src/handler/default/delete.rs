@@ -14,5 +14,5 @@ pub async fn delete(req_ctx: &request::Ctx) -> crate::path::Result<Response> {
         object.delete_internal(path!["delete"]).await?;
         Ok(object.to_teon_internal(&path!["data"]).await?)
     }).await?;
-    Ok(Response::data(value)?)
+    Ok(Response::data(value))
 }

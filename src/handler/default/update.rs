@@ -17,5 +17,5 @@ pub async fn update(req_ctx: &request::Ctx) -> crate::path::Result<Response> {
         let select = req_ctx.body().get("select");
         Ok(update_internal(object, update, include, select, &path!["update"]).await?)
     }).await?;
-    Ok(Response::data(value)?)
+    Ok(Response::data(value))
 }

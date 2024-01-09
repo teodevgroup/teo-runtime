@@ -37,5 +37,5 @@ pub async fn copy_or_create(req_ctx: &request::Ctx) -> crate::path::Result<Respo
             }
         }
     }).await?;
-    Ok(Response::data(value)?)
+    Ok(Response::data(value))
 }
