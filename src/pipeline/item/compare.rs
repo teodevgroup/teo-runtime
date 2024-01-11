@@ -7,15 +7,16 @@ use teo_result::Error;
 use crate::arguments::Arguments;
 use crate::pipeline::ctx::extract::ExtractFromPipelineCtx;
 
-pub trait CompareArgument<A, O: Into<ValidateResult>>: Send + Sync + 'static {
+pub trait CompareArgument<A, O: Into<ValidateResult>, E: Into<Error> + std::error::Error>: Send + Sync + 'static {
     fn call(&self, old: Value, new: Value, args: Arguments, ctx: Ctx) -> BoxFuture<'static, O>;
 }
 
-impl<V1, V2, O, F, Fut> CompareArgument<(V1, V2), O> for F where
-    V1: TryFrom<Value, Error=Error> + Send + Sync,
-    V2: TryFrom<Value, Error=Error> + Send + Sync,
+impl<V1, V2, O, F, Fut, E> CompareArgument<(V1, V2), O, E> for F where
+    V1: TryFrom<Value, Error=E> + Send + Sync,
+    V2: TryFrom<Value, Error=E> + Send + Sync,
     O: Into<ValidateResult> + Send + Sync,
     F: Fn(V1, V2) -> Fut + Sync + Send + 'static,
+    E: Into<Error> + std::error::Error,
     Fut: Future<Output = O> + Send + 'static {
     fn call(&self, old: Value, new: Value, args: Arguments, ctx: Ctx) -> BoxFuture<'static, O> {
         let old: V1 = old.try_into().unwrap();
@@ -24,12 +25,13 @@ impl<V1, V2, O, F, Fut> CompareArgument<(V1, V2), O> for F where
     }
 }
 
-impl<V1, V2, A1, O, F, Fut> CompareArgument<(V1, V2, A1), O> for F where
-    V1: TryFrom<Value, Error=Error> + Send + Sync,
-    V2: TryFrom<Value, Error=Error> + Send + Sync,
+impl<V1, V2, A1, O, F, E, Fut> CompareArgument<(V1, V2, A1), O, E> for F where
+    V1: TryFrom<Value, Error=E> + Send + Sync,
+    V2: TryFrom<Value, Error=E> + Send + Sync,
     A1: ExtractFromPipelineCtx + Send + Sync,
     O: Into<ValidateResult> + Send + Sync,
     F: Fn(V1, V2, A1) -> Fut + Sync + Send + 'static,
+    E: Into<Error> + std::error::Error,
     Fut: Future<Output = O> + Send + 'static {
     fn call(&self, old: Value, new: Value, args: Arguments, ctx: Ctx) -> BoxFuture<'static, O> {
         let old: V1 = old.try_into().unwrap();
@@ -39,13 +41,14 @@ impl<V1, V2, A1, O, F, Fut> CompareArgument<(V1, V2, A1), O> for F where
     }
 }
 
-impl<V1, V2, A1, A2, O, F, Fut> CompareArgument<(V1, V2, A1, A2), O> for F where
-    V1: TryFrom<Value, Error=Error> + Send + Sync,
-    V2: TryFrom<Value, Error=Error> + Send + Sync,
+impl<V1, V2, A1, A2, O, F, E, Fut> CompareArgument<(V1, V2, A1, A2), O, E> for F where
+    V1: TryFrom<Value, Error=E> + Send + Sync,
+    V2: TryFrom<Value, Error=E> + Send + Sync,
     A1: ExtractFromPipelineCtx + Send + Sync,
     A2: ExtractFromPipelineCtx + Send + Sync,
     O: Into<ValidateResult> + Send + Sync,
     F: Fn(V1, V2, A1, A2) -> Fut + Sync + Send + 'static,
+    E: Into<Error> + std::error::Error,
     Fut: Future<Output = O> + Send + 'static {
     fn call(&self, old: Value, new: Value, args: Arguments, ctx: Ctx) -> BoxFuture<'static, O> {
         let old: V1 = old.try_into().unwrap();
@@ -56,14 +59,15 @@ impl<V1, V2, A1, A2, O, F, Fut> CompareArgument<(V1, V2, A1, A2), O> for F where
     }
 }
 
-impl<V1, V2, A1, A2, A3, O, F, Fut> CompareArgument<(V1, V2, A1, A2, A3), O> for F where
-    V1: TryFrom<Value, Error=Error> + Send + Sync,
-    V2: TryFrom<Value, Error=Error> + Send + Sync,
+impl<V1, V2, A1, A2, A3, O, F, E, Fut> CompareArgument<(V1, V2, A1, A2, A3), O, E> for F where
+    V1: TryFrom<Value, Error=E> + Send + Sync,
+    V2: TryFrom<Value, Error=E> + Send + Sync,
     A1: ExtractFromPipelineCtx + Send + Sync,
     A2: ExtractFromPipelineCtx + Send + Sync,
     A3: ExtractFromPipelineCtx + Send + Sync,
     O: Into<ValidateResult> + Send + Sync,
     F: Fn(V1, V2, A1, A2, A3) -> Fut + Sync + Send + 'static,
+    E: Into<Error> + std::error::Error,
     Fut: Future<Output = O> + Send + 'static {
     fn call(&self, old: Value, new: Value, args: Arguments, ctx: Ctx) -> BoxFuture<'static, O> {
         let old: V1 = old.try_into().unwrap();

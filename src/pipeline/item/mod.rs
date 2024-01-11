@@ -11,6 +11,7 @@ use crate::pipeline::ctx::Ctx;
 use teo_result::Result;
 use futures_util::future::BoxFuture;
 use serde::Serialize;
+use teo_parser::r#type::Type;
 use crate::object::Object;
 
 #[derive(Educe)]
@@ -41,6 +42,7 @@ pub struct BoundedItem {
     pub arguments: Arguments,
     #[educe(Debug(ignore))] #[serde(skip)]
     pub(crate) call: Arc<dyn Call>,
+    pub(crate) cast_output_type: Option<Type>,
 }
 
 impl BoundedItem {

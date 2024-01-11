@@ -29,7 +29,7 @@ pub fn fetch_expression_kind<I>(expression: &Expression, schema: &Schema, info_p
         ExpressionKind::ArgumentList(_) => unreachable!(),
         ExpressionKind::Subscript(_) => unreachable!(),
         ExpressionKind::Unit(u) => fetch_unit(u, schema, info_provider, expect, namespace),
-        ExpressionKind::Pipeline(p) => fetch_pipeline(p, schema, info_provider, expect, namespace),
+        ExpressionKind::Pipeline(p) => fetch_pipeline(p, schema, info_provider, &expect.expect_for_pipeline(), namespace),
         ExpressionKind::IntSubscript(_) => unreachable!(),
         ExpressionKind::NamedExpression(_) => unreachable!(),
         ExpressionKind::BracketExpression(e) => fetch_expression(e.expression(), schema, info_provider, expect, namespace),

@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 use std::fmt::{Debug, Formatter};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use maplit::btreemap;
 use serde::{Serialize, Serializer};
 use teo_result::Error;

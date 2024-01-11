@@ -1,9 +1,11 @@
 use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::ast::schema::Schema;
 use teo_parser::ast::node::Node;
+use teo_parser::ast::pipeline::PipelineResolved;
 use teo_parser::ast::unit::Unit;
 use teo_parser::r#type::Type;
 use teo_parser::traits::named_identifiable::NamedIdentifiable;
+use teo_parser::traits::resolved::Resolve;
 use teo_parser::utils::top_filter::top_filter_for_pipeline;
 use teo_result::{Error, Result};
 use crate::namespace::Namespace;
@@ -14,12 +16,13 @@ use crate::schema::fetch::fetch_argument_list::fetch_argument_list_or_empty;
 use crate::schema::fetch::fetchers::fetch_identifier::fetch_identifier_to_node;
 
 pub fn fetch_pipeline<I>(pipeline: &teo_parser::ast::pipeline::Pipeline, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
-    fetch_pipeline_unit(pipeline.unit(), schema, info_provider, expect, namespace)
+    fetch_pipeline_unit(&pipeline.resolved().replace_generics(expect.clone()), pipeline.unit(), schema, info_provider, expect, namespace)
 }
 
-fn fetch_pipeline_unit<I>(unit: &Unit, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
+fn fetch_pipeline_unit<I>(pipeline_resolved: &PipelineResolved, unit: &Unit, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
     let mut pipeline = Pipeline::new();
     let mut current_space: Option<&teo_parser::ast::namespace::Namespace> = None;
+    let mut item_index = 0;
     for (index, expression) in unit.expressions().enumerate() {
         if let Some(identifier) = expression.kind.as_identifier() {
             if let Some(this_top) = if current_space.is_some() {
@@ -39,8 +42,10 @@ fn fetch_pipeline_unit<I>(unit: &Unit, schema: &Schema, info_provider: &I, expec
                             path: pipeline_item.path.clone(),
                             arguments,
                             call: pipeline_item.call.clone(),
+                            cast_output_type: pipeline_resolved.items_resolved.get(item_index).map(|r| r.output_type.clone()),
                         });
                         current_space = None;
+                        item_index += 1;
                     }
                     _ => unreachable!()
                 }

@@ -1,5 +1,6 @@
 use teo_teon::Value;
 use crate::arguments::Arguments;
+use crate::object;
 use crate::pipeline::Ctx;
 
 pub trait ExtractFromPipelineCtx {
@@ -19,6 +20,12 @@ impl ExtractFromPipelineCtx for Value {
         } else {
             panic!("cannot extract value from pipeline ctx")
         }
+    }
+}
+
+impl ExtractFromPipelineCtx for object::Object {
+    fn extract(_: &Arguments, ctx: &Ctx) -> Self {
+        ctx.value().clone()
     }
 }
 

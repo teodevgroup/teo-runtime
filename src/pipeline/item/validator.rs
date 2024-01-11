@@ -103,7 +103,7 @@ impl<A0, O, F, Fut> ValidateArgument<(A0,), O> for F where
     F: Fn(A0) -> Fut + Sync + Send + Clone + 'static,
     O: Into<ValidateResult> + Send + Sync,
     Fut: Future<Output = O> + Send + 'static {
-    fn call(&self, args: Arguments, ctx: Ctx) -> BoxFuture<'static, O> {
+    fn call(&self, _: Arguments, ctx: Ctx) -> BoxFuture<'static, O> {
         let value: A0 = ctx.value().clone().try_into().unwrap();
         Box::pin(self(value))
     }

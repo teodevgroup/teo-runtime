@@ -301,10 +301,11 @@ impl Namespace {
         });
     }
 
-    pub fn define_compare_pipeline_item<T, O, F>(&mut self, name: &str, call: F) where
+    pub fn define_compare_pipeline_item<T, O, F, E>(&mut self, name: &str, call: F) where
         T: Send + Sync + 'static,
         O: Into<ValidateResult> + Send + Sync + 'static,
-        F: CompareArgument<T, O> + 'static {
+        E: Into<Error> + std::error::Error,
+        F: CompareArgument<T, O, E> + 'static {
         let wrap_call = Box::leak(Box::new(call));
         self.pipeline_items.insert(name.to_owned(), pipeline::Item {
             path: next_path(&self.path, name),
