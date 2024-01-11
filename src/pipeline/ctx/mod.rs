@@ -76,7 +76,7 @@ impl Ctx {
     pub async fn run_pipeline(&self, pipeline: &Pipeline) -> Result<Object> {
         let mut ctx = self.clone();
         for item in &pipeline.items {
-            ctx = ctx.alter_value(item.call(item.arguments.clone(), ctx.clone()).await?);
+            ctx = ctx.alter_value(item.call(item.arguments.clone(), ctx.clone()).await?.cast(item.cast_output_type.as_ref()));
         }
         Ok(ctx.value().clone())
     }

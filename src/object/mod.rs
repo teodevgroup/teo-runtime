@@ -2,9 +2,11 @@ pub mod serde;
 pub mod convert;
 pub mod traits;
 pub mod error_ext;
+pub mod cast;
 
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
+use teo_parser::r#type::Type;
 use teo_teon::Value;
 use teo_result::Error;
 use crate::model;
@@ -121,6 +123,14 @@ impl Object {
         match result {
             Ok(t) => Ok(t),
             Err(_) => Err(Error::new(message.as_ref())),
+        }
+    }
+
+    pub fn cast(&self, target: Option<&Type>) -> Self {
+        if let Some(teon) = self.as_teon() {
+            Object::from(teon.cast(target))
+        } else {
+            self.clone()
         }
     }
 }
