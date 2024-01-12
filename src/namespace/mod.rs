@@ -1,3 +1,5 @@
+pub mod extensions;
+
 use std::collections::BTreeMap;
 use std::ops::Deref;
 use std::sync::Arc;

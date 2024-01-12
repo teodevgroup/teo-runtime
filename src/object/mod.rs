@@ -13,8 +13,9 @@ use crate::model;
 use crate::pipeline::pipeline::Pipeline;
 use crate::r#struct;
 use teo_result::Result;
-use crate::config::debug::Debug;
 use crate::interface_enum_variant::InterfaceEnumVariant;
+use crate::namespace::Namespace;
+use crate::object::cast::TeonCast;
 
 #[derive(Debug, Clone)]
 pub struct Object {
@@ -126,9 +127,9 @@ impl Object {
         }
     }
 
-    pub fn cast(&self, target: Option<&Type>) -> Self {
+    pub fn cast(&self, target: Option<&Type>, namespace: &Namespace) -> Self {
         if let Some(teon) = self.as_teon() {
-            Object::from(teon.cast(target))
+            Object::from(teon.cast(target, namespace))
         } else {
             self.clone()
         }

@@ -1,23 +1,27 @@
+use indexmap::IndexMap;
+use teo_parser::r#type::synthesized_shape::SynthesizedShape;
 use teo_parser::r#type::Type;
 use teo_teon::types::enum_variant::EnumVariant;
 use teo_teon::types::range::Range;
 use teo_teon::Value;
+use crate::namespace::extensions::SynthesizedShapeReferenceExtension;
+use crate::namespace::Namespace;
 
 pub trait TeonCast {
-    fn cast(&self, target: Option<&Type>) -> Self;
+    fn cast(&self, target: Option<&Type>, namespace: &Namespace) -> Self;
 }
 
 impl TeonCast for Value {
-    fn cast(&self, target: Option<&Type>) -> Self {
+    fn cast(&self, target: Option<&Type>, namespace: &Namespace) -> Self {
         if let Some(target) = target {
-            do_cast(self, target)
+            do_cast(self, target, namespace)
         } else {
             self.clone()
         }
     }
 }
 
-fn do_cast(value: &Value, target: &Type) -> Value {
+fn do_cast(value: &Value, target: &Type, namespace: &Namespace) -> Value {
     match target {
         Type::Int => do_cast_to_int(value),
         Type::Int64 => do_cast_to_int64(value),
@@ -27,28 +31,28 @@ fn do_cast(value: &Value, target: &Type) -> Value {
         Type::Union(types) => {
             let mut result = value.clone();
             for t in types {
-                result = do_cast(&result, t);
+                result = do_cast(&result, t, namespace);
             }
             result
         }
         Type::Enumerable(enumerable) => {
             if let Some(array) = value.as_array() {
-                Value::Array(array.iter().map(|v| do_cast(v, enumerable.as_ref())).collect())
+                Value::Array(array.iter().map(|v| do_cast(v, enumerable.as_ref(), namespace)).collect())
             } else {
-                do_cast(value, enumerable.as_ref())
+                do_cast(value, enumerable.as_ref(), namespace)
             }
         }
-        Type::Optional(inner) => do_cast(value, inner.as_ref()),
+        Type::Optional(inner) => do_cast(value, inner.as_ref(), namespace),
         Type::Array(inner) => {
             if let Some(array) = value.as_array() {
-                Value::Array(array.iter().map(|v| do_cast(v, inner.as_ref())).collect())
+                Value::Array(array.iter().map(|v| do_cast(v, inner.as_ref(), namespace)).collect())
             } else {
                 value.clone()
             }
         }
         Type::Dictionary(inner) => {
             if let Some(dictionary) = value.as_dictionary() {
-                Value::Dictionary(dictionary.iter().map(|(k, v)| (k.clone(), do_cast(v, inner.as_ref()))).collect())
+                Value::Dictionary(dictionary.iter().map(|(k, v)| (k.clone(), do_cast(v, inner.as_ref(), namespace))).collect())
             } else {
                 value.clone()
             }
@@ -56,9 +60,9 @@ fn do_cast(value: &Value, target: &Type) -> Value {
         Type::Tuple(types) => {
             let undetermined = Type::Undetermined;
             if let Some(array) = value.as_array() {
-                Value::Tuple(array.iter().enumerate().map(|(i, v)| do_cast(v, types.get(i).unwrap_or(&undetermined))).collect())
+                Value::Tuple(array.iter().enumerate().map(|(i, v)| do_cast(v, types.get(i).unwrap_or(&undetermined), namespace)).collect())
             } else if let Some(array) = value.as_tuple() {
-                Value::Tuple(array.iter().enumerate().map(|(i, v)| do_cast(v, types.get(i).unwrap_or(&undetermined))).collect())
+                Value::Tuple(array.iter().enumerate().map(|(i, v)| do_cast(v, types.get(i).unwrap_or(&undetermined), namespace)).collect())
             } else {
                 value.clone()
             }
@@ -66,21 +70,41 @@ fn do_cast(value: &Value, target: &Type) -> Value {
         Type::Range(inner) => {
             if let Some(range) = value.as_range() {
                 Value::Range(Range {
-                    start: Box::new(do_cast(range.start.as_ref(), inner.as_ref())),
-                    end: Box::new(do_cast(range.end.as_ref(), inner.as_ref())),
+                    start: Box::new(do_cast(range.start.as_ref(), inner.as_ref(), namespace)),
+                    end: Box::new(do_cast(range.end.as_ref(), inner.as_ref(), namespace)),
                     closed: range.closed
                 })
             } else {
                 value.clone()
             }
         }
-        Type::SynthesizedShape(_) => {}
-        Type::SynthesizedShapeReference(_) => {}
-        Type::SynthesizedEnum(_) => {}
-        Type::SynthesizedEnumReference(_) => {}
-        Type::SynthesizedInterfaceEnum(_) => {}
-        Type::SynthesizedInterfaceEnumReference(_) => {}
-        Type::InterfaceObject(_, _) => {}
+        Type::SynthesizedShape(shape) => {
+            if let Some(dictionary) = value.as_dictionary() {
+                Value::Dictionary(do_cast_shape(dictionary, shape, namespace))
+            } else {
+                value.clone()
+            }
+        }
+        Type::SynthesizedShapeReference(reference) => {
+            if let Some(definition) = reference.fetch_synthesized_definition_for_namespace(namespace) {
+                do_cast(value, definition, namespace)
+            } else {
+                value.clone()
+            }
+        }
+        Type::SynthesizedEnum(_) => do_cast_to_enum_variant(value),
+        Type::SynthesizedEnumReference(_) => do_cast_to_enum_variant(value),
+        Type::SynthesizedInterfaceEnum(_) => do_cast_to_enum_variant(value),
+        Type::SynthesizedInterfaceEnumReference(_) => do_cast_to_enum_variant(value),
+        Type::InterfaceObject(reference, gens) => {
+            if let Some(dictionary) = value.as_dictionary() {
+                let interface = namespace.interface_at_path(&reference.str_path()).unwrap();
+                let shape = interface.shape_from_generics(gens);
+                Value::Dictionary(do_cast_shape(dictionary, &shape, namespace))
+            } else {
+                value.clone()
+            }
+        }
         _ => value.clone(),
     }
 }
@@ -129,4 +153,9 @@ fn do_cast_to_enum_variant(value: &Value) -> Value {
         }),
         _ => value.clone(),
     }
+}
+
+fn do_cast_shape(dictionary: &IndexMap<String, Value>, shape: &SynthesizedShape, namespace: &Namespace) -> IndexMap<String, Value> {
+    let undetermined = Type::Undetermined;
+    dictionary.iter().map(|(k, v)| (k.clone(), do_cast(v, shape.get(k).unwrap_or(&undetermined), namespace))).collect()
 }
