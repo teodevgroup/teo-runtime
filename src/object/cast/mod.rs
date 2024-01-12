@@ -1,5 +1,6 @@
 use teo_parser::r#type::Type;
 use teo_teon::types::enum_variant::EnumVariant;
+use teo_teon::types::range::Range;
 use teo_teon::Value;
 
 pub trait TeonCast {
@@ -24,16 +25,55 @@ fn do_cast(value: &Value, target: &Type) -> Value {
         Type::Float => do_cast_to_float(value),
         Type::EnumVariant(_) => do_cast_to_enum_variant(value),
         Type::Union(types) => {
-
+            let mut result = value.clone();
+            for t in types {
+                result = do_cast(&result, t);
+            }
+            result
         }
         Type::Enumerable(enumerable) => {
-
+            if let Some(array) = value.as_array() {
+                Value::Array(array.iter().map(|v| do_cast(v, enumerable.as_ref())).collect())
+            } else {
+                do_cast(value, enumerable.as_ref())
+            }
         }
         Type::Optional(inner) => do_cast(value, inner.as_ref()),
-        Type::Array(_) => {}
-        Type::Dictionary(_) => {}
-        Type::Tuple(_) => {}
-        Type::Range(_) => {}
+        Type::Array(inner) => {
+            if let Some(array) = value.as_array() {
+                Value::Array(array.iter().map(|v| do_cast(v, inner.as_ref())).collect())
+            } else {
+                value.clone()
+            }
+        }
+        Type::Dictionary(inner) => {
+            if let Some(dictionary) = value.as_dictionary() {
+                Value::Dictionary(dictionary.iter().map(|(k, v)| (k.clone(), do_cast(v, inner.as_ref()))).collect())
+            } else {
+                value.clone()
+            }
+        }
+        Type::Tuple(types) => {
+            let undetermined = Type::Undetermined;
+            if let Some(array) = value.as_array() {
+                Value::Tuple(array.iter().enumerate().map(|(i, v)| do_cast(v, types.get(i).unwrap_or(&undetermined))).collect())
+            } else if let Some(array) = value.as_tuple() {
+                Value::Tuple(array.iter().enumerate().map(|(i, v)| do_cast(v, types.get(i).unwrap_or(&undetermined))).collect())
+            } else {
+                value.clone()
+            }
+        }
+        Type::Range(inner) => {
+            if let Some(range) = value.as_range() {
+                Value::Range(Range {
+                    start: Box::new(do_cast(range.start.as_ref(), inner.as_ref())),
+                    end: Box::new(do_cast(range.end.as_ref(), inner.as_ref())),
+                    closed: range.closed
+                })
+            } else {
+                value.clone()
+            }
+        }
         Type::SynthesizedShape(_) => {}
         Type::SynthesizedShapeReference(_) => {}
         Type::SynthesizedEnum(_) => {}
