@@ -26,9 +26,11 @@ use crate::model::relation::Relation;
 use crate::{object, pipeline, request};
 use crate::model::field::column_named::ColumnNamed;
 use crate::model::field::is_optional::IsOptional;
+use crate::model::field::typed::Typed;
 use crate::model::relation::delete::Delete;
 use crate::model::relation::update::Update;
 use crate::namespace::Namespace;
+use crate::object::cast::TeonCast;
 use crate::object::error_ext;
 use crate::optionality::Optionality;
 use crate::readwrite::write::Write;
@@ -100,10 +102,10 @@ impl Object {
     pub async fn update_teon(&self, value: &Value) -> Result<()> {
         check_user_json_keys(value.as_dictionary().unwrap(), &self.model().cache.input_keys.iter().map(|k| k.as_str()).collect(), self.model())?;
         for (key, value) in value.as_dictionary().unwrap() {
-            if self.model().field(key).is_some() {
-                self.set_value(key, value.clone())?;
-            } else if self.model().property(key).is_some() {
-                self.set_property(key, value).await?;
+            if let Some(field) = self.model().field(key) {
+                self.set_value(key, value.cast(Some(&field.r#type), self.namespace()))?;
+            } else if let Some(field) = self.model().property(key) {
+                self.set_property(key, value.cast(Some(&field.r#type), self.namespace())).await?;
             }
         }
         self.inner.is_initialized.store(true, Ordering::SeqCst);
@@ -162,7 +164,7 @@ impl Object {
                         AtomicUpdater(updator) => self.set_value_to_atomic_updator_map(key, updator),
                         SetValue(value) => {
                             // on set pipeline
-                            let ctx = self.pipeline_ctx_for_path_and_value(path.clone(), value);
+                            let ctx = self.pipeline_ctx_for_path_and_value(path.clone(), value.cast(Some(field.r#type()), self.namespace()));
                             let value: Value = ctx.run_pipeline_into_path_value_error(&field.on_set).await?.try_into()?;
                             self.check_write_rule(key, &value, &path).await?;
                             self.set_value_to_value_map(key, value.clone());
@@ -184,7 +186,7 @@ impl Object {
                             SetValue(v) => v,
                             _ => return Err(error_ext::unexpected_input(path + key)),
                         };
-                        let ctx = self.pipeline_ctx_for_path_and_value(path.clone(), value);
+                        let ctx = self.pipeline_ctx_for_path_and_value(path.clone(), value.cast(Some(property.r#type()), self.namespace()));
                         let _ = ctx.run_pipeline_into_path_value_error(setter).await?;
                     }
                 }
@@ -286,14 +288,16 @@ impl Object {
         if !model_keys.contains_str(key.as_ref()) {
             return Err(Error::new(format!("invalid key {}", key.as_ref())));
         }
-        self.set_value_to_value_map(key.as_ref(), value);
+        let target = self.model().field(key.as_ref()).map(|f| f.r#type());
+        self.set_value_to_value_map(key.as_ref(), value.cast(target, self.namespace()));
         Ok(())
     }
 
     pub async fn set_property(&self, key: &str, value: impl Into<Value>) -> Result<()> {
         let property = self.model().property(key).unwrap();
         let setter = property.setter.as_ref().unwrap();
-        let ctx = self.pipeline_ctx_for_path_and_value(path![key], value.into());
+        let value: Value = value.into();
+        let ctx = self.pipeline_ctx_for_path_and_value(path![key], value.cast(Some(property.r#type()), self.namespace()));
         ctx.run_pipeline(setter).await?;
         Ok(())
     }
