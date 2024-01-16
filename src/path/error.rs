@@ -1,5 +1,6 @@
 use std::any::Any;
 use std::collections::BTreeMap;
+use std::convert::Infallible;
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 use indexmap::{IndexMap, indexmap};
@@ -229,5 +230,11 @@ impl From<&Error> for Value {
             retval.as_dictionary_mut().unwrap().insert("fields".to_owned(), fields.unwrap());
         }
         retval
+    }
+}
+
+impl From<Infallible> for Error {
+    fn from(value: Infallible) -> Self {
+        unreachable!()
     }
 }
