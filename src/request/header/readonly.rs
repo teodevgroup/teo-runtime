@@ -26,7 +26,7 @@ impl HeaderMap {
 
 pub mod r#trait {
 
-    pub trait HeaderMap {
+    pub trait HeaderMap: Send + Sync {
 
         fn keys(&self) -> Vec<&str>;
 
