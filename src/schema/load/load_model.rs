@@ -24,10 +24,11 @@ pub fn load_model(main_namespace: &mut Namespace, schema: &Schema, model_declara
     model.parser_path = model_declaration.path().clone();
     model.comment = load_comment(model_declaration.comment());
     for decorator in model_declaration.decorators() {
-        let decorator_declaration = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration().unwrap();
-        if let Some(decorator_implementation) = main_namespace.model_decorator_at_path(&decorator_declaration.str_path()) {
-            let args = fetch_decorator_arguments(decorator, schema, model_declaration, main_namespace)?;
-            decorator_implementation.call.call(args, &mut model)?;
+        if let Some(decorator_declaration) = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration() {
+            if let Some(decorator_implementation) = main_namespace.model_decorator_at_path(&decorator_declaration.str_path()) {
+                let args = fetch_decorator_arguments(decorator, schema, model_declaration, main_namespace)?;
+                decorator_implementation.call.call(args, &mut model)?;
+            }
         }
     }
     let database = main_namespace.namespace_mut_or_create_at_path(&model_declaration.namespace_str_path()).database;
@@ -77,10 +78,11 @@ fn load_model_field(main_namespace: &mut Namespace, field_declaration: &teo_pars
     }
     field.r#type = field_declaration.type_expr().resolved().clone();
     for decorator in field_declaration.decorators() {
-        let decorator_declaration = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration().unwrap();
-        if let Some(decorator_implementation) = main_namespace.model_field_decorator_at_path(&decorator_declaration.str_path()) {
-            let args = fetch_decorator_arguments(decorator, schema, field_declaration, main_namespace)?;
-            decorator_implementation.call.call(args, &mut field)?;
+        if let Some(decorator_declaration) = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration() {
+            if let Some(decorator_implementation) = main_namespace.model_field_decorator_at_path(&decorator_declaration.str_path()) {
+                let args = fetch_decorator_arguments(decorator, schema, field_declaration, main_namespace)?;
+                decorator_implementation.call.call(args, &mut field)?;
+            }
         }
     }
     field.finalize(database.unwrap(), schema)?;
@@ -119,10 +121,11 @@ fn load_model_relation(main_namespace: &mut Namespace, field_declaration: &teo_p
     r#type = r#type.unwrap_array();
     relation.model = r#type.as_model_object().unwrap().string_path().clone();
     for decorator in field_declaration.decorators() {
-        let decorator_declaration = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration().unwrap();
-        if let Some(decorator_implementation) = main_namespace.model_relation_decorator_at_path(&decorator_declaration.str_path()) {
-            let args = fetch_decorator_arguments(decorator, schema, field_declaration, main_namespace)?;
-            decorator_implementation.call.call(args, &mut relation)?;
+        if let Some(decorator_declaration) = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration() {
+            if let Some(decorator_implementation) = main_namespace.model_relation_decorator_at_path(&decorator_declaration.str_path()) {
+                let args = fetch_decorator_arguments(decorator, schema, field_declaration, main_namespace)?;
+                decorator_implementation.call.call(args, &mut relation)?;
+            }
         }
     }
     relation.finalize(database.unwrap(), fields);
@@ -142,10 +145,11 @@ fn load_model_property(main_namespace: &mut Namespace, field_declaration: &teo_p
     r#type = r#type.unwrap_optional();
     property.r#type = r#type.clone();
     for decorator in field_declaration.decorators() {
-        let decorator_declaration = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration().unwrap();
-        if let Some(decorator_implementation) = main_namespace.model_property_decorator_at_path(&decorator_declaration.str_path()) {
-            let args = fetch_decorator_arguments(decorator, schema, field_declaration, main_namespace)?;
-            decorator_implementation.call.call(args, &mut property)?;
+        if let Some(decorator_declaration) = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration() {
+            if let Some(decorator_implementation) = main_namespace.model_property_decorator_at_path(&decorator_declaration.str_path()) {
+                let args = fetch_decorator_arguments(decorator, schema, field_declaration, main_namespace)?;
+                decorator_implementation.call.call(args, &mut property)?;
+            }
         }
     }
     property.finalize(database.unwrap(), schema)?;

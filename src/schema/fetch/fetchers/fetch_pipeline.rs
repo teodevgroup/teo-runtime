@@ -37,13 +37,14 @@ fn fetch_pipeline_unit<I>(pipeline_resolved: &PipelineResolved, unit: &Unit, sch
                     Node::PipelineItemDeclaration(pipeline_item_declaration) => {
                         let argument_list = unit.expression_at(index + 1).map(|e| e.kind.as_argument_list()).flatten();
                         let arguments = fetch_argument_list_or_empty(argument_list, schema, info_provider, namespace)?;
-                        let pipeline_item = namespace.pipeline_item_at_path(&pipeline_item_declaration.str_path()).unwrap();
-                        pipeline.items.push(BoundedItem {
-                            path: pipeline_item.path.clone(),
-                            arguments,
-                            call: pipeline_item.call.clone(),
-                            cast_output_type: pipeline_resolved.items_resolved.get(item_index).map(|r| r.output_type.clone()),
-                        });
+                        if let Some(pipeline_item) = namespace.pipeline_item_at_path(&pipeline_item_declaration.str_path()) {
+                            pipeline.items.push(BoundedItem {
+                                path: pipeline_item.path.clone(),
+                                arguments,
+                                call: pipeline_item.call.clone(),
+                                cast_output_type: pipeline_resolved.items_resolved.get(item_index).map(|r| r.output_type.clone()),
+                            });
+                        }
                         current_space = None;
                         item_index += 1;
                     }
