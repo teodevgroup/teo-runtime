@@ -25,8 +25,8 @@ pub async fn find_many(ctx: &request::Ctx) -> crate::path::Result<Response> {
     let mut meta = teon!({"count": count});
     let page_size = ctx.body().get("pageSize");
     if page_size.is_some() {
-        let page_size = page_size.unwrap().as_int().unwrap();
-        let count = count as i32;
+        let page_size = page_size.unwrap().to_int64().unwrap();
+        let count = count as i64;
         let mut number_of_pages = count / page_size;
         if count % page_size != 0 {
             number_of_pages += 1;
