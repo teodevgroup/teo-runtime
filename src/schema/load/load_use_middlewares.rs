@@ -3,6 +3,7 @@ use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::traits::resolved::Resolve;
 use teo_result::Result;
 use async_recursion::async_recursion;
+use teo_parser::ast::arith_expr::ArithExpr;
 use crate::arguments::Arguments;
 use crate::middleware::{Block, Use};
 use crate::middleware::middleware::{combine_middleware, empty_middleware, Middleware};
@@ -20,12 +21,19 @@ pub(super) async fn load_use_middlewares(main_namespace: &mut Namespace, schema:
                 let mut arguments = Arguments::default();
                 if let Some(middleware) = main_namespace.middleware_at_path(&path) {
                     let creator = middleware.creator.clone();
-                    if expression.kind.is_unit() {
-                        let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&use_middlewares_block.namespace_str_path());
-                        let last_expression = expression.kind.as_unit().unwrap().expression_at(expression.kind.as_unit().unwrap().expressions().count() - 1).unwrap();
-                        if let Some(argument_list) = last_expression.kind.as_argument_list() {
-                            let new_arguments = fetch_argument_list(argument_list, schema, use_middlewares_block, dest_namespace)?;
-                            arguments = new_arguments;
+                    if let Some(arith_expr) = expression.kind.as_arith_expr() {
+                        match arith_expr {
+                            ArithExpr::Expression(expression) => {
+                                if expression.kind.is_unit() {
+                                    let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&use_middlewares_block.namespace_str_path());
+                                    let last_expression = expression.kind.as_unit().unwrap().expression_at(expression.kind.as_unit().unwrap().expressions().count() - 1).unwrap();
+                                    if let Some(argument_list) = last_expression.kind.as_argument_list() {
+                                        let new_arguments = fetch_argument_list(argument_list, schema, use_middlewares_block, dest_namespace)?;
+                                        arguments = new_arguments;
+                                    }
+                                }
+                            },
+                            _ => ()
                         }
                     }
                     block.uses.push(Use {
