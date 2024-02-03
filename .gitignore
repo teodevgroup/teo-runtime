@@ -2,3 +2,4 @@
 /Cargo.lock
 .idea
 teo-runtime.code-workspace
+.DS_Store
