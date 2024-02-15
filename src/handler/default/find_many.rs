@@ -21,7 +21,7 @@ pub async fn find_many(ctx: &request::Ctx) -> crate::path::Result<Response> {
     count_input_obj.remove("take");
     count_input_obj.remove("pageSize");
     count_input_obj.remove("pageNumber");
-    let count = ctx.transaction_ctx().count(model, &count_input, path![]).await.unwrap();
+    let count = ctx.transaction_ctx().count_objects(model, &count_input, path![]).await.unwrap();
     let mut meta = teon!({"count": count});
     let page_size = ctx.body().get("pageSize");
     if page_size.is_some() {

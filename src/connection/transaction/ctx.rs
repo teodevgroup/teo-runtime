@@ -273,9 +273,19 @@ impl Ctx {
         }
     }
 
-    pub async fn count(&self, model: &'static Model, finder: &Value, path: KeyPath) -> crate::path::Result<usize> {
+    pub async fn count(&self, model: &'static Model, finder: &Value, path: KeyPath) -> crate::path::Result<Value> {
         let transaction = self.transaction_for_model(model).await;
         transaction.count(model, finder, self.clone(), path).await
+    }
+
+    pub async fn count_objects(&self, model: &'static Model, finder: &Value, path: KeyPath) -> crate::path::Result<usize> {
+        let transaction = self.transaction_for_model(model).await;
+        transaction.count_objects(model, finder, self.clone(), path).await
+    }
+
+    pub async fn count_fields(&self, model: &'static Model, finder: &Value, path: KeyPath) -> crate::path::Result<Value> {
+        let transaction = self.transaction_for_model(model).await;
+        transaction.count_fields(model, finder, self.clone(), path).await
     }
 
     pub async fn aggregate(&self, model: &'static Model, finder: &Value, path: KeyPath) -> crate::path::Result<Value> {

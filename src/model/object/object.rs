@@ -651,7 +651,7 @@ impl Object {
         for (opposite_model, opposite_relation) in namespace.model_opposite_relations(model) {
             if opposite_relation.delete == Delete::Deny {
                 let finder = self.intrinsic_where_unique_for_opposite_relation(opposite_relation);
-                let count = self.transaction_ctx().count(opposite_model, &finder, path.clone()).await.unwrap();
+                let count = self.transaction_ctx().count_objects(opposite_model, &finder, path.clone()).await.unwrap();
                 if count > 0 {
                     return Err(error_ext::deletion_denied(path.clone(), &format!("{}.{}", opposite_model.path().join("."), opposite_relation.name())));
                 }
@@ -725,7 +725,7 @@ impl Object {
                     }
                     if contains {
                         let finder = self.intrinsic_where_unique_for_opposite_relation_with_prev_value(opposite_relation);
-                        let count = self.transaction_ctx().count(opposite_model, &finder, path.clone()).await.unwrap();
+                        let count = self.transaction_ctx().count_objects(opposite_model, &finder, path.clone()).await.unwrap();
                         if count > 0 {
                             return Err(error_ext::updation_denied(path.clone(), &format!("{}.{}", opposite_model.path().join("."), opposite_relation.name())));
                         }

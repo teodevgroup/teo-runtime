@@ -24,8 +24,16 @@ impl Ctx {
         self.transaction_ctx.find_many(self.model, finder, None, path![]).await
     }
 
-    pub async fn count(&self, finder: &Value) -> crate::path::Result<usize> {
+    pub async fn count(&self, finder: &Value) -> crate::path::Result<Value> {
         self.transaction_ctx.count(self.model, finder, path![]).await
+    }
+
+    pub async fn count_objects(&self, finder: &Value) -> crate::path::Result<usize> {
+        self.transaction_ctx.count_objects(self.model, finder, path![]).await
+    }
+
+    pub async fn count_fields(&self, finder: &Value) -> crate::path::Result<Value> {
+        self.transaction_ctx.count_fields(self.model, finder, path![]).await
     }
 
     pub async fn aggregate<T, E>(&self, finder: &Value) -> crate::path::Result<T> where T: TryFrom<Value, Error=E>, crate::path::Error: From<E> {
