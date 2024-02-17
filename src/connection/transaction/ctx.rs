@@ -5,7 +5,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use key_path::KeyPath;
 use maplit::btreemap;
-use teo_result::Result;
+use teo_result::{Result, Error};
 use teo_teon::Value;
 use crate::{connection, model, request};
 use crate::connection::connection::Connection;
@@ -283,9 +283,10 @@ impl Ctx {
         transaction.count_objects(model, finder, self.clone(), path).await
     }
 
-    pub async fn count_fields(&self, model: &'static Model, finder: &Value, path: KeyPath) -> crate::path::Result<Value> {
+    pub async fn count_fields<T, E>(&self, model: &'static Model, finder: &Value, path: KeyPath) -> crate::path::Result<T> where T: TryFrom<Value, Error=E>, crate::path::Error: From<E> {
         let transaction = self.transaction_for_model(model).await;
-        transaction.count_fields(model, finder, self.clone(), path).await
+        let value = transaction.count_fields(model, finder, self.clone(), path).await?;
+        Ok(value.try_into()?)
     }
 
     pub async fn aggregate(&self, model: &'static Model, finder: &Value, path: KeyPath) -> crate::path::Result<Value> {

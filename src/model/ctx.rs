@@ -1,5 +1,6 @@
 use key_path::path;
 use teo_teon::Value;
+use teo_result::Error;
 use crate::connection::transaction;
 use crate::model;
 use crate::model::Model;
@@ -32,7 +33,7 @@ impl Ctx {
         self.transaction_ctx.count_objects(self.model, finder, path![]).await
     }
 
-    pub async fn count_fields(&self, finder: &Value) -> crate::path::Result<Value> {
+    pub async fn count_fields<T, E>(&self, finder: &Value) -> crate::path::Result<T> where T: TryFrom<Value, Error=E>, crate::path::Error: From<E> {
         self.transaction_ctx.count_fields(self.model, finder, path![]).await
     }
 
