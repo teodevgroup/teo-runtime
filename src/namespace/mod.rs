@@ -354,12 +354,12 @@ impl Namespace {
     }
 
     pub fn define_model_handler_group<T>(&mut self, name: &str, builder: T) where T: Fn(&mut handler::Group) {
-        let mut handler_group = handler::Group {
+        let handler_group = handler::Group {
             path: next_path(&self.path, name),
             handlers: btreemap!{},
         };
-        builder(&mut handler_group);
         self.model_handler_groups.insert(name.to_owned(), handler_group);
+        builder(self.model_handler_groups.get_mut(name).unwrap());
     }
 
     pub fn define_handler<T, F>(&mut self, name: &str, call: F) where T: 'static, F: 'static + HandlerCtxArgument<T> {
@@ -382,12 +382,12 @@ impl Namespace {
     }
 
     pub fn define_handler_group<T>(&mut self, name: &str, builder: T) where T: Fn(&mut handler::Group) {
-        let mut handler_group = handler::Group {
+        let handler_group = handler::Group {
             path: next_path(&self.path, name),
             handlers: btreemap!{},
         };
-        builder(&mut handler_group);
         self.handler_groups.insert(name.to_owned(), handler_group);
+        builder(self.handler_groups.get_mut(name).unwrap());
     }
 
     pub fn define_struct<T>(&mut self, name: &str, builder: T) where T: Fn(&'static Vec<String>, &mut Struct) {
