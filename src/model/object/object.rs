@@ -328,6 +328,10 @@ impl Object {
     }
 
     fn set_value_to_value_map(&self, key: &str, value: Value) {
+        let value_current = self.get_value(key).unwrap();
+        if value_current == value {
+            return
+        }
         // record previous value if needed
         self.record_previous_value_for_field_if_needed(key);
 
@@ -710,7 +714,8 @@ impl Object {
 
     #[async_recursion]
     async fn save_to_database(&self, path: &KeyPath) -> crate::path::Result<()> {
-        if self.is_modified() {
+        if !self.is_new() && self.is_modified() {
+            println!("will save to database and modified {:?}", self);
             let modified_fields = self.inner.modified_fields.lock().unwrap().clone();
             let namespace = self.namespace();
             let model = self.model();
@@ -737,6 +742,7 @@ impl Object {
                 let mut contains = false;
                 for f_name in modified_fields.iter() {
                     if opposite_relation.references.contains(f_name) {
+                        println!("prev and curr: {} {}", self.get_previous_value(f_name)?, self.get_value(f_name)?);
                         contains = true;
                     }
                 }
@@ -746,6 +752,7 @@ impl Object {
                         Update::Deny => {}, // done before
                         Update::Nullify => {
                             let finder = self.intrinsic_where_unique_for_opposite_relation_with_prev_value(opposite_relation);
+                            println!("into nullify, {} {}", self.is_new(), finder);
                             self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | SINGLE, self.request_ctx(), path.clone(), |object| async move {
                                 for key in &opposite_relation.fields {
                                     object.set_value(key, Value::Null)?;
@@ -756,15 +763,20 @@ impl Object {
                         },
                         Update::Update => {
                             let finder = self.intrinsic_where_unique_for_opposite_relation_with_prev_value(opposite_relation);
+                            println!("into update, {} {}", self.is_new(), finder);
                             self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | SINGLE, self.request_ctx(), path.clone(), |object| async move {
                                 for (local, foreign) in opposite_relation.iter() {
-                                    object.set_value(local, self.get_value(foreign)?)?;
+                                    let current = self.get_value(foreign)?;
+                                    if object.get_value(local)? != current {
+                                        object.set_value(local, current)?;
+                                    }
                                 }
                                 object.save_with_session_and_path( &path![]).await?;
                                 Ok(())
                             }).await?;
                         }
                         Update::Delete => {
+                            println!("into delete");
                             let finder = self.intrinsic_where_unique_for_opposite_relation_with_prev_value(opposite_relation);
                             self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DELETE | SINGLE, self.request_ctx(), path.clone(), |object| async move {
                                 object.delete_from_database(path).await?;
@@ -772,6 +784,7 @@ impl Object {
                             }).await?;
                         }
                         Update::Default => {
+                            println!("into default");
                             let finder = self.intrinsic_where_unique_for_opposite_relation_with_prev_value(opposite_relation);
                             self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | SINGLE, self.request_ctx(), path.clone(), |object| async move {
                                 for key in &opposite_relation.fields {
