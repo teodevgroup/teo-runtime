@@ -715,7 +715,6 @@ impl Object {
     #[async_recursion]
     async fn save_to_database(&self, path: &KeyPath) -> crate::path::Result<()> {
         if !self.is_new() && self.is_modified() {
-            println!("will save to database and modified {:?}", self);
             let modified_fields = self.inner.modified_fields.lock().unwrap().clone();
             let namespace = self.namespace();
             let model = self.model();
@@ -740,19 +739,19 @@ impl Object {
             // nullify and cascade
             for (opposite_model, opposite_relation) in namespace.model_opposite_relations(model) {
                 let mut contains = false;
+                let mut relation_modified_fields = vec![];
                 for f_name in modified_fields.iter() {
                     if opposite_relation.references.contains(f_name) {
-                        println!("prev and curr: {} {}", self.get_previous_value(f_name)?, self.get_value(f_name)?);
+                        relation_modified_fields.push(f_name.as_str());
                         contains = true;
                     }
                 }
-                if contains {
+                if contains && !self.every_field_is_null_previously(relation_modified_fields)? {
                     match opposite_relation.update {
                         Update::NoAction => {} // do nothing
                         Update::Deny => {}, // done before
                         Update::Nullify => {
                             let finder = self.intrinsic_where_unique_for_opposite_relation_with_prev_value(opposite_relation);
-                            println!("into nullify, {} {}", self.is_new(), finder);
                             self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | SINGLE, self.request_ctx(), path.clone(), |object| async move {
                                 for key in &opposite_relation.fields {
                                     object.set_value(key, Value::Null)?;
@@ -763,7 +762,6 @@ impl Object {
                         },
                         Update::Update => {
                             let finder = self.intrinsic_where_unique_for_opposite_relation_with_prev_value(opposite_relation);
-                            println!("into update, {} {}", self.is_new(), finder);
                             self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | SINGLE, self.request_ctx(), path.clone(), |object| async move {
                                 for (local, foreign) in opposite_relation.iter() {
                                     let current = self.get_value(foreign)?;
@@ -776,7 +774,6 @@ impl Object {
                             }).await?;
                         }
                         Update::Delete => {
-                            println!("into delete");
                             let finder = self.intrinsic_where_unique_for_opposite_relation_with_prev_value(opposite_relation);
                             self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DELETE | SINGLE, self.request_ctx(), path.clone(), |object| async move {
                                 object.delete_from_database(path).await?;
@@ -784,7 +781,6 @@ impl Object {
                             }).await?;
                         }
                         Update::Default => {
-                            println!("into default");
                             let finder = self.intrinsic_where_unique_for_opposite_relation_with_prev_value(opposite_relation);
                             self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | SINGLE, self.request_ctx(), path.clone(), |object| async move {
                                 for key in &opposite_relation.fields {
@@ -1779,6 +1775,16 @@ impl Object {
 
     pub fn ignore_relation(&self, name: &str) {
         *self.inner.ignore_relation.lock().unwrap() = Some(name.to_owned()); 
+    }
+
+    fn every_field_is_null_previously(&self, fields: Vec<&str>) -> Result<bool> {
+        let mut result = true;
+        for field in fields {
+            if !self.get_previous_value_or_current_value(field)?.is_null() {
+                result = false;
+            }
+        }
+        Ok(result)
     }
 }
 
