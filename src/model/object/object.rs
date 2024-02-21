@@ -328,6 +328,10 @@ impl Object {
     }
 
     fn set_value_to_value_map(&self, key: &str, value: Value) {
+        let value_current = self.get_value(key).unwrap();
+        if value_current == value {
+            return
+        }
         // record previous value if needed
         self.record_previous_value_for_field_if_needed(key);
 
@@ -710,7 +714,7 @@ impl Object {
 
     #[async_recursion]
     async fn save_to_database(&self, path: &KeyPath) -> crate::path::Result<()> {
-        if self.is_modified() {
+        if !self.is_new() && self.is_modified() {
             let modified_fields = self.inner.modified_fields.lock().unwrap().clone();
             let namespace = self.namespace();
             let model = self.model();
@@ -735,12 +739,14 @@ impl Object {
             // nullify and cascade
             for (opposite_model, opposite_relation) in namespace.model_opposite_relations(model) {
                 let mut contains = false;
+                let mut relation_modified_fields = vec![];
                 for f_name in modified_fields.iter() {
                     if opposite_relation.references.contains(f_name) {
+                        relation_modified_fields.push(f_name.as_str());
                         contains = true;
                     }
                 }
-                if contains {
+                if contains && !self.every_field_is_null_previously(relation_modified_fields)? {
                     match opposite_relation.update {
                         Update::NoAction => {} // do nothing
                         Update::Deny => {}, // done before
@@ -758,7 +764,10 @@ impl Object {
                             let finder = self.intrinsic_where_unique_for_opposite_relation_with_prev_value(opposite_relation);
                             self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | SINGLE, self.request_ctx(), path.clone(), |object| async move {
                                 for (local, foreign) in opposite_relation.iter() {
-                                    object.set_value(local, self.get_value(foreign)?)?;
+                                    let current = self.get_value(foreign)?;
+                                    if object.get_value(local)? != current {
+                                        object.set_value(local, current)?;
+                                    }
                                 }
                                 object.save_with_session_and_path( &path![]).await?;
                                 Ok(())
@@ -1766,6 +1775,16 @@ impl Object {
 
     pub fn ignore_relation(&self, name: &str) {
         *self.inner.ignore_relation.lock().unwrap() = Some(name.to_owned()); 
+    }
+
+    fn every_field_is_null_previously(&self, fields: Vec<&str>) -> Result<bool> {
+        let mut result = true;
+        for field in fields {
+            if !self.get_previous_value_or_current_value(field)?.is_null() {
+                result = false;
+            }
+        }
+        Ok(result)
     }
 }
 
