@@ -8,6 +8,7 @@ pub mod reset_data_sets;
 pub mod bool;
 pub mod runtime;
 pub mod client_language;
+pub mod client_host;
 pub mod action;
 pub mod pipeline;
 pub mod enum_variant;
