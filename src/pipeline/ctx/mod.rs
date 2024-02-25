@@ -61,7 +61,7 @@ impl Ctx {
         self.inner.request_ctx.clone()
     }
 
-    pub async fn resolve_pipeline(&self, object: Object, err_prefix: impl AsRef<str>) -> Result<Object> {
+    pub async fn resolve_pipeline(&self, object: Object, err_prefix: impl Into<String>) -> Result<Object> {
         if let Some(pipeline) = object.as_pipeline() {
             self.run_pipeline_with_err_prefix(pipeline, err_prefix).await
         } else {
@@ -69,7 +69,7 @@ impl Ctx {
         }
     }
 
-    pub async fn run_pipeline_with_err_prefix(&self, pipeline: &Pipeline, err_prefix: impl AsRef<str>) -> Result<Object> {
+    pub async fn run_pipeline_with_err_prefix(&self, pipeline: &Pipeline, err_prefix: impl Into<String>) -> Result<Object> {
         self.run_pipeline(pipeline).await.err_prefix(err_prefix)
     }
 
