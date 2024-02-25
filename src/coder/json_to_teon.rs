@@ -20,8 +20,9 @@ use teo_teon::Value;
 use teo_teon::types::file::File;
 use crate::interface::Interface;
 use crate::namespace::Namespace;
-use crate::path::Error;
+use teo_result::Error;
 use crate::utils::ContainsStr;
+use crate::error_runtime_ext::ErrorRuntimeExt;
 
 pub fn fetch_synthesized_interface_enum<'a>(reference: &SynthesizedInterfaceEnumReference, schema: &'a Schema) -> &'a SynthesizedInterfaceEnum {
     let model = schema.find_top_by_path(reference.owner.as_model_object().unwrap().path()).unwrap().as_model().unwrap();
@@ -42,7 +43,7 @@ pub fn fetch_input<'a>(reference: &SynthesizedShapeReference, main_namespace: &'
     }
 }
 
-pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type, main_namespace: &Namespace) -> crate::path::Result<Value> {
+pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type, main_namespace: &Namespace) -> teo_result::Result<Value> {
     match t {
         Type::Undetermined => Ok(Value::from(json)),
         Type::Ignored => Ok(Value::from(json)),
@@ -108,7 +109,7 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
         },
         Type::Enumerable(inner) => {
             if let Some(json_array) = json.as_array() {
-                let values: Vec<Value> = json_array.iter().enumerate().map(|(i, j)| Ok(json_to_teon_with_type(j, &(path + i), inner.as_ref(), main_namespace)?)).collect::<crate::path::Result<Vec<Value>>>()?;
+                let values: Vec<Value> = json_array.iter().enumerate().map(|(i, j)| Ok(json_to_teon_with_type(j, &(path + i), inner.as_ref(), main_namespace)?)).collect::<teo_result::Result<Vec<Value>>>()?;
                 Ok(Value::Array(values))
             } else {
                 Ok(Value::Array(vec![json_to_teon_with_type(json, path, inner.as_ref(), main_namespace)?]))
@@ -116,7 +117,7 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
         }
         Type::Array(inner) => {
             if let Some(json_array) = json.as_array() {
-                let values: Vec<Value> = json_array.iter().enumerate().map(|(i, j)| json_to_teon_with_type(j, &(path + i), inner.as_ref(), main_namespace)).collect::<crate::path::Result<Vec<Value>>>()?;
+                let values: Vec<Value> = json_array.iter().enumerate().map(|(i, j)| json_to_teon_with_type(j, &(path + i), inner.as_ref(), main_namespace)).collect::<teo_result::Result<Vec<Value>>>()?;
                 Ok(Value::Array(values))
             } else {
                 Err(Error::value_error(path.clone(), "expect array"))
@@ -124,7 +125,7 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
         }
         Type::Dictionary(inner) => {
             if let Some(json_object) = json.as_object() {
-                let values: IndexMap<String, Value> = json_object.iter().map(|(k, j)| Ok((k.clone(), json_to_teon_with_type(j, &(path + k), inner.as_ref(), main_namespace)?))).collect::<crate::path::Result<IndexMap<String, Value>>>()?;
+                let values: IndexMap<String, Value> = json_object.iter().map(|(k, j)| Ok((k.clone(), json_to_teon_with_type(j, &(path + k), inner.as_ref(), main_namespace)?))).collect::<teo_result::Result<IndexMap<String, Value>>>()?;
                 Ok(Value::Dictionary(values))
             } else {
                 Err(Error::value_error(path.clone(), "expect dictionary"))
@@ -176,7 +177,7 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
     }
 }
 
-fn json_to_teon_with_synthesized_enum(json: &serde_json::Value, path: &KeyPath, synthesized_enum: &SynthesizedEnum) -> crate::path::Result<Value> {
+fn json_to_teon_with_synthesized_enum(json: &serde_json::Value, path: &KeyPath, synthesized_enum: &SynthesizedEnum) -> teo_result::Result<Value> {
     if json.is_string() {
         let name = json.as_str().unwrap();
         if synthesized_enum.keys.contains_str(name) {
@@ -189,7 +190,7 @@ fn json_to_teon_with_synthesized_enum(json: &serde_json::Value, path: &KeyPath, 
     Err(Error::value_error(path.clone(), "expect string enum variant"))
 }
 
-pub fn json_to_teon_with_shape(json: &serde_json::Value, path: &KeyPath, shape: &SynthesizedShape, main_namespace: &Namespace) -> crate::path::Result<Value> {
+pub fn json_to_teon_with_shape(json: &serde_json::Value, path: &KeyPath, shape: &SynthesizedShape, main_namespace: &Namespace) -> teo_result::Result<Value> {
     if let Some(object) = json.as_object() {
         let required_keys: BTreeSet<&str> = shape.iter().filter_map(|(k, v)| if !v.is_optional() {
             Some(k.as_str())
@@ -206,7 +207,7 @@ pub fn json_to_teon_with_shape(json: &serde_json::Value, path: &KeyPath, shape: 
         if let Some(not_provided) = not_provided_keys.first() {
             return Err(Error::value_error(path + *not_provided, "expect value"));
         }
-        let map: IndexMap<String, Value> = object.iter().map(|(k, v)| Ok((k.to_owned(), json_to_teon(v, &(path + k), shape.get(k).unwrap(), main_namespace)?))).collect::<crate::path::Result<IndexMap<String, Value>>>()?;
+        let map: IndexMap<String, Value> = object.iter().map(|(k, v)| Ok((k.to_owned(), json_to_teon(v, &(path + k), shape.get(k).unwrap(), main_namespace)?))).collect::<teo_result::Result<IndexMap<String, Value>>>()?;
         Ok(Value::Dictionary(map))
     } else {
         Err(Error::value_error(path.clone(), "unexpected value"))
@@ -214,7 +215,7 @@ pub fn json_to_teon_with_shape(json: &serde_json::Value, path: &KeyPath, shape: 
 
 }
 
-pub fn json_to_teon(json: &serde_json::Value, path: &KeyPath, input: &Type, main_namespace: &Namespace) -> crate::path::Result<Value> {
+pub fn json_to_teon(json: &serde_json::Value, path: &KeyPath, input: &Type, main_namespace: &Namespace) -> teo_result::Result<Value> {
     json_to_teon_with_type(json, path, input, main_namespace)
 }
 

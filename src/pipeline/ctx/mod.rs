@@ -10,6 +10,7 @@ use crate::request;
 use teo_result::{Result, ResultExt};
 use crate::action::Action;
 use crate::connection::transaction;
+use crate::error_runtime_ext::ErrorRuntimeExt;
 
 #[derive(Clone)]
 pub struct Ctx {
@@ -81,17 +82,17 @@ impl Ctx {
         Ok(ctx.value().clone())
     }
 
-    pub async fn run_pipeline_into_path_value_error(&self, pipeline: &Pipeline) -> crate::path::Result<Object> {
+    pub async fn run_pipeline_into_path_value_error(&self, pipeline: &Pipeline) -> teo_result::Result<Object> {
         match self.run_pipeline(pipeline).await {
             Ok(object) => Ok(object),
-            Err(e) => Err(crate::path::Error::value_error(self.path().clone(), e.message))
+            Err(e) => Err(teo_result::Error::value_error(self.path().clone(), e.message))
         }
     }
 
-    pub async fn run_pipeline_into_path_unauthorized_error(&self, pipeline: &Pipeline) -> crate::path::Result<Object> {
+    pub async fn run_pipeline_into_path_unauthorized_error(&self, pipeline: &Pipeline) -> teo_result::Result<Object> {
         match self.run_pipeline(pipeline).await {
             Ok(object) => Ok(object),
-            Err(e) => Err(crate::path::Error::unauthorized_error(self.path().clone(), e.message))
+            Err(e) => Err(teo_result::Error::unauthorized_error(self.path().clone(), e.message))
         }
     }
 

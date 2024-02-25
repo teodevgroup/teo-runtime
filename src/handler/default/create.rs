@@ -5,7 +5,7 @@ use crate::action::action::*;
 use crate::connection::transaction;
 use crate::handler::default::internal::create::create_internal;
 
-pub async fn create(req_ctx: &request::Ctx) -> crate::path::Result<Response> {
+pub async fn create(req_ctx: &request::Ctx) -> teo_result::Result<Response> {
     let model = req_ctx.namespace().model_at_path(&req_ctx.handler_match().path()).unwrap();
     let action = CREATE | SINGLE | ENTRY;
     let value = req_ctx.transaction_ctx().run_transaction(|ctx: transaction::Ctx| async move {

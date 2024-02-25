@@ -27,23 +27,23 @@ pub trait Transaction: Send + Sync + Debug {
 
     // Object manipulation
 
-    async fn save_object(&self, object: &model::Object, path: KeyPath) -> crate::path::Result<()>;
+    async fn save_object(&self, object: &model::Object, path: KeyPath) -> teo_result::Result<()>;
 
-    async fn delete_object(&self, object: &model::Object, path: KeyPath) -> crate::path::Result<()>;
+    async fn delete_object(&self, object: &model::Object, path: KeyPath) -> teo_result::Result<()>;
 
-    async fn find_unique(&self, model: &'static Model, finder: &Value, ignore_select_and_include: bool, action: Action, transaction_ctx: transaction::Ctx, req_ctx: Option<request::Ctx>, path: KeyPath) -> crate::path::Result<Option<model::Object>>;
+    async fn find_unique(&self, model: &'static Model, finder: &Value, ignore_select_and_include: bool, action: Action, transaction_ctx: transaction::Ctx, req_ctx: Option<request::Ctx>, path: KeyPath) -> teo_result::Result<Option<model::Object>>;
 
-    async fn find_many(&self, model: &'static Model, finder: &Value, ignore_select_and_include: bool, action: Action, transaction_ctx: transaction::Ctx, req_ctx: Option<request::Ctx>, path: KeyPath) -> crate::path::Result<Vec<model::Object>>;
+    async fn find_many(&self, model: &'static Model, finder: &Value, ignore_select_and_include: bool, action: Action, transaction_ctx: transaction::Ctx, req_ctx: Option<request::Ctx>, path: KeyPath) -> teo_result::Result<Vec<model::Object>>;
 
-    async fn count(&self, model: &'static Model, finder: &Value, transaction_ctx: transaction::Ctx, path: KeyPath) -> crate::path::Result<Value>;
+    async fn count(&self, model: &'static Model, finder: &Value, transaction_ctx: transaction::Ctx, path: KeyPath) -> teo_result::Result<Value>;
 
-    async fn count_objects(&self, model: &'static Model, finder: &Value, transaction_ctx: transaction::Ctx, path: KeyPath) -> crate::path::Result<usize>;
+    async fn count_objects(&self, model: &'static Model, finder: &Value, transaction_ctx: transaction::Ctx, path: KeyPath) -> teo_result::Result<usize>;
 
-    async fn count_fields(&self, model: &'static Model, finder: &Value, transaction_ctx: transaction::Ctx, path: KeyPath) -> crate::path::Result<Value>;
+    async fn count_fields(&self, model: &'static Model, finder: &Value, transaction_ctx: transaction::Ctx, path: KeyPath) -> teo_result::Result<Value>;
 
-    async fn aggregate(&self, model: &'static Model, finder: &Value, transaction_ctx: transaction::Ctx, path: KeyPath) -> crate::path::Result<Value>;
+    async fn aggregate(&self, model: &'static Model, finder: &Value, transaction_ctx: transaction::Ctx, path: KeyPath) -> teo_result::Result<Value>;
 
-    async fn group_by(&self, model: &'static Model, finder: &Value, transaction_ctx: transaction::Ctx, path: KeyPath) -> crate::path::Result<Vec<Value>>;
+    async fn group_by(&self, model: &'static Model, finder: &Value, transaction_ctx: transaction::Ctx, path: KeyPath) -> teo_result::Result<Vec<Value>>;
 
     // Transaction
 

@@ -81,7 +81,7 @@ pub struct Namespace {
     pub middleware_stack: &'static dyn Middleware,
     #[educe(Debug(ignore))] #[serde(skip)]
     pub handler_map: handler::Map,
-    pub model_opposite_relations_map: BTreeMap<Vec<String>, Vec<(Vec<String>, String)>> // model path, relation name
+    pub model_opposite_relations_map: BTreeMap<Vec<String>, Vec<(Vec<String>, String)>> // model error_ext, relation name
 }
 
 impl Namespace {

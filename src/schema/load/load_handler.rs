@@ -9,9 +9,10 @@ use teo_result::Result;
 use crate::handler::Handler;
 use crate::handler::handler::Method;
 use crate::namespace::Namespace;
-use crate::path::Error;
+use teo_result::Error;
 use crate::request;
 use crate::schema::fetch::fetch_decorator_arguments::fetch_decorator_arguments;
+use crate::error_runtime_ext::ErrorRuntimeExt;
 
 pub fn load_handler(main_namespace: &mut Namespace, schema: &Schema, handler_declaration: &teo_parser::ast::handler::HandlerDeclaration, diagnostics: &mut Diagnostics) -> Result<()> {
     let mut handler = if let Some(handler) = main_namespace.handler_at_path(&handler_declaration.str_path()).cloned() {

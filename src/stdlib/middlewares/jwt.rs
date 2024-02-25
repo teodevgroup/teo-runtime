@@ -8,6 +8,7 @@ use crate::namespace::Namespace;
 use crate::request::ctx::Ctx;
 use teo_result::Result;
 use teo_result::Error;
+use crate::error_runtime_ext::ErrorRuntimeExt;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -40,7 +41,7 @@ pub(in crate::stdlib) fn load_jwt_middleware(namespace: &mut Namespace) {
         Ok(middleware_wrap_fn(move |ctx: Ctx, next: &'static dyn Next| async move {
             if let Some(authorization) = ctx.request().headers().get("authorization") {
                 if authorization.len() < 7 {
-                    return Err(crate::path::Error::value_error_message_only("invalid jwt token"));
+                    return Err(teo_result::Error::value_error_message_only("invalid jwt token"));
                 }
                 let token = &authorization[7..];
                 if let Ok(claims) = decode_token(&token.to_string(), &secret) {
@@ -48,7 +49,7 @@ pub(in crate::stdlib) fn load_jwt_middleware(namespace: &mut Namespace) {
                     // fetch object and set to ctx
                     ctx.data_mut().insert("identity", 2);
                 } else {
-                    return Err(crate::path::Error::value_error_message_only("invalid jwt token"));
+                    return Err(teo_result::Error::value_error_message_only("invalid jwt token"));
                 }
             }
             let res = next.call(ctx).await?;

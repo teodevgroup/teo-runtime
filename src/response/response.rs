@@ -48,12 +48,12 @@ impl Response {
         Self::teon(teon!({"data": data, "meta": meta}))
     }
 
-    pub fn error(error: impl Into<crate::path::Error>) -> Response {
+    pub fn error(error: impl Into<teo_result::Error>) -> Response {
         let path_error = error.into();
         let code = path_error.code;
         let value: Value = path_error.into();
         let res = Self::teon(value);
-        res.set_code(code as u16);
+        res.set_code(code.unwrap_or(500));
         res
     }
 

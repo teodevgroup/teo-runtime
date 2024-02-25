@@ -4,7 +4,7 @@ use crate::action::Action;
 use crate::connection::transaction;
 use crate::model::Model;
 use crate::object::error_ext;
-use crate::path::Result;
+use teo_result::Result;
 use crate::request;
 
 pub(in crate::handler) async fn create_internal<'a>(transaction_ctx: transaction::Ctx, req_ctx: request::Ctx, create: Option<&'a Value>, include: Option<&'a Value>, select: Option<&'a Value>, model: &'static Model, path: &'a KeyPath, action: Action) -> Result<Value> {

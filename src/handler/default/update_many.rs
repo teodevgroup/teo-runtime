@@ -6,7 +6,7 @@ use crate::action::action::*;
 use crate::connection::transaction;
 use crate::handler::default::internal::update::update_internal;
 
-pub async fn update_many(req_ctx: &request::Ctx) -> crate::path::Result<Response> {
+pub async fn update_many(req_ctx: &request::Ctx) -> teo_result::Result<Response> {
     let model = req_ctx.namespace().model_at_path(&req_ctx.handler_match().path()).unwrap();
     let action = UPDATE | MANY | ENTRY;
     let (objects, count) = req_ctx.transaction_ctx().run_transaction(|ctx: transaction::Ctx| async move {

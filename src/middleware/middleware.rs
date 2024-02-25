@@ -6,13 +6,13 @@ use crate::request::ctx::extract::ExtractFromRequestCtx;
 use crate::response::Response;
 
 pub trait Middleware: Send + Sync {
-    fn call(&self, ctx: Ctx, next: &'static dyn Next) -> BoxFuture<'static, crate::path::Result<Response>>;
+    fn call(&self, ctx: Ctx, next: &'static dyn Next) -> BoxFuture<'static, teo_result::Result<Response>>;
 }
 
 impl<F, Fut> Middleware for F where
     F: Fn(Ctx, &'static dyn Next) -> Fut + Sync + Send,
-    Fut: Future<Output = crate::path::Result<Response>> + Send + 'static {
-    fn call(&self, ctx: Ctx, next: &'static dyn Next) -> BoxFuture<'static, crate::path::Result<Response>> {
+    Fut: Future<Output = teo_result::Result<Response>> + Send + 'static {
+    fn call(&self, ctx: Ctx, next: &'static dyn Next) -> BoxFuture<'static, teo_result::Result<Response>> {
         Box::pin(self(ctx, next))
     }
 }
@@ -50,14 +50,14 @@ fn join_middleware(outer: &'static dyn Middleware, inner: &'static dyn Middlewar
 }
 
 pub trait MiddlewareArgument<A>: Send + Sync + 'static {
-    fn call(&self, ctx: Ctx, next: &'static dyn Next) -> BoxFuture<'static, crate::path::Result<Response>>;
+    fn call(&self, ctx: Ctx, next: &'static dyn Next) -> BoxFuture<'static, teo_result::Result<Response>>;
 }
 
 impl<A0, F, Fut> MiddlewareArgument<(A0,)> for F where
     A0: ExtractFromRequestCtx + Send + Sync,
     F: Fn(A0, &'static dyn Next) -> Fut + Sync + Send + Clone + 'static,
-    Fut: Future<Output = crate::path::Result<Response>> + Send + 'static {
-    fn call(&self, ctx: Ctx, next: &'static dyn Next) -> BoxFuture<'static, crate::path::Result<Response>> {
+    Fut: Future<Output = teo_result::Result<Response>> + Send + 'static {
+    fn call(&self, ctx: Ctx, next: &'static dyn Next) -> BoxFuture<'static, teo_result::Result<Response>> {
         let value: A0 = ExtractFromRequestCtx::extract(&ctx);
         Box::pin(self(value, next))
     }
@@ -67,8 +67,8 @@ impl<A0, A1, F, Fut> MiddlewareArgument<(A0, A1)> for F where
     A0: ExtractFromRequestCtx + Send + Sync,
     A1: ExtractFromRequestCtx + Send + Sync,
     F: Fn(A0, A1, &'static dyn Next) -> Fut + Sync + Send + Clone + 'static,
-    Fut: Future<Output = crate::path::Result<Response>> + Send + 'static {
-    fn call(&self, ctx: Ctx, next: &'static dyn Next) -> BoxFuture<'static, crate::path::Result<Response>> {
+    Fut: Future<Output = teo_result::Result<Response>> + Send + 'static {
+    fn call(&self, ctx: Ctx, next: &'static dyn Next) -> BoxFuture<'static, teo_result::Result<Response>> {
         let a0: A0 = ExtractFromRequestCtx::extract(&ctx);
         let a1: A1 = ExtractFromRequestCtx::extract(&ctx);
         Box::pin(self(a0, a1, next))
@@ -80,8 +80,8 @@ impl<A0, A1, A2, F, Fut> MiddlewareArgument<(A0, A1, A2)> for F where
     A1: ExtractFromRequestCtx + Send + Sync,
     A2: ExtractFromRequestCtx + Send + Sync,
     F: Fn(A0, A1, A2, &'static dyn Next) -> Fut + Sync + Send + Clone + 'static,
-    Fut: Future<Output = crate::path::Result<Response>> + Send + 'static {
-    fn call(&self, ctx: Ctx, next: &'static dyn Next) -> BoxFuture<'static, crate::path::Result<Response>> {
+    Fut: Future<Output = teo_result::Result<Response>> + Send + 'static {
+    fn call(&self, ctx: Ctx, next: &'static dyn Next) -> BoxFuture<'static, teo_result::Result<Response>> {
         let a0: A0 = ExtractFromRequestCtx::extract(&ctx);
         let a1: A1 = ExtractFromRequestCtx::extract(&ctx);
         let a2: A2 = ExtractFromRequestCtx::extract(&ctx);
@@ -95,8 +95,8 @@ impl<A0, A1, A2, A3, F, Fut> MiddlewareArgument<(A0, A1, A2, A3)> for F where
     A2: ExtractFromRequestCtx + Send + Sync,
     A3: ExtractFromRequestCtx + Send + Sync,
     F: Fn(A0, A1, A2, A3, &'static dyn Next) -> Fut + Sync + Send + Clone + 'static,
-    Fut: Future<Output = crate::path::Result<Response>> + Send + 'static {
-    fn call(&self, ctx: Ctx, next: &'static dyn Next) -> BoxFuture<'static, crate::path::Result<Response>> {
+    Fut: Future<Output = teo_result::Result<Response>> + Send + 'static {
+    fn call(&self, ctx: Ctx, next: &'static dyn Next) -> BoxFuture<'static, teo_result::Result<Response>> {
         let a0: A0 = ExtractFromRequestCtx::extract(&ctx);
         let a1: A1 = ExtractFromRequestCtx::extract(&ctx);
         let a2: A2 = ExtractFromRequestCtx::extract(&ctx);
