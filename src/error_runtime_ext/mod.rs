@@ -17,7 +17,7 @@ pub trait ErrorRuntimeExt {
 impl ErrorRuntimeExt for Error {
 
     fn value_error(path: KeyPath, message: impl Into<String>) -> Error {
-        Error::new_with_code_title_fields(
+        Error::new_with_code_title_errors(
             "value is invalid",
             400,
             "ValueError",
@@ -36,7 +36,7 @@ impl ErrorRuntimeExt for Error {
     }
 
     fn unique_error(path: KeyPath, constraint: impl AsRef<str>) -> Error {
-        Error::new_with_code_title_fields(
+        Error::new_with_code_title_errors(
             "value is not unique",
             400,
             "UniqueError",
@@ -47,7 +47,7 @@ impl ErrorRuntimeExt for Error {
     }
 
     fn internal_server_error(path: KeyPath, message: impl Into<String>) -> Error {
-        Error::new_with_code_title_fields(
+        Error::new_with_code_title_errors(
             "internal server error",
             500,
             "InternalServerError",
@@ -66,7 +66,7 @@ impl ErrorRuntimeExt for Error {
     }
 
     fn not_found(path: KeyPath) -> Error {
-        Error::new_with_code_title_fields(
+        Error::new_with_code_title_errors(
             "not found",
             404,
             "NotFound",
@@ -85,7 +85,7 @@ impl ErrorRuntimeExt for Error {
     }
 
     fn unauthorized_error(path: KeyPath, message: impl Into<String>) -> Error {
-        Error::new_with_code_title_fields(
+        Error::new_with_code_title_errors(
             "unauthorized",
             401,
             "Unauthorized",
