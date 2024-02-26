@@ -90,8 +90,8 @@ impl ErrorRuntimeExt for Error {
             401,
             "Unauthorized",
             indexmap! {
-            path.to_string() => message.into()
-        }
+                path.to_string() => message.into()
+            }
         )
     }
 
