@@ -34,6 +34,7 @@ impl Method {
 #[derive(Serialize, Clone)]
 pub struct Handler {
     pub path: Vec<String>,
+    pub namespace_path: Vec<String>,
     pub input_type: Type,
     pub output_type: Type,
     pub nonapi: bool,
@@ -58,6 +59,16 @@ impl Handler {
 
     pub fn has_body_input(&self) -> bool {
         !(self.method == Method::Get || self.method == Method::Delete)
+    }
+
+    pub fn custom_url_args_path(&self) -> Option<Vec<String>> {
+        if let Some(interface) = &self.interface {
+            let mut result = self.path.clone();
+            result.push(interface.clone());
+            Some(result)
+        } else {
+            None
+        }
     }
 }
 

@@ -29,6 +29,7 @@ pub fn load_handler(main_namespace: &mut Namespace, schema: &Schema, handler_dec
             method: Method::Post,
             interface: None,
             url: None,
+            namespace_path: handler_declaration.namespace_str_path().iter().map(|s| s.to_string()).collect(),
             call: Box::leak(Box::new(|ctx: request::Ctx| async {
                 Err(Error::not_found_message_only())
             })),

@@ -365,6 +365,7 @@ impl Namespace {
     pub fn define_handler<T, F>(&mut self, name: &str, call: F) where T: 'static, F: 'static + HandlerCtxArgument<T> {
         let wrapped_call = Box::leak(Box::new(call));
         let handler = Handler {
+            namespace_path: self.path.clone(),
             input_type: Type::Undetermined,
             output_type: Type::Undetermined,
             nonapi: false,

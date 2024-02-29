@@ -20,6 +20,11 @@ impl Group {
     pub fn define_handler<T, F>(&mut self, name: &str, call: F) where T: 'static, F: 'static + HandlerCtxArgument<T> {
         let wrapped_call = Box::leak(Box::new(call));
         let handler = Handler {
+            namespace_path: {
+                let mut result = self.path.clone();
+                result.pop();
+                result
+            },
             input_type: Type::Undetermined,
             output_type: Type::Undetermined,
             nonapi: false,
