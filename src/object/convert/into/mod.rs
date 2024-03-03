@@ -7,6 +7,7 @@ pub mod database;
 pub mod reset_data_sets;
 pub mod bool;
 pub mod runtime;
+pub mod type_script_http_provider;
 pub mod client_language;
 pub mod client_host;
 pub mod action;

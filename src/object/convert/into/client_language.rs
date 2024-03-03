@@ -1,4 +1,4 @@
-use crate::config::client::ClientLanguage;
+use crate::config::client::{ClientLanguage, TypeScriptHTTPProvider};
 use teo_result::Error;
 use crate::interface_enum_variant::InterfaceEnumVariant;
 use crate::object::Object;
@@ -9,9 +9,12 @@ impl TryFrom<Object> for ClientLanguage {
 
     fn try_from(ref value: Object) -> std::result::Result<Self, Self::Error> {
         let enum_variant: InterfaceEnumVariant = value.try_into()?;
+
         match enum_variant.value.as_str() {
-            "javaScript" => Ok(ClientLanguage::JavaScript),
-            "typeScript" => Ok(ClientLanguage::TypeScript),
+            "typeScript" => {
+                let http_provider: TypeScriptHTTPProvider = enum_variant.args().unwrap().get_optional("httpProvider")?.unwrap_or(TypeScriptHTTPProvider::Fetch);
+                Ok(ClientLanguage::TypeScript(http_provider))
+            },
             "swift" => Ok(ClientLanguage::Swift),
             "kotlin" => Ok(ClientLanguage::Kotlin),
             "cSharp" => Ok(ClientLanguage::CSharp),

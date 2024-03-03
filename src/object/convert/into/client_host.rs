@@ -9,7 +9,7 @@ impl TryFrom<Object> for ClientHost {
 
     fn try_from(ref value: Object) -> Result<Self, Self::Error> {
         let enum_variant: InterfaceEnumVariant = value.try_into()?;
-        let string: String = enum_variant.args().unwrap().get("value").unwrap();
+        let string: String = enum_variant.args().unwrap().get("value")?;
         match enum_variant.value.as_str() {
             "string" => Ok(ClientHost::String(string)),
             "inject" => Ok(ClientHost::Inject(string)),

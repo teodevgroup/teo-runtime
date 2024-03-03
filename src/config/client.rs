@@ -1,9 +1,15 @@
 use serde::Serialize;
 
 #[derive(Debug, Serialize)]
+pub enum TypeScriptHTTPProvider {
+    Fetch,
+    Taro,
+    WeChat,
+}
+
+#[derive(Debug, Serialize)]
 pub enum ClientLanguage {
-    JavaScript,
-    TypeScript,
+    TypeScript(TypeScriptHTTPProvider),
     Swift,
     Kotlin,
     CSharp,
