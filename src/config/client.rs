@@ -7,6 +7,29 @@ pub enum TypeScriptHTTPProvider {
     WeChat,
 }
 
+impl TypeScriptHTTPProvider {
+    pub fn is_fetch(&self) -> bool {
+        match self {
+            Self::Fetch => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_taro(&self) -> bool {
+        match self {
+            Self::Taro => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_wechat(&self) -> bool {
+        match self {
+            Self::WeChat => true,
+            _ => false,
+        }
+    }
+}
+
 #[derive(Debug, Serialize)]
 pub enum ClientLanguage {
     TypeScript(TypeScriptHTTPProvider),
@@ -14,6 +37,16 @@ pub enum ClientLanguage {
     Kotlin,
     CSharp,
     Dart,
+}
+
+impl ClientLanguage {
+
+    pub fn ts_http_provider(&self) -> Option<&TypeScriptHTTPProvider> {
+        match self {
+            ClientLanguage::TypeScript(v) => Some(v),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Serialize)]
