@@ -65,6 +65,8 @@ pub fn fetch_enum_variant_literal<I>(e: &EnumVariantLiteral, schema: &Schema, in
                 let mut args = None;
                 if let Some(argument_list) = e.argument_list() {
                     args = Some(fetch_argument_list(argument_list, schema, info_provider, namespace)?);
+                } else if member.argument_list_declaration().is_some() {
+                    args = Some(Arguments::new(btreemap! {}))
                 }
                 if r#enum.option {
                     Ok(Object::from(Value::OptionVariant(OptionVariant {
