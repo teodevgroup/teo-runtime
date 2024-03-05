@@ -52,8 +52,8 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
         Type::Bool => if json.is_boolean() { Ok(Value::from(json)) } else { Err(Error::value_error(path.clone(), "expect bool")) },
         Type::Int => if json.is_i64() { Ok(Value::Int(json.as_i64().unwrap() as i32)) } else { Err(Error::value_error(path.clone(), "expect int")) },
         Type::Int64 => if json.is_i64() { Ok(Value::Int64(json.as_i64().unwrap())) } else { Err(Error::value_error(path.clone(), "expect int 64")) },
-        Type::Float32 => if json.is_f64() { Ok(Value::Float32(json.as_f64().unwrap() as f32)) } else { Err(Error::value_error(path.clone(), "expect float 32")) },
-        Type::Float => if json.is_f64() { Ok(Value::Float(json.as_f64().unwrap())) } else { Err(Error::value_error(path.clone(), "expect float")) },
+        Type::Float32 => if json.is_f64() { Ok(Value::Float32(json.as_f64().unwrap() as f32)) } else if json.is_i64() { Ok(Value::Float32(json.as_i64().unwrap() as f32)) } else { Err(Error::value_error(path.clone(), "expect float 32")) },
+        Type::Float => if json.is_f64() { Ok(Value::Float(json.as_f64().unwrap())) } else if json.is_i64() { Ok(Value::Float(json.as_i64().unwrap() as f64)) } else { Err(Error::value_error(path.clone(), "expect float")) },
         Type::Decimal => if json.is_string() {
             Ok(Value::Decimal(match BigDecimal::from_str(json.as_str().unwrap()) {
                 Ok(s) => s,
