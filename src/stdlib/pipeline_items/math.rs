@@ -172,11 +172,11 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &mut Namespace) {
         ).await?;
         let arg: &Value = arg_object.try_into_err_prefix("pow(value)")?;
         if input.is_any_int() {
-            if arg.is_any_int() {
+            if !arg.is_any_int() {
                 return Err(Error::new("pow(value): value is not integer"));
             }
         } else if input.is_any_float() {
-            if arg.is_any_int_or_float() {
+            if !arg.is_any_int_or_float() {
                 return Err(Error::new("pow(value): value is not int or float"));
             }
         }
