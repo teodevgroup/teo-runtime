@@ -836,14 +836,14 @@ impl Object {
             self.apply_on_save_pipeline_and_validate_required_fields(path, ignore_required_relation).await?;
             self.trigger_before_save_callbacks(path).await?;
             // perform relation manipulations (has foreign key)
-            self.perform_relation_manipulations(|r| r.has_foreign_key, path).await?;
+            self.perform_relation_manipulations(|r| r.has_foreign_key, path, is_new, is_modified).await?;
             self.save_to_database(path).await?;
         } else {
             // perform relation manipulations (has foreign key)
-            self.perform_relation_manipulations(|r| r.has_foreign_key, path).await?;
+            self.perform_relation_manipulations(|r| r.has_foreign_key, path, is_new, is_modified).await?;
         }
         // perform relation manipulations (doesn't have foreign key)
-        self.perform_relation_manipulations(|r| !r.has_foreign_key, path).await?;
+        self.perform_relation_manipulations(|r| !r.has_foreign_key, path, is_new, is_modified).await?;
         // clear properties
         self.clear_state();
         if is_modified || is_new {
@@ -1025,7 +1025,7 @@ impl Object {
         Value::Dictionary(identifier)
     }
 
-    async fn perform_relation_manipulations<F: Fn(&'static Relation) -> bool>(&self, f: F, path: &KeyPath) -> Result<()> {
+    async fn perform_relation_manipulations<F: Fn(&'static Relation) -> bool>(&self, f: F, path: &KeyPath, is_new: bool, is_modified: bool) -> Result<()> {
         for relation in self.model().relations() {
             if f(relation) {
                 let many = relation.is_vec;
@@ -1072,9 +1072,9 @@ impl Object {
                 let relation_mutation_map = self.inner.relation_mutation_map.lock().await;
                 if let Some(manipulation) = relation_mutation_map.get(relation.name()) {
                     if many {
-                        self.perform_relation_manipulation_many(relation, manipulation, &(path + relation.name())).await?;
+                        self.perform_relation_manipulation_many(relation, manipulation, &(path + relation.name()), is_new, is_modified).await?;
                     } else {
-                        self.perform_relation_manipulation_one(relation, manipulation, &(path + relation.name())).await?;
+                        self.perform_relation_manipulation_one(relation, manipulation, &(path + relation.name()), is_new, is_modified).await?;
                     }
                 }
             }
@@ -1498,8 +1498,8 @@ impl Object {
         Ok(())
     }
 
-    async fn perform_relation_manipulation_one_inner(&self, relation: &'static Relation, action: Action, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
-        if !relation.is_vec && !relation.has_foreign_key && !self.is_new() {
+    async fn perform_relation_manipulation_one_inner(&self, relation: &'static Relation, action: Action, value: &Value, path: &KeyPath, is_new: bool, is_modified: bool) -> Result<()> {
+        if !relation.is_vec && !relation.has_foreign_key && !is_new {
             match action {
                 NESTED_CREATE_ACTION | NESTED_CONNECT_ACTION | NESTED_CONNECT_OR_CREATE_ACTION => {
                     let disconnect_value = self.intrinsic_where_unique_for_relation(relation);
@@ -1553,7 +1553,7 @@ impl Object {
         }
     }
 
-    async fn perform_relation_manipulation_one(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
+    async fn perform_relation_manipulation_one(&self, relation: &'static Relation, value: &Value, path: &KeyPath, is_new: bool, is_modified: bool) -> Result<()> {
         for (key, value) in value.as_dictionary().unwrap() {
             let key = key.as_str();
             let path = path + key;
@@ -1563,7 +1563,7 @@ impl Object {
             // todo: action transform
             //let ctx = PipelineCtx::initial_state_with_value(normalized_value.as_ref().clone(), self.transaction_ctx().transaction_for_model(self.model()).unwrap(), self.initiator().as_req()).with_path(error_ext.clone()).with_action(action);
             //let (transformed_value, new_action) = other_model.transformed_action(ctx).await?;
-            self.perform_relation_manipulation_one_inner(relation, action, &normalized_value, &path).await?;
+            self.perform_relation_manipulation_one_inner(relation, action, &normalized_value, &path, is_new, is_modified).await?;
         }
         Ok(())
     }
@@ -1591,7 +1591,7 @@ impl Object {
         }
     }
 
-    async fn perform_relation_manipulation_many(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
+    async fn perform_relation_manipulation_many(&self, relation: &'static Relation, value: &Value, path: &KeyPath, is_new: bool, is_modified: bool) -> teo_result::Result<()> {
         for (key, value) in value.as_dictionary().unwrap() {
             let key = key.as_str();
             let path = path + key;
