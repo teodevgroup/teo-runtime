@@ -102,7 +102,13 @@ pub fn fetch_enum_variant_literal<I>(e: &EnumVariantLiteral, schema: &Schema, in
             let synthesized_interface_enum = fetch_synthesized_interface_enum(synthesized_interface_enum_reference, schema);
             fetch_enum_variant_literal_from_synthesized_interface_enum(e, schema, info_provider, synthesized_interface_enum, namespace)
         },
-        _ => panic!()
+        Type::FieldName(name) => {
+            Ok(Object::from(Value::EnumVariant(EnumVariant {
+                value: name.clone(),
+                args: None,
+            })))
+        }
+        _ => unreachable!(),
     }
 }
 
