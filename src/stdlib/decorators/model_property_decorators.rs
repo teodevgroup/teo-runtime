@@ -43,4 +43,14 @@ pub(in crate::stdlib) fn load_model_property_decorators(namespace: &mut Namespac
     namespace.define_model_property_decorator("unique", |arguments, property| {
         unique_decorator(arguments, property)
     });
+
+    namespace.define_model_property_decorator("inputOmissible", |arguments, property| {
+        property.input_omissible = true;
+        Ok(())
+    });
+
+    namespace.define_model_property_decorator("outputOmissible", |arguments, property| {
+        property.output_omissible = true;
+        Ok(())
+    });
 }
