@@ -119,7 +119,7 @@ impl Map {
             url = url.trim_end_matches("/");
         }
         let parts = url.split("/");
-        if parts.clone().count() < 2 {
+        if parts.clone().count() < 1 {
             return None;
         }
         let mut result: Vec<String> = parts.map(|p| p.to_string()).collect();
