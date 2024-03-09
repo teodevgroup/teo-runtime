@@ -31,8 +31,10 @@ impl Input {
     pub fn has_i_mode(map: &IndexMap<String, Value>) -> bool {
         match map.get("mode") {
             Some(val) => {
-                if let Some(str) = val.as_str() {
-                    return str == "caseInsensitive"
+                if let Some(variant) = val.as_enum_variant() {
+                    return variant.value.as_str() == "caseInsensitive"
+                } else if let Some(variant) = val.as_str() {
+                    return variant == "caseInsensitive"
                 } else {
                     false
                 }
