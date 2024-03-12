@@ -64,6 +64,7 @@ pub struct Namespace {
     pub pipeline_items: BTreeMap<String, pipeline::Item>,
     pub middlewares: BTreeMap<String, middleware::Definition>,
     pub handlers: BTreeMap<String, Handler>,
+    pub handler_templates: BTreeMap<String, Handler>,
     pub model_handler_groups: BTreeMap<String, handler::Group>,
     pub handler_groups: BTreeMap<String, handler::Group>,
     pub server: Option<Server>,
@@ -112,6 +113,7 @@ impl Namespace {
             middlewares: btreemap! {},
             model_handler_groups: btreemap! {},
             handlers: btreemap!{},
+            handler_templates: btreemap! {},
             handler_groups: btreemap! {},
             server: None,
             connector: None,
@@ -380,6 +382,26 @@ impl Namespace {
             })),
         };
         self.handlers.insert(name.to_owned(), handler);
+    }
+
+    pub fn define_handler_template<T, F>(&mut self, name: &str, call: F) where T: 'static, F: 'static + HandlerCtxArgument<T> {
+        let wrapped_call = Box::leak(Box::new(call));
+        let handler = Handler {
+            namespace_path: self.path.clone(),
+            input_type: Type::Undetermined,
+            output_type: Type::Undetermined,
+            nonapi: false,
+            format: HandlerInputFormat::Json,
+            path: next_path(&self.path, name),
+            ignore_prefix: false,
+            method: Method::Post,
+            interface: None,
+            url: None,
+            call: Box::leak(Box::new(|ctx: request::Ctx| async {
+                wrapped_call.call(ctx).await
+            })),
+        };
+        self.handler_templates.insert(name.to_owned(), handler);
     }
 
     pub fn define_handler_group<T>(&mut self, name: &str, builder: T) where T: Fn(&mut handler::Group) {
