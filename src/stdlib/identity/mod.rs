@@ -74,11 +74,11 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
         Ok(())
     });
 
-    identity_namespace.define_pipeline_item("jwt", |arguments, pipeline_ctx| async move {
+    identity_namespace.define_pipeline_item("jwt", |arguments: Arguments, pipeline_ctx: pipeline::Ctx| async move {
         let jwt_secret: String = arguments.get("secret")?;
         let expired: Option<i64> = arguments.get_optional("expired")?;
 
-        Ok(())
+        Ok(pipeline_ctx.value().clone())
     });
 
     identity_namespace.define_handler_template("signIn", |req_ctx: request::Ctx| async move {
@@ -138,19 +138,30 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
             "value": checker_value.unwrap(),
             "companions": companion_values,
         });
-        let pipeline_ctx = pipeline::Ctx::new(Object::from(pipeline_input), object, path!["credentials"], CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx.transaction_ctx(), Some(req_ctx.clone()));
+        let pipeline_ctx = pipeline::Ctx::new(Object::from(pipeline_input), object.clone(), path!["credentials"], CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx.transaction_ctx(), Some(req_ctx.clone()));
         let _ = pipeline_ctx.run_pipeline(auth_checker_pipeline).await?;
+        let self_pipeline_ctx = pipeline::Ctx::new(Object::from(&object), object.clone(), path![], CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx.transaction_ctx(), Some(req_ctx.clone()));
+        if let Some(validator) = model.data.get("identity:validateAccount") {
+            let validator = validator.as_pipeline().unwrap();
+            let _ = self_pipeline_ctx.run_pipeline(validator).await?;
+        }
+        let Some(token_issuer) = model.data.get("identity:tokenIssuer") else {
+            return Err(Error::internal_server_error_message_only("missing identity token issuer"));
+        };
+        let token_issuer = token_issuer.as_pipeline().unwrap();
+        let token_string: String = self_pipeline_ctx.run_pipeline(token_issuer).await?.try_into()?;
         // Output to the client
         let include = input.get("include");
         let select = input.get("select");
         let obj = object.refreshed(include, select).await?;
-        // @identity.tokenIssuer($identity.jwt($self.get(.duration).default(3600)))
-        // @identity.validateAccount()
-        Ok(Response::html(""))
+        let obj_teon = obj.to_teon().await?;
+        Ok(Response::data_meta(obj_teon, teon!({
+            "token": token_string
+        })))
     });
 
     identity_namespace.define_handler_template("identity", |req_ctx: request::Ctx| async move {
-
+        Ok::<Response, Error>(Response::html("")?)
     });
 
     identity_namespace.define_middleware("identityFromJwt", |arguments: Arguments| async move {
@@ -159,15 +170,23 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
         Ok(middleware_wrap_fn(move |ctx: Ctx, next: &'static dyn Next| async move {
             if let Some(authorization) = ctx.request().headers().get("authorization") {
                 if authorization.len() < 7 {
-                    return Err(teo_result::Error::value_error_message_only("invalid jwt token"));
+                    return Err(Error::value_error_message_only("invalid jwt token"));
                 }
                 let token = &authorization[7..];
                 if let Ok(claims) = decode_token(&token.to_string(), &secret) {
                     let json_identifier = &claims.id;
-                    // fetch object and set to ctx
-                    ctx.data_mut().insert("identity", 2);
+                    let Some(model_ctx) = ctx.transaction_ctx().model_ctx_for_model_at_path(&claims.model.iter().map(|s| s.as_str()).collect()) else {
+                        return Err(Error::unauthorized_error_message_only("invalid jwt token"));
+                    };
+                    let teon_identifier = Value::from(json_identifier);
+                    let object: Option<model::Object> = model_ctx.find_unique(&teon_identifier).await?;
+                    if let Some(object) = object {
+                        ctx.data_mut().insert("identity", Object::from(object));
+                    } else {
+                        return Err(Error::unauthorized_error_message_only("invalid jwt token"));
+                    }
                 } else {
-                    return Err(teo_result::Error::value_error_message_only("invalid jwt token"));
+                    return Err(Error::unauthorized_error_message_only("invalid jwt token"));
                 }
             }
             let res = next.call(ctx).await?;

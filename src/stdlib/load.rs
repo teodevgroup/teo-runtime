@@ -6,7 +6,6 @@ use crate::stdlib::decorators::model_decorators::load_model_decorators;
 use crate::stdlib::decorators::model_field_decorators::load_model_field_decorators;
 use crate::stdlib::decorators::model_property_decorators::load_model_property_decorators;
 use crate::stdlib::decorators::model_relation_decorators::load_model_relation_decorators;
-use crate::stdlib::middlewares::jwt::load_jwt_middleware;
 use crate::stdlib::middlewares::log_request::load_log_request_middleware;
 use crate::stdlib::pipeline_items::logical::load_pipeline_logical_items;
 use crate::stdlib::pipeline_items::math::load_pipeline_math_items;
@@ -55,7 +54,6 @@ pub fn load(namespace: &mut Namespace) {
     load_bcrypt_items(std_namespace);
     // middlewares
     load_log_request_middleware(std_namespace);
-    load_jwt_middleware(std_namespace);
     // libraries
     load_identity_library(std_namespace);
 }
