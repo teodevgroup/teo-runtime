@@ -58,6 +58,12 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
         Ok(())
     });
 
+    identity_namespace.define_model_decorator("jwtSecret", |arguments, model| {
+        let secret: String = arguments.get("pipeline")?;
+        model.data.insert("identity:jwtSecret".to_owned(), secret.into());
+        Ok(())
+    });
+
     identity_namespace.define_model_field_decorator("id", |arguments, field| {
         field.data.insert("identity:id".to_owned(), true.into());
         Ok(())
@@ -75,10 +81,19 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
     });
 
     identity_namespace.define_pipeline_item("jwt", |arguments: Arguments, pipeline_ctx: pipeline::Ctx| async move {
-        let jwt_secret: String = arguments.get("secret")?;
+        let object = pipeline_ctx.object();
+        let Some(jwt_secret) = object.model().data.get("identity:jwtSecret") else {
+            return Err(Error::internal_server_error_message_only("missing @identity.jwtSecret"));
+        };
+        let jwt_secret: String = jwt_secret.try_into()?;
         let expired: Option<i64> = arguments.get_optional("expired")?;
-
-        Ok(pipeline_ctx.value().clone())
+        let json_identifier: JsonValue = object.identifier().try_into()?;
+        let claims = JwtClaims {
+            id: json_identifier,
+            model: object.model().path.clone(),
+            exp: if let Some(expired) = expired { expired as usize } else { std::usize::MAX },
+        };
+        Ok(encode_token(claims, &jwt_secret).into())
     });
 
     identity_namespace.define_handler_template("signIn", |req_ctx: request::Ctx| async move {
@@ -116,7 +131,7 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
                     return Err(Error::value_error(path!["credentials", k.as_str()], "multiple @identity.checker value received"));
                 }
             }
-            if let Some(f) = companion_fields.iter().find(|f| f.name() == k.as_str()) {
+            if let Some(_) = companion_fields.iter().find(|f| f.name() == k.as_str()) {
                 companion_values.insert(k.to_string(), v.clone());
             }
         }
@@ -161,6 +176,7 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
     });
 
     identity_namespace.define_handler_template("identity", |req_ctx: request::Ctx| async move {
+
         Ok::<Response, Error>(Response::html("")?)
     });
 
