@@ -9,6 +9,7 @@ pub trait ErrorRuntimeExt {
     fn internal_server_error(path: KeyPath, message: impl Into<String>) -> Error;
     fn internal_server_error_message_only(message: impl Into<String>) -> Error;
     fn not_found(path: KeyPath) -> Error;
+    fn not_found_with_message(path: KeyPath, message: impl Into<String>) -> Error;
     fn not_found_message_only() -> Error;
     fn unauthorized_error(path: KeyPath, message: impl Into<String>) -> Error;
     fn unauthorized_error_message_only(message: impl Into<String>) -> Error;
@@ -71,8 +72,19 @@ impl ErrorRuntimeExt for Error {
             404,
             "NotFound",
             indexmap!{
-            path.to_string() => "not found".to_owned()
-        }
+                path.to_string() => "not found".to_owned()
+            }
+        )
+    }
+
+    fn not_found_with_message(path: KeyPath, message: impl Into<String>) -> Error {
+        Error::new_with_code_title_errors(
+            "not found",
+            404,
+            "NotFound",
+            indexmap!{
+                path.to_string() => message.into()
+            }
         )
     }
 
