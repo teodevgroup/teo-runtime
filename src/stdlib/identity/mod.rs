@@ -31,8 +31,8 @@ pub fn encode_token(claims: JwtClaims, secret: &str) -> String {
     token.unwrap()
 }
 
-pub fn decode_token(token: &String, secret: &str) -> teo_result::Result<JwtClaims> {
-    return match decode::<JwtClaims>(&token, &DecodingKey::from_secret(secret.as_ref()), &Validation::default()) {
+pub fn decode_token(token: &str, secret: &str) -> teo_result::Result<JwtClaims> {
+    return match decode::<JwtClaims>(token, &DecodingKey::from_secret(secret.as_ref()), &Validation::default()) {
         Ok(token) => {
             Ok(token.claims)
         }
@@ -176,6 +176,32 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
     });
 
     identity_namespace.define_handler_template("identity", |req_ctx: request::Ctx| async move {
+        let model = req_ctx.namespace().model_at_path(&req_ctx.handler_match().path()).unwrap();
+        let model_ctx = req_ctx.transaction_ctx().model_ctx_for_model_at_path(&req_ctx.handler_match().path()).unwrap();
+        let Some(jwt_secret) = model.data.get("identity:jwtSecret") else {
+            return Err(Error::internal_server_error_message_only("missing @identity.jwtSecret"));
+        };
+        let jwt_secret: String = jwt_secret.try_into()?;
+        let Some(authorization) = req_ctx.request().headers().get("authorization") else {
+            return Err(Error::value_error_message_only("missing authorization header value"));
+        };
+        if authorization.len() < 7 {
+            return Err(Error::value_error_message_only("invalid jwt token"));
+        }
+        let token = &authorization[7..];
+        let Ok(claims) = decode_token(token, jwt_secret.as_str()) else {
+            return Err(Error::unauthorized_error_message_only("invalid jwt token"));
+        };
+        if claims.model != model.path {
+            return Err(Error::unauthorized_error_message_only("wrong model of identity"));
+        }
+        let teon_value: Value = Value::from(claims.id);
+        let object: Option<model::Object> = model_ctx.find_unique(&teon_value).await?;
+        if let Some(object) = object {
+            return Ok(Response::data(object.to_teon().await?));
+        } else {
+            return Err(Error::unauthorized_error_message_only("identity not found"));
+        }
 
         Ok::<Response, Error>(Response::html("")?)
     });
