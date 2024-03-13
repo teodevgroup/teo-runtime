@@ -19,6 +19,7 @@ use crate::schema::load::load_entity::load_entity;
 use crate::schema::load::load_enum::load_enum;
 use crate::schema::load::load_handler::load_handler;
 use crate::schema::load::load_handler_group::load_handler_group;
+use crate::schema::load::load_handler_template::load_handler_template;
 use crate::schema::load::load_interface::load_interface;
 use crate::schema::load::load_model::load_model;
 use crate::schema::load::load_model_opposite_relations::load_model_opposite_relations;
@@ -211,6 +212,21 @@ pub async fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignore
         }
     }
 
+    // load handler templates
+    for handler_template_declaration in schema.handler_template_declarations() {
+        load_handler_template(main_namespace, schema, handler_template_declaration, &mut diagnostics)?;
+    }
+
+    // load handlers
+    for handler_declaration in schema.handler_declarations() {
+        load_handler(main_namespace, schema, handler_declaration, &mut diagnostics)?;
+    }
+
+    // load handler groups
+    for handler_group_declaration in schema.handler_group_declarations() {
+        load_handler_group(main_namespace, schema, handler_group_declaration, &mut diagnostics)?;
+    }
+
     // load models
     for model_declaration in schema.models() {
         let database = main_namespace.namespace_mut_or_create_at_path(&model_declaration.namespace_str_path()).database;
@@ -218,23 +234,10 @@ pub async fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignore
             load_model(main_namespace, schema, model_declaration, &mut diagnostics)?;
         }
     }
+
     // load model opposite relations
     load_model_opposite_relations(main_namespace);
 
-    // load handlers
-    for handler_declaration in schema.handler_declarations() {
-        load_handler(main_namespace, schema, handler_declaration, &mut diagnostics)?;
-    }
-
-    // load handler templates
-    for handler_template_declaration in schema.handler_template_declarations() {
-
-    }
-
-    // load handler groups
-    for handler_group_declaration in schema.handler_group_declarations() {
-        load_handler_group(main_namespace, schema, handler_group_declaration, &mut diagnostics)?;
-    }
 
     // load data set
     for data_set_declaration in schema.data_sets() {

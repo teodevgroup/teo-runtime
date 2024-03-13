@@ -15,3 +15,4 @@ mod load_handler;
 mod load_handler_group;
 pub mod load_data_sets;
 mod load_model_opposite_relations;
+mod load_handler_template;

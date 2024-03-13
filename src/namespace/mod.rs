@@ -31,6 +31,7 @@ use crate::stdlib::load::load;
 use educe::Educe;
 use serde::Serialize;
 use teo_parser::ast::handler::HandlerInputFormat;
+use teo_parser::ast::handler_template_declaration::HandlerTemplateDeclaration;
 use teo_parser::r#type::Type;
 use crate::handler::ctx_argument::HandlerCtxArgument;
 use crate::handler::Handler;
@@ -574,6 +575,21 @@ impl Namespace {
         }
     }
 
+    pub fn handler_template_at_path(&self, path: &Vec<&str>) -> Option<&Handler> {
+        let handler_name = path.last().unwrap().deref();
+        if path.len() == 1 {
+            self.handler_templates.get(handler_name)
+        } else {
+            // try find a namespace first
+            let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+            if let Some(dest_namespace) = self.namespace_at_path(&namespace_path) {
+                dest_namespace.handler_templates.get(handler_name)
+            } else {
+                None
+            }
+        }
+    }
+
     pub fn handler_at_path(&self, path: &Vec<&str>) -> Option<&Handler> {
         let handler_name = path.last().unwrap().deref();
         if path.len() == 1 {
@@ -601,6 +617,13 @@ impl Namespace {
                 }
             }
         }
+    }
+
+    pub fn replace_handler_template_at_path(&mut self, path: &Vec<&str>, handler: Handler) {
+        let handler_name = path.last().unwrap().deref();
+        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        let dest_namespace = self.namespace_mut_or_create_at_path(&namespace_path);
+        dest_namespace.handlers.insert(handler_name.to_string(), handler);
     }
 
     pub fn replace_handler_at_path(&mut self, path: &Vec<&str>, handler: Handler, inside_group: bool) {
