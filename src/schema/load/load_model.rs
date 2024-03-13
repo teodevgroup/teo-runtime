@@ -17,6 +17,7 @@ use crate::optionality::Optionality;
 use crate::schema::fetch::fetch_decorator_arguments::fetch_decorator_arguments;
 use crate::schema::load::load_comment::load_comment;
 use crate::schema::load::load_handler::load_handler;
+use crate::schema::load::load_handler_inclusion::load_handler_inclusion;
 
 pub fn load_model(main_namespace: &mut Namespace, schema: &Schema, model_declaration: &teo_parser::ast::model::Model, diagnostics: &mut Diagnostics) -> Result<()> {
     let mut model = Model::new();
@@ -64,7 +65,7 @@ pub fn load_model(main_namespace: &mut Namespace, schema: &Schema, model_declara
         load_handler(main_namespace, schema, handler_declaration, diagnostics)?;
     }
     for handler_inclusion in model_declaration.handler_inclusions() {
-
+        load_handler_inclusion(main_namespace, schema, handler_inclusion diagnostics)?;
     }
     Ok(())
 }
