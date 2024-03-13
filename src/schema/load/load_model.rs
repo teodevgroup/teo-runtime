@@ -63,6 +63,9 @@ pub fn load_model(main_namespace: &mut Namespace, schema: &Schema, model_declara
     for handler_declaration in model_declaration.handlers() {
         load_handler(main_namespace, schema, handler_declaration, diagnostics)?;
     }
+    for handler_inclusion in model_declaration.handler_inclusions() {
+
+    }
     Ok(())
 }
 
