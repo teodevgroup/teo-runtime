@@ -166,7 +166,7 @@ pub async fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignore
         // validate handler templates
         for handler_template_declaration in schema.handler_template_declarations() {
             let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&handler_template_declaration.namespace_str_path());
-            if dest_namespace.handlers.get(handler_template_declaration.identifier().name()).is_none() {
+            if dest_namespace.handler_templates.get(handler_template_declaration.identifier().name()).is_none() {
                 diagnostics.insert(DiagnosticsError::new(handler_template_declaration.identifier().span(), "handler template implementation is not found", schema.source(handler_template_declaration.source_id()).unwrap().file_path.clone()));
             }
         }
