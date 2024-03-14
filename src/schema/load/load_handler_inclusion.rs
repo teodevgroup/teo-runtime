@@ -16,7 +16,7 @@ use crate::schema::fetch::fetch_decorator_arguments::fetch_decorator_arguments;
 use crate::error_runtime_ext::ErrorRuntimeExt;
 
 pub fn load_handler_inclusion(main_namespace: &mut Namespace, schema: &Schema, handler_inclusion: &IncludeHandlerFromTemplate, diagnostics: &mut Diagnostics) -> Result<()> {
-    let template_path: Vec<&str> = handler_inclusion.identifier_path().identifiers().map(|i| i.name()).collect();
+    let template_path: Vec<&str> = handler_inclusion.resolved().template_path.iter().map(|i| i.as_str()).collect();
     let mut handler = if let Some(handler) = main_namespace.handler_template_at_path(&template_path).cloned() {
         handler
     } else {
