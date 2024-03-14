@@ -59,7 +59,7 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
     });
 
     identity_namespace.define_model_decorator("jwtSecret", |arguments, model| {
-        let secret: String = arguments.get("pipeline")?;
+        let secret: String = arguments.get("secret")?;
         model.data.insert("identity:jwtSecret".to_owned(), secret.into());
         Ok(())
     });
