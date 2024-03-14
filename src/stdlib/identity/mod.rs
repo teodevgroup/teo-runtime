@@ -1,3 +1,4 @@
+use chrono::Utc;
 use indexmap::{IndexMap, indexmap};
 use jsonwebtoken::{decode, DecodingKey, encode, EncodingKey, Header, Validation};
 use key_path::path;
@@ -31,13 +32,13 @@ pub fn encode_token(claims: JwtClaims, secret: &str) -> String {
     token.unwrap()
 }
 
-pub fn decode_token(token: &str, secret: &str) -> teo_result::Result<JwtClaims> {
+pub fn decode_token(token: &str, secret: &str) -> Result<JwtClaims, jsonwebtoken::errors::Error> {
     return match decode::<JwtClaims>(token, &DecodingKey::from_secret(secret.as_ref()), &Validation::default()) {
         Ok(token) => {
             Ok(token.claims)
         }
-        Err(_) => {
-            Err(Error::new_with_code("invalid jwt token", 401))
+        Err(reason) => {
+            Err(reason)
         }
     }
 }
@@ -91,7 +92,7 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
         let claims = JwtClaims {
             id: json_identifier,
             model: object.model().path.clone(),
-            exp: if let Some(expired) = expired { expired as usize } else { std::usize::MAX },
+            exp: if let Some(expired) = expired { (Utc::now().timestamp() + expired) as usize } else { usize::MAX },
         };
         Ok(encode_token(claims, &jwt_secret).into())
     });
@@ -215,20 +216,30 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
                     return Err(Error::value_error_message_only("invalid jwt token"));
                 }
                 let token = &authorization[7..];
-                if let Ok(claims) = decode_token(&token.to_string(), &secret) {
-                    let json_identifier = &claims.id;
-                    let Some(model_ctx) = ctx.transaction_ctx().model_ctx_for_model_at_path(&claims.model.iter().map(|s| s.as_str()).collect()) else {
-                        return Err(Error::unauthorized_error_message_only("invalid jwt token"));
-                    };
-                    let teon_identifier = Value::from(json_identifier);
-                    let object: Option<model::Object> = model_ctx.find_unique(&teon_identifier).await?;
-                    if let Some(object) = object {
-                        ctx.data_mut().insert("identity", Object::from(object));
-                    } else {
-                        return Err(Error::unauthorized_error_message_only("invalid jwt token"));
+                match decode_token(token, &secret) {
+                    Ok(claims) => {
+                        let json_identifier = &claims.id;
+                        let Some(model_ctx) = ctx.transaction_ctx().model_ctx_for_model_at_path(&claims.model.iter().map(|s| s.as_str()).collect()) else {
+                            return Err(Error::unauthorized_error_message_only("invalid jwt token"));
+                        };
+                        let teon_identifier = Value::from(json_identifier);
+                        let object: Option<model::Object> = model_ctx.find_unique(&teon_identifier).await?;
+                        if let Some(object) = object {
+                            ctx.data_mut().insert("identity", Object::from(object));
+                        } else {
+                            return Err(Error::unauthorized_error_message_only("invalid jwt token"));
+                        }
                     }
-                } else {
-                    return Err(Error::unauthorized_error_message_only("invalid jwt token"));
+                    Err(error) => {
+                        return match error.kind() {
+                            jsonwebtoken::errors::ErrorKind::ExpiredSignature => {
+                                Err(Error::unauthorized_error_message_only("token expired"))
+                            }
+                            _ => {
+                                Err(Error::unauthorized_error_message_only("invalid jwt token"))
+                            }
+                        };
+                    }
                 }
             }
             let res = next.call(ctx).await?;
