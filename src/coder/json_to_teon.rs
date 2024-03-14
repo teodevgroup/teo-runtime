@@ -173,6 +173,18 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
         },
         Type::SynthesizedEnum(synthesized_enum) => json_to_teon_with_synthesized_enum(json, path, synthesized_enum),
         Type::SynthesizedShape(synthesized_shape) => json_to_teon_with_shape(json, path, synthesized_shape, main_namespace),
+        Type::DeclaredSynthesizedShape(synthesized_shape_reference, model_type) => {
+            if let Some(model_reference) = model_type.as_model_object() {
+                let m = main_namespace.model_at_path(&model_reference.str_path()).unwrap();
+                if let Some(shape) = m.cache.shape.get_declared(synthesized_shape_reference.string_path()) {
+                    json_to_teon_with_shape(json, path, shape, main_namespace)
+                } else {
+                    Err(Error::value_error(path.clone(), "unexpected type"))?
+                }
+            } else {
+                Err(Error::value_error(path.clone(), "unexpected type"))?
+            }
+        },
         _ => Err(Error::value_error(path.clone(), "unexpected type"))?,
     }
 }

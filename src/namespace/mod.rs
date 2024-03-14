@@ -640,6 +640,11 @@ impl Namespace {
                 group.handlers.insert(handler_name.to_string(), handler);
             } else if let Some(group) = dest_namespace.model_handler_groups.get_mut(group_name) {
                 group.handlers.insert(handler_name.to_string(), handler);
+            } else {
+                dest_namespace.define_model_handler_group(group_name, |f| { });
+                if let Some(group) = dest_namespace.model_handler_groups.get_mut(group_name) {
+                    group.handlers.insert(handler_name.to_string(), handler);
+                }
             }
         } else {
             dest_namespace.handlers.insert(handler_name.to_string(), handler);
