@@ -54,9 +54,16 @@ pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &mut Namesp
             model_object.set_value(key_value, value)?;
             Ok(ctx.value().clone())
         } else if let Ok(dictionary) = dictionary {
-            let key: &str = args.get("key").err_prefix("set(key)")?;
+            let key: &Value = args.get("key").err_prefix("set(key)")?;
+            let key_str = if key.is_string() {
+                key.as_str().unwrap()
+            } else if key.is_enum_variant() {
+                key.as_enum_variant().unwrap().value.as_str()
+            } else {
+                unreachable!()
+            };
             let mut new_dictionary = dictionary.clone();
-            new_dictionary.insert(key.to_owned(), value);
+            new_dictionary.insert(key_str.to_owned(), value);
             Ok(Object::from(Value::Dictionary(new_dictionary)))
         } else {
             Err(Error::new("set: input is not model object or dictionary"))
