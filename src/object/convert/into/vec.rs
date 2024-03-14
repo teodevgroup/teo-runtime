@@ -1,6 +1,7 @@
 use teo_teon::Value;
 use teo_result::Error;
 use crate::object::Object;
+use crate::pipeline::Pipeline;
 
 impl<'a> TryFrom<&'a Object> for &'a Vec<Value> {
 

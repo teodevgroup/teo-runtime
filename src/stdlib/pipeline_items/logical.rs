@@ -6,6 +6,7 @@ use crate::pipeline::Ctx;
 use crate::pipeline::pipeline::Pipeline;
 use teo_result::{Result, ResultExt};
 use crate::action::Action;
+use crate::error_runtime_ext::ErrorRuntimeExt;
 
 pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) {
 
@@ -51,6 +52,30 @@ pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) 
             },
         }
     });
+
+    namespace.define_pipeline_item("do", |args: Arguments, ctx: Ctx| async move {
+        let pipeline: &Pipeline = args.get("pipeline").err_prefix("do")?;
+        let _ = ctx.run_pipeline(pipeline).await?;
+        Ok(ctx.value().clone())
+    });
+
+    namespace.define_pipeline_item("not", |args: Arguments, ctx: Ctx| async move {
+        let pipeline: &Pipeline = args.get("pipeline").err_prefix("not")?;
+        match ctx.run_pipeline(pipeline).await {
+            Ok(_) => Err(Error::value_error_message_only("not: value is not invalid")),
+            Err(_) => Ok(ctx.value().clone())
+        }
+    });
+
+    // namespace.define_pipeline_item("all", |args: Arguments, ctx: Ctx| async move {
+    //     let pipelines: Vec<&Pipeline> = args.get("pipeline").err_prefix("all")?;
+    //     Ok(ctx.value().clone())
+    // });
+    //
+    // namespace.define_pipeline_item("any", |args: Arguments, ctx: Ctx| async move {
+    //     let pipelines: Vec<&Pipeline> = args.get("pipelines").err_prefix("any")?;
+    //     Ok(ctx.value().clone())
+    // });
 
     namespace.define_pipeline_item("when", |args: Arguments, ctx: Ctx| async move {
         let action: Action = args.get("action")?;
