@@ -29,8 +29,15 @@ pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &mut Namesp
             let value: Value = model_object.get_value(key_value)?;
             Ok(Object::from(value))
         } else if let Ok(dictionary) = dictionary {
-            let key: &str = args.get("key").err_prefix("get(key)")?;
-            Ok(Object::from(dictionary.get(key).cloned().unwrap_or(Value::Null)))
+            let key: &Value = args.get("key").err_prefix("get(key)")?;
+            let key_str = if key.is_string() {
+                key.as_str().unwrap()
+            } else if key.is_enum_variant() {
+                key.as_enum_variant().unwrap().value.as_str()
+            } else {
+                unreachable!()
+            };
+            Ok(Object::from(dictionary.get(key_str).cloned().unwrap_or(Value::Null)))
         } else {
             Err(Error::new("get: input is not model object or dictionary"))
         }
