@@ -627,7 +627,7 @@ impl Namespace {
         let handler_name = path.last().unwrap().deref();
         let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
         let dest_namespace = self.namespace_mut_or_create_at_path(&namespace_path);
-        dest_namespace.handlers.insert(handler_name.to_string(), handler);
+        dest_namespace.handler_templates.insert(handler_name.to_string(), handler);
     }
 
     pub fn replace_handler_at_path(&mut self, path: &Vec<&str>, handler: Handler, inside_group: bool) {
