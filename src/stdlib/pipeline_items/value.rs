@@ -105,7 +105,7 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
 
     namespace.define_pipeline_item("presents", |args: Arguments, ctx: Ctx| async move {
         if ctx.value().is_null() {
-            Err(Error::new("input is not present"))?
+            Err(Error::new_with_code("input is not present", 400))?
         }
         Ok(ctx.value().clone())
     });
@@ -115,7 +115,7 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
         if input {
             Ok(ctx.value().clone())
         } else {
-            Err(Error::new("input is not true"))?
+            Err(Error::new_with_code("input is not true", 400))?
         }
     });
 
