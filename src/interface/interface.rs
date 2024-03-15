@@ -2,7 +2,6 @@ use std::collections::BTreeMap;
 use indexmap::indexmap;
 use maplit::btreemap;
 use serde::Serialize;
-use teo_parser::ast::interface::InterfaceDeclarationResolved;
 use teo_parser::r#type::reference::Reference;
 use teo_parser::r#type::synthesized_shape::SynthesizedShape;
 use teo_parser::r#type::Type;
@@ -20,6 +19,8 @@ pub struct Interface {
     pub generic_names: Vec<String>,
     pub extends: Vec<Type>,
     pub shape: SynthesizedShape,
+    pub generate_client: bool,
+    pub generate_entity: bool,
 }
 
 impl Interface {
@@ -33,6 +34,8 @@ impl Interface {
             generic_names: vec![],
             extends: vec![],
             shape: SynthesizedShape::new(indexmap! {}),
+            generate_client: true,
+            generate_entity: true,
         }
     }
 

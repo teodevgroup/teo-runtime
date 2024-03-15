@@ -2,6 +2,7 @@ use crate::namespace::Namespace;
 use crate::stdlib::decorators::enum_decorators::load_enum_decorators;
 use crate::stdlib::decorators::enum_member_decorators::load_enum_member_decorators;
 use crate::stdlib::decorators::handler_decorators::load_handler_decorators;
+use crate::stdlib::decorators::interface_decorators::load_interface_decorators;
 use crate::stdlib::decorators::model_decorators::load_model_decorators;
 use crate::stdlib::decorators::model_field_decorators::load_model_field_decorators;
 use crate::stdlib::decorators::model_property_decorators::load_model_property_decorators;
@@ -37,6 +38,7 @@ pub fn load(namespace: &mut Namespace) {
     load_model_property_decorators(std_namespace);
     load_enum_decorators(std_namespace);
     load_enum_member_decorators(std_namespace);
+    load_interface_decorators(std_namespace);
     load_handler_decorators(std_namespace);
     // pipeline items
     load_pipeline_math_items(std_namespace);

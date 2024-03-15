@@ -221,6 +221,10 @@ impl Namespace {
         self.enum_member_decorators.insert(name.to_owned(), r#enum::member::Decorator { path: next_path(&self.path, name), call: Arc::new(call) });
     }
 
+    pub fn define_interface_decorator<F>(&mut self, name: &str, call: F) where F: Fn(Arguments, &mut Interface) -> Result<()> + 'static {
+        self.interface_decorators.insert(name.to_owned(), interface::Decorator { path: next_path(&self.path, name), call: Arc::new(call) });
+    }
+
     pub fn define_handler_decorator(&mut self, name: &str, call: impl Fn(Arguments, &mut Handler) -> Result<()> + 'static) {
         self.handler_decorators.insert(name.to_owned(), handler::Decorator { path: next_path(&self.path, name), call: Arc::new(call) });
     }

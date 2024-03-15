@@ -10,6 +10,7 @@ use teo_result::Result;
 use crate::interface;
 use crate::interface::Interface;
 use crate::model::field::is_optional::{IsOptional};
+use crate::schema::fetch::fetch_decorator_arguments::fetch_decorator_arguments;
 use crate::schema::load::load_comment::load_comment;
 
 pub fn load_interface(main_namespace: &mut Namespace, schema: &Schema, interface_declaration: &teo_parser::ast::interface::InterfaceDeclaration, diagnostics: &mut Diagnostics) -> Result<()> {
@@ -24,6 +25,14 @@ pub fn load_interface(main_namespace: &mut Namespace, schema: &Schema, interface
     }
     for t in interface_declaration.extends() {
         interface.extends.push(t.resolved().clone());
+    }
+    for decorator in interface_declaration.decorators() {
+        if let Some(decorator_declaration) = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration() {
+            if let Some(decorator_implementation) = main_namespace.interface_decorator_at_path(&decorator_declaration.str_path()) {
+                let args = fetch_decorator_arguments(decorator, schema, interface_declaration, main_namespace)?;
+                decorator_implementation.call.call(args, &mut interface)?;
+            }
+        }
     }
     for field_declaration in interface_declaration.fields() {
         if field_declaration.is_available() {
