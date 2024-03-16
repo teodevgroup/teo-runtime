@@ -171,7 +171,14 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
         let self_pipeline_ctx = pipeline::Ctx::new(Object::from(&object), object.clone(), path![], CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx.transaction_ctx(), Some(req_ctx.clone()));
         if let Some(validator) = model.data.get("identity:validateAccount") {
             let validator = validator.as_pipeline().unwrap();
-            let _ = self_pipeline_ctx.run_pipeline(validator).await?;
+            match self_pipeline_ctx.run_pipeline(validator).await {
+                Ok(_) => (),
+                Err(mut error) => {
+                    error.title = Some("Unauthorized".to_owned());
+                    error.code = Some(401);
+                    return Err(error);
+                }
+            }
         }
         let Some(token_issuer) = model.data.get("identity:tokenIssuer") else {
             return Err(Error::internal_server_error_message_only("missing identity token issuer"));
@@ -237,6 +244,18 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
                         let teon_identifier = Value::from(json_identifier);
                         let object: Option<model::Object> = model_ctx.find_unique(&teon_identifier).await?;
                         if let Some(object) = object {
+                            if let Some(validator) = object.model().data.get("identity:validateAccount") {
+                                let validator = validator.as_pipeline().unwrap();
+                                let self_pipeline_ctx = pipeline::Ctx::new(Object::from(&object), object.clone(), path![], CODE_NAME | CODE_AMOUNT | CODE_POSITION, ctx.transaction_ctx(), Some(ctx.clone()));
+                                match self_pipeline_ctx.run_pipeline(validator).await {
+                                    Ok(_) => (),
+                                    Err(mut error) => {
+                                        error.title = Some("Unauthorized".to_owned());
+                                        error.code = Some(401);
+                                        return Err(error);
+                                    }
+                                }
+                            }
                             ctx.data_mut().insert("identity", Object::from(object));
                         } else {
                             return Err(Error::unauthorized_error_message_only("invalid jwt token"));
