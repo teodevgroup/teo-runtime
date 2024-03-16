@@ -85,7 +85,11 @@ impl Ctx {
     pub async fn run_pipeline_into_path_value_error(&self, pipeline: &Pipeline) -> teo_result::Result<Object> {
         match self.run_pipeline(pipeline).await {
             Ok(object) => Ok(object),
-            Err(e) => Err(teo_result::Error::value_error(self.path().clone(), e.message))
+            Err(e) => {
+                let mut error = teo_result::Error::value_error(self.path().clone(), e.message);
+                error.code = e.code;
+                Err(error)
+            }
         }
     }
 
