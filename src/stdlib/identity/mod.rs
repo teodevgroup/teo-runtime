@@ -171,7 +171,7 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
         let self_pipeline_ctx = pipeline::Ctx::new(Object::from(&object), object.clone(), path![], CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx.transaction_ctx(), Some(req_ctx.clone()));
         if let Some(validator) = model.data.get("identity:validateAccount") {
             let validator = validator.as_pipeline().unwrap();
-            let _ = self_pipeline_ctx.run_pipeline_into_path_value_error(validator).await?;
+            let _ = self_pipeline_ctx.run_pipeline(validator).await?;
         }
         let Some(token_issuer) = model.data.get("identity:tokenIssuer") else {
             return Err(Error::internal_server_error_message_only("missing identity token issuer"));
