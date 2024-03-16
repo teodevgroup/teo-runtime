@@ -87,12 +87,23 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
             return Err(Error::internal_server_error_message_only("missing @identity.jwtSecret"));
         };
         let jwt_secret: String = jwt_secret.try_into()?;
-        let expired: Option<i64> = arguments.get_optional("expired")?;
+        let expired: Option<Object> = arguments.get_optional("expired")?;
+
         let json_identifier: JsonValue = object.identifier().try_into()?;
         let claims = JwtClaims {
             id: json_identifier,
             model: object.model().path.clone(),
-            exp: if let Some(expired) = expired { (Utc::now().timestamp() + expired) as usize } else { usize::MAX },
+            exp: if let Some(expired) = expired {
+                let expired_at = if let Some(value) = expired.as_teon() {
+                    value.as_int64().unwrap()
+                } else if let Some(pipeline) = expired.as_pipeline() {
+                    let result: i64 = pipeline_ctx.alter_value(Object::from(object)).run_pipeline(pipeline)?;
+                    result
+                } else {
+                    unreachable!()
+                };
+                (Utc::now().timestamp() + expired_at) as usize
+            } else { usize::MAX },
         };
         Ok(encode_token(claims, &jwt_secret).into())
     });
