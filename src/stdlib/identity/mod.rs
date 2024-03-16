@@ -97,8 +97,8 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
                 let expired_at = if let Some(value) = expired.as_teon() {
                     value.as_int64().unwrap()
                 } else if let Some(pipeline) = expired.as_pipeline() {
-                    let result: i64 = pipeline_ctx.alter_value(Object::from(object)).run_pipeline(pipeline)?;
-                    result
+                    let result: Object = pipeline_ctx.run_pipeline(pipeline).await?;
+                    result.as_teon().unwrap().as_int64().unwrap()
                 } else {
                     unreachable!()
                 };
@@ -167,6 +167,7 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
         });
         let pipeline_ctx = pipeline::Ctx::new(Object::from(pipeline_input), object.clone(), path!["credentials"], CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx.transaction_ctx(), Some(req_ctx.clone()));
         let _ = pipeline_ctx.run_pipeline_into_path_value_error(auth_checker_pipeline).await?;
+        let credentials_pipeline_ctx = pipeline::Ctx::new(Object::from(Value::Dictionary(credentials.clone())), object.clone(), path!["credentials"], CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx.transaction_ctx(), Some(req_ctx.clone()));
         let self_pipeline_ctx = pipeline::Ctx::new(Object::from(&object), object.clone(), path![], CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx.transaction_ctx(), Some(req_ctx.clone()));
         if let Some(validator) = model.data.get("identity:validateAccount") {
             let validator = validator.as_pipeline().unwrap();
@@ -176,7 +177,7 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
             return Err(Error::internal_server_error_message_only("missing identity token issuer"));
         };
         let token_issuer = token_issuer.as_pipeline().unwrap();
-        let token_string: String = self_pipeline_ctx.run_pipeline_into_path_value_error(token_issuer).await?.try_into()?;
+        let token_string: String = credentials_pipeline_ctx.run_pipeline_into_path_value_error(token_issuer).await?.try_into()?;
         // Output to the client
         let include = input.get("include");
         let select = input.get("select");

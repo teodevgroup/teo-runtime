@@ -226,7 +226,7 @@ pub(in crate::stdlib) fn load_model_field_decorators(namespace: &mut Namespace) 
         };
         let renamed: Option<Value> = arguments.get_optional("renamed")?;
         let version: Option<String> = arguments.get_optional("version")?;
-        let default: Option<Value> = arguments.get_optional("value")?;
+        let default: Option<Value> = arguments.get_optional("default")?;
         let priority: Option<i32> = arguments.get_optional("priority")?;
         if let Some(renamed) = renamed {
             match renamed {
