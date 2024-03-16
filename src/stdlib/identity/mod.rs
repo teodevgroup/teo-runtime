@@ -119,6 +119,7 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
         let mut checker_value: Option<&Value> = None;
         let mut checker_field: Option<&Field> = None;
         let mut companion_values: IndexMap<String, Value> = indexmap!{};
+        let mut id_values: IndexMap<String, Value> = indexmap!{};
         let id_fields: Vec<&Field> = model.fields.values().filter(|f| f.data.get("identity:id").is_some()).collect();
         if id_fields.len() == 0 {
             return Err(Error::internal_server_error(path!["credentials"], "no @identity.id defined on this model"));
@@ -127,6 +128,7 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
         let companion_fields: Vec<&Field> = model.fields.values().filter(|f| f.data.get("identity:companion").is_some()).collect();
         for (k, v) in credentials {
             if let Some(f) = id_fields.iter().find(|f| f.name() == k.as_str()) {
+                id_values.insert(k.to_string(), v.clone());
                 if identity_key.is_none() {
                     identity_key = Some(k);
                     identity_value = Some(v);
@@ -164,6 +166,7 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
         let pipeline_input = teon!({
             "value": checker_value.unwrap(),
             "companions": companion_values,
+            "ids": id_values,
         });
         let pipeline_ctx = pipeline::Ctx::new(Object::from(pipeline_input), object.clone(), path!["credentials"], CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx.transaction_ctx(), Some(req_ctx.clone()));
         let _ = pipeline_ctx.run_pipeline_into_path_value_error(auth_checker_pipeline).await?;
