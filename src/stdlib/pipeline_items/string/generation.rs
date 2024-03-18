@@ -27,7 +27,7 @@ pub(in crate::stdlib) fn load_pipeline_string_generation_items(namespace: &mut N
     });
 
     namespace.define_pipeline_item("randomDigits", |args: Arguments, ctx: Ctx| async move {
-        let len: usize = args.get("len").err_prefix("randomDigits")?;
+        let len: usize = args.get("len").error_message_prefixed("randomDigits")?;
         Ok(Object::from(generate(len, "1234567890")))
     });
 

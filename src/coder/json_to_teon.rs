@@ -22,7 +22,7 @@ use crate::interface::Interface;
 use crate::namespace::Namespace;
 use teo_result::Error;
 use crate::utils::ContainsStr;
-use crate::error_runtime_ext::ErrorRuntimeExt;
+
 
 pub fn fetch_synthesized_interface_enum<'a>(reference: &SynthesizedInterfaceEnumReference, schema: &'a Schema) -> &'a SynthesizedInterfaceEnum {
     let model = schema.find_top_by_path(reference.owner.as_model_object().unwrap().path()).unwrap().as_model().unwrap();
@@ -48,63 +48,63 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
         Type::Undetermined => Ok(Value::from(json)),
         Type::Ignored => Ok(Value::from(json)),
         Type::Any => Ok(Value::from(json)),
-        Type::Null => if json.is_null() { Ok(Value::Null) } else { Err(Error::value_error(path.clone(), "expect null")) },
-        Type::Bool => if json.is_boolean() { Ok(Value::from(json)) } else { Err(Error::value_error(path.clone(), "expect bool")) },
-        Type::Int => if json.is_i64() { Ok(Value::Int(json.as_i64().unwrap() as i32)) } else { Err(Error::value_error(path.clone(), "expect int")) },
-        Type::Int64 => if json.is_i64() { Ok(Value::Int64(json.as_i64().unwrap())) } else { Err(Error::value_error(path.clone(), "expect int 64")) },
-        Type::Float32 => if json.is_f64() { Ok(Value::Float32(json.as_f64().unwrap() as f32)) } else if json.is_i64() { Ok(Value::Float32(json.as_i64().unwrap() as f32)) } else { Err(Error::value_error(path.clone(), "expect float 32")) },
-        Type::Float => if json.is_f64() { Ok(Value::Float(json.as_f64().unwrap())) } else if json.is_i64() { Ok(Value::Float(json.as_i64().unwrap() as f64)) } else { Err(Error::value_error(path.clone(), "expect float")) },
+        Type::Null => if json.is_null() { Ok(Value::Null) } else { Err(Error::invalid_request_pathed(path.clone(), "expect null")) },
+        Type::Bool => if json.is_boolean() { Ok(Value::from(json)) } else { Err(Error::invalid_request_pathed(path.clone(), "expect bool")) },
+        Type::Int => if json.is_i64() { Ok(Value::Int(json.as_i64().unwrap() as i32)) } else { Err(Error::invalid_request_pathed(path.clone(), "expect int")) },
+        Type::Int64 => if json.is_i64() { Ok(Value::Int64(json.as_i64().unwrap())) } else { Err(Error::invalid_request_pathed(path.clone(), "expect int 64")) },
+        Type::Float32 => if json.is_f64() { Ok(Value::Float32(json.as_f64().unwrap() as f32)) } else if json.is_i64() { Ok(Value::Float32(json.as_i64().unwrap() as f32)) } else { Err(Error::invalid_request_pathed(path.clone(), "expect float 32")) },
+        Type::Float => if json.is_f64() { Ok(Value::Float(json.as_f64().unwrap())) } else if json.is_i64() { Ok(Value::Float(json.as_i64().unwrap() as f64)) } else { Err(Error::invalid_request_pathed(path.clone(), "expect float")) },
         Type::Decimal => if json.is_string() {
             Ok(Value::Decimal(match BigDecimal::from_str(json.as_str().unwrap()) {
                 Ok(s) => s,
-                Err(_) => Err(Error::value_error(path.clone(), "string is not valid decimal"))?,
+                Err(_) => Err(Error::invalid_request_pathed(path.clone(), "string is not valid decimal"))?,
             }))
         } else if json.is_number() {
             if let Some(f) = json.as_f64() {
                 Ok(Value::Decimal(match BigDecimal::from_f64(f) {
                     Some(s) => s,
-                    None => Err(Error::value_error(path.clone(), "number is not valid decimal"))?,
+                    None => Err(Error::invalid_request_pathed(path.clone(), "number is not valid decimal"))?,
                 }))
             } else if let Some(i) = json.as_i64() {
                 Ok(Value::Decimal(match BigDecimal::from_i64(i) {
                     Some(s) => s,
-                    None => Err(Error::value_error(path.clone(), "number is not valid decimal"))?,
+                    None => Err(Error::invalid_request_pathed(path.clone(), "number is not valid decimal"))?,
                 }))
             } else {
                 unreachable!()
             }
         } else {
-            Err(Error::value_error(path.clone(), "expect string or number which represents decimal"))
+            Err(Error::invalid_request_pathed(path.clone(), "expect string or number which represents decimal"))
         }
-        Type::String => if json.is_string() { Ok(Value::String(json.as_str().unwrap().to_owned())) } else { Err(Error::value_error(path.clone(), "expect string")) },
+        Type::String => if json.is_string() { Ok(Value::String(json.as_str().unwrap().to_owned())) } else { Err(Error::invalid_request_pathed(path.clone(), "expect string")) },
         Type::ObjectId => if json.is_string() {
             Ok(Value::ObjectId(match ObjectId::parse_str(json.as_str().unwrap()) {
                 Ok(s) => s,
-                Err(_) => Err(Error::value_error(path.clone(), "string is not valid object id"))?,
+                Err(_) => Err(Error::invalid_request_pathed(path.clone(), "string is not valid object id"))?,
             }))
         } else {
-            Err(Error::value_error(path.clone(), "expect string represents object id"))
+            Err(Error::invalid_request_pathed(path.clone(), "expect string represents object id"))
         }
         Type::Date => if json.is_string() {
             Ok(Value::Date(match NaiveDate::parse_from_str(json.as_str().unwrap(), "%Y-%m-%d") {
                 Ok(s) => s,
-                Err(_) => Err(Error::value_error(path.clone(), "string is not valid date"))?,
+                Err(_) => Err(Error::invalid_request_pathed(path.clone(), "string is not valid date"))?,
             }))
         } else {
-            Err(Error::value_error(path.clone(), "expect string represents date"))
+            Err(Error::invalid_request_pathed(path.clone(), "expect string represents date"))
         }
         Type::DateTime => if json.is_string() {
             Ok(Value::DateTime(match DateTime::parse_from_rfc3339(json.as_str().unwrap()) {
                 Ok(d) => d.with_timezone(&Utc),
-                Err(_) => Err(Error::value_error(path.clone(), "string is not valid datetime"))?,
+                Err(_) => Err(Error::invalid_request_pathed(path.clone(), "string is not valid datetime"))?,
             }))
         } else {
-            Err(Error::value_error(path.clone(), "expect string represents datetime"))
+            Err(Error::invalid_request_pathed(path.clone(), "expect string represents datetime"))
         }
         Type::File => {
             Ok(Value::File(match File::try_from(json) {
                 Ok(f) => f,
-                Err(err) => Err(Error::value_error(path.clone(), err.message()))?,
+                Err(err) => Err(Error::invalid_request_pathed(path.clone(), err.message()))?,
             }))
         },
         Type::Enumerable(inner) => {
@@ -120,7 +120,7 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
                 let values: Vec<Value> = json_array.iter().enumerate().map(|(i, j)| json_to_teon_with_type(j, &(path + i), inner.as_ref(), main_namespace)).collect::<teo_result::Result<Vec<Value>>>()?;
                 Ok(Value::Array(values))
             } else {
-                Err(Error::value_error(path.clone(), "expect array"))
+                Err(Error::invalid_request_pathed(path.clone(), "expect array"))
             }
         }
         Type::Dictionary(inner) => {
@@ -128,28 +128,28 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
                 let values: IndexMap<String, Value> = json_object.iter().map(|(k, j)| Ok((k.clone(), json_to_teon_with_type(j, &(path + k), inner.as_ref(), main_namespace)?))).collect::<teo_result::Result<IndexMap<String, Value>>>()?;
                 Ok(Value::Dictionary(values))
             } else {
-                Err(Error::value_error(path.clone(), "expect dictionary"))
+                Err(Error::invalid_request_pathed(path.clone(), "expect dictionary"))
             }
         }
-        Type::Tuple(_) => Err(Error::value_error(path.clone(), "unexpected type"))?,
-        Type::Range(_) => Err(Error::value_error(path.clone(), "unexpected type"))?,
+        Type::Tuple(_) => Err(Error::invalid_request_pathed(path.clone(), "unexpected type"))?,
+        Type::Range(_) => Err(Error::invalid_request_pathed(path.clone(), "unexpected type"))?,
         Type::Union(inners) => {
             for inner in inners {
                 if let Ok(result) = json_to_teon_with_type(json, path, inner, main_namespace) {
                     return Ok(result);
                 }
             }
-            Err(Error::value_error(path.clone(), "unexpected value"))
+            Err(Error::invalid_request_pathed(path.clone(), "unexpected value"))
         }
         Type::EnumVariant(reference) => if json.is_string() {
             let e = main_namespace.enum_at_path(&reference.str_path()).unwrap();
             if e.cache.member_names.contains_str(json.as_str().unwrap()) {
                 Ok(Value::String(json.as_str().unwrap().to_owned()))
             } else {
-                Err(Error::value_error(path.clone(), "expect enum member"))
+                Err(Error::invalid_request_pathed(path.clone(), "expect enum member"))
             }
         } else {
-            Err(Error::value_error(path.clone(), "expect string represents enum member"))
+            Err(Error::invalid_request_pathed(path.clone(), "expect string represents enum member"))
         }
         Type::InterfaceObject(reference, gens) => {
             let i = main_namespace.interface_at_path(&reference.str_path()).unwrap();
@@ -179,13 +179,13 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
                 if let Some(shape) = m.cache.shape.get_declared(synthesized_shape_reference.string_path()) {
                     json_to_teon_with_shape(json, path, shape, main_namespace)
                 } else {
-                    Err(Error::value_error(path.clone(), "unexpected type"))?
+                    Err(Error::invalid_request_pathed(path.clone(), "unexpected type"))?
                 }
             } else {
-                Err(Error::value_error(path.clone(), "unexpected type"))?
+                Err(Error::invalid_request_pathed(path.clone(), "unexpected type"))?
             }
         },
-        _ => Err(Error::value_error(path.clone(), "unexpected type"))?,
+        _ => Err(Error::invalid_request_pathed(path.clone(), "unexpected type"))?,
     }
 }
 
@@ -199,7 +199,7 @@ fn json_to_teon_with_synthesized_enum(json: &serde_json::Value, path: &KeyPath, 
             }));
         }
     }
-    Err(Error::value_error(path.clone(), "expect string enum variant"))
+    Err(Error::invalid_request_pathed(path.clone(), "expect string enum variant"))
 }
 
 pub fn json_to_teon_with_shape(json: &serde_json::Value, path: &KeyPath, shape: &SynthesizedShape, main_namespace: &Namespace) -> teo_result::Result<Value> {
@@ -213,16 +213,16 @@ pub fn json_to_teon_with_shape(json: &serde_json::Value, path: &KeyPath, shape: 
         let passed_in_keys: BTreeSet<&str> = object.keys().map(AsRef::as_ref).collect();
         let unallowed_keys: Vec<&str> = passed_in_keys.difference(&all_keys).map(|s| *s).collect();
         if let Some(unallowed) = unallowed_keys.first() {
-            return Err(Error::value_error(path + *unallowed, "unexpected key"));
+            return Err(Error::invalid_request_pathed(path + *unallowed, "unexpected key"));
         }
         let not_provided_keys: Vec<&str> = required_keys.difference(&passed_in_keys).map(|s| *s).collect();
         if let Some(not_provided) = not_provided_keys.first() {
-            return Err(Error::value_error(path + *not_provided, "expect value"));
+            return Err(Error::invalid_request_pathed(path + *not_provided, "expect value"));
         }
         let map: IndexMap<String, Value> = object.iter().map(|(k, v)| Ok((k.to_owned(), json_to_teon(v, &(path + k), shape.get(k).unwrap(), main_namespace)?))).collect::<teo_result::Result<IndexMap<String, Value>>>()?;
         Ok(Value::Dictionary(map))
     } else {
-        Err(Error::value_error(path.clone(), "unexpected value"))
+        Err(Error::invalid_request_pathed(path.clone(), "unexpected value"))
     }
 
 }

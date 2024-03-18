@@ -84,7 +84,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
     namespace.define_pipeline_item("isSuffixOf", |args: Arguments, ctx: Ctx| async move {
         let input: &str = ctx.value().try_into_err_prefix("isSuffixOf")?;
         let arg_object = ctx.resolve_pipeline(
-            args.get_object("value").err_prefix("isSuffixOf")?,
+            args.get_object("value").error_message_prefixed("isSuffixOf")?,
             "isSuffixOf",
         ).await?;
         let arg: &str = arg_object.try_into_err_prefix("isSuffixOf")?;
@@ -97,7 +97,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
     namespace.define_pipeline_item("hasSuffix", |args: Arguments, ctx: Ctx| async move {
         let input: &str = ctx.value().try_into_err_prefix("hasSuffix")?;
         let arg_object = ctx.resolve_pipeline(
-            args.get_object("value").err_prefix("hasSuffix")?,
+            args.get_object("value").error_message_prefixed("hasSuffix")?,
             "hasSuffix",
         ).await?;
         let arg: &str = arg_object.try_into_err_prefix("hasSuffix")?;
@@ -110,7 +110,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
     namespace.define_pipeline_item("isPrefixOf", |args: Arguments, ctx: Ctx| async move {
         let input: &str = ctx.value().try_into_err_prefix("isPrefixOf")?;
         let arg_object = ctx.resolve_pipeline(
-            args.get_object("value").err_prefix("isPrefixOf")?,
+            args.get_object("value").error_message_prefixed("isPrefixOf")?,
             "isPrefixOf",
         ).await?;
         let arg: &str = arg_object.try_into_err_prefix("isPrefixOf")?;
@@ -123,7 +123,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
     namespace.define_pipeline_item("hasPrefix", |args: Arguments, ctx: Ctx| async move {
         let input: &str = ctx.value().try_into_err_prefix("hasPrefix")?;
         let arg_object = ctx.resolve_pipeline(
-            args.get_object("value").err_prefix("hasPrefix")?,
+            args.get_object("value").error_message_prefixed("hasPrefix")?,
             "hasPrefix",
         ).await?;
         let arg: &str = arg_object.try_into_err_prefix("hasPrefix")?;
@@ -135,7 +135,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
 
     namespace.define_pipeline_item("regexMatch", |args: Arguments, ctx: Ctx| async move {
         let input: &str = ctx.value().try_into_err_prefix("regexMatch")?;
-        let regex: &Regex = args.get("regex").err_prefix("regexMatch")?;
+        let regex: &Regex = args.get("regex").error_message_prefixed("regexMatch")?;
         if !regex.is_match(input){
             Err(Error::new(format!("input doesn't match regex")))?
         }

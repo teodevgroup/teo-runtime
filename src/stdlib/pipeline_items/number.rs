@@ -40,7 +40,7 @@ pub(in crate::stdlib) fn load_pipeline_number_items(namespace: &mut Namespace) {
     });
 
     namespace.define_pipeline_item("randomFloat", |args: Arguments, ctx: Ctx| async move {
-        let range: &Range = args.get("range").err_prefix("randomFloat")?;
+        let range: &Range = args.get("range").error_message_prefixed("randomFloat")?;
         let (start, end, closed) = {
             let start = if let Some(f) = range.start.to_float() {
                 f

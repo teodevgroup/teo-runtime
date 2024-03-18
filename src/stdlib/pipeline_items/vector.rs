@@ -12,7 +12,7 @@ pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {
     namespace.define_pipeline_item("append", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_into_err_prefix("append")?;
         let arg_object = ctx.resolve_pipeline(
-            args.get_object("value").err_prefix("append(value)")?,
+            args.get_object("value").error_message_prefixed("append(value)")?,
             "append(value)",
         ).await?;
         let arg: Value = arg_object.try_into_err_prefix("append(value)")?;
@@ -35,7 +35,7 @@ pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {
     namespace.define_pipeline_item("prepend", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_into_err_prefix("prepend")?;
         let arg_object = ctx.resolve_pipeline(
-            args.get_object("value").err_prefix("prepend(value)")?,
+            args.get_object("value").error_message_prefixed("prepend(value)")?,
             "prepend(value)" ,
         ).await?;
         let mut arg: Value = arg_object.try_into_err_prefix("prepend(value)")?;
@@ -66,8 +66,8 @@ pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {
 
     namespace.define_pipeline_item("hasLength", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_into_err_prefix("hasLength")?;
-        let len_arg: Option<usize> = args.get_optional("len").err_prefix("hasLength(len)")?.try_into()?;
-        let range_arg: Option<&Range> = args.get_optional("range").err_prefix("hasLength(range)")?.try_into()?;
+        let len_arg: Option<usize> = args.get_optional("len").error_message_prefixed("hasLength(len)")?.try_into()?;
+        let range_arg: Option<&Range> = args.get_optional("range").error_message_prefixed("hasLength(range)")?.try_into()?;
         let (lower , upper , closed) = if let Some(len) = len_arg {
             (len, len, true)
         } else if let Some(range) = range_arg {
@@ -112,7 +112,7 @@ pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {
     namespace.define_pipeline_item("truncate", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_into_err_prefix("truncate")?;
         let arg_object = &ctx.resolve_pipeline(
-            args.get_object("maxLen").err_prefix("truncate(maxLen)")?,
+            args.get_object("maxLen").error_message_prefixed("truncate(maxLen)")?,
             "truncate(maxLen)",
         ).await?;
         let arg: usize = arg_object.try_into_err_prefix("truncate(maxLen)")?;

@@ -13,7 +13,7 @@ use crate::namespace::Namespace;
 use teo_result::Error;
 use crate::request;
 use crate::schema::fetch::fetch_decorator_arguments::fetch_decorator_arguments;
-use crate::error_runtime_ext::ErrorRuntimeExt;
+
 
 pub fn load_handler_inclusion(main_namespace: &mut Namespace, schema: &Schema, handler_inclusion: &IncludeHandlerFromTemplate, diagnostics: &mut Diagnostics) -> Result<()> {
     let template_path: Vec<&str> = handler_inclusion.resolved().template_path.iter().map(|i| i.as_str()).collect();
@@ -33,7 +33,7 @@ pub fn load_handler_inclusion(main_namespace: &mut Namespace, schema: &Schema, h
             url: None,
             namespace_path: handler_inclusion.namespace_str_path().iter().map(|s| s.to_string()).collect(),
             call: Box::leak(Box::new(|ctx: request::Ctx| async {
-                Err(Error::not_found_message_only())
+                Err(Error::not_found())
             })),
         }
     };

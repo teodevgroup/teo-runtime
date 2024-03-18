@@ -12,7 +12,7 @@ use crate::namespace::Namespace;
 use teo_result::Error;
 use crate::request;
 use crate::schema::fetch::fetch_decorator_arguments::fetch_decorator_arguments;
-use crate::error_runtime_ext::ErrorRuntimeExt;
+
 
 pub fn load_handler(main_namespace: &mut Namespace, schema: &Schema, handler_declaration: &teo_parser::ast::handler::HandlerDeclaration, diagnostics: &mut Diagnostics) -> Result<()> {
     let mut handler = if let Some(handler) = main_namespace.handler_at_path(&handler_declaration.str_path()).cloned() {
@@ -31,7 +31,7 @@ pub fn load_handler(main_namespace: &mut Namespace, schema: &Schema, handler_dec
             url: None,
             namespace_path: handler_declaration.namespace_str_path().iter().map(|s| s.to_string()).collect(),
             call: Box::leak(Box::new(|ctx: request::Ctx| async {
-                Err(Error::not_found_message_only())
+                Err(Error::not_found())
             })),
         }
     };

@@ -35,7 +35,7 @@ use crate::object::error_ext;
 use crate::optionality::Optionality;
 use crate::readwrite::write::Write;
 use crate::utils::ContainsStr;
-use crate::error_runtime_ext::ErrorRuntimeExt;
+
 
 #[derive(Clone)]
 pub struct Object {
@@ -257,7 +257,7 @@ impl Object {
             }
         };
         if !valid {
-            Err(teo_result::Error::value_error(path + key.as_ref(), "unexpected key"))
+            Err(Error::invalid_request_pathed(path + key.as_ref(), "unexpected key"))
         } else {
             Ok(())
         }
@@ -1872,7 +1872,7 @@ impl ErrorIfNotFound for Option<Object> {
     fn into_not_found_error(self, path: KeyPath) -> teo_result::Result<Object> {
         match self {
             Some(object) => Ok(object),
-            None => Err(error_ext::not_found(path)),
+            None => Err(Error::not_found_pathed(path, "not found")),
         }
     }
 }
@@ -1884,7 +1884,7 @@ impl ErrorIfNotFound for teo_result::Result<Option<Object>> {
             Err(err) => Err(err),
             Ok(option) => match option {
                 Some(object) => Ok(object),
-                None => Err(error_ext::not_found(path)),
+                None => Err(Error::not_found_pathed(path, "not found")),
             }
         }
     }

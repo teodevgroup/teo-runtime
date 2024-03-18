@@ -53,7 +53,7 @@ impl Response {
         let code = path_error.code;
         let value: Value = path_error.into();
         let res = Self::teon(value);
-        res.set_code(code.unwrap_or(500));
+        res.set_code(code);
         res
     }
 

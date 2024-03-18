@@ -23,13 +23,13 @@ pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &mut Namesp
         let model_object: Result<&model::Object> = ctx.value().try_into_err_prefix("get");
         let dictionary: Result<&IndexMap<String, Value>> = ctx.value().try_into_err_prefix("get");
         if let Ok(model_object) = model_object {
-            let key: &EnumVariant = args.get("key").err_prefix("get(key)")?;
+            let key: &EnumVariant = args.get("key").error_message_prefixed("get(key)")?;
             let key_value = key.value.as_str();
             // get value and return here
             let value: Value = model_object.get_value(key_value)?;
             Ok(Object::from(value))
         } else if let Ok(dictionary) = dictionary {
-            let key: &Value = args.get("key").err_prefix("get(key)")?;
+            let key: &Value = args.get("key").error_message_prefixed("get(key)")?;
             let key_str = if key.is_string() {
                 key.as_str().unwrap()
             } else if key.is_enum_variant() {
@@ -48,13 +48,13 @@ pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &mut Namesp
         let dictionary: Result<&IndexMap<String, Value>> = ctx.value().try_into_err_prefix("set");
         let value: Value = args.get("value")?;
         if let Ok(model_object) = model_object {
-            let key: &EnumVariant = args.get("key").err_prefix("set(key)")?;
+            let key: &EnumVariant = args.get("key").error_message_prefixed("set(key)")?;
             let key_value = key.value.as_str();
             // get value and return here
             model_object.set_value(key_value, value)?;
             Ok(ctx.value().clone())
         } else if let Ok(dictionary) = dictionary {
-            let key: &Value = args.get("key").err_prefix("set(key)")?;
+            let key: &Value = args.get("key").error_message_prefixed("set(key)")?;
             let key_str = if key.is_string() {
                 key.as_str().unwrap()
             } else if key.is_enum_variant() {
@@ -73,7 +73,7 @@ pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &mut Namesp
     namespace.define_pipeline_item("assign", |args: Arguments, ctx: Ctx| async move {
         let model_object = ctx.object();
         let value: Value = args.get("value")?;
-        let key: &EnumVariant = args.get("key").err_prefix("assign(key)")?;
+        let key: &EnumVariant = args.get("key").error_message_prefixed("assign(key)")?;
         let key_value = key.value.as_str();
         // get value and return here
         model_object.set_value(key_value, value)?;
@@ -82,7 +82,7 @@ pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &mut Namesp
 
     namespace.define_pipeline_item("previous", |args: Arguments, ctx: Ctx| async move {
         let model_object = ctx.object();
-        let key: &EnumVariant = args.get("key").err_prefix("previous(key)")?;
+        let key: &EnumVariant = args.get("key").error_message_prefixed("previous(key)")?;
         let key_value = key.value.as_str();
         // get value and return here
         let result = model_object.get_previous_value(key_value)?;

@@ -6,7 +6,6 @@ use crate::pipeline::Ctx;
 use crate::pipeline::pipeline::Pipeline;
 use teo_result::{Result, ResultExt};
 use crate::action::Action;
-use crate::error_runtime_ext::ErrorRuntimeExt;
 
 pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) {
 
@@ -19,7 +18,7 @@ pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) 
     });
 
     namespace.define_pipeline_item("validate", |args: Arguments, ctx: Ctx| async move {
-        let pipeline: &Pipeline = args.get("pipeline").err_prefix("validate")?;
+        let pipeline: &Pipeline = args.get("pipeline").error_message_prefixed("validate")?;
         if let Err(err) = ctx.run_pipeline(pipeline).await {
             Err(err)?
         }
@@ -27,12 +26,12 @@ pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) 
     });
 
     namespace.define_pipeline_item("passed", |args: Arguments, ctx: Ctx| async move {
-        let pipeline: &Pipeline = args.get("pipeline").err_prefix("validate")?;
+        let pipeline: &Pipeline = args.get("pipeline").error_message_prefixed("validate")?;
         Ok(Object::from(ctx.run_pipeline(pipeline).await.is_ok()))
     });
 
     namespace.define_pipeline_item("if", |args: Arguments, ctx: Ctx| async move {
-        let cond: &Pipeline = args.get("cond").err_prefix("if")?;
+        let cond: &Pipeline = args.get("cond").error_message_prefixed("if")?;
         let then: Result<&Pipeline> = args.get("then");
         let r#else: Result<&Pipeline> = args.get("else");
         match ctx.run_pipeline(cond).await {
@@ -54,26 +53,26 @@ pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) 
     });
 
     namespace.define_pipeline_item("do", |args: Arguments, ctx: Ctx| async move {
-        let pipeline: &Pipeline = args.get("pipeline").err_prefix("do")?;
+        let pipeline: &Pipeline = args.get("pipeline").error_message_prefixed("do")?;
         let _ = ctx.run_pipeline(pipeline).await?;
         Ok(ctx.value().clone())
     });
 
     namespace.define_pipeline_item("not", |args: Arguments, ctx: Ctx| async move {
-        let pipeline: &Pipeline = args.get("pipeline").err_prefix("not")?;
+        let pipeline: &Pipeline = args.get("pipeline").error_message_prefixed("not")?;
         match ctx.run_pipeline(pipeline).await {
-            Ok(_) => Err(Error::value_error_message_only("not: value is not invalid")),
+            Ok(_) => Err(Error::invalid_request_message("not: value is not invalid")),
             Err(_) => Ok(ctx.value().clone())
         }
     });
 
     // namespace.define_pipeline_item("all", |args: Arguments, ctx: Ctx| async move {
-    //     let pipelines: Vec<&Pipeline> = args.get("pipeline").err_prefix("all")?;
+    //     let pipelines: Vec<&Pipeline> = args.get("pipeline").error_message_prefixed("all")?;
     //     Ok(ctx.value().clone())
     // });
     //
     // namespace.define_pipeline_item("any", |args: Arguments, ctx: Ctx| async move {
-    //     let pipelines: Vec<&Pipeline> = args.get("pipelines").err_prefix("any")?;
+    //     let pipelines: Vec<&Pipeline> = args.get("pipelines").error_message_prefixed("any")?;
     //     Ok(ctx.value().clone())
     // });
 

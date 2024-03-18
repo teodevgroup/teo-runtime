@@ -10,7 +10,7 @@ use crate::request;
 use teo_result::{Result, ResultExt};
 use crate::action::Action;
 use crate::connection::transaction;
-use crate::error_runtime_ext::ErrorRuntimeExt;
+
 
 #[derive(Clone)]
 pub struct Ctx {
@@ -62,7 +62,7 @@ impl Ctx {
         self.inner.request_ctx.clone()
     }
 
-    pub async fn resolve_pipeline(&self, object: Object, err_prefix: impl Into<String>) -> Result<Object> {
+    pub async fn resolve_pipeline(&self, object: Object, err_prefix: impl AsRef<str>) -> Result<Object> {
         if let Some(pipeline) = object.as_pipeline() {
             self.run_pipeline_with_err_prefix(pipeline, err_prefix).await
         } else {
@@ -70,8 +70,8 @@ impl Ctx {
         }
     }
 
-    pub async fn run_pipeline_with_err_prefix(&self, pipeline: &Pipeline, err_prefix: impl Into<String>) -> Result<Object> {
-        self.run_pipeline(pipeline).await.err_prefix(err_prefix)
+    pub async fn run_pipeline_with_err_prefix(&self, pipeline: &Pipeline, err_prefix: impl AsRef<str>) -> Result<Object> {
+        self.run_pipeline(pipeline).await.error_message_prefixed(err_prefix)
     }
 
     pub async fn run_pipeline(&self, pipeline: &Pipeline) -> Result<Object> {
@@ -86,7 +86,7 @@ impl Ctx {
         match self.run_pipeline(pipeline).await {
             Ok(object) => Ok(object),
             Err(e) => {
-                let mut error = teo_result::Error::value_error(self.path().clone(), e.message);
+                let mut error = teo_result::Error::invalid_request_pathed(self.path(), e.message);
                 error.code = e.code;
                 Err(error)
             }
@@ -96,7 +96,7 @@ impl Ctx {
     pub async fn run_pipeline_into_path_unauthorized_error(&self, pipeline: &Pipeline) -> teo_result::Result<Object> {
         match self.run_pipeline(pipeline).await {
             Ok(object) => Ok(object),
-            Err(e) => Err(teo_result::Error::unauthorized_error(self.path().clone(), e.message))
+            Err(e) => Err(teo_result::Error::unauthorized_pathed(self.path(), e.message))
         }
     }
 

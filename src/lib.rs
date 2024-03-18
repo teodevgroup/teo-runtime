@@ -23,7 +23,6 @@ pub mod schema;
 pub mod cell;
 pub mod optionality;
 pub mod readwrite;
-pub mod error_runtime_ext;
 pub mod coder;
 pub mod traits;
 pub mod data_set;

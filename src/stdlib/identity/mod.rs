@@ -9,7 +9,7 @@ use crate::pipeline::Pipeline;
 use crate::{pipeline, request};
 use teo_result::Error;
 use teo_teon::{teon, Value};
-use crate::error_runtime_ext::ErrorRuntimeExt;
+
 use crate::{model, model::{Field}};
 use crate::action::action::{CODE_AMOUNT, CODE_NAME, CODE_POSITION};
 use crate::arguments::Arguments;
@@ -84,7 +84,7 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
     identity_namespace.define_pipeline_item("jwt", |arguments: Arguments, pipeline_ctx: pipeline::Ctx| async move {
         let object = pipeline_ctx.object();
         let Some(jwt_secret) = object.model().data.get("identity:jwtSecret") else {
-            return Err(Error::internal_server_error_message_only("missing @identity.jwtSecret"));
+            return Err(Error::internal_server_error_message("missing @identity.jwtSecret"));
         };
         let jwt_secret: String = jwt_secret.try_into()?;
         let expired: Option<Object> = arguments.get_optional("expired")?;
@@ -122,7 +122,7 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
         let mut id_values: IndexMap<String, Value> = indexmap!{};
         let id_fields: Vec<&Field> = model.fields.values().filter(|f| f.data.get("identity:id").is_some()).collect();
         if id_fields.len() == 0 {
-            return Err(Error::internal_server_error(path!["credentials"], "no @identity.id defined on this model"));
+            return Err(Error::internal_server_error_pathed(path!["credentials"], "no @identity.id defined on this model"));
         }
         let checker_fields: Vec<&Field> = model.fields.values().filter(|f| f.data.get("identity:checker").is_some()).collect();
         let companion_fields: Vec<&Field> = model.fields.values().filter(|f| f.data.get("identity:companion").is_some()).collect();
@@ -133,7 +133,7 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
                     identity_key = Some(k);
                     identity_value = Some(v);
                 } else {
-                    return Err(Error::value_error(path!["credentials", k.as_str()], "multiple @identity.id value received"));
+                    return Err(Error::invalid_request_pathed(path!["credentials", k.as_str()], "multiple @identity.id value received"));
                 }
             }
             if let Some(f) = checker_fields.iter().find(|f| f.name() == k.as_str()) {
@@ -142,7 +142,7 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
                     checker_value = Some(v);
                     checker_field = Some(*f);
                 } else {
-                    return Err(Error::value_error(path!["credentials", k.as_str()], "multiple @identity.checker value received"));
+                    return Err(Error::invalid_request_pathed(path!["credentials", k.as_str()], "multiple @identity.checker value received"));
                 }
             }
             if let Some(_) = companion_fields.iter().find(|f| f.name() == k.as_str()) {
@@ -150,9 +150,9 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
             }
         }
         if identity_key == None {
-            return Err(Error::value_error(path!["credentials"], "missing @identity.id value"));
+            return Err(Error::invalid_request_pathed(path!["credentials"], "missing @identity.id value"));
         } else if checker_key == None {
-            return Err(Error::value_error(path!["credentials"], "missing @identity.checker value"));
+            return Err(Error::invalid_request_pathed(path!["credentials"], "missing @identity.checker value"));
         }
         let object: Option<model::Object> = model_ctx.find_unique(&teon!({
             "where": {
@@ -160,7 +160,7 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
             }
         })).await?;
         let Some(object) = object else {
-            return Err(Error::not_found_with_message(path!["credentials"], "this identity is not found"));
+            return Err(Error::not_found_pathed(path!["credentials"], "this identity is not found"));
         };
         let auth_checker_pipeline = checker_field.unwrap().data.get("identity:checker").unwrap().as_pipeline().unwrap();
         let pipeline_input = teon!({
@@ -177,14 +177,13 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
             match self_pipeline_ctx.run_pipeline(validator).await {
                 Ok(_) => (),
                 Err(mut error) => {
-                    error.title = Some("Unauthorized".to_owned());
-                    error.code = Some(401);
+                    error.code = 401;
                     return Err(error);
                 }
             }
         }
         let Some(token_issuer) = model.data.get("identity:tokenIssuer") else {
-            return Err(Error::internal_server_error_message_only("missing identity token issuer"));
+            return Err(Error::internal_server_error_message("missing identity token issuer"));
         };
         let token_issuer = token_issuer.as_pipeline().unwrap();
         let token_string: String = credentials_pipeline_ctx.run_pipeline_into_path_value_error(token_issuer).await?.try_into()?;
@@ -202,28 +201,28 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
         let model = req_ctx.namespace().model_at_path(&req_ctx.handler_match().path()).unwrap();
         let model_ctx = req_ctx.transaction_ctx().model_ctx_for_model_at_path(&req_ctx.handler_match().path()).unwrap();
         let Some(jwt_secret) = model.data.get("identity:jwtSecret") else {
-            return Err(Error::internal_server_error_message_only("missing @identity.jwtSecret"));
+            return Err(Error::internal_server_error_message("missing @identity.jwtSecret"));
         };
         let jwt_secret: String = jwt_secret.try_into()?;
         let Some(authorization) = req_ctx.request().headers().get("authorization") else {
-            return Err(Error::value_error_message_only("missing authorization header value"));
+            return Err(Error::unauthorized_message("missing authorization header value"));
         };
         if authorization.len() < 7 {
-            return Err(Error::value_error_message_only("invalid jwt token"));
+            return Err(Error::unauthorized_message("invalid jwt token"));
         }
         let token = &authorization[7..];
         let Ok(claims) = decode_token(token, jwt_secret.as_str()) else {
-            return Err(Error::unauthorized_error_message_only("invalid jwt token"));
+            return Err(Error::unauthorized_message("invalid jwt token"));
         };
         if claims.model != model.path {
-            return Err(Error::unauthorized_error_message_only("wrong model of identity"));
+            return Err(Error::unauthorized_message("wrong model of identity"));
         }
         let teon_value: Value = Value::from(claims.id);
         let object: Option<model::Object> = model_ctx.find_unique(&teon_value).await?;
         if let Some(object) = object {
             return Ok(Response::data(object.to_teon().await?));
         } else {
-            return Err(Error::unauthorized_error_message_only("identity not found"));
+            return Err(Error::unauthorized_message("identity not found"));
         }
 
         Ok::<Response, Error>(Response::html("")?)
@@ -235,14 +234,14 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
         Ok(middleware_wrap_fn(move |ctx: Ctx, next: &'static dyn Next| async move {
             if let Some(authorization) = ctx.request().headers().get("authorization") {
                 if authorization.len() < 7 {
-                    return Err(Error::value_error_message_only("invalid jwt token"));
+                    return Err(Error::unauthorized_message("invalid jwt token"));
                 }
                 let token = &authorization[7..];
                 match decode_token(token, &secret) {
                     Ok(claims) => {
                         let json_identifier = &claims.id;
                         let Some(model_ctx) = ctx.transaction_ctx().model_ctx_for_model_at_path(&claims.model.iter().map(|s| s.as_str()).collect()) else {
-                            return Err(Error::unauthorized_error_message_only("invalid jwt token"));
+                            return Err(Error::unauthorized_message("invalid jwt token"));
                         };
                         let teon_identifier = Value::from(json_identifier);
                         let object: Option<model::Object> = model_ctx.find_unique(&teon_identifier).await?;
@@ -253,24 +252,23 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
                                 match self_pipeline_ctx.run_pipeline(validator).await {
                                     Ok(_) => (),
                                     Err(mut error) => {
-                                        error.title = Some("Unauthorized".to_owned());
-                                        error.code = Some(401);
+                                        error.code = 401;
                                         return Err(error);
                                     }
                                 }
                             }
                             ctx.data_mut().insert("identity", Object::from(object));
                         } else {
-                            return Err(Error::unauthorized_error_message_only("invalid jwt token"));
+                            return Err(Error::unauthorized_message("invalid jwt token"));
                         }
                     }
                     Err(error) => {
                         return match error.kind() {
                             jsonwebtoken::errors::ErrorKind::ExpiredSignature => {
-                                Err(Error::unauthorized_error_message_only("token expired"))
+                                Err(Error::unauthorized_message("token expired"))
                             }
                             _ => {
-                                Err(Error::unauthorized_error_message_only("invalid jwt token"))
+                                Err(Error::unauthorized_message("invalid jwt token"))
                             }
                         };
                     }

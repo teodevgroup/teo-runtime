@@ -7,7 +7,7 @@ use teo_parser::r#type::synthesized_shape_reference::SynthesizedShapeReferenceKi
 use teo_teon::Value;
 use crate::coder::json_to_teon;
 use crate::namespace::Namespace;
-use crate::error_runtime_ext::ErrorRuntimeExt;
+
 
 pub fn validate_and_transform_json_input_for_builtin_action(model: &Model, action: Action, json_body: &JsonValue, main_namespace: &Namespace) -> teo_result::Result<Value> {
     let input= match action {
@@ -26,7 +26,7 @@ pub fn validate_and_transform_json_input_for_builtin_action(model: &Model, actio
         COUNT_HANDLER => model.cache.shape.get(SynthesizedShapeReferenceKind::CountArgs).unwrap(),
         AGGREGATE_HANDLER => model.cache.shape.get(SynthesizedShapeReferenceKind::AggregateArgs).unwrap(),
         GROUP_BY_HANDLER => model.cache.shape.get(SynthesizedShapeReferenceKind::GroupByArgs).unwrap(),
-        _ => Err(teo_result::Error::value_error(path![], "unfound input definition"))?,
+        _ => Err(teo_result::Error::invalid_request_pathed(path![], "unfound input definition"))?,
     };
     json_to_teon(json_body, &path![], input, main_namespace)
 }

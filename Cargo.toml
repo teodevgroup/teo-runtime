@@ -1,6 +1,6 @@
 [package]
 name = "teo-runtime"
-version = "0.2.16"
+version = "0.2.19"
 edition = "2021"
 description = "Runtime for Teo"
 license = "Apache-2.0"
@@ -11,15 +11,15 @@ repository = "https://github.com/teocloud/teo-runtime"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-teo-result = { version = "0.2.8", path = "../teo-result" }
-teo-teon = { version = "0.2.13", path = "../teo-teon" }
+teo-result = { version = "0.2.9", path = "../teo-result" }
+teo-teon = { version = "0.2.19", path = "../teo-teon" }
 teo-parser = { version = "0.2.16", path = "../teo-parser" }
 maplit = "1.0.2"
 indexmap = { version = "2.2.5", features = ["serde"] }
 serde = { version = "1.0.190", features = ["derive"] }
 serde_json = { version = "1.0", features = ["preserve_order"] }
 educe = "0.5.11"
-key-path = "0.2.0"
+key-path = "0.2.2"
 async-trait = "0.1.77"
 async-recursion = "1.0.5"
 uuid = { version = "1.6", features = ["v4", "fast-rng"] }

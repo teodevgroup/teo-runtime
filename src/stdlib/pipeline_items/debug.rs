@@ -20,13 +20,13 @@ pub(in crate::stdlib) fn load_debug_items(namespace: &mut Namespace) {
                 if let Some(errors) = &error.errors {
                     error.errors = Some(errors.iter().map(|(k, v)| (k.to_owned(), message.to_owned())).collect());
                     if let Some(code) = code {
-                        error.code = Some(code as u16);
+                        error.code = code as u16;
                     };
                     Err(error)
                 } else {
                     error.message = message.to_owned();
                     if let Some(code) = code {
-                        error.code = Some(code as u16);
+                        error.code = code as u16;
                     };
                     Err(error)
                 }

@@ -3,7 +3,7 @@ use crate::request;
 use teo_teon::{teon, Value};
 use crate::action::action::*;
 use crate::response::Response;
-use crate::error_runtime_ext::ErrorRuntimeExt;
+
 
 pub async fn find_many(ctx: &request::Ctx) -> teo_result::Result<Response> {
     let model = ctx.namespace().model_at_path(&ctx.handler_match().path()).unwrap();
@@ -39,7 +39,7 @@ pub async fn find_many(ctx: &request::Ctx) -> teo_result::Result<Response> {
     for (index, result) in results.iter().enumerate() {
         match result.to_teon_internal(&path!["data", index]).await {
             Ok(result) => result_json.push(result),
-            Err(_) => return Err(teo_result::Error::unauthorized_error(path!["data", index], "not allowed to read")),
+            Err(_) => return Err(teo_result::Error::unauthorized_pathed(path!["data", index], "not allowed to read")),
         }
     }
     Ok(Response::data_meta(Value::Array(result_json), meta))
