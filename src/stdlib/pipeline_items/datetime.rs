@@ -12,7 +12,7 @@ pub(in crate::stdlib) fn load_pipeline_datetime_items(namespace: &mut Namespace)
     });
 
     namespace.define_pipeline_item("today", |args: Arguments, ctx: Ctx| async move {
-        let arg_object = ctx.resolve_pipeline(
+        let arg_object: Object = ctx.resolve_pipeline_with_err_prefix(
             args.get_object("tz").error_message_prefixed("today(tz)")?,
             "today(tz)",
         ).await?;
@@ -23,8 +23,8 @@ pub(in crate::stdlib) fn load_pipeline_datetime_items(namespace: &mut Namespace)
     });
 
     namespace.define_pipeline_item("toDate", |args: Arguments, ctx: Ctx| async move {
-        let datetime: &DateTime<Utc> = ctx.value().try_into_err_prefix("toDate")?;
-        let arg_object = ctx.resolve_pipeline(
+        let datetime: &DateTime<Utc> = ctx.value().try_ref_into_err_prefix("toDate")?;
+        let arg_object: Object = ctx.resolve_pipeline_with_err_prefix(
             args.get_object("tz").error_message_prefixed("toDate(tz)")?,
             "toDate(tz)",
         ).await?;

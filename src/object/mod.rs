@@ -111,15 +111,35 @@ impl Object {
         self.is_teon() && self.as_teon().unwrap().is_null()
     }
 
-    pub fn try_into_err_prefix<'a, T: 'a, E>(&'a self, prefix: impl AsRef<str>) -> Result<T> where E: std::error::Error, T: TryFrom<&'a Object, Error = E> {
+    pub fn try_into_err_prefix<T, E>(self, prefix: impl AsRef<str>) -> Result<T> where Error: From<E>, T: TryFrom<Object, Error = E> {
         let result: std::result::Result<T, E> = self.try_into();
         match result {
             Ok(t) => Ok(t),
-            Err(e) => Err(Error::new(format!("{}: {e}", prefix.as_ref()))),
+            Err(e) => Err(Error::new(format!("{}: {}", prefix.as_ref(), Error::from(e)))),
         }
     }
 
-    pub fn try_into_err_message<'a, T: 'a, E>(&'a self, message: impl AsRef<str>) -> Result<T> where E: std::error::Error, T: TryFrom<&'a Object, Error = E> {
+    fn try_into_err_message_inner<T, E>(self) -> Result<T> where Error: From<E>, T: TryFrom<Object, Error = E> {
+        Ok(self.try_into()?)
+    }
+
+    pub fn try_into_err_message<T, E>(self, message: impl AsRef<str>) -> Result<T> where Error: From<E>, T: TryFrom<Object, Error = E> {
+        let result: Result<T> = self.try_into_err_message_inner();
+        match result {
+            Ok(t) => Ok(t),
+            Err(_) => Err(Error::new(message.as_ref())),
+        }
+    }
+
+    pub fn try_ref_into_err_prefix<'a, T: 'a, E>(&'a self, prefix: impl AsRef<str>) -> Result<T> where Error: From<E>, T: TryFrom<&'a Object, Error = E> {
+        let result: std::result::Result<T, E> = self.try_into();
+        match result {
+            Ok(t) => Ok(t),
+            Err(e) => Err(Error::new(format!("{}: {}", prefix.as_ref(), Error::from(e)))),
+        }
+    }
+
+    pub fn try_ref_into_err_message<'a, T: 'a, E>(&'a self, message: impl AsRef<str>) -> Result<T> where Error: From<E>, T: TryFrom<&'a Object, Error = E> {
         let result: std::result::Result<T, E> = self.try_into();
         match result {
             Ok(t) => Ok(t),

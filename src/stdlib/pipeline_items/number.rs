@@ -12,7 +12,7 @@ use rand::{thread_rng, Rng};
 pub(in crate::stdlib) fn load_pipeline_number_items(namespace: &mut Namespace) {
 
     namespace.define_pipeline_item("isEven", |args: Arguments, ctx: Ctx| async move {
-        let input: &Value = ctx.value().try_into_err_prefix("isEven")?;
+        let input: &Value = ctx.value().try_ref_into_err_prefix("isEven")?;
         match input {
             Value::Int(i) => if !i.is_even() {
                 Err(Error::new("input is not even"))?
@@ -26,7 +26,7 @@ pub(in crate::stdlib) fn load_pipeline_number_items(namespace: &mut Namespace) {
     });
 
     namespace.define_pipeline_item("isOdd", |args: Arguments, ctx: Ctx| async move {
-        let input: &Value = ctx.value().try_into_err_prefix("isOdd")?;
+        let input: &Value = ctx.value().try_ref_into_err_prefix("isOdd")?;
         match input {
             Value::Int(i) => if !i.is_odd() {
                 Err(Error::new("input is not odd"))?

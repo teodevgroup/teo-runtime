@@ -149,7 +149,7 @@ impl Object {
                     if let Some(argument) = &field.default {
                         if let Some(pipeline) = argument.as_pipeline() {
                             let ctx = self.pipeline_ctx_for_path_and_value(path.clone(), Value::Null);
-                            let value: Value = ctx.run_pipeline_into_path_value_error(pipeline).await?.try_into()?;
+                            let value: Value = ctx.run_pipeline(pipeline).await?;
                             self.set_value_to_value_map(key, value);
                         } else if let Some(value) = argument.as_teon() {
                             self.set_value_to_value_map(key, value.clone());
@@ -166,7 +166,7 @@ impl Object {
                         SetValue(value) => {
                             // on set pipeline
                             let ctx = self.pipeline_ctx_for_path_and_value(path.clone(), value.cast(Some(field.r#type()), self.namespace()));
-                            let value: Value = ctx.run_pipeline_into_path_value_error(&field.on_set).await?.try_into()?;
+                            let value: Value = ctx.run_pipeline(&field.on_set).await?;
                             self.check_write_rule(key, &value, &path).await?;
                             self.set_value_to_value_map(key, value.clone());
                         }
@@ -188,7 +188,7 @@ impl Object {
                             _ => return Err(error_ext::unexpected_input(path + key)),
                         };
                         let ctx = self.pipeline_ctx_for_path_and_value(path.clone(), value.cast(Some(property.r#type()), self.namespace()));
-                        let _ = ctx.run_pipeline_into_path_value_error(setter).await?;
+                        let _: Object = ctx.run_pipeline(setter).await?;
                     }
                 }
             }
@@ -211,25 +211,25 @@ impl Object {
 
     async fn check_model_write_permission<'a>(&self, path: impl AsRef<KeyPath>) -> Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        ctx.run_pipeline_into_path_value_error(&self.model().can_mutate).await?;
+        ctx.run_pipeline_ignore_return_value(&self.model().can_mutate).await?;
         Ok(())
     }
 
     async fn check_model_read_permission<'a>(&self, path: impl AsRef<KeyPath>) -> Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        ctx.run_pipeline_into_path_value_error(&self.model().can_read).await?;
+        ctx.run_pipeline_ignore_return_value(&self.model().can_read).await?;
         Ok(())
     }
 
     async fn check_field_write_permission<'a>(&self, field: &Field, path: impl AsRef<KeyPath>) -> Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        ctx.run_pipeline_into_path_value_error(&field.can_mutate).await?;
+        ctx.run_pipeline_ignore_return_value(&field.can_mutate).await?;
         Ok(())
     }
 
     async fn check_field_read_permission<'a>(&self, field: &Field, path: impl AsRef<KeyPath>) -> Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        ctx.run_pipeline_into_path_value_error(&field.can_read).await?;
+        ctx.run_pipeline_ignore_return_value(&field.can_read).await?;
         Ok(())
     }
 
@@ -253,7 +253,7 @@ impl Object {
             Write::WriteNonNull => if is_new { true } else { !value.is_null() },
             Write::WriteIf(pipeline) => {
                 let ctx = self.pipeline_ctx_for_path_and_value(path + key.as_ref(), value.clone());
-                ctx.run_pipeline_into_path_value_error(pipeline).await.is_ok()
+                ctx.run_pipeline_ignore_return_value(pipeline).await.is_ok()
             }
         };
         if !valid {
@@ -299,7 +299,7 @@ impl Object {
         let setter = property.setter.as_ref().unwrap();
         let value: Value = value.into();
         let ctx = self.pipeline_ctx_for_path_and_value(path![key], value.cast(Some(property.r#type()), self.namespace()));
-        ctx.run_pipeline(setter).await?;
+        ctx.run_pipeline_ignore_return_value(setter).await?;
         Ok(())
     }
 
@@ -410,7 +410,7 @@ impl Object {
         }
         let getter = property.getter.as_ref().unwrap();
         let ctx = self.pipeline_ctx_for_path_and_value(path![key], Value::Null);
-        let value: Value = ctx.run_pipeline(getter).await?.try_into()?;
+        let value: Value = ctx.run_pipeline(getter).await?;
         if property.cached {
             self.inner.cached_property_map.lock().unwrap().insert(key.to_string(), value.clone());
         }
@@ -549,7 +549,7 @@ impl Object {
                     }
                 };
                 let ctx = self.pipeline_ctx_for_path_and_value(path + field.name(), initial_value);
-                let value: Value = ctx.run_pipeline_into_path_value_error(&field.on_save).await?.try_into()?;
+                let value: Value = ctx.run_pipeline(&field.on_save).await?;
                 self.inner.value_map.lock().unwrap().insert(key.to_string(), value);
                 self.set_modified_field(key);
             }
@@ -597,7 +597,7 @@ impl Object {
                         let value = self.get_value(key).unwrap();
                         if value.is_null() {
                             let ctx = self.pipeline_ctx_for_path_and_value(path + field.name(), Value::Null);
-                            let invalid = ctx.run_pipeline_into_path_value_error(pipeline).await.is_err();
+                            let invalid = ctx.run_pipeline_ignore_return_value(pipeline).await.is_err();
                             if invalid {
                                 return Err(error_ext::missing_required_input(path + field.name()));
                             }
@@ -696,7 +696,7 @@ impl Object {
                                     object.set_value(key, value.clone())?;
                                 } else if let Some(pipeline) = default.as_pipeline() {
                                     let pipeline_ctx = pipeline::Ctx::new(Value::Null.into(), object.clone(), path![], CODE_NAME | DISCONNECT | SINGLE, self.transaction_ctx(), self.request_ctx());
-                                    let value_object = pipeline_ctx.run_pipeline(pipeline).await?;
+                                    let value_object: object::Object = pipeline_ctx.run_pipeline(pipeline).await?;
                                     let value = value_object.as_teon().unwrap();
                                     object.set_value(key, value.clone())?;
                                 }
@@ -791,7 +791,7 @@ impl Object {
                                             object.set_value(key, value.clone())?;
                                         } else if let Some(pipeline) = default.as_pipeline() {
                                             let pipeline_ctx = pipeline::Ctx::new(Value::Null.into(), object.clone(), path![], CODE_NAME | DISCONNECT | SINGLE, self.transaction_ctx(), self.request_ctx());
-                                            let value_object = pipeline_ctx.run_pipeline(pipeline).await?;
+                                            let value_object: object::Object = pipeline_ctx.run_pipeline(pipeline).await?;
                                             let value = value_object.as_teon().unwrap();
                                             object.set_value(key, value.clone())?;
                                         }
@@ -863,19 +863,19 @@ impl Object {
 
     async fn trigger_before_delete_callbacks<'a>(&self, path: impl AsRef<KeyPath>) -> teo_result::Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        let _ = ctx.run_pipeline_into_path_unauthorized_error(&self.model().before_delete).await?;
+        ctx.run_pipeline_ignore_return_value(&self.model().before_delete).await?;
         Ok(())
     }
 
     async fn trigger_after_delete_callbacks<'a>(&self, path: impl AsRef<KeyPath>) -> teo_result::Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        let _ = ctx.run_pipeline_into_path_unauthorized_error(&self.model().after_delete).await?;
+        ctx.run_pipeline_ignore_return_value(&self.model().after_delete).await?;
         Ok(())
     }
 
     async fn trigger_before_save_callbacks<'a>(&self, path: impl AsRef<KeyPath>) -> teo_result::Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        let _ = ctx.run_pipeline_into_path_unauthorized_error(&self.model().before_save).await?;
+        ctx.run_pipeline_ignore_return_value(&self.model().before_save).await?;
         Ok(())
     }
 
@@ -886,7 +886,7 @@ impl Object {
         }
         self.inner.inside_after_save_callback.store(true, Ordering::SeqCst);
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        ctx.run_pipeline_into_path_unauthorized_error(&self.model().after_save).await?;
+        ctx.run_pipeline_ignore_return_value(&self.model().after_save).await?;
         self.inner.inside_after_save_callback.store(false, Ordering::SeqCst);
         Ok(())
     }
@@ -944,7 +944,7 @@ impl Object {
                         continue
                     }
                     let ctx = self.pipeline_ctx_for_path_and_value(path![key], value);
-                    let value: Value = ctx.run_pipeline_into_path_value_error(&field.on_output).await?.try_into()?;
+                    let value: Value = ctx.run_pipeline(&field.on_output).await?;
                     if !value.is_null() {
                         map.insert(key.to_string(), value);
                     }
@@ -957,7 +957,7 @@ impl Object {
                     } else {
                         if let Some(getter) = &property.getter {
                             let ctx = self.pipeline_ctx_for_path_and_value(path![key], Value::Null);
-                            let value: Value = ctx.run_pipeline_into_path_value_error(&getter).await?.try_into()?;
+                            let value: Value = ctx.run_pipeline(&getter).await?;
                             if !value.is_null() {
                                 map.insert(key.to_string(), value);
                             }

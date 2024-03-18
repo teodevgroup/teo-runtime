@@ -10,8 +10,8 @@ use teo_teon::Value;
 pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {
 
     namespace.define_pipeline_item("append", |args: Arguments, ctx: Ctx| async move {
-        let input: &Value = ctx.value().try_into_err_prefix("append")?;
-        let arg_object = ctx.resolve_pipeline(
+        let input: &Value = ctx.value().try_ref_into_err_prefix("append")?;
+        let arg_object: Object = ctx.resolve_pipeline_with_err_prefix(
             args.get_object("value").error_message_prefixed("append(value)")?,
             "append(value)",
         ).await?;
@@ -33,8 +33,8 @@ pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {
     });
 
     namespace.define_pipeline_item("prepend", |args: Arguments, ctx: Ctx| async move {
-        let input: &Value = ctx.value().try_into_err_prefix("prepend")?;
-        let arg_object = ctx.resolve_pipeline(
+        let input: &Value = ctx.value().try_ref_into_err_prefix("prepend")?;
+        let arg_object: Object = ctx.resolve_pipeline_with_err_prefix(
             args.get_object("value").error_message_prefixed("prepend(value)")?,
             "prepend(value)" ,
         ).await?;
@@ -56,7 +56,7 @@ pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {
     });
 
     namespace.define_pipeline_item("getLength", |args: Arguments, ctx: Ctx| async move {
-        let input: &Value = ctx.value().try_into_err_prefix("getLength")?;
+        let input: &Value = ctx.value().try_ref_into_err_prefix("getLength")?;
         Ok(match input {
             Value::String(s) => Object::from(s.len() as i32),
             Value::Array(v) => Object::from(v.len() as i32),
@@ -65,7 +65,7 @@ pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {
     });
 
     namespace.define_pipeline_item("hasLength", |args: Arguments, ctx: Ctx| async move {
-        let input: &Value = ctx.value().try_into_err_prefix("hasLength")?;
+        let input: &Value = ctx.value().try_ref_into_err_prefix("hasLength")?;
         let len_arg: Option<usize> = args.get_optional("len").error_message_prefixed("hasLength(len)")?.try_into()?;
         let range_arg: Option<&Range> = args.get_optional("range").error_message_prefixed("hasLength(range)")?.try_into()?;
         let (lower , upper , closed) = if let Some(len) = len_arg {
@@ -101,7 +101,7 @@ pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {
     });
 
     namespace.define_pipeline_item("reverse", |args: Arguments, ctx: Ctx| async move {
-        let input: &Value = ctx.value().try_into_err_prefix("reverse")?;
+        let input: &Value = ctx.value().try_ref_into_err_prefix("reverse")?;
         match input {
             Value::String(s) => Ok(Object::from(s.chars().rev().collect::<String>())),
             Value::Array(v) => Ok(Object::from(v.into_iter().rev().map(|v| v.clone()).collect::<Vec<Value>>())),
@@ -110,12 +110,12 @@ pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {
     });
 
     namespace.define_pipeline_item("truncate", |args: Arguments, ctx: Ctx| async move {
-        let input: &Value = ctx.value().try_into_err_prefix("truncate")?;
-        let arg_object = &ctx.resolve_pipeline(
+        let input: &Value = ctx.value().try_ref_into_err_prefix("truncate")?;
+        let arg_object: Object = ctx.resolve_pipeline_with_err_prefix(
             args.get_object("maxLen").error_message_prefixed("truncate(maxLen)")?,
             "truncate(maxLen)",
         ).await?;
-        let arg: usize = arg_object.try_into_err_prefix("truncate(maxLen)")?;
+        let arg: usize = arg_object.try_ref_into_err_prefix("truncate(maxLen)")?;
         match input {
             Value::String(s) => Ok(Object::from(s.chars().take(arg).collect::<String>())),
             Value::Array(v) => Ok(Object::from(v.iter().take(arg).map(|v| v.clone()).collect::<Vec<Value>>())),

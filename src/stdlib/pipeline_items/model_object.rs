@@ -20,8 +20,8 @@ pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &mut Namesp
     });
 
     namespace.define_pipeline_item("get", |args: Arguments, ctx: Ctx| async move {
-        let model_object: Result<&model::Object> = ctx.value().try_into_err_prefix("get");
-        let dictionary: Result<&IndexMap<String, Value>> = ctx.value().try_into_err_prefix("get");
+        let model_object: Result<&model::Object> = ctx.value().try_ref_into_err_prefix("get");
+        let dictionary: Result<&IndexMap<String, Value>> = ctx.value().try_ref_into_err_prefix("get");
         if let Ok(model_object) = model_object {
             let key: &EnumVariant = args.get("key").error_message_prefixed("get(key)")?;
             let key_value = key.value.as_str();
@@ -44,8 +44,8 @@ pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &mut Namesp
     });
 
     namespace.define_pipeline_item("set", |args: Arguments, ctx: Ctx| async move {
-        let model_object: Result<&model::Object> = ctx.value().try_into_err_prefix("set");
-        let dictionary: Result<&IndexMap<String, Value>> = ctx.value().try_into_err_prefix("set");
+        let model_object: Result<&model::Object> = ctx.value().try_ref_into_err_prefix("set");
+        let dictionary: Result<&IndexMap<String, Value>> = ctx.value().try_ref_into_err_prefix("set");
         let value: Value = args.get("value")?;
         if let Ok(model_object) = model_object {
             let key: &EnumVariant = args.get("key").error_message_prefixed("set(key)")?;

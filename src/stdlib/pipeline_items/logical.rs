@@ -19,7 +19,7 @@ pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) 
 
     namespace.define_pipeline_item("validate", |args: Arguments, ctx: Ctx| async move {
         let pipeline: &Pipeline = args.get("pipeline").error_message_prefixed("validate")?;
-        if let Err(err) = ctx.run_pipeline(pipeline).await {
+        if let Err(err) = ctx.run_pipeline_ignore_return_value(pipeline).await {
             Err(err)?
         }
         Ok(ctx.value().clone())
@@ -27,7 +27,7 @@ pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) 
 
     namespace.define_pipeline_item("passed", |args: Arguments, ctx: Ctx| async move {
         let pipeline: &Pipeline = args.get("pipeline").error_message_prefixed("validate")?;
-        Ok(Object::from(ctx.run_pipeline(pipeline).await.is_ok()))
+        Ok(Object::from(ctx.run_pipeline_ignore_return_value(pipeline).await.is_ok()))
     });
 
     namespace.define_pipeline_item("if", |args: Arguments, ctx: Ctx| async move {
@@ -54,13 +54,13 @@ pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) 
 
     namespace.define_pipeline_item("do", |args: Arguments, ctx: Ctx| async move {
         let pipeline: &Pipeline = args.get("pipeline").error_message_prefixed("do")?;
-        let _ = ctx.run_pipeline(pipeline).await?;
+        let _ = ctx.run_pipeline_ignore_return_value(pipeline).await?;
         Ok(ctx.value().clone())
     });
 
     namespace.define_pipeline_item("not", |args: Arguments, ctx: Ctx| async move {
         let pipeline: &Pipeline = args.get("pipeline").error_message_prefixed("not")?;
-        match ctx.run_pipeline(pipeline).await {
+        match ctx.run_pipeline_ignore_return_value(pipeline).await {
             Ok(_) => Err(Error::invalid_request_message("not: value is not invalid")),
             Err(_) => Ok(ctx.value().clone())
         }
