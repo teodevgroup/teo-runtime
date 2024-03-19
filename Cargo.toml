@@ -1,6 +1,6 @@
 [package]
 name = "teo-runtime"
-version = "0.2.19"
+version = "0.2.20"
 edition = "2021"
 description = "Runtime for Teo"
 license = "Apache-2.0"
@@ -13,7 +13,7 @@ repository = "https://github.com/teocloud/teo-runtime"
 [dependencies]
 teo-result = { version = "0.2.9", path = "../teo-result" }
 teo-teon = { version = "0.2.19", path = "../teo-teon" }
-teo-parser = { version = "0.2.16", path = "../teo-parser" }
+teo-parser = { version = "0.2.20", path = "../teo-parser" }
 maplit = "1.0.2"
 indexmap = { version = "2.2.5", features = ["serde"] }
 serde = { version = "1.0.190", features = ["derive"] }
