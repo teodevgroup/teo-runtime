@@ -11,8 +11,6 @@ use teo_result::{Result, ResultExt};
 use crate::action::Action;
 use crate::connection::transaction;
 use teo_result::Error;
-use tokio::net::unix::pipe::pipe;
-
 
 #[derive(Clone)]
 pub struct Ctx {
