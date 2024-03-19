@@ -23,6 +23,7 @@ use crate::stdlib::pipeline_items::datetime::load_pipeline_datetime_items;
 use crate::stdlib::pipeline_items::debug::load_debug_items;
 use crate::stdlib::structs::load_structs;
 use crate::stdlib::identity::load_identity_library;
+use crate::stdlib::pipeline_items::request::load_pipeline_request_items;
 
 pub fn load(namespace: &mut Namespace) {
     if !namespace.path.is_empty() {
@@ -52,6 +53,7 @@ pub fn load(namespace: &mut Namespace) {
     load_pipeline_array_items(std_namespace);
     load_pipeline_vector_items(std_namespace);
     load_pipeline_datetime_items(std_namespace);
+    load_pipeline_request_items(std_namespace);
     load_debug_items(std_namespace);
     load_bcrypt_items(std_namespace);
     // middlewares
