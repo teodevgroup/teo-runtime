@@ -257,7 +257,7 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
                                     }
                                 }
                             }
-                            ctx.data_mut().insert("identity", Object::from(object));
+                            ctx.data_mut().insert("account", Object::from(object));
                         } else {
                             return Err(Error::unauthorized_message("invalid jwt token"));
                         }
