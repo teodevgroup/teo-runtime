@@ -42,7 +42,14 @@ impl<T, E> TryFrom<Value> for Option<Vec<T>> where T: TryFrom<Value, Error=E> + 
     fn try_from(value: Value) -> Result<Self, Self::Error> {
         match value {
             Value::Null => Ok(None),
-            _ => Ok(Some(value.try_into()?))
+            Value::Array(vec) => {
+                let mut result = vec![];
+                for v in vec {
+                    result.push(v.try_into()?);
+                }
+                Ok(Some(result))
+            }
+            _ => Err(Error::new(format!("Cannot convert into Option<Vec<T>>: {}", value))),
         }
     }
 }
@@ -53,7 +60,14 @@ impl<T, E> TryFrom<&Value> for Option<Vec<T>> where T: TryFrom<Value, Error=E> +
     fn try_from(value: &Value) -> Result<Self, Self::Error> {
         match value {
             Value::Null => Ok(None),
-            _ => Ok(Some(value.try_into()?))
+            Value::Array(vec) => {
+                let mut result = vec![];
+                for v in vec {
+                    result.push(v.clone().try_into()?);
+                }
+                Ok(Some(result))
+            }
+            _ => Err(Error::new(format!("Cannot convert into Option<Vec<T>>: {}", value))),
         }
     }
 }

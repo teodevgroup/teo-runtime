@@ -133,10 +133,10 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
                     match &expression.kind {
                         ExpressionKind::Identifier(i) => {
                             if r#enum.option {
-                                Ok(UnitFetchResult::Value(Value::OptionVariant(Value::from(OptionVariant {
+                                Ok(UnitFetchResult::Value(Value::OptionVariant(OptionVariant {
                                     value: r#enum.members().find(|m| m.name() == i.name()).unwrap().resolved().to_int().unwrap(),
                                     display: format!(".{}", i.name()),
-                                }))))
+                                })))
                             } else if r#enum.interface {
                                 let member_definition = r#enum.members().find(|m| m.identifier().name() == i.name()).unwrap();
                                 if member_definition.argument_list_declaration().is_some() {

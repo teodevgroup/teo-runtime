@@ -68,7 +68,7 @@ pub fn fetch_enum_variant_literal<I>(e: &EnumVariantLiteral, schema: &Schema, in
                 }
                 if r#enum.option {
                     Ok(Value::from(Value::OptionVariant(OptionVariant {
-                        value: member.resolved().try_into()?,
+                        value: Value::from(member.resolved().clone()).try_into()?,
                         display: format!(".{}", member.identifier().name()),
                     })))
                 } else if r#enum.interface {

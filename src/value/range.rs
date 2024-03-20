@@ -1,6 +1,7 @@
 use std::fmt::{Display, Formatter};
 use serde::Serialize;
 use crate::value::Value;
+use teo_parser::value::range::Range as ParserRange;
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Range {
@@ -19,5 +20,15 @@ impl Display for Range {
             f.write_str("..")?;
         }
         Display::fmt(self.end.as_ref(), f)
+    }
+}
+
+impl From<ParserRange> for Range {
+    fn from(value: ParserRange) -> Self {
+        Self {
+            closed: value.closed,
+            start: Box::new(value.start.as_ref().clone().into()),
+            end: Box::new(value.end.as_ref().clone().into()),
+        }
     }
 }

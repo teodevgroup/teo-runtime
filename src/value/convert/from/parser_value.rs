@@ -25,8 +25,6 @@ impl From<ParserValue> for Value {
             ParserValue::OptionVariant(v) => Value::OptionVariant(OptionVariant::from(v)),
             ParserValue::InterfaceEnumVariant(v) => Value::InterfaceEnumVariant(InterfaceEnumVariant::from(v)),
             ParserValue::Regex(v) => Value::Regex(v),
-            ParserValue::File(v) => panic!("do not carry file from parser value"),
-            ParserValue::Pipeline(v) => panic!("do not carry file from parser value"),
         }
     }
 }

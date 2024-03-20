@@ -7,7 +7,7 @@ use teo_result::Error;
 use teo_result::Result;
 use crate::value::Value;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Arguments {
     inner: Arc<ArgumentsInner>
 }
@@ -113,6 +113,7 @@ impl Default for Arguments {
     }
 }
 
+#[derive(PartialEq)]
 struct ArgumentsInner {
     map: BTreeMap<String, Value>
 }
