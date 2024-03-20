@@ -1,12 +1,12 @@
 use teo_result::Error;
-use crate::object::Object;
 use crate::value::interface_enum_variant::InterfaceEnumVariant;
+use crate::value::Value;
 
-impl<'a> TryFrom<&'a Object> for &'a InterfaceEnumVariant {
+impl<'a> TryFrom<&'a Value> for &'a InterfaceEnumVariant {
 
     type Error = Error;
 
-    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: &'a Value) -> Result<Self, Self::Error> {
         if let Some(v) = value.as_interface_enum_variant() {
             Ok(v)
         } else {
@@ -15,11 +15,11 @@ impl<'a> TryFrom<&'a Object> for &'a InterfaceEnumVariant {
     }
 }
 
-impl<'a> TryFrom<&'a Object> for InterfaceEnumVariant {
+impl<'a> TryFrom<&'a Value> for InterfaceEnumVariant {
 
     type Error = Error;
 
-    fn try_from(value: &'a Object) -> Result<Self, Self::Error> {
+    fn try_from(value: &'a Value) -> Result<Self, Self::Error> {
         if let Some(v) = value.as_interface_enum_variant() {
             Ok(v.clone())
         } else {
@@ -28,11 +28,11 @@ impl<'a> TryFrom<&'a Object> for InterfaceEnumVariant {
     }
 }
 
-impl TryFrom<Object> for InterfaceEnumVariant {
+impl TryFrom<Value> for InterfaceEnumVariant {
 
     type Error = Error;
 
-    fn try_from(value: Object) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: Value) -> std::result::Result<Self, Self::Error> {
         if let Some(v) = value.as_interface_enum_variant() {
             Ok(v.clone())
         } else {
@@ -41,10 +41,10 @@ impl TryFrom<Object> for InterfaceEnumVariant {
     }
 }
 
-impl<'a> TryFrom<&'a Object> for Vec<InterfaceEnumVariant> {
+impl<'a> TryFrom<&'a Value> for Vec<InterfaceEnumVariant> {
     type Error = Error;
 
-    fn try_from(value: &'a Object) -> Result<Self, Self::Error> {
+    fn try_from(value: &'a Value) -> Result<Self, Self::Error> {
         if let Some(array) = value.as_array() {
             let mut result = vec![];
             for item in array {

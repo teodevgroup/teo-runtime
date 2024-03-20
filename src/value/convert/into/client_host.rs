@@ -1,16 +1,16 @@
 use crate::config::client::ClientHost;
 use teo_result::Error;
 use crate::value::interface_enum_variant::InterfaceEnumVariant;
-use crate::object::Object;
+use crate::value::Value;
 
-impl TryFrom<Object> for ClientHost {
+impl TryFrom<Value> for ClientHost {
 
     type Error = Error;
 
-    fn try_from(ref value: Object) -> Result<Self, Self::Error> {
-        let enum_variant: InterfaceEnumVariant = value.try_into()?;
-        let string: String = enum_variant.args().unwrap().get("value")?;
-        match enum_variant.value.as_str() {
+    fn try_from(ref value: Value) -> Result<Self, Self::Error> {
+        let interface_enum_variant: InterfaceEnumVariant = value.try_into()?;
+        let string: String = interface_enum_variant.args().unwrap().get("value")?;
+        match interface_enum_variant.value.as_str() {
             "string" => Ok(ClientHost::String(string)),
             "inject" => Ok(ClientHost::Inject(string)),
             _ => Err(Error::new(format!("invalid client host name: {:?}", value)))

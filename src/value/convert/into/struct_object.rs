@@ -1,12 +1,12 @@
-use crate::object::Object;
 use crate::r#struct;
 use teo_result::Error;
+use crate::value::Value;
 
-impl<'a> TryFrom<&'a Object> for &'a r#struct::Object {
+impl<'a> TryFrom<&'a Value> for &'a r#struct::Object {
 
     type Error = Error;
 
-    fn try_from(value: &'a Object) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: &'a Value) -> std::result::Result<Self, Self::Error> {
         match value.as_struct_object() {
             Some(o) => Ok(o),
             None => Err(Error::new(format!("object is not struct object: {:?}", value)))
@@ -14,11 +14,11 @@ impl<'a> TryFrom<&'a Object> for &'a r#struct::Object {
     }
 }
 
-impl TryFrom<&Object> for r#struct::Object {
+impl TryFrom<&Value> for r#struct::Object {
 
     type Error = Error;
 
-    fn try_from(value: &Object) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: &Value) -> std::result::Result<Self, Self::Error> {
         match value.as_struct_object() {
             Some(o) => Ok(o.clone()),
             None => Err(Error::new(format!("object is not struct object: {:?}", value)))
@@ -26,11 +26,11 @@ impl TryFrom<&Object> for r#struct::Object {
     }
 }
 
-impl TryFrom<Object> for r#struct::Object {
+impl TryFrom<Value> for r#struct::Object {
 
     type Error = Error;
 
-    fn try_from(value: Object) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: Value) -> std::result::Result<Self, Self::Error> {
         match value.as_struct_object() {
             Some(o) => Ok(o.clone()),
             None => Err(Error::new(format!("object is not struct object: {:?}", value)))

@@ -1,15 +1,15 @@
 use teo_result::Error;
 use crate::handler::handler::Method;
 use crate::value::interface_enum_variant::InterfaceEnumVariant;
-use crate::object::Object;
+use crate::value::Value;
 
-impl TryFrom<&Object> for Method {
+impl TryFrom<&Value> for Method {
 
     type Error = Error;
 
-    fn try_from(value: &Object) -> std::result::Result<Self, Self::Error> {
-        let enum_variant: InterfaceEnumVariant = value.try_into()?;
-        Ok(match enum_variant.value.as_str() {
+    fn try_from(value: &Value) -> std::result::Result<Self, Self::Error> {
+        let interface_enum_variant: InterfaceEnumVariant = value.try_into()?;
+        Ok(match interface_enum_variant.value.as_str() {
             "post" => Method::Post,
             "get" => Method::Get,
             "patch" => Method::Patch,
