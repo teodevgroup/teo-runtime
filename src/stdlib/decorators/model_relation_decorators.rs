@@ -15,16 +15,16 @@ pub(in crate::stdlib) fn load_model_relation_decorators(namespace: &mut Namespac
         let update: Option<Update> = arguments.get_optional("onUpdate")?;
         let delete: Option<Delete> = arguments.get_optional("onDelete")?;
         if fields.is_ok() {
-            let fields: Vec<&str> = fields.unwrap().into_vec()?;
-            let references: Vec<&str> = references.unwrap().into_vec()?;
-            let fields: Vec<String> = fields.iter().map(|f| f.clone().into_string()).collect::<Vec<_>>();
-            let references: Vec<String> = references.iter().map(|f| f.clone().into_string()).collect::<Vec<_>>();
+            let fields: Vec<&str> = fields.as_ref().unwrap().try_into()?;
+            let references: Vec<&str> = references.as_ref().unwrap().try_into()?;
+            let fields: Vec<String> = fields.iter().map(|f| f.to_string()).collect::<Vec<_>>();
+            let references: Vec<String> = references.iter().map(|f| f.to_string()).collect::<Vec<_>>();
             relation.fields = fields;
             relation.references = references;
         } else if through.is_ok() {
             let through = through.unwrap();
-            let local = local.unwrap().into_string();
-            let foreign = foreign.unwrap().into_string();
+            let local = local.unwrap().to_string();
+            let foreign = foreign.unwrap().to_string();
             relation.through = Some(through);
             relation.local = Some(local);
             relation.foreign = Some(foreign);

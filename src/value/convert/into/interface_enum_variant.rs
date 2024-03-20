@@ -40,19 +40,3 @@ impl TryFrom<Value> for InterfaceEnumVariant {
         }
     }
 }
-
-impl<'a> TryFrom<&'a Value> for Vec<InterfaceEnumVariant> {
-    type Error = Error;
-
-    fn try_from(value: &'a Value) -> Result<Self, Self::Error> {
-        if let Some(array) = value.as_array() {
-            let mut result = vec![];
-            for item in array {
-                result.push(item.as_interface_enum_variant().unwrap().clone());
-            }
-            Ok(result)
-        } else {
-            Err(Error::new(format!("object is not Vec<InterfaceEnumVariant>: {:?}", value)))
-        }
-    }
-}

@@ -80,12 +80,10 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
             if current_value.is_interface_enum_variant() {
                 todo!()
             } else {
-                let path = if current_value.is_teon() {
-                    current_value.default_struct_path()?
-                } else if current_value.is_struct_object() {
+                let path = if current_value.is_struct_object() {
                     current_value.as_struct_object().unwrap().struct_path()
                 } else {
-                    Err(Error::new("not supported"))?
+                    current_value.default_struct_path()?
                 };
                 let r#struct = namespace.struct_at_path(&path).unwrap();
                 let struct_definition = schema.std_source().find_node_by_string_path(&path, &top_filter_for_reference_type(ReferenceSpace::Default), info_provider.availability()).unwrap().as_struct_declaration().unwrap();

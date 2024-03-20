@@ -98,7 +98,7 @@ pub(in crate::stdlib) fn load_model_decorators(namespace: &mut Namespace) {
                     results.push(a.as_option_variant().unwrap().value.into());
                 }
                 model.actions = results;
-            } else if enable.is_enum_variant() {
+            } else if enable.is_option_variant() {
                 model.actions = vec![enable.as_option_variant().unwrap().value.into()];
             }
         } else if let Ok(disable) = disable {
@@ -109,7 +109,7 @@ pub(in crate::stdlib) fn load_model_decorators(namespace: &mut Namespace) {
                     results.push(action.not());
                 }
                 model.actions = results;
-            } else if disable.is_enum_variant() {
+            } else if disable.is_option_variant() {
                 let action: Action = disable.as_option_variant().unwrap().value.into();
                 model.actions = vec![action.not()];
             }

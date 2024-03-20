@@ -145,13 +145,13 @@ impl Object {
                 };
                 if need_to_trigger_default_value {
                     // apply default values
-                    if let Some(argument) = &field.default {
-                        if let Some(pipeline) = argument.as_pipeline() {
+                    if let Some(default) = &field.default {
+                        if let Some(pipeline) = default.as_pipeline() {
                             let ctx = self.pipeline_ctx_for_path_and_value(path.clone(), Value::Null);
                             let value: Value = ctx.run_pipeline(pipeline).await?;
                             self.set_value_to_value_map(key, value);
-                        } else if let Some(value) = argument.as_teon() {
-                            self.set_value_to_value_map(key, value.clone());
+                        } else {
+                            self.set_value_to_value_map(key, default.clone());
                         }
                     }
                 } else {
@@ -691,12 +691,13 @@ impl Object {
                         for key in &opposite_relation.fields {
                             let field = opposite_model.field(key).unwrap();
                             if let Some(default) = &field.default {
-                                if let Some(value) = default.as_teon() {
-                                    object.set_value(key, value.clone())?;
-                                } else if let Some(pipeline) = default.as_pipeline() {
+                                if let Some(pipeline) = default.as_pipeline() {
                                     let pipeline_ctx = pipeline::Ctx::new(Value::Null.into(), object.clone(), path![], CODE_NAME | DISCONNECT | SINGLE, self.transaction_ctx(), self.request_ctx());
                                     let value: Value = pipeline_ctx.run_pipeline(pipeline).await?;
                                     object.set_value(key, value.clone())?;
+
+                                } else {
+                                    object.set_value(key, default.clone())?;
                                 }
                             } else {
                                 Err(Error::new(format!("default value is not defined: {}.{}", opposite_model.path.join("."), key)))?;
@@ -785,12 +786,12 @@ impl Object {
                                 for key in &opposite_relation.fields {
                                     let field = opposite_model.field(key).unwrap();
                                     if let Some(default) = &field.default {
-                                        if let Some(value) = default.as_teon() {
-                                            object.set_value(key, value.clone())?;
-                                        } else if let Some(pipeline) = default.as_pipeline() {
+                                        if let Some(pipeline) = default.as_pipeline() {
                                             let pipeline_ctx = pipeline::Ctx::new(Value::Null.into(), object.clone(), path![], CODE_NAME | DISCONNECT | SINGLE, self.transaction_ctx(), self.request_ctx());
                                             let value: Value = pipeline_ctx.run_pipeline(pipeline).await?;
                                             object.set_value(key, value)?;
+                                        } else {
+                                            object.set_value(key, default.clone())?;
                                         }
                                     } else {
                                         Err(Error::new(format!("default value is not defined: {}.{}", opposite_model.path.join("."), key)))?;

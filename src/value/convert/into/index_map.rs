@@ -21,18 +21,6 @@ impl<T> TryInto<IndexMap<String, T>> for Value where T: TryFrom<Value>, T::Error
     }
 }
 
-impl <'a> TryInto<&'a IndexMap<String, Value>> for &'a Value {
-
-    type Error = Error;
-
-    fn try_into(self) -> Result<&'a IndexMap<String, Value>, Self::Error> {
-        match self {
-            Value::Dictionary(m) => Ok(m),
-            _ => Err(Error::new(format!("Cannot convert {} into IndexMap", self.type_hint()))),
-        }
-    }
-}
-
 impl<'a, T> TryInto<IndexMap<String, T>> for &'a Value where T: TryFrom<&'a Value>, T::Error: Display {
 
     type Error = Error;
@@ -85,6 +73,17 @@ impl<'a, T> TryInto<Option<IndexMap<String, T>>> for &'a Value where T: TryFrom<
                 Ok(Some(result))
             }
             _ => Err(Error::new(format!("Cannot convert {} into Option<IndexMap>", self.type_hint()))),
+        }
+    }
+}
+
+impl<'a> TryFrom<&Value> for &'a IndexMap<String, Value> {
+    type Error = Error;
+
+    fn try_from(value: &Value) -> Result<Self, Self::Error> {
+        match value {
+            Value::Dictionary(inner) => Ok(inner),
+            _ => Err(Error::new(format!("cannot convert to &IndexMap<String, Value>: {}", value)))
         }
     }
 }

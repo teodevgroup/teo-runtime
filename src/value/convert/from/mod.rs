@@ -21,3 +21,4 @@ pub mod error;
 pub mod model_object;
 pub mod pipeline;
 pub mod struct_object;
+pub mod parser_value;

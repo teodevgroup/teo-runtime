@@ -2,35 +2,35 @@ use regex::Regex;
 use teo_result::Error;
 use crate::value::Value;
 
-impl TryInto<Regex> for Value {
-
+impl TryFrom<Value> for Regex {
     type Error = Error;
 
-    fn try_into(self) -> Result<Regex, Self::Error> {
-        match self {
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
+        match value {
             Value::Regex(s) => Ok(s),
-            _ => Err(Error::new(format!("Cannot convert {} into Regex", self.type_hint()))),
+            _ => Err(Error::new(format!("cannot convert to Regex: {}", value))),
         }
     }
 }
 
-impl TryInto<Regex> for &Value {
-
+impl TryFrom<&Value> for Regex {
     type Error = Error;
 
-    fn try_into(self) -> Result<Regex, Self::Error> {
-        self.clone().try_into()
+    fn try_from(value: &Value) -> Result<Self, Self::Error> {
+        match value {
+            Value::Regex(s) => Ok(s.clone()),
+            _ => Err(Error::new(format!("cannot convert to Regex: {}", value))),
+        }
     }
 }
 
-impl<'a> TryInto<&'a Regex> for &'a Value {
-
+impl<'a> TryFrom<&'a Value> for &'a Regex {
     type Error = Error;
 
-    fn try_into(self) -> Result<&'a Regex, Self::Error> {
-        match self {
+    fn try_from(value: &'a Value) -> Result<Self, Self::Error> {
+        match value {
             Value::Regex(s) => Ok(s),
-            _ => Err(Error::new(format!("Cannot convert {} into &Regex", self.type_hint()))),
+            _ => Err(Error::new(format!("cannot convert to &Regex: {}", value))),
         }
     }
 }

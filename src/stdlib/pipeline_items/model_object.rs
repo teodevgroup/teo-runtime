@@ -28,8 +28,6 @@ pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &mut Namesp
             let key: &Value = args.get("key").error_message_prefixed("get(key)")?;
             let key_str = if key.is_string() {
                 key.as_str().unwrap()
-            } else if key.is_enum_variant() {
-                key.as_enum_variant().unwrap().value.as_str()
             } else {
                 unreachable!()
             };

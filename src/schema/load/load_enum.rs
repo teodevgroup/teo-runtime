@@ -21,7 +21,7 @@ pub fn load_enum(main_namespace: &mut Namespace, schema: &Schema, enum_declarati
             r#enum.members.push(
                 Member::new(
                     enum_member.identifier().name().to_owned(),
-                    enum_member.resolved().clone(),
+                    enum_member.resolved().clone().into(),
                     load_comment(enum_member.comment())
                 )
             );

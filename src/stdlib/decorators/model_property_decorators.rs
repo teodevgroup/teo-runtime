@@ -24,8 +24,8 @@ pub(in crate::stdlib) fn load_model_property_decorators(namespace: &mut Namespac
 
     namespace.define_model_property_decorator("deps", |arguments, property| {
         let deps: Value = arguments.get("deps")?;
-        let deps: Vec<&str> = deps.into_vec()?;
-        let deps: Vec<String> = deps.iter().map(|f| f.clone().into_string()).collect::<Vec<_>>();
+        let deps: Vec<&str> = deps.as_ref().try_into()?;
+        let deps: Vec<String> = deps.iter().map(|f| f.to_string()).collect::<Vec<_>>();
         property.dependencies = deps;
         Ok(())
     });

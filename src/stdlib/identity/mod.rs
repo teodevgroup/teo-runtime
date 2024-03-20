@@ -93,13 +93,11 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
             id: json_identifier,
             model: object.model().path.clone(),
             exp: if let Some(expired) = expired {
-                let expired_at = if let Some(value) = expired.as_teon() {
-                    value.as_int64().unwrap()
-                } else if let Some(pipeline) = expired.as_pipeline() {
+                let expired_at = if let Some(pipeline) = expired.as_pipeline() {
                     let result: Value = pipeline_ctx.run_pipeline(pipeline).await?;
                     result.as_int64().unwrap()
                 } else {
-                    unreachable!()
+                    expired.as_int64().unwrap()
                 };
                 (Utc::now().timestamp() + expired_at) as usize
             } else { usize::MAX },
