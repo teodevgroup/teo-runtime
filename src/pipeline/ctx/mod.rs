@@ -3,7 +3,6 @@ pub mod extract;
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 use key_path::KeyPath;
-use crate::object::Object;
 use crate::model;
 use crate::pipeline::pipeline::Pipeline;
 use crate::request;
@@ -11,6 +10,7 @@ use teo_result::{Result, ResultExt};
 use crate::action::Action;
 use crate::connection::transaction;
 use teo_result::Error;
+use crate::value::Value;
 
 #[derive(Clone)]
 pub struct Ctx {
@@ -22,7 +22,7 @@ unsafe impl Sync for Ctx { }
 
 #[derive(Debug)]
 struct CtxInner {
-    value: Object,
+    value: Value,
     object: model::Object,
     path: KeyPath,
     action: Action,
@@ -32,13 +32,13 @@ struct CtxInner {
 
 impl Ctx {
 
-    pub fn new(value: Object, object: model::Object, path: KeyPath, action: Action, transaction_ctx: transaction::Ctx, request_ctx: Option<request::Ctx>) -> Self {
+    pub fn new(value: Value, object: model::Object, path: KeyPath, action: Action, transaction_ctx: transaction::Ctx, request_ctx: Option<request::Ctx>) -> Self {
         Self {
             inner: Arc::new(CtxInner { value, object, path, action, transaction_ctx, request_ctx })
         }
     }
 
-    pub fn value(&self) -> &Object {
+    pub fn value(&self) -> &Value {
         &self.inner.value
     }
 
@@ -62,7 +62,7 @@ impl Ctx {
         self.inner.request_ctx.clone()
     }
 
-    pub async fn resolve_pipeline<T, E>(&self, object: Object) -> Result<T> where T: TryFrom<Object, Error=E>, Error: From<E> {
+    pub async fn resolve_pipeline<T, E>(&self, object: Value) -> Result<T> where T: TryFrom<Value, Error=E>, Error: From<E> {
         if let Some(pipeline) = object.as_pipeline() {
             self.run_pipeline(pipeline).await
         } else {
@@ -70,7 +70,7 @@ impl Ctx {
         }
     }
 
-    pub async fn resolve_pipeline_with_err_prefix<T, E>(&self, object: Object, err_prefix: impl AsRef<str>) -> Result<T> where T: TryFrom<Object, Error=E>, Error: From<E> {
+    pub async fn resolve_pipeline_with_err_prefix<T, E>(&self, object: Value, err_prefix: impl AsRef<str>) -> Result<T> where T: TryFrom<Value, Error=E>, Error: From<E> {
         if let Some(pipeline) = object.as_pipeline() {
             self.run_pipeline_with_err_prefix(pipeline, err_prefix).await
         } else {
@@ -78,7 +78,7 @@ impl Ctx {
         }
     }
 
-    async fn run_pipeline_inner<T, E>(&self, pipeline: &Pipeline) -> Result<T> where T: TryFrom<Object, Error=E>, Error: From<E> {
+    async fn run_pipeline_inner<T, E>(&self, pipeline: &Pipeline) -> Result<T> where T: TryFrom<Value, Error=E>, Error: From<E> {
         let mut ctx = self.clone();
         for item in &pipeline.items {
             ctx = ctx.alter_value(item.call(item.arguments.clone(), ctx.clone()).await?.cast(item.cast_output_type.as_ref(), self.transaction_ctx().namespace()));
@@ -86,27 +86,27 @@ impl Ctx {
         Ok(ctx.value().clone().try_into()?)
     }
 
-    pub async fn run_pipeline<T, E>(&self, pipeline: &Pipeline) -> Result<T> where T: TryFrom<Object, Error=E>, Error: From<E> {
+    pub async fn run_pipeline<T, E>(&self, pipeline: &Pipeline) -> Result<T> where T: TryFrom<Value, Error=E>, Error: From<E> {
         let result = self.run_pipeline_inner(pipeline).await;
         result.map_err(|e| e.path_prefixed(self.path().to_string()))
     }
 
     pub async fn run_pipeline_ignore_return_value(&self, pipeline: &Pipeline) -> Result<()> {
-        let _: Object = self.run_pipeline(pipeline).await?;
+        let _: Value = self.run_pipeline(pipeline).await?;
         Ok(())
     }
 
-    pub async fn run_pipeline_with_err_prefix<T, E>(&self, pipeline: &Pipeline, err_prefix: impl AsRef<str>) -> Result<T> where T: TryFrom<Object, Error=E>, Error: From<E> {
+    pub async fn run_pipeline_with_err_prefix<T, E>(&self, pipeline: &Pipeline, err_prefix: impl AsRef<str>) -> Result<T> where T: TryFrom<Value, Error=E>, Error: From<E> {
         self.run_pipeline(pipeline).await.error_message_prefixed(err_prefix)
     }
 
     pub async fn run_pipeline_with_err_prefix_ignore_return_value(&self, pipeline: &Pipeline, err_prefix: impl AsRef<str>) -> Result<()> {
-        let _: Object = self.run_pipeline_with_err_prefix(pipeline, err_prefix).await?;
+        let _: Value = self.run_pipeline_with_err_prefix(pipeline, err_prefix).await?;
         Ok(())
     }
 
 
-    pub fn alter_value(&self, value: Object) -> Self {
+    pub fn alter_value(&self, value: Value) -> Self {
         Self {
             inner: Arc::new(CtxInner {
                 value,

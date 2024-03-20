@@ -10,9 +10,9 @@ use crate::model::field::typed::Typed;
 use crate::traits::named::Named;
 use crate::model::relation::delete::Delete;
 use crate::model::relation::update::Update;
-use crate::object::Object;
 use crate::optionality::Optionality;
 use crate::traits::documentable::Documentable;
+use crate::value::Value;
 
 #[derive(Debug, Serialize)]
 pub struct Relation {
@@ -30,7 +30,7 @@ pub struct Relation {
     pub delete: Delete,
     pub update: Update,
     pub has_foreign_key: bool,
-    pub data: BTreeMap<String, Object>,
+    pub data: BTreeMap<String, Value>,
 }
 
 impl Relation {

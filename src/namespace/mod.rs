@@ -30,17 +30,16 @@ use crate::stdlib::load::load;
 use educe::Educe;
 use serde::Serialize;
 use teo_parser::ast::handler::HandlerInputFormat;
-use teo_parser::ast::handler_template_declaration::HandlerTemplateDeclaration;
 use teo_parser::r#type::Type;
 use crate::handler::ctx_argument::HandlerCtxArgument;
 use crate::handler::Handler;
 use crate::handler::handler::Method;
-use crate::object::Object;
 use crate::pipeline::item::callback::{CallbackArgument, CallbackResult};
 use crate::pipeline::item::compare::CompareArgument;
 use crate::pipeline::item::transform::{TransformArgument, TransformResult};
 use crate::pipeline::item::validator::{ValidateArgument, ValidateResult, Validity};
 use crate::traits::named::Named;
+use crate::value::Value;
 
 #[derive(Educe)]
 #[educe(Debug)]
@@ -235,7 +234,7 @@ impl Namespace {
 
     pub fn define_transform_pipeline_item<A, O, F, R>(&mut self, name: &str, call: F) where
         A: Send + Sync + 'static,
-        O: Into<Object> + Send + Sync + 'static,
+        O: Into<Value> + Send + Sync + 'static,
         R: Into<TransformResult<O>> + Send + Sync + 'static,
         F: TransformArgument<A, O, R> + 'static {
         let wrap_call = Box::leak(Box::new(call));
@@ -321,7 +320,7 @@ impl Namespace {
                 }
                 let key = ctx.path()[ctx.path().len() - 1].as_key().unwrap();
                 let previous_value = ctx.object().get_previous_value(key)?;
-                let current_value = ctx.value().clone().as_teon().unwrap().clone();
+                let current_value = ctx.value().clone().clone();
                 if previous_value == current_value {
                     return Ok(ctx.value().clone());
                 }

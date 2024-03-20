@@ -4,7 +4,7 @@ use crate::teon;
 use crate::action::Action;
 use crate::connection::transaction;
 use crate::model::Model;
-use crate::object::error_ext;
+use crate::error_ext;
 use teo_result::Result;
 use crate::request;
 

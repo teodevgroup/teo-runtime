@@ -12,7 +12,7 @@ use teo_result::Result;
 use futures_util::future::BoxFuture;
 use serde::Serialize;
 use teo_parser::r#type::Type;
-use crate::object::Object;
+use crate::value::Value;
 
 #[derive(Educe)]
 #[educe(Debug)]
@@ -24,13 +24,13 @@ pub struct Item {
 }
 
 pub trait Call: Send + Sync {
-    fn call(&self, args: Arguments, ctx: Ctx) -> BoxFuture<'static, Result<Object>>;
+    fn call(&self, args: Arguments, ctx: Ctx) -> BoxFuture<'static, Result<Value>>;
 }
 
 impl<F, Fut> Call for F where
         F: Fn(Arguments, Ctx) -> Fut + Sync + Send,
-        Fut: Future<Output = Result<Object>> + Send + 'static {
-    fn call(&self, args: Arguments, ctx: Ctx) -> BoxFuture<'static, Result<Object>> {
+        Fut: Future<Output = Result<Value>> + Send + 'static {
+    fn call(&self, args: Arguments, ctx: Ctx) -> BoxFuture<'static, Result<Value>> {
         Box::pin(self(args, ctx))
     }
 }
@@ -47,7 +47,7 @@ pub struct BoundedItem {
 
 impl BoundedItem {
 
-    pub(crate) async fn call(&self, args: Arguments, ctx: Ctx) -> Result<Object> {
+    pub(crate) async fn call(&self, args: Arguments, ctx: Ctx) -> Result<Value> {
         self.call.call(args, ctx).await
     }
 }

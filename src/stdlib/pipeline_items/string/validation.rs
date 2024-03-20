@@ -5,7 +5,7 @@ use crate::pipeline::Ctx;
 use once_cell::sync::Lazy;
 use teo_result::Error;
 use teo_result::ResultExt;
-use crate::object::Object;
+use crate::value::Value;
 
 pub(super) static EMAIL_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"^\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b$").unwrap()
@@ -84,7 +84,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
 
     namespace.define_pipeline_item("isSuffixOf", |args: Arguments, ctx: Ctx| async move {
         let input: &str = ctx.value().try_ref_into_err_prefix("isSuffixOf")?;
-        let arg_object: Object = ctx.resolve_pipeline_with_err_prefix(
+        let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
             args.get_object("value").error_message_prefixed("isSuffixOf")?,
             "isSuffixOf",
         ).await?;
@@ -97,7 +97,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
 
     namespace.define_pipeline_item("hasSuffix", |args: Arguments, ctx: Ctx| async move {
         let input: &str = ctx.value().try_ref_into_err_prefix("hasSuffix")?;
-        let arg_object: Object = ctx.resolve_pipeline_with_err_prefix(
+        let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
             args.get_object("value").error_message_prefixed("hasSuffix")?,
             "hasSuffix",
         ).await?;
@@ -110,7 +110,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
 
     namespace.define_pipeline_item("isPrefixOf", |args: Arguments, ctx: Ctx| async move {
         let input: &str = ctx.value().try_ref_into_err_prefix("isPrefixOf")?;
-        let arg_object: Object = ctx.resolve_pipeline_with_err_prefix(
+        let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
             args.get_object("value").error_message_prefixed("isPrefixOf")?,
             "isPrefixOf",
         ).await?;
@@ -123,7 +123,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
 
     namespace.define_pipeline_item("hasPrefix", |args: Arguments, ctx: Ctx| async move {
         let input: &str = ctx.value().try_ref_into_err_prefix("hasPrefix")?;
-        let arg_object: Object = ctx.resolve_pipeline_with_err_prefix(
+        let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
             args.get_object("value").error_message_prefixed("hasPrefix")?,
             "hasPrefix",
         ).await?;

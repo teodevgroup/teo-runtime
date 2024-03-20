@@ -36,7 +36,7 @@ pub fn load_data_sets(namespace: &Namespace, names: Option<&Vec<String>>, all: b
                 for schema_record in schema_group.records() {
                     let record = Record {
                         name: schema_record.identifier().name().to_owned(),
-                        value: fetch_dictionary_literal(schema_record.dictionary(), schema, schema_record, &Type::Undetermined, namespace)?.as_teon().unwrap().clone(),
+                        value: fetch_dictionary_literal(schema_record.dictionary(), schema, schema_record, &Type::Undetermined, namespace)?.clone(),
                     };
                     group.records.push(record);
                 }

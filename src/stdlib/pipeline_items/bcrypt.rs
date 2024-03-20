@@ -1,9 +1,9 @@
 use crate::namespace::Namespace;
 use crate::arguments::Arguments;
 use crate::pipeline::{Ctx, Pipeline};
-use crate::object::Object;
 use bcrypt::{DEFAULT_COST, hash, verify};
 use teo_result::{Error, ResultExt};
+use crate::value::Value;
 
 pub(in crate::stdlib) fn load_bcrypt_items(namespace: &mut Namespace) {
 
@@ -11,7 +11,7 @@ pub(in crate::stdlib) fn load_bcrypt_items(namespace: &mut Namespace) {
 
     bcrypt_namespace.define_pipeline_item("salt", |_: Arguments, ctx: Ctx| async move {
         let value: &str = ctx.value().try_ref_into_err_message("salt: value is not string")?;
-        Ok(Object::from(hash(value, DEFAULT_COST).unwrap()))
+        Ok(Value::from(hash(value, DEFAULT_COST).unwrap()))
     });
 
     bcrypt_namespace.define_pipeline_item("verify", |args: Arguments, ctx: Ctx| async move {

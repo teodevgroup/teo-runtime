@@ -23,18 +23,17 @@ use crate::action::action::*;
 use crate::model::object::input::Input;
 use crate::model::object::input::Input::{AtomicUpdater, SetValue};
 use crate::model::relation::Relation;
-use crate::{object, pipeline, request};
+use crate::{pipeline, request};
 use crate::model::field::column_named::ColumnNamed;
 use crate::model::field::is_optional::IsOptional;
 use crate::model::field::typed::Typed;
 use crate::model::relation::delete::Delete;
 use crate::model::relation::update::Update;
 use crate::namespace::Namespace;
-use crate::object::cast::TeonCast;
-use crate::object::error_ext;
 use crate::optionality::Optionality;
 use crate::readwrite::write::Write;
 use crate::utils::ContainsStr;
+use crate::error_ext;
 
 
 #[derive(Clone)]
@@ -92,7 +91,7 @@ impl Object {
     }
 
     fn pipeline_ctx_for_path_and_value(&self, path: KeyPath, value: Value) -> pipeline::Ctx {
-        pipeline::Ctx::new(object::Object::from(value), self.clone(), path, self.action(), self.transaction_ctx(), self.request_ctx())
+        pipeline::Ctx::new(Value::from(value), self.clone(), path, self.action(), self.transaction_ctx(), self.request_ctx())
     }
 
     pub async fn set_teon(&self, value: &Value) -> Result<()> {
@@ -696,8 +695,7 @@ impl Object {
                                     object.set_value(key, value.clone())?;
                                 } else if let Some(pipeline) = default.as_pipeline() {
                                     let pipeline_ctx = pipeline::Ctx::new(Value::Null.into(), object.clone(), path![], CODE_NAME | DISCONNECT | SINGLE, self.transaction_ctx(), self.request_ctx());
-                                    let value_object: object::Object = pipeline_ctx.run_pipeline(pipeline).await?;
-                                    let value = value_object.as_teon().unwrap();
+                                    let value: Value = pipeline_ctx.run_pipeline(pipeline).await?;
                                     object.set_value(key, value.clone())?;
                                 }
                             } else {
@@ -791,9 +789,8 @@ impl Object {
                                             object.set_value(key, value.clone())?;
                                         } else if let Some(pipeline) = default.as_pipeline() {
                                             let pipeline_ctx = pipeline::Ctx::new(Value::Null.into(), object.clone(), path![], CODE_NAME | DISCONNECT | SINGLE, self.transaction_ctx(), self.request_ctx());
-                                            let value_object: object::Object = pipeline_ctx.run_pipeline(pipeline).await?;
-                                            let value = value_object.as_teon().unwrap();
-                                            object.set_value(key, value.clone())?;
+                                            let value: Value = pipeline_ctx.run_pipeline(pipeline).await?;
+                                            object.set_value(key, value)?;
                                         }
                                     } else {
                                         Err(Error::new(format!("default value is not defined: {}.{}", opposite_model.path.join("."), key)))?;

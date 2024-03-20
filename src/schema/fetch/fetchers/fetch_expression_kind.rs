@@ -4,15 +4,15 @@ use teo_parser::ast::schema::Schema;
 use teo_parser::r#type::Type;
 use teo_result::Result;
 use crate::namespace::Namespace;
-use crate::object::Object;
 use crate::schema::fetch::fetch_expression::fetch_expression;
 use crate::schema::fetch::fetchers::fetch_arith_expr::fetch_arith_expr;
 use crate::schema::fetch::fetchers::fetch_identifier::fetch_identifier;
 use crate::schema::fetch::fetchers::fetch_literals::{fetch_array_literal, fetch_dictionary_literal, fetch_enum_variant_literal, fetch_tuple_literal};
 use crate::schema::fetch::fetchers::fetch_pipeline::fetch_pipeline;
 use crate::schema::fetch::fetchers::fetch_unit::fetch_unit;
+use crate::value::Value;
 
-pub fn fetch_expression_kind<I>(expression: &Expression, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
+pub fn fetch_expression_kind<I>(expression: &Expression, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Value> where I: InfoProvider {
     match &expression.kind {
         ExpressionKind::Group(g) => fetch_expression(g.expression(), schema, info_provider, expect, namespace),
         ExpressionKind::ArithExpr(a) => fetch_arith_expr(a, schema, info_provider, expect, namespace),

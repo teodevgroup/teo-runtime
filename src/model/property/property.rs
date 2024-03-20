@@ -13,10 +13,10 @@ use crate::model::field::indexable::{Indexable};
 use crate::model::field::is_optional::IsOptional;
 use crate::traits::named::Named;
 use crate::model::field::typed::Typed;
-use crate::object::Object;
 use crate::optionality::Optionality;
 use crate::pipeline::pipeline::Pipeline;
 use crate::traits::documentable::Documentable;
+use crate::value::Value;
 
 #[derive(Debug, Serialize)]
 pub struct Property {
@@ -33,7 +33,7 @@ pub struct Property {
     pub output_omissible: bool,
     pub cached: bool,
     pub index: Option<Index>,
-    pub data: BTreeMap<String, Object>,
+    pub data: BTreeMap<String, Value>,
 }
 
 impl Property {

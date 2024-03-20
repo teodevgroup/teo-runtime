@@ -1,11 +1,11 @@
 use crate::arguments::Arguments;
 use teo_result::Error;
 use crate::namespace::Namespace;
-use crate::object::Object;
 use crate::pipeline::Ctx;
 use crate::pipeline::pipeline::Pipeline;
 use teo_result::{Result, ResultExt};
 use crate::action::Action;
+use crate::value::Value;
 
 pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) {
 
@@ -27,7 +27,7 @@ pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) 
 
     namespace.define_pipeline_item("passed", |args: Arguments, ctx: Ctx| async move {
         let pipeline: &Pipeline = args.get("pipeline").error_message_prefixed("validate")?;
-        Ok(Object::from(ctx.run_pipeline_ignore_return_value(pipeline).await.is_ok()))
+        Ok(Value::from(ctx.run_pipeline_ignore_return_value(pipeline).await.is_ok()))
     });
 
     namespace.define_pipeline_item("if", |args: Arguments, ctx: Ctx| async move {

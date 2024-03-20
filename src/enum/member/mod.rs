@@ -2,7 +2,6 @@ pub mod decorator;
 
 use maplit::btreemap;
 use std::collections::BTreeMap;
-use crate::object::Object;
 use serde::Serialize;
 use crate::value::Value;
 pub use decorator::Decorator;
@@ -15,7 +14,7 @@ pub struct Member {
     pub name: String,
     pub comment: Option<Comment>,
     pub value: Value,
-    pub data: BTreeMap<String, Object>,
+    pub data: BTreeMap<String, Value>,
 }
 
 impl Member {

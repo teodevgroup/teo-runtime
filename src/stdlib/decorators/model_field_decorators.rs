@@ -2,7 +2,6 @@ use crate::value::Value;
 use crate::database::r#type::DatabaseType;
 use crate::model::field::Migration;
 use crate::namespace::Namespace;
-use crate::object::Object;
 use crate::optionality::Optionality;
 use crate::pipeline::pipeline::Pipeline;
 use crate::readwrite::read::Read;
@@ -77,7 +76,7 @@ pub(in crate::stdlib) fn load_model_field_decorators(namespace: &mut Namespace) 
     namespace.define_model_field_decorator("presentWith", |arguments, field| {
         let fields: Value = arguments.get("fields")?;
         match fields {
-            Value::EnumVariant(e) => field.optionality = Optionality::PresentWith(vec![e.value.to_owned()]),
+            Value::String(e) => field.optionality = Optionality::PresentWith(vec![e.to_owned()]),
             Value::Array(a) => field.optionality = Optionality::PresentWith(a.iter().map(|d| d.as_enum_variant().unwrap().value.to_owned()).collect()),
             _ => panic!()
         }
@@ -87,7 +86,7 @@ pub(in crate::stdlib) fn load_model_field_decorators(namespace: &mut Namespace) 
     namespace.define_model_field_decorator("presentWithout", |arguments, field| {
         let fields: Value = arguments.get("fields")?;
         match fields {
-            Value::EnumVariant(e) => field.optionality = Optionality::PresentWithout(vec![e.value.to_owned()]),
+            Value::String(e) => field.optionality = Optionality::PresentWithout(vec![e.to_owned()]),
             Value::Array(a) => field.optionality = Optionality::PresentWithout(a.iter().map(|d| d.as_enum_variant().unwrap().value.to_owned()).collect()),
             _ => panic!()
         }
@@ -150,7 +149,7 @@ pub(in crate::stdlib) fn load_model_field_decorators(namespace: &mut Namespace) 
     });
 
     namespace.define_model_field_decorator("default", |arguments, field| {
-        let value: Object = arguments.get("value")?;
+        let value: Value = arguments.get("value")?;
         field.default = Some(value);
         field.input_omissible = true;
         Ok(())

@@ -12,17 +12,16 @@ use teo_parser::utils::top_filter::top_filter_for_reference_type;
 use teo_result::{Error, Result};
 use crate::value::Value;
 use crate::namespace::Namespace;
-use crate::object::Object;
 use crate::schema::fetch::fetch_expression::fetch_expression;
 
-pub fn fetch_identifier<I>(identifier: &Identifier, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
+pub fn fetch_identifier<I>(identifier: &Identifier, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Value> where I: InfoProvider {
     let top = fetch_identifier_to_node(identifier, schema, info_provider, expect,  &top_filter_for_reference_type(ReferenceSpace::Default))?;
     match top {
         Node::Config(c) => Err(Error::new("cannot resolve")),
         Node::ConstantDeclaration(c) => fetch_expression(c.expression(), schema, info_provider, expect, namespace),
         Node::Enum(e) => Err(Error::new("cannot resolve")),
-        Node::Model(m) => Ok(Object::from(Value::from(m.string_path().clone()))),
-        Node::DataSet(d) => Ok(Object::from(Value::from(d.string_path().clone()))),
+        Node::Model(m) => Ok(Value::from(m.string_path().clone())),
+        Node::DataSet(d) => Ok(Value::from(d.string_path().clone())),
         Node::InterfaceDeclaration(i) => Err(Error::new("cannot resolve")),
         Node::Namespace(n) => Err(Error::new("cannot resolve")),
         _ => unreachable!(),

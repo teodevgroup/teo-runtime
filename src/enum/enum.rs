@@ -1,11 +1,11 @@
 use maplit::btreemap;
 use std::collections::BTreeMap;
-use crate::object::Object;
 use serde::Serialize;
 use crate::comment::Comment;
 use crate::r#enum::member::Member;
 use crate::traits::documentable::Documentable;
 use crate::traits::named::Named;
+use crate::value::Value;
 
 #[derive(Debug, Serialize)]
 pub struct Enum {
@@ -14,7 +14,7 @@ pub struct Enum {
     pub option: bool,
     pub interface: bool,
     pub members: Vec<Member>,
-    pub data: BTreeMap<String, Object>,
+    pub data: BTreeMap<String, Value>,
     pub cache: Cache,
 }
 

@@ -16,11 +16,11 @@ impl TryFrom<&Value> for Sort {
     }
 }
 
-impl TryFrom<&Value> for Sort {
+impl TryFrom<Value> for Sort {
 
     type Error = Error;
 
-    fn try_from(value: &Value) -> Result<Self, Self::Error> {
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
         let enum_variant: &str = value.try_into()?;
         Ok(match enum_variant {
             "asc" => Sort::Asc,

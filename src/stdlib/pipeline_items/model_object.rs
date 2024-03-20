@@ -6,7 +6,6 @@ use crate::value::Value;
 use crate::arguments::Arguments;
 use teo_result::Error;
 use crate::namespace::Namespace;
-use crate::object::Object;
 use crate::pipeline::Ctx;
 use teo_result::{Result, ResultExt};
 use crate::model;
@@ -14,7 +13,7 @@ use crate::model;
 pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &mut Namespace) {
 
     namespace.define_pipeline_item("self", |args: Arguments, ctx: Ctx| async move {
-        Ok(Object::from(ctx.object()))
+        Ok(Value::from(ctx.object()))
     });
 
     namespace.define_pipeline_item("get", |args: Arguments, ctx: Ctx| async move {
@@ -24,7 +23,7 @@ pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &mut Namesp
             let key: &str = args.get("key").error_message_prefixed("get(key)")?;
             // get value and return here
             let value: Value = model_object.get_value(key)?;
-            Ok(Object::from(value))
+            Ok(Value::from(value))
         } else if let Ok(dictionary) = dictionary {
             let key: &Value = args.get("key").error_message_prefixed("get(key)")?;
             let key_str = if key.is_string() {
@@ -34,7 +33,7 @@ pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &mut Namesp
             } else {
                 unreachable!()
             };
-            Ok(Object::from(dictionary.get(key_str).cloned().unwrap_or(Value::Null)))
+            Ok(Value::from(dictionary.get(key_str).cloned().unwrap_or(Value::Null)))
         } else {
             Err(Error::new("get: input is not model object or dictionary"))
         }
@@ -53,7 +52,7 @@ pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &mut Namesp
             let key: &str = args.get("key").error_message_prefixed("set(key)")?;
             let mut new_dictionary = dictionary.clone();
             new_dictionary.insert(key.to_owned(), value);
-            Ok(Object::from(Value::Dictionary(new_dictionary)))
+            Ok(Value::from(Value::Dictionary(new_dictionary)))
         } else {
             Err(Error::new("set: input is not model object or dictionary"))
         }
@@ -73,6 +72,6 @@ pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &mut Namesp
         let key: &str = args.get("key").error_message_prefixed("previous(key)")?;
         // get value and return here
         let result = model_object.get_previous_value(key)?;
-        Ok(Object::from(result))
+        Ok(Value::from(result))
     });
 }

@@ -4,7 +4,6 @@ use crate::value::Value;
 use crate::arguments::Arguments;
 use teo_result::Error;
 use crate::namespace::Namespace;
-use crate::object::Object;
 use crate::pipeline::Ctx;
 use teo_result::{Result, ResultExt};
 use rand::{thread_rng, Rng};
@@ -55,7 +54,7 @@ pub(in crate::stdlib) fn load_pipeline_number_items(namespace: &mut Namespace) {
             (start, end, range.closed)
         };
         let mut rng = thread_rng();
-        Ok(Object::from(if closed {
+        Ok(Value::from(if closed {
             rng.gen_range(start..=end)
         } else {
             rng.gen_range(start..end)
@@ -94,7 +93,7 @@ pub(in crate::stdlib) fn load_pipeline_number_items(namespace: &mut Namespace) {
             }
         };
         let mut rng = thread_rng();
-        Ok(Object::from(if closed {
+        Ok(Value::from(if closed {
             rng.gen_range(start..=end)
         } else {
             rng.gen_range(start..end)

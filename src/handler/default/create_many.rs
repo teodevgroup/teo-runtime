@@ -6,7 +6,7 @@ use crate::response::Response;
 use crate::action::action::*;
 use crate::connection::transaction;
 use crate::handler::default::internal::create::create_internal;
-use crate::object::error_ext;
+use crate::error_ext;
 
 pub async fn create_many(req_ctx: &request::Ctx) -> teo_result::Result<Response> {
     let model = req_ctx.namespace().model_at_path(&req_ctx.handler_match().path()).unwrap();

@@ -2,7 +2,6 @@ use crate::namespace::Namespace;
 use crate::arguments::Arguments;
 use crate::pipeline::Ctx;
 use teo_result::ResultExt;
-use crate::object::Object;
 use teo_result::Error;
 use pad::{PadStr, Alignment};
 use inflector::Inflector;
@@ -13,7 +12,7 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
 
     namespace.define_pipeline_item("eq", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("eq")?;
-        let rhs_object: Object = ctx.resolve_pipeline_with_err_prefix(
+        let rhs_object: Value = ctx.resolve_pipeline_with_err_prefix(
             args.get_object("rhs").error_message_prefixed("eq(rhs)")?,
             "eq(rhs)",
         ).await?;
@@ -27,7 +26,7 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
 
     namespace.define_pipeline_item("gt", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("gt")?;
-        let arg_object: Object = ctx.resolve_pipeline_with_err_prefix(
+        let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
             args.get_object("rhs").error_message_prefixed("gt(rhs)")?,
             "gt(rhs)",
         ).await?;
@@ -41,7 +40,7 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
 
     namespace.define_pipeline_item("gte", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("gte")?;
-        let arg_object: Object = ctx.resolve_pipeline_with_err_prefix(
+        let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
             args.get_object("rhs").error_message_prefixed("gte(rhs)")?,
             "gte(rhs)",
         ).await?;
@@ -56,7 +55,7 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
 
     namespace.define_pipeline_item("lt", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("lt")?;
-        let arg_object: Object = ctx.resolve_pipeline_with_err_prefix(
+        let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
             args.get_object("value").error_message_prefixed("lt(rhs)")?,
             "lt(rhs)",
         ).await?;
@@ -70,7 +69,7 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
 
     namespace.define_pipeline_item("lte", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("lte")?;
-        let arg_object: Object = ctx.resolve_pipeline_with_err_prefix(
+        let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
             args.get_object("rhs").error_message_prefixed("lte(rhs)")?,
             "lte(rhs)",
         ).await?;
@@ -84,7 +83,7 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
 
     namespace.define_pipeline_item("neq", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("neq")?;
-        let arg_object: Object = ctx.resolve_pipeline_with_err_prefix(
+        let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
             args.get_object("rhs").error_message_prefixed("neq(rhs)")?,
             "neq(rhs)",
         ).await?;
@@ -130,7 +129,7 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
 
     namespace.define_pipeline_item("oneOf", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("oneOf")?;
-        let candidates_object: Object = ctx.resolve_pipeline_with_err_prefix(
+        let candidates_object: Value = ctx.resolve_pipeline_with_err_prefix(
             args.get_object("candidates").error_message_prefixed("oneOf(candidates)")?,
             "oneOf(candidates)",
         ).await?;

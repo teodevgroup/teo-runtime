@@ -1,7 +1,6 @@
 pub extern crate indexmap;
 
 pub mod stdlib;
-pub mod object;
 pub mod namespace;
 pub mod model;
 pub mod r#enum;
@@ -29,3 +28,4 @@ pub mod coder;
 pub mod traits;
 pub mod data_set;
 pub mod value;
+pub mod error_ext;

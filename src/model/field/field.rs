@@ -1,7 +1,6 @@
 use std::collections::BTreeMap;
 use maplit::btreemap;
 use serde::Serialize;
-use teo_parser::ast::namespace::Namespace;
 use teo_parser::ast::schema::Schema;
 use teo_parser::availability::Availability;
 use teo_result::Result;
@@ -17,12 +16,12 @@ use crate::model::field::is_optional::IsOptional;
 use crate::model::field::Migration;
 use crate::traits::named::Named;
 use crate::model::field::typed::Typed;
-use crate::object::Object;
 use crate::optionality::Optionality;
 use crate::pipeline::pipeline::Pipeline;
 use crate::readwrite::read::Read;
 use crate::readwrite::write::Write;
 use crate::traits::documentable::Documentable;
+use crate::value::Value;
 
 #[derive(Debug, Serialize)]
 pub struct Field {
@@ -47,13 +46,13 @@ pub struct Field {
     pub sortable: bool,
     pub auto: bool,
     pub auto_increment: bool,
-    pub default: Option<Object>,
+    pub default: Option<Value>,
     pub on_set: Pipeline,
     pub on_save: Pipeline,
     pub on_output: Pipeline,
     pub can_mutate: Pipeline,
     pub can_read: Pipeline,
-    pub data: BTreeMap<String, Object>,
+    pub data: BTreeMap<String, Value>,
     pub availability: Availability,
 }
 

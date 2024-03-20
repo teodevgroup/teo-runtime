@@ -15,7 +15,6 @@ use crate::action::action::{CODE_AMOUNT, CODE_NAME, CODE_POSITION};
 use crate::arguments::Arguments;
 use crate::middleware::middleware::middleware_wrap_fn;
 use crate::middleware::next::Next;
-use crate::object::Object;
 use crate::request::Ctx;
 use crate::response::Response;
 use crate::traits::named::Named;
@@ -87,7 +86,7 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
             return Err(Error::internal_server_error_message("missing @identity.jwtSecret"));
         };
         let jwt_secret: String = jwt_secret.try_into()?;
-        let expired: Option<Object> = arguments.get_optional("expired")?;
+        let expired: Option<Value> = arguments.get_optional("expired")?;
 
         let json_identifier: JsonValue = object.identifier().try_into()?;
         let claims = JwtClaims {
@@ -97,8 +96,8 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
                 let expired_at = if let Some(value) = expired.as_teon() {
                     value.as_int64().unwrap()
                 } else if let Some(pipeline) = expired.as_pipeline() {
-                    let result: Object = pipeline_ctx.run_pipeline(pipeline).await?;
-                    result.as_teon().unwrap().as_int64().unwrap()
+                    let result: Value = pipeline_ctx.run_pipeline(pipeline).await?;
+                    result.as_int64().unwrap()
                 } else {
                     unreachable!()
                 };
@@ -168,10 +167,10 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
             "companions": companion_values,
             "ids": id_values,
         });
-        let pipeline_ctx = pipeline::Ctx::new(Object::from(pipeline_input), object.clone(), path!["credentials"], CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx.transaction_ctx(), Some(req_ctx.clone()));
+        let pipeline_ctx = pipeline::Ctx::new(Value::from(pipeline_input), object.clone(), path!["credentials"], CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx.transaction_ctx(), Some(req_ctx.clone()));
         let _ = pipeline_ctx.run_pipeline_ignore_return_value(auth_checker_pipeline).await?;
-        let credentials_pipeline_ctx = pipeline::Ctx::new(Object::from(Value::Dictionary(credentials.clone())), object.clone(), path!["credentials"], CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx.transaction_ctx(), Some(req_ctx.clone()));
-        let self_pipeline_ctx = pipeline::Ctx::new(Object::from(&object), object.clone(), path![], CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx.transaction_ctx(), Some(req_ctx.clone()));
+        let credentials_pipeline_ctx = pipeline::Ctx::new(Value::from(Value::Dictionary(credentials.clone())), object.clone(), path!["credentials"], CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx.transaction_ctx(), Some(req_ctx.clone()));
+        let self_pipeline_ctx = pipeline::Ctx::new(Value::from(&object), object.clone(), path![], CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx.transaction_ctx(), Some(req_ctx.clone()));
         if let Some(validator) = model.data.get("identity:validateAccount") {
             let validator = validator.as_pipeline().unwrap();
             match self_pipeline_ctx.run_pipeline_ignore_return_value(validator).await {
@@ -248,7 +247,7 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
                         if let Some(object) = object {
                             if let Some(validator) = object.model().data.get("identity:validateAccount") {
                                 let validator = validator.as_pipeline().unwrap();
-                                let self_pipeline_ctx = pipeline::Ctx::new(Object::from(&object), object.clone(), path![], CODE_NAME | CODE_AMOUNT | CODE_POSITION, ctx.transaction_ctx(), Some(ctx.clone()));
+                                let self_pipeline_ctx = pipeline::Ctx::new(Value::from(&object), object.clone(), path![], CODE_NAME | CODE_AMOUNT | CODE_POSITION, ctx.transaction_ctx(), Some(ctx.clone()));
                                 match self_pipeline_ctx.run_pipeline_ignore_return_value(validator).await {
                                     Ok(_) => (),
                                     Err(mut error) => {
@@ -257,7 +256,7 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
                                     }
                                 }
                             }
-                            ctx.data_mut().insert("account", Object::from(object));
+                            ctx.data_mut().insert("account", Value::from(object));
                         } else {
                             return Err(Error::unauthorized_message("invalid jwt token"));
                         }

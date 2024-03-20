@@ -15,20 +15,19 @@ use crate::arguments::Arguments;
 use crate::coder::json_to_teon::{fetch_synthesized_enum, fetch_synthesized_interface_enum};
 use crate::value::interface_enum_variant::InterfaceEnumVariant;
 use crate::namespace::Namespace;
-use crate::object::Object;
 use crate::schema::fetch::fetch_argument_list::fetch_argument_list;
 use crate::schema::fetch::fetch_expression::{fetch_dictionary_key_expression, fetch_expression};
 use crate::utils::ContainsStr;
 
-pub fn fetch_tuple_literal<I>(tuple_literal: &TupleLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
+pub fn fetch_tuple_literal<I>(tuple_literal: &TupleLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Value> where I: InfoProvider {
     let mut result = vec![];
     for (index, expression) in tuple_literal.expressions().enumerate() {
-        result.push(fetch_expression(expression, schema, info_provider, expect.unwrap_optional().unwrap_tuple_index(index).unwrap(), namespace)?.as_teon().unwrap().clone());
+        result.push(fetch_expression(expression, schema, info_provider, expect.unwrap_optional().unwrap_tuple_index(index).unwrap(), namespace)?.clone());
     }
-    Ok(Object::from(Value::Tuple(result)))
+    Ok(Value::from(Value::Tuple(result)))
 }
 
-pub fn fetch_array_literal<I>(array_literal: &ArrayLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
+pub fn fetch_array_literal<I>(array_literal: &ArrayLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Value> where I: InfoProvider {
     let mut teon_result = vec![];
     let mut array_result = vec![];
     for expression in array_literal.expressions() {
@@ -36,27 +35,27 @@ pub fn fetch_array_literal<I>(array_literal: &ArrayLiteral, schema: &Schema, inf
         if expression_result.is_interface_enum_variant() {
             array_result.push(expression_result);
         } else {
-            teon_result.push(expression_result.as_teon().unwrap().clone());
+            teon_result.push(expression_result.clone());
         }
     }
     if !array_result.is_empty() {
-        Ok(Object::from(array_result))
+        Ok(Value::from(array_result))
     } else {
-        Ok(Object::from(Value::Array(teon_result)))
+        Ok(Value::from(Value::Array(teon_result)))
     }
 }
 
-pub fn fetch_dictionary_literal<I>(dictionary_literal: &DictionaryLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
+pub fn fetch_dictionary_literal<I>(dictionary_literal: &DictionaryLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Value> where I: InfoProvider {
     let mut result = indexmap!{};
     for named_expression in dictionary_literal.expressions() {
-        let k = fetch_dictionary_key_expression(named_expression.key(), schema, info_provider, namespace)?.as_teon().unwrap().as_str().unwrap().to_owned();
-        let v = fetch_expression(named_expression.value(), schema, info_provider, expect.unwrap_optional().unwrap_dictionary(), namespace)?.as_teon().unwrap().clone();
+        let k = fetch_dictionary_key_expression(named_expression.key(), schema, info_provider, namespace)?.as_str().unwrap().to_owned();
+        let v = fetch_expression(named_expression.value(), schema, info_provider, expect.unwrap_optional().unwrap_dictionary(), namespace)?.clone();
         result.insert(k, v);
     }
-    Ok(Object::from(Value::Dictionary(result)))
+    Ok(Value::from(Value::Dictionary(result)))
 }
 
-pub fn fetch_enum_variant_literal<I>(e: &EnumVariantLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
+pub fn fetch_enum_variant_literal<I>(e: &EnumVariantLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Value> where I: InfoProvider {
     match expect {
         Type::EnumVariant(reference) => {
             let r#enum = schema.find_top_by_path(reference.path()).unwrap().as_enum().unwrap();
@@ -68,17 +67,17 @@ pub fn fetch_enum_variant_literal<I>(e: &EnumVariantLiteral, schema: &Schema, in
                     args = Some(Arguments::new(btreemap! {}))
                 }
                 if r#enum.option {
-                    Ok(Object::from(Value::OptionVariant(OptionVariant {
+                    Ok(Value::from(Value::OptionVariant(OptionVariant {
                         value: member.resolved().try_into()?,
                         display: format!(".{}", member.identifier().name()),
                     })))
                 } else if r#enum.interface {
-                    Ok(Object::from(InterfaceEnumVariant {
+                    Ok(Value::from(InterfaceEnumVariant {
                         value: member.identifier().name().to_owned(),
                         args,
                     }))
                 } else {
-                    Ok(Object::from(Value::String(member.identifier().name().to_owned())))
+                    Ok(Value::from(Value::String(member.identifier().name().to_owned())))
                 }
             } else {
                 unreachable!()
@@ -99,25 +98,25 @@ pub fn fetch_enum_variant_literal<I>(e: &EnumVariantLiteral, schema: &Schema, in
             fetch_enum_variant_literal_from_synthesized_interface_enum(e, schema, info_provider, synthesized_interface_enum, namespace)
         },
         Type::FieldName(name) => {
-            Ok(Object::from(Value::String(name.clone())))
+            Ok(Value::from(Value::String(name.clone())))
         }
         _ => unreachable!(),
     }
 }
 
-fn fetch_enum_variant_literal_from_synthesized_interface_enum<I>(e: &EnumVariantLiteral, schema: &Schema, info_provider: &I, synthesized_enum: &SynthesizedInterfaceEnum, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
+fn fetch_enum_variant_literal_from_synthesized_interface_enum<I>(e: &EnumVariantLiteral, schema: &Schema, info_provider: &I, synthesized_enum: &SynthesizedInterfaceEnum, namespace: &Namespace) -> Result<Value> where I: InfoProvider {
     if synthesized_enum.keys.contains_str(e.identifier().name()) {
         let args = if let Some(argument_list) = e.argument_list() {
             let mut map = btreemap! {};
             for argument in argument_list.arguments() {
-                map.insert(argument.name().unwrap().name().to_owned(), Object::from(argument.value().resolved().value().unwrap().to_owned()));
+                map.insert(argument.name().unwrap().name().to_owned(), Value::from(argument.value().resolved().value().unwrap().to_owned()));
             }
             let arguments = Arguments::new(map);
             Some(arguments)
         } else {
             None
         };
-        Ok(Object::from(InterfaceEnumVariant {
+        Ok(Value::from(InterfaceEnumVariant {
             value: e.identifier().name().to_owned(),
             args,
         }))
@@ -126,9 +125,9 @@ fn fetch_enum_variant_literal_from_synthesized_interface_enum<I>(e: &EnumVariant
     }
 }
 
-fn fetch_enum_variant_literal_from_synthesized_enum<I>(e: &EnumVariantLiteral, schema: &Schema, info_provider: &I, synthesized_enum: &SynthesizedEnum, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
+fn fetch_enum_variant_literal_from_synthesized_enum<I>(e: &EnumVariantLiteral, schema: &Schema, info_provider: &I, synthesized_enum: &SynthesizedEnum, namespace: &Namespace) -> Result<Value> where I: InfoProvider {
     if synthesized_enum.keys.contains_str(e.identifier().name()) {
-        Ok(Object::from(Value::String(e.identifier().name().to_owned())))
+        Ok(Value::String(e.identifier().name().to_owned()))
     } else {
         unreachable!()
     }

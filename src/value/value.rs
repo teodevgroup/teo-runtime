@@ -19,7 +19,6 @@ use teo_result::{Error, Result};
 use crate::{model, r#struct};
 use crate::namespace::extensions::SynthesizedShapeReferenceExtension;
 use crate::namespace::Namespace;
-use crate::object::ObjectInner;
 use crate::pipeline::Pipeline;
 use super::interface_enum_variant::InterfaceEnumVariant;
 use super::option_variant::OptionVariant;
@@ -405,7 +404,7 @@ impl Value {
         self.as_interface_enum_variant().is_some()
     }
 
-    pub fn as_interface_enum_variant(&self) -> Option<&InterfaceEnumVariant()> {
+    pub fn as_interface_enum_variant(&self) -> Option<&InterfaceEnumVariant> {
         match self {
             Value::InterfaceEnumVariant(e) => Some(e),
             _ => None,

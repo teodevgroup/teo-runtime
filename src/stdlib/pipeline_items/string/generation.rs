@@ -2,33 +2,33 @@ use crate::namespace::Namespace;
 use crate::arguments::Arguments;
 use crate::pipeline::Ctx;
 use teo_result::ResultExt;
-use crate::object::Object;
 use cuid2::create_id;
 use random_string::generate;
 use cuid::{cuid, slug};
 use uuid::Uuid;
+use crate::value::Value;
 
 pub(in crate::stdlib) fn load_pipeline_string_generation_items(namespace: &mut Namespace) {
 
     namespace.define_pipeline_item("cuid", |args: Arguments, ctx: Ctx| async move {
-        Ok(Object::from(cuid().unwrap()))
+        Ok(Value::from(cuid().unwrap()))
     });
 
     namespace.define_pipeline_item("cuid2", |args: Arguments, ctx: Ctx| async move {
-        Ok(Object::from(create_id()))
+        Ok(Value::from(create_id()))
     });
 
     namespace.define_pipeline_item("slug", |args: Arguments, ctx: Ctx| async move {
-        Ok(Object::from(slug().unwrap()))
+        Ok(Value::from(slug().unwrap()))
     });
 
     namespace.define_pipeline_item("uuid", |args: Arguments, ctx: Ctx| async move {
-        Ok(Object::from(Uuid::new_v4().to_string()))
+        Ok(Value::from(Uuid::new_v4().to_string()))
     });
 
     namespace.define_pipeline_item("randomDigits", |args: Arguments, ctx: Ctx| async move {
         let len: usize = args.get("len").error_message_prefixed("randomDigits")?;
-        Ok(Object::from(generate(len, "1234567890")))
+        Ok(Value::from(generate(len, "1234567890")))
     });
 
 }

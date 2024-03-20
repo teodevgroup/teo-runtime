@@ -1,11 +1,9 @@
-use std::future::Future;
 use std::sync::Arc;
 use educe::Educe;
-use futures_util::future::BoxFuture;
 use serde::Serialize;
 use crate::arguments::Arguments;
-use crate::object::Object;
 use teo_result::Result;
+use crate::value::Value;
 
 #[derive(Educe, Serialize)]
 #[educe(Debug)]
@@ -16,12 +14,12 @@ pub struct Definition {
 }
 
 pub trait StaticFunction: Send + Sync {
-    fn call(&self, arguments: Arguments) -> Result<Object>;
+    fn call(&self, arguments: Arguments) -> Result<Value>;
 }
 
 impl<F> StaticFunction for F where
-    F: Fn(Arguments) -> Result<Object> + Send + Sync {
-    fn call(&self, arguments: Arguments) -> Result<Object> {
+    F: Fn(Arguments) -> Result<Value> + Send + Sync {
+    fn call(&self, arguments: Arguments) -> Result<Value> {
         self(arguments)
     }
 }

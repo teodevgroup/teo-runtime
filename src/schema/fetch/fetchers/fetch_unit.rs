@@ -18,7 +18,6 @@ use crate::value::Value;
 use crate::arguments::Arguments;
 use crate::value::interface_enum_variant::InterfaceEnumVariant;
 use crate::namespace::Namespace;
-use crate::object::traits::PrimitiveStruct;
 use crate::schema::fetch::fetch_argument_list::{fetch_argument_list, fetch_argument_list_or_empty};
 use crate::schema::fetch::fetch_expression::fetch_expression;
 use crate::schema::fetch::fetchers::fetch_identifier::{fetch_identifier_to_expr_info, fetch_identifier_to_node};
@@ -82,7 +81,7 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
                 todo!()
             } else {
                 let path = if current_value.is_teon() {
-                    current_value.as_teon().unwrap().default_struct_path()?
+                    current_value.default_struct_path()?
                 } else if current_value.is_struct_object() {
                     current_value.as_struct_object().unwrap().struct_path()
                 } else {

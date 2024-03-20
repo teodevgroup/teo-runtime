@@ -3,9 +3,9 @@ use futures_util::future::BoxFuture;
 use self::Validity::*;
 use teo_result::{Error, Result};
 use crate::arguments::Arguments;
-use crate::object::Object;
 use crate::pipeline::Ctx;
 use crate::pipeline::ctx::extract::ExtractFromPipelineCtx;
+use crate::value::Value;
 
 #[derive(Clone)]
 pub enum Validity {
@@ -99,7 +99,7 @@ pub trait ValidateArgument<A, O: Into<ValidateResult>>: Send + Sync + 'static {
 }
 
 impl<A0, O, F, Fut> ValidateArgument<(A0,), O> for F where
-    A0: TryFrom<Object, Error=Error> + Send + Sync,
+    A0: TryFrom<Value, Error=Error> + Send + Sync,
     F: Fn(A0) -> Fut + Sync + Send + Clone + 'static,
     O: Into<ValidateResult> + Send + Sync,
     Fut: Future<Output = O> + Send + 'static {
@@ -110,7 +110,7 @@ impl<A0, O, F, Fut> ValidateArgument<(A0,), O> for F where
 }
 
 impl<A0, A1, O, F, Fut> ValidateArgument<(A0, A1), O> for F where
-    A0: TryFrom<Object, Error=Error> + Send + Sync,
+    A0: TryFrom<Value, Error=Error> + Send + Sync,
     A1: ExtractFromPipelineCtx + Send + Sync,
     F: Fn(A0, A1) -> Fut + Sync + Send + 'static,
     O: Into<ValidateResult> + Send + Sync,
@@ -123,7 +123,7 @@ impl<A0, A1, O, F, Fut> ValidateArgument<(A0, A1), O> for F where
 }
 
 impl<A0, A1, A2, O, F, Fut> ValidateArgument<(A0, A1, A2), O> for F where
-    A0: TryFrom<Object, Error=Error> + Send + Sync,
+    A0: TryFrom<Value, Error=Error> + Send + Sync,
     A1: ExtractFromPipelineCtx + Send + Sync,
     A2: ExtractFromPipelineCtx + Send + Sync,
     F: Fn(A0, A1, A2) -> Fut + Sync + Send + 'static,
@@ -138,7 +138,7 @@ impl<A0, A1, A2, O, F, Fut> ValidateArgument<(A0, A1, A2), O> for F where
 }
 
 impl<A0, A1, A2, A3, O, F, Fut> ValidateArgument<(A0, A1, A2, A3), O> for F where
-    A0: TryFrom<Object, Error=Error> + Send + Sync,
+    A0: TryFrom<Value, Error=Error> + Send + Sync,
     A1: ExtractFromPipelineCtx + Send + Sync,
     A2: ExtractFromPipelineCtx + Send + Sync,
     A3: ExtractFromPipelineCtx + Send + Sync,

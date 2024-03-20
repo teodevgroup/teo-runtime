@@ -1,10 +1,9 @@
 use educe::Educe;
-use std::future::Future;
 use std::sync::Arc;
 use serde::Serialize;
 use crate::arguments::Arguments;
-use crate::object::Object;
 use teo_result::Result;
+use crate::value::Value;
 
 #[derive(Educe, Serialize)]
 #[educe(Debug)]
@@ -15,12 +14,12 @@ pub struct Definition {
 }
 
 pub trait Function: Send + Sync {
-    fn call(&self, this: Object, arguments: Arguments) -> Result<Object>;
+    fn call(&self, this: Value, arguments: Arguments) -> Result<Value>;
 }
 
 impl<F> Function for F where
-    F: Fn(Object, Arguments) -> Result<Object> + Send + Sync {
-    fn call(&self, this: Object, arguments: Arguments) -> Result<Object> {
+    F: Fn(Value, Arguments) -> Result<Value> + Send + Sync {
+    fn call(&self, this: Value, arguments: Arguments) -> Result<Value> {
         self(this, arguments)
     }
 }

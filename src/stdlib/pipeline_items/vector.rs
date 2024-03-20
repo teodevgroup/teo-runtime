@@ -2,7 +2,6 @@ use crate::namespace::Namespace;
 use crate::arguments::Arguments;
 use crate::pipeline::Ctx;
 use teo_result::ResultExt;
-use crate::object::Object;
 use teo_result::Error;
 use crate::value::range::Range;
 use crate::value::Value;
@@ -11,7 +10,7 @@ pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {
 
     namespace.define_pipeline_item("append", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("append")?;
-        let arg_object: Object = ctx.resolve_pipeline_with_err_prefix(
+        let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
             args.get_object("value").error_message_prefixed("append(value)")?,
             "append(value)",
         ).await?;
@@ -21,12 +20,12 @@ pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {
                 if !arg.is_string() {
                     Err(Error::new("append(value): value is not string"))?
                 }
-                Ok(Object::from(s.clone() + arg.as_str().unwrap()))
+                Ok(Value::from(s.clone() + arg.as_str().unwrap()))
             },
             Value::Array(v) => {
                 let mut new_array = v.clone();
                 new_array.push(arg);
-                Ok(Object::from(new_array))
+                Ok(Value::from(new_array))
             },
             _ => Err(Error::new("append: input is not array or string"))
         }
@@ -34,7 +33,7 @@ pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {
 
     namespace.define_pipeline_item("prepend", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("prepend")?;
-        let arg_object: Object = ctx.resolve_pipeline_with_err_prefix(
+        let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
             args.get_object("value").error_message_prefixed("prepend(value)")?,
             "prepend(value)" ,
         ).await?;
@@ -44,12 +43,12 @@ pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {
                 if !arg.is_string() {
                     Err(Error::new("prepend(value): value is not string"))?
                 }
-                Ok(Object::from(arg.as_str().unwrap().to_owned() + &s))
+                Ok(Value::from(arg.as_str().unwrap().to_owned() + &s))
             },
             Value::Array(v) => {
                 let mut new_array = v.clone();
                 new_array.insert(0, arg);
-                Ok(Object::from(new_array))
+                Ok(Value::from(new_array))
             },
             _ => Err(Error::new("prepend: input is not array or string"))
         }
@@ -58,8 +57,8 @@ pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {
     namespace.define_pipeline_item("getLength", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("getLength")?;
         Ok(match input {
-            Value::String(s) => Object::from(s.len() as i32),
-            Value::Array(v) => Object::from(v.len() as i32),
+            Value::String(s) => Value::from(s.len() as i32),
+            Value::Array(v) => Value::from(v.len() as i32),
             _ => Err(Error::new("getLength: input is not array or string"))?
         })
     });
@@ -103,22 +102,22 @@ pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {
     namespace.define_pipeline_item("reverse", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("reverse")?;
         match input {
-            Value::String(s) => Ok(Object::from(s.chars().rev().collect::<String>())),
-            Value::Array(v) => Ok(Object::from(v.into_iter().rev().map(|v| v.clone()).collect::<Vec<Value>>())),
+            Value::String(s) => Ok(Value::from(s.chars().rev().collect::<String>())),
+            Value::Array(v) => Ok(Value::from(v.into_iter().rev().map(|v| v.clone()).collect::<Vec<Value>>())),
             _ => Err(Error::new("reverse: input is not array or string"))?
         }
     });
 
     namespace.define_pipeline_item("truncate", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("truncate")?;
-        let arg_object: Object = ctx.resolve_pipeline_with_err_prefix(
+        let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
             args.get_object("maxLen").error_message_prefixed("truncate(maxLen)")?,
             "truncate(maxLen)",
         ).await?;
         let arg: usize = arg_object.try_ref_into_err_prefix("truncate(maxLen)")?;
         match input {
-            Value::String(s) => Ok(Object::from(s.chars().take(arg).collect::<String>())),
-            Value::Array(v) => Ok(Object::from(v.iter().take(arg).map(|v| v.clone()).collect::<Vec<Value>>())),
+            Value::String(s) => Ok(Value::from(s.chars().take(arg).collect::<String>())),
+            Value::Array(v) => Ok(Value::from(v.iter().take(arg).map(|v| v.clone()).collect::<Vec<Value>>())),
             _ => Err(Error::new("truncate: input is not array or string"))?
         }
     });

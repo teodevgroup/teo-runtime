@@ -23,9 +23,9 @@ use crate::model::property::Property;
 use crate::model::relation::delete::Delete;
 use crate::model::relation::Relation;
 use crate::namespace::Namespace;
-use crate::object::Object;
 use crate::pipeline::pipeline::Pipeline;
 use crate::traits::documentable::Documentable;
+use crate::value::Value;
 
 #[derive(Debug, Serialize)]
 pub struct Model {
@@ -62,7 +62,7 @@ pub struct Model {
     #[serde(rename = "canMutate")]
     pub can_mutate: Pipeline,
     pub migration: Migration,
-    pub data: BTreeMap<String, Object>,
+    pub data: BTreeMap<String, Value>,
     pub cache: Cache,
     pub builtin_handlers: Vec<Action>,
 }
