@@ -17,8 +17,7 @@ impl TryFrom<&Value> for Action {
     type Error = Error;
 
     fn try_from(value: &Value) -> std::result::Result<Self, Self::Error> {
-        let teon: Value = value.try_into()?;
-        let option_variant: &OptionVariant = teon.try_into()?;
+        let option_variant: &OptionVariant = value.try_into()?;
         Ok(Action(option_variant.value as u32))
     }
 }

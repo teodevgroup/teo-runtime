@@ -72,10 +72,10 @@ impl<T, E> TryFrom<&Value> for Option<Vec<T>> where T: TryFrom<Value, Error=E> +
     }
 }
 
-impl TryFrom<&Value> for &Vec<Value> {
+impl<'a> TryFrom<&'a Value> for &'a Vec<Value> {
     type Error = Error;
 
-    fn try_from(value: &Value) -> Result<Self, Self::Error> {
+    fn try_from(value: &'a Value) -> Result<Self, Self::Error> {
         match value {
             Value::Array(inner) => Ok(inner),
             _ => Err(Error::new(format!("cannot convert to &Vec<Value>: {}", value)))

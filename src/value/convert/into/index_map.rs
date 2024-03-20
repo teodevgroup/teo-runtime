@@ -77,10 +77,10 @@ impl<'a, T> TryInto<Option<IndexMap<String, T>>> for &'a Value where T: TryFrom<
     }
 }
 
-impl<'a> TryFrom<&Value> for &'a IndexMap<String, Value> {
+impl<'a> TryFrom<&'a Value> for &'a IndexMap<String, Value> {
     type Error = Error;
 
-    fn try_from(value: &Value) -> Result<Self, Self::Error> {
+    fn try_from(value: &'a Value) -> Result<Self, Self::Error> {
         match value {
             Value::Dictionary(inner) => Ok(inner),
             _ => Err(Error::new(format!("cannot convert to &IndexMap<String, Value>: {}", value)))
