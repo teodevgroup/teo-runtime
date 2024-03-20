@@ -1,5 +1,5 @@
 use teo_result::{Error, Result};
-use teo_teon::Value;
+use crate::value::Value;
 
 pub trait PrimitiveStruct {
     fn default_struct_path(&self) -> Result<Vec<&'static str>>;

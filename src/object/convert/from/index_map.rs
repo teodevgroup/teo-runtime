@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use indexmap::IndexMap;
-use teo_teon::Value;
+use crate::value::Value;
 use crate::object::{Object, ObjectInner};
 
 impl From<IndexMap<String, Value>> for Object {

@@ -1,5 +1,5 @@
-use teo_teon::types::range::Range;
-use teo_teon::Value;
+use crate::value::range::Range;
+use crate::value::Value;
 use crate::object::Object;
 use teo_result::Error;
 

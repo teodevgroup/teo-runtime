@@ -1,6 +1,6 @@
 use std::sync::Arc;
-use teo_teon::types::option_variant::OptionVariant;
-use teo_teon::Value;
+use crate::value::option_variant::OptionVariant;
+use crate::value::Value;
 use crate::object::{Object, ObjectInner};
 
 impl From<OptionVariant> for Object {

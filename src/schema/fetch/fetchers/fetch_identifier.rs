@@ -10,7 +10,7 @@ use teo_parser::search::search_identifier_path::{search_identifier_path_names_wi
 use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::utils::top_filter::top_filter_for_reference_type;
 use teo_result::{Error, Result};
-use teo_teon::Value;
+use crate::value::Value;
 use crate::namespace::Namespace;
 use crate::object::Object;
 use crate::schema::fetch::fetch_expression::fetch_expression;

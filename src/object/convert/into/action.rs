@@ -1,7 +1,6 @@
-use teo_teon::types::enum_variant::EnumVariant;
-use teo_teon::Value;
+use crate::value::Value;
 use teo_result::Error;
-use teo_teon::types::option_variant::OptionVariant;
+use crate::value::option_variant::OptionVariant;
 use crate::action::Action;
 use crate::object::Object;
 

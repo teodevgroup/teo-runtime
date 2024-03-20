@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use teo_teon::Value;
+use crate::value::Value;
 use crate::object::{Object, ObjectInner};
 
 impl From<bool> for Object {

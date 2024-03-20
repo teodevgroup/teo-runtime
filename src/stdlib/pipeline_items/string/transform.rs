@@ -6,7 +6,7 @@ use crate::object::Object;
 use pad::{PadStr, Alignment};
 use inflector::Inflector;
 use regex::Regex;
-use teo_teon::Value;
+use crate::value::Value;
 use teo_result::Error;
 
 pub(in crate::stdlib) fn load_pipeline_string_transform_items(namespace: &mut Namespace) {

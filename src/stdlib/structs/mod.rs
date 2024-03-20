@@ -4,7 +4,7 @@ use bson::oid::ObjectId;
 use chrono::{DateTime, NaiveDate, SecondsFormat, Utc};
 use indexmap::IndexMap;
 use maplit::btreemap;
-use teo_teon::Value;
+use crate::value::Value;
 use crate::namespace::Namespace;
 use crate::arguments::Arguments;
 use crate::r#struct;

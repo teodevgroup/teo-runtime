@@ -1,6 +1,6 @@
 use std::future::Future;
 use futures_util::future::BoxFuture;
-use teo_teon::Value;
+use crate::value::Value;
 use crate::pipeline::Ctx;
 use crate::pipeline::item::validator::ValidateResult;
 use teo_result::Error;

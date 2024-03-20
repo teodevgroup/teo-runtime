@@ -14,16 +14,16 @@ use teo_parser::traits::node_trait::NodeTrait;
 use teo_parser::traits::resolved::Resolve;
 use teo_parser::utils::top_filter::top_filter_for_reference_type;
 use teo_result::{Error, Result};
-use teo_teon::types::enum_variant::EnumVariant;
-use teo_teon::Value;
+use crate::value::Value;
 use crate::arguments::Arguments;
-use crate::interface_enum_variant::InterfaceEnumVariant;
+use crate::value::interface_enum_variant::InterfaceEnumVariant;
 use crate::namespace::Namespace;
 use crate::object::Object;
 use crate::object::traits::PrimitiveStruct;
 use crate::schema::fetch::fetch_argument_list::{fetch_argument_list, fetch_argument_list_or_empty};
 use crate::schema::fetch::fetch_expression::fetch_expression;
 use crate::schema::fetch::fetchers::fetch_identifier::{fetch_identifier_to_expr_info, fetch_identifier_to_node};
+use crate::value::option_variant::OptionVariant;
 
 #[derive(Debug)]
 pub(super) enum UnitFetchResult {
@@ -40,14 +40,8 @@ impl UnitFetchResult {
                 match reference_info.r#type() {
                     ReferenceType::Model => Ok(Object::from(Value::from(reference_info.reference().string_path().clone()))),
                     ReferenceType::DataSet => Ok(Object::from(Value::from(reference_info.reference().string_path().clone()))),
-                    ReferenceType::ModelField => Ok(Object::from(Value::EnumVariant(EnumVariant {
-                        value: reference_info.reference.string_path().last().unwrap().clone(),
-                        args: None,
-                    }))),
-                    ReferenceType::EnumMember => Ok(Object::from(Value::EnumVariant(EnumVariant {
-                        value: reference_info.reference.string_path().last().unwrap().clone(),
-                        args: None,
-                    }))),
+                    ReferenceType::ModelField => Ok(Object::from(Value::String(reference_info.reference.string_path().last().unwrap().clone()))),
+                    ReferenceType::EnumMember => Ok(Object::from(Value::String(reference_info.reference.string_path().last().unwrap().clone()))),
                     _ => Err(Error::new("cannot convert reference into object"))?,
                 }
             }
@@ -143,9 +137,9 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
                     match &expression.kind {
                         ExpressionKind::Identifier(i) => {
                             if r#enum.option {
-                                Ok(UnitFetchResult::Object(Object::from(Value::EnumVariant(EnumVariant {
-                                    value: i.name().to_owned(),
-                                    args: None,
+                                Ok(UnitFetchResult::Object(Object::from(Value::OptionVariant(OptionVariant {
+                                    value: r#enum.members().find(|m| m.name() == i.name()).unwrap().resolved().to_int().unwrap(),
+                                    display: format!(".{}", i.name()),
                                 }))))
                             } else if r#enum.interface {
                                 let member_definition = r#enum.members().find(|m| m.identifier().name() == i.name()).unwrap();
@@ -162,10 +156,7 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
                                     })))
                                 }
                             } else {
-                                Ok(UnitFetchResult::Object(Object::from(Value::EnumVariant(EnumVariant {
-                                    value: i.name().to_owned(),
-                                    args: None,
-                                }))))
+                                Ok(UnitFetchResult::Object(Object::from(Value::String(i.name().to_owned()))))
                             }
                         }
                         _ => unreachable!()

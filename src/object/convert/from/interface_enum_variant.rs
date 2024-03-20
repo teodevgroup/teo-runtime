@@ -1,6 +1,6 @@
 use std::sync::Arc;
-use crate::interface_enum_variant::InterfaceEnumVariant;
 use crate::object::{Object, ObjectInner};
+use crate::value::interface_enum_variant::InterfaceEnumVariant;
 
 impl From<InterfaceEnumVariant> for Object {
 

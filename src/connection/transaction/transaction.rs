@@ -2,7 +2,7 @@ use std::fmt::Debug;
 use std::sync::Arc;
 use async_trait::async_trait;
 use key_path::KeyPath;
-use teo_teon::Value;
+use crate::value::Value;
 use crate::action::Action;
 use teo_result::Result;
 use crate::connection::connection::Connection;

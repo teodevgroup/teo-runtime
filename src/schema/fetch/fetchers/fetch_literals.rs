@@ -9,12 +9,11 @@ use teo_parser::r#type::Type;
 use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::traits::resolved::Resolve;
 use teo_result::Result;
-use teo_teon::types::enum_variant::EnumVariant;
-use teo_teon::types::option_variant::OptionVariant;
-use teo_teon::Value;
+use crate::value::option_variant::OptionVariant;
+use crate::value::Value;
 use crate::arguments::Arguments;
 use crate::coder::json_to_teon::{fetch_synthesized_enum, fetch_synthesized_interface_enum};
-use crate::interface_enum_variant::InterfaceEnumVariant;
+use crate::value::interface_enum_variant::InterfaceEnumVariant;
 use crate::namespace::Namespace;
 use crate::object::Object;
 use crate::schema::fetch::fetch_argument_list::fetch_argument_list;
@@ -79,10 +78,7 @@ pub fn fetch_enum_variant_literal<I>(e: &EnumVariantLiteral, schema: &Schema, in
                         args,
                     }))
                 } else {
-                    Ok(Object::from(Value::EnumVariant(EnumVariant {
-                        value: member.identifier().name().to_owned(),
-                        args: None,
-                    })))
+                    Ok(Object::from(Value::String(member.identifier().name().to_owned())))
                 }
             } else {
                 unreachable!()
@@ -103,10 +99,7 @@ pub fn fetch_enum_variant_literal<I>(e: &EnumVariantLiteral, schema: &Schema, in
             fetch_enum_variant_literal_from_synthesized_interface_enum(e, schema, info_provider, synthesized_interface_enum, namespace)
         },
         Type::FieldName(name) => {
-            Ok(Object::from(Value::EnumVariant(EnumVariant {
-                value: name.clone(),
-                args: None,
-            })))
+            Ok(Object::from(Value::String(name.clone())))
         }
         _ => unreachable!(),
     }
@@ -135,10 +128,7 @@ fn fetch_enum_variant_literal_from_synthesized_interface_enum<I>(e: &EnumVariant
 
 fn fetch_enum_variant_literal_from_synthesized_enum<I>(e: &EnumVariantLiteral, schema: &Schema, info_provider: &I, synthesized_enum: &SynthesizedEnum, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
     if synthesized_enum.keys.contains_str(e.identifier().name()) {
-        Ok(Object::from(Value::EnumVariant(EnumVariant {
-            value: e.identifier().name().to_owned(),
-            args: None,
-        })))
+        Ok(Object::from(Value::String(e.identifier().name().to_owned())))
     } else {
         unreachable!()
     }

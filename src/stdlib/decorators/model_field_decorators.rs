@@ -1,6 +1,5 @@
-use teo_teon::Value;
+use crate::value::Value;
 use crate::database::r#type::DatabaseType;
-use crate::interface_enum_variant::InterfaceEnumVariant;
 use crate::model::field::Migration;
 use crate::namespace::Namespace;
 use crate::object::Object;
@@ -9,6 +8,7 @@ use crate::pipeline::pipeline::Pipeline;
 use crate::readwrite::read::Read;
 use crate::readwrite::write::Write;
 use crate::stdlib::decorators::indexable_decorators::{id_decorator, index_decorator, unique_decorator};
+use crate::value::interface_enum_variant::InterfaceEnumVariant;
 
 pub(in crate::stdlib) fn load_model_field_decorators(namespace: &mut Namespace) {
 

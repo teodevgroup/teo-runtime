@@ -1,11 +1,11 @@
 use itertools::Itertools;
 use crate::arguments::Arguments;
-use crate::model::{field, Model};
+use crate::model::Model;
 use teo_result::Result;
 use crate::{index, model};
-use crate::interface_enum_variant::InterfaceEnumVariant;
 use crate::model::field::indexable::Indexable;
 use crate::sort::Sort;
+use crate::value::interface_enum_variant::InterfaceEnumVariant;
 
 pub fn model_id_decorator(arguments: Arguments, model: &mut Model) -> Result<()> {
     decorator(index::Type::Primary, arguments, model)

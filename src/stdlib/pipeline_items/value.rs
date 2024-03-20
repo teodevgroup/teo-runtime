@@ -7,7 +7,7 @@ use teo_result::Error;
 use pad::{PadStr, Alignment};
 use inflector::Inflector;
 use regex::Regex;
-use teo_teon::Value;
+use crate::value::Value;
 
 pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
 

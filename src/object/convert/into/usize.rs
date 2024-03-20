@@ -1,6 +1,6 @@
 use crate::object::Object;
 use teo_result::Error;
-use teo_teon::Value;
+use crate::value::Value;
 
 impl<'a> TryFrom<&'a Object> for usize {
 

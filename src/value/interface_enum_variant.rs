@@ -29,6 +29,12 @@ impl InterfaceEnumVariant {
 
 impl Display for InterfaceEnumVariant {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.value())
+        f.write_str(self.value())?;
+        if let Some(args) = self.args() {
+            f.write_str("(")?;
+            Display::fmt(args, f)?;
+            f.write_str(")")?;
+        }
+        Ok(())
     }
 }

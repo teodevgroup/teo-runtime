@@ -1,7 +1,8 @@
 use std::fmt::{Debug, Formatter};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
-use teo_teon::{teon, Value};
+use crate::value::Value;
+use crate::teon;
 use teo_result::Result;
 use crate::response::body::Body;
 use crate::response::header::readwrite::HeaderMap;

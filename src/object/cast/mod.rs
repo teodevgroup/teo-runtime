@@ -1,9 +1,8 @@
 use indexmap::IndexMap;
 use teo_parser::r#type::synthesized_shape::SynthesizedShape;
 use teo_parser::r#type::Type;
-use teo_teon::types::enum_variant::EnumVariant;
-use teo_teon::types::range::Range;
-use teo_teon::Value;
+use crate::value::range::Range;
+use crate::value::Value;
 use crate::namespace::extensions::SynthesizedShapeReferenceExtension;
 use crate::namespace::Namespace;
 
@@ -27,7 +26,6 @@ fn do_cast(value: &Value, target: &Type, namespace: &Namespace) -> Value {
         Type::Int64 => do_cast_to_int64(value),
         Type::Float32 => do_cast_to_float32(value),
         Type::Float => do_cast_to_float(value),
-        Type::EnumVariant(_) => do_cast_to_enum_variant(value),
         Type::Union(types) => {
             let mut result = value.clone();
             for t in types {
@@ -92,10 +90,6 @@ fn do_cast(value: &Value, target: &Type, namespace: &Namespace) -> Value {
                 value.clone()
             }
         }
-        Type::SynthesizedEnum(_) => do_cast_to_enum_variant(value),
-        Type::SynthesizedEnumReference(_) => do_cast_to_enum_variant(value),
-        Type::SynthesizedInterfaceEnum(_) => do_cast_to_enum_variant(value),
-        Type::SynthesizedInterfaceEnumReference(_) => do_cast_to_enum_variant(value),
         Type::InterfaceObject(reference, gens) => {
             if let Some(dictionary) = value.as_dictionary() {
                 let interface = namespace.interface_at_path(&reference.str_path()).unwrap();
@@ -141,16 +135,6 @@ fn do_cast_to_float(value: &Value) -> Value {
         Value::Float32(f) => Value::Float(*f as f64),
         Value::Int(i) => Value::Float(*i as f64),
         Value::Int64(i) => Value::Float(*i as f64),
-        _ => value.clone(),
-    }
-}
-
-fn do_cast_to_enum_variant(value: &Value) -> Value {
-    match value {
-        Value::String(s) => Value::EnumVariant(EnumVariant {
-            value: s.clone(),
-            args: None,
-        }),
         _ => value.clone(),
     }
 }

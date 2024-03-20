@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 use std::sync::Arc;
 use maplit::btreemap;
 use serde::{Serialize, Serializer};
@@ -27,6 +27,22 @@ impl Debug for Arguments {
             debug_struct.field(k.as_str(), &v);
         }
         debug_struct.finish()
+    }
+}
+
+impl Display for Arguments {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("(")?;
+        for (i, (k, v)) in self.inner.map.iter().enumerate() {
+            f.write_str(k)?;
+            f.write_str(": ")?;
+            Display::fmt(v, f)?;
+            if i != self.inner.map.len() - 1 {
+                f.write_str(", ")?;
+            }
+        }
+        f.write_str(")")?;
+        Ok(())
     }
 }
 

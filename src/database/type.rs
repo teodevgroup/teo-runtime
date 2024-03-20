@@ -4,7 +4,7 @@ use crate::database::mongo::r#type::MongoDBType;
 use crate::database::mysql::r#type::MySQLType;
 use crate::database::postgres::r#type::PostgreSQLType;
 use crate::database::sqlite::r#type::SQLiteType;
-use crate::interface_enum_variant::InterfaceEnumVariant;
+use crate::value::interface_enum_variant::InterfaceEnumVariant;
 use teo_result::{Result, Error};
 
 #[derive(Debug, Serialize, Clone, PartialEq, Eq, Hash)]

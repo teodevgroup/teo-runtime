@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use chrono::{DateTime, Utc};
-use teo_teon::Value;
+use crate::value::Value;
 use crate::object::{Object, ObjectInner};
 
 impl From<DateTime<Utc>> for Object {

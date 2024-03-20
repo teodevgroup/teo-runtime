@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use teo_teon::Value;
+use crate::value::Value;
 
 #[derive(Clone)]
 pub struct Body {

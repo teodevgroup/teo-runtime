@@ -1,6 +1,6 @@
 use teo_result::Error;
 use crate::handler::handler::Method;
-use crate::interface_enum_variant::InterfaceEnumVariant;
+use crate::value::interface_enum_variant::InterfaceEnumVariant;
 use crate::object::Object;
 
 impl TryFrom<&Object> for Method {

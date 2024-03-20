@@ -4,7 +4,7 @@ use maplit::btreemap;
 use std::collections::BTreeMap;
 use crate::object::Object;
 use serde::Serialize;
-use teo_teon::Value;
+use crate::value::Value;
 pub use decorator::Decorator;
 use crate::comment::Comment;
 use crate::traits::documentable::Documentable;

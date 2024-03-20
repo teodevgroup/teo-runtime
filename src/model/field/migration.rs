@@ -1,5 +1,5 @@
 use serde::Serialize;
-use teo_teon::Value;
+use crate::value::Value;
 use crate::pipeline::pipeline::Pipeline;
 
 #[derive(Debug, Serialize)]

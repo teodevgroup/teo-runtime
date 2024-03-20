@@ -1,6 +1,5 @@
 use teo_result::Result;
-use teo_teon::types::enum_variant::EnumVariant;
-use teo_teon::Value;
+use crate::value::Value;
 use crate::model::relation::delete::Delete;
 use crate::model::relation::update::Update;
 use crate::namespace::Namespace;
@@ -11,13 +10,13 @@ pub(in crate::stdlib) fn load_model_relation_decorators(namespace: &mut Namespac
         let fields: Result<Value> = arguments.get("fields");
         let references: Result<Value> = arguments.get("references");
         let through: Result<Vec<String>> = arguments.get("through");
-        let local: Result<EnumVariant> = arguments.get("local");
-        let foreign: Result<EnumVariant> = arguments.get("foreign");
+        let local: Result<&str> = arguments.get("local");
+        let foreign: Result<&str> = arguments.get("foreign");
         let update: Option<Update> = arguments.get_optional("onUpdate")?;
         let delete: Option<Delete> = arguments.get_optional("onDelete")?;
         if fields.is_ok() {
-            let fields: Vec<EnumVariant> = fields.unwrap().into_vec()?;
-            let references: Vec<EnumVariant> = references.unwrap().into_vec()?;
+            let fields: Vec<&str> = fields.unwrap().into_vec()?;
+            let references: Vec<&str> = references.unwrap().into_vec()?;
             let fields: Vec<String> = fields.iter().map(|f| f.clone().into_string()).collect::<Vec<_>>();
             let references: Vec<String> = references.iter().map(|f| f.clone().into_string()).collect::<Vec<_>>();
             relation.fields = fields;

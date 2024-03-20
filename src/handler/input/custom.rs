@@ -1,6 +1,6 @@
 use key_path::path;
 use serde_json::{Value as JsonValue};
-use teo_teon::Value;
+use crate::value::Value;
 use crate::coder::json_to_teon::json_to_teon_with_type;
 use crate::handler::Handler;
 use crate::namespace::Namespace;

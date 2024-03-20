@@ -1,5 +1,5 @@
 use teo_result::Error;
-use crate::interface_enum_variant::InterfaceEnumVariant;
+use crate::value::interface_enum_variant::InterfaceEnumVariant;
 use crate::model::relation::delete::Delete;
 use crate::object::Object;
 

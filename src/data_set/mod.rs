@@ -1,4 +1,4 @@
-use teo_teon::Value;
+use crate::value::Value;
 
 #[derive(Debug, Clone)]
 pub struct DataSet {

@@ -1,5 +1,5 @@
 use std::fmt::Display;
-use teo_teon::Value;
+use crate::value::Value;
 use teo_result::Error;
 use crate::object::Object;
 

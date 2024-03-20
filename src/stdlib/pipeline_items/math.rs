@@ -2,7 +2,7 @@ use num_integer::Roots;
 use std::ops::Add;
 use bigdecimal::num_traits::{Pow};
 use bigdecimal::BigDecimal;
-use teo_teon::Value;
+use crate::value::Value;
 use crate::arguments::Arguments;
 use teo_result::Error;
 use crate::namespace::Namespace;

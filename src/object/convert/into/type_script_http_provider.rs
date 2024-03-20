@@ -1,6 +1,6 @@
 use crate::config::client::TypeScriptHTTPProvider;
 use teo_result::Error;
-use crate::interface_enum_variant::InterfaceEnumVariant;
+use crate::value::interface_enum_variant::InterfaceEnumVariant;
 use crate::object::Object;
 
 impl TryFrom<Object> for TypeScriptHTTPProvider {

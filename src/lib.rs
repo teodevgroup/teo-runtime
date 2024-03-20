@@ -1,3 +1,5 @@
+pub extern crate indexmap;
+
 pub mod stdlib;
 pub mod object;
 pub mod namespace;
@@ -26,4 +28,4 @@ pub mod readwrite;
 pub mod coder;
 pub mod traits;
 pub mod data_set;
-pub mod interface_enum_variant;
+pub mod value;

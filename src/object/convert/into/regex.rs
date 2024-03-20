@@ -1,5 +1,5 @@
 use regex::Regex;
-use teo_teon::Value;
+use crate::value::Value;
 use crate::object::Object;
 use teo_result::Error;
 

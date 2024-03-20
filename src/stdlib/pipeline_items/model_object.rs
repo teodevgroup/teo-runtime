@@ -1,16 +1,14 @@
 use std::collections::HashMap;
 use indexmap::IndexMap;
 use num_integer::Integer;
-use teo_teon::types::range::Range;
-use teo_teon::Value;
+use crate::value::range::Range;
+use crate::value::Value;
 use crate::arguments::Arguments;
 use teo_result::Error;
 use crate::namespace::Namespace;
 use crate::object::Object;
 use crate::pipeline::Ctx;
 use teo_result::{Result, ResultExt};
-use rand::{thread_rng, Rng};
-use teo_teon::types::enum_variant::EnumVariant;
 use crate::model;
 
 pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &mut Namespace) {
@@ -23,10 +21,9 @@ pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &mut Namesp
         let model_object: Result<&model::Object> = ctx.value().try_ref_into_err_prefix("get");
         let dictionary: Result<&IndexMap<String, Value>> = ctx.value().try_ref_into_err_prefix("get");
         if let Ok(model_object) = model_object {
-            let key: &EnumVariant = args.get("key").error_message_prefixed("get(key)")?;
-            let key_value = key.value.as_str();
+            let key: &str = args.get("key").error_message_prefixed("get(key)")?;
             // get value and return here
-            let value: Value = model_object.get_value(key_value)?;
+            let value: Value = model_object.get_value(key)?;
             Ok(Object::from(value))
         } else if let Ok(dictionary) = dictionary {
             let key: &Value = args.get("key").error_message_prefixed("get(key)")?;
@@ -48,22 +45,14 @@ pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &mut Namesp
         let dictionary: Result<&IndexMap<String, Value>> = ctx.value().try_ref_into_err_prefix("set");
         let value: Value = args.get("value")?;
         if let Ok(model_object) = model_object {
-            let key: &EnumVariant = args.get("key").error_message_prefixed("set(key)")?;
-            let key_value = key.value.as_str();
+            let key: &str = args.get("key").error_message_prefixed("set(key)")?;
             // get value and return here
-            model_object.set_value(key_value, value)?;
+            model_object.set_value(key, value)?;
             Ok(ctx.value().clone())
         } else if let Ok(dictionary) = dictionary {
-            let key: &Value = args.get("key").error_message_prefixed("set(key)")?;
-            let key_str = if key.is_string() {
-                key.as_str().unwrap()
-            } else if key.is_enum_variant() {
-                key.as_enum_variant().unwrap().value.as_str()
-            } else {
-                unreachable!()
-            };
+            let key: &str = args.get("key").error_message_prefixed("set(key)")?;
             let mut new_dictionary = dictionary.clone();
-            new_dictionary.insert(key_str.to_owned(), value);
+            new_dictionary.insert(key.to_owned(), value);
             Ok(Object::from(Value::Dictionary(new_dictionary)))
         } else {
             Err(Error::new("set: input is not model object or dictionary"))
@@ -73,19 +62,17 @@ pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &mut Namesp
     namespace.define_pipeline_item("assign", |args: Arguments, ctx: Ctx| async move {
         let model_object = ctx.object();
         let value: Value = args.get("value")?;
-        let key: &EnumVariant = args.get("key").error_message_prefixed("assign(key)")?;
-        let key_value = key.value.as_str();
+        let key: &str = args.get("key").error_message_prefixed("assign(key)")?;
         // get value and return here
-        model_object.set_value(key_value, value)?;
+        model_object.set_value(key, value)?;
         Ok(ctx.value().clone())
     });
 
     namespace.define_pipeline_item("previous", |args: Arguments, ctx: Ctx| async move {
         let model_object = ctx.object();
-        let key: &EnumVariant = args.get("key").error_message_prefixed("previous(key)")?;
-        let key_value = key.value.as_str();
+        let key: &str = args.get("key").error_message_prefixed("previous(key)")?;
         // get value and return here
-        let result = model_object.get_previous_value(key_value)?;
+        let result = model_object.get_previous_value(key)?;
         Ok(Object::from(result))
     });
 }

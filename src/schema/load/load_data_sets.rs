@@ -3,8 +3,8 @@ use teo_parser::r#type::Type;
 use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::traits::resolved::Resolve;
 use teo_result::Result;
-use teo_teon::types::enum_variant::EnumVariant;
-use teo_teon::{teon, Value};
+use crate::value::Value;
+use crate::teon;
 use crate::data_set::{DataSet, Group, Record};
 use crate::namespace::Namespace;
 use crate::schema::fetch::fetchers::fetch_literals::fetch_dictionary_literal;
@@ -62,10 +62,10 @@ pub(crate) fn normalize_dataset_relations<'a>(dataset: &mut DataSet, namespace: 
                     let opposite_rel = opposite_rel.unwrap();
                     if relation.is_vec {
                         for v in v.as_array().unwrap() {
-                            assign_relation_other_sides.push((dataset.name.clone(), opposite_model.path.clone(), v.as_enum_variant().unwrap().value.as_str().to_owned(), opposite_rel.name.clone(), record.name.clone()));
+                            assign_relation_other_sides.push((dataset.name.clone(), opposite_model.path.clone(), v.as_str().unwrap().to_owned(), opposite_rel.name.clone(), record.name.clone()));
                         }
                     } else {
-                        assign_relation_other_sides.push((dataset.name.clone(), opposite_model.path.clone(), v.as_enum_variant().unwrap().value.as_str().to_owned(), opposite_rel.name.clone(), record.name.clone()));
+                        assign_relation_other_sides.push((dataset.name.clone(), opposite_model.path.clone(), v.as_str().unwrap().to_owned(), opposite_rel.name.clone(), record.name.clone()));
                     }
                 }
             }
@@ -84,23 +84,14 @@ fn assign_relation_other_side(dataset: &mut DataSet, data_set_name: &Vec<String>
     if relation.is_vec {
         if that_record.value.as_dictionary_mut().unwrap().contains_key(relation.name()) {
             let array = that_record.value.as_dictionary_mut().unwrap().get_mut(relation.name()).unwrap().as_array_mut().unwrap();
-            let to_insert = Value::EnumVariant(EnumVariant {
-                value: value_name.clone(),
-                args: None,
-            });
+            let to_insert = Value::String(value_name.clone());
             if !array.contains(&to_insert) {
                 array.push(to_insert);
             }
         } else {
-            that_record.value.as_dictionary_mut().unwrap().insert(relation.name().to_owned(), teon!([Value::EnumVariant(EnumVariant {
-                value: value_name.clone(),
-                args: None,
-            })]));
+            that_record.value.as_dictionary_mut().unwrap().insert(relation.name().to_owned(), teon!([Value::String(value_name.clone())]));
         }
     } else {
-        that_record.value.as_dictionary_mut().unwrap().insert(relation.name().to_owned(), Value::EnumVariant(EnumVariant {
-            value: value_name.clone(),
-            args: None,
-        }));
+        that_record.value.as_dictionary_mut().unwrap().insert(relation.name().to_owned(), Value::String(value_name.clone()));
     }
 }

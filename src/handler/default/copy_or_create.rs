@@ -1,5 +1,6 @@
 use key_path::path;
-use teo_teon::{teon, Value};
+use crate::value::Value;
+use crate::teon;
 use crate::request;
 use crate::response::Response;
 use crate::action::action::*;

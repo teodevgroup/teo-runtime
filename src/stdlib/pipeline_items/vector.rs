@@ -4,8 +4,8 @@ use crate::pipeline::Ctx;
 use teo_result::ResultExt;
 use crate::object::Object;
 use teo_result::Error;
-use teo_teon::types::range::Range;
-use teo_teon::Value;
+use crate::value::range::Range;
+use crate::value::Value;
 
 pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {
 

@@ -1,6 +1,6 @@
 use num_integer::Integer;
-use teo_teon::types::range::Range;
-use teo_teon::Value;
+use crate::value::range::Range;
+use crate::value::Value;
 use crate::arguments::Arguments;
 use teo_result::Error;
 use crate::namespace::Namespace;

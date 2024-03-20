@@ -15,9 +15,8 @@ use teo_parser::r#type::synthesized_shape::SynthesizedShape;
 use teo_parser::r#type::synthesized_shape_reference::SynthesizedShapeReference;
 use teo_parser::r#type::Type;
 use teo_parser::traits::resolved::Resolve;
-use teo_teon::types::enum_variant::EnumVariant;
-use teo_teon::Value;
-use teo_teon::types::file::File;
+use crate::value::Value;
+use crate::value::file::File;
 use crate::interface::Interface;
 use crate::namespace::Namespace;
 use teo_result::Error;
@@ -193,10 +192,7 @@ fn json_to_teon_with_synthesized_enum(json: &serde_json::Value, path: &KeyPath, 
     if json.is_string() {
         let name = json.as_str().unwrap();
         if synthesized_enum.keys.contains_str(name) {
-            return Ok(Value::EnumVariant(EnumVariant {
-                value: name.to_owned(),
-                args: None,
-            }));
+            return Ok(Value::String(name.to_owned()));
         }
     }
     Err(Error::invalid_request_pathed(path.clone(), "expect string enum variant"))

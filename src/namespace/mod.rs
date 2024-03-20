@@ -11,7 +11,6 @@ use crate::config::connector::Connector;
 use crate::config::debug::Debug;
 use crate::config::entity::Entity;
 use crate::config::server::Server;
-use crate::config::test::Test;
 use crate::connection::connection::Connection;
 use teo_result::Error;
 use crate::handler;
@@ -73,7 +72,6 @@ pub struct Namespace {
     pub clients: BTreeMap<String, Client>,
     pub entities: BTreeMap<String, Entity>,
     pub debug: Option<Debug>,
-    pub test: Option<Test>,
     pub middlewares_block: Option<middleware::Block>,
     pub database: Option<Database>,
     pub connector_reference: Option<Vec<String>>,
@@ -121,7 +119,6 @@ impl Namespace {
             clients: btreemap! {},
             entities: btreemap! {},
             debug: None,
-            test: None,
             middlewares_block: None,
             database: None,
             connector_reference: None,

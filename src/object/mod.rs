@@ -7,15 +7,15 @@ pub mod cast;
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 use teo_parser::r#type::Type;
-use teo_teon::Value;
+use crate::value::Value;
 use teo_result::Error;
 use crate::model;
 use crate::pipeline::pipeline::Pipeline;
 use crate::r#struct;
 use teo_result::Result;
-use crate::interface_enum_variant::InterfaceEnumVariant;
 use crate::namespace::Namespace;
 use crate::object::cast::TeonCast;
+use crate::value::interface_enum_variant::InterfaceEnumVariant;
 
 #[derive(Debug, Clone)]
 pub struct Object {

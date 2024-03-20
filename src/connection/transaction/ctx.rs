@@ -6,7 +6,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use key_path::KeyPath;
 use maplit::btreemap;
 use teo_result::{Result, Error};
-use teo_teon::Value;
+use crate::value::Value;
 use crate::{connection, model, request};
 use crate::connection::connection::Connection;
 use crate::connection::transaction::{ExtractFromTransactionCtx, Transaction};

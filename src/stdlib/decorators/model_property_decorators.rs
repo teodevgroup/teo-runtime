@@ -1,6 +1,4 @@
-use teo_teon::types::enum_variant::EnumVariant;
-use teo_teon::Value;
-use teo_result::Result;
+use crate::value::Value;
 use crate::namespace::Namespace;
 use crate::pipeline::pipeline::Pipeline;
 use crate::stdlib::decorators::indexable_decorators::{id_decorator, index_decorator, unique_decorator};
@@ -26,7 +24,7 @@ pub(in crate::stdlib) fn load_model_property_decorators(namespace: &mut Namespac
 
     namespace.define_model_property_decorator("deps", |arguments, property| {
         let deps: Value = arguments.get("deps")?;
-        let deps: Vec<EnumVariant> = deps.into_vec()?;
+        let deps: Vec<&str> = deps.into_vec()?;
         let deps: Vec<String> = deps.iter().map(|f| f.clone().into_string()).collect::<Vec<_>>();
         property.dependencies = deps;
         Ok(())

@@ -1,5 +1,6 @@
 use key_path::{KeyPath, path};
-use teo_teon::{teon, Value};
+use crate::value::Value;
+use crate::teon;
 use crate::model::Object;
 use teo_result::Result;
 

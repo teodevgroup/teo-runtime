@@ -1,5 +1,5 @@
 use std::ops::Not;
-use teo_teon::Value;
+use crate::value::Value;
 use crate::namespace::Namespace;
 use teo_result::Result;
 use crate::action::Action;

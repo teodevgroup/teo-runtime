@@ -24,7 +24,6 @@ use crate::schema::load::load_interface::load_interface;
 use crate::schema::load::load_model::load_model;
 use crate::schema::load::load_model_opposite_relations::load_model_opposite_relations;
 use crate::schema::load::load_server::load_server;
-use crate::schema::load::load_test::load_test;
 use crate::schema::load::load_use_middlewares::load_use_middlewares;
 
 pub async fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignores_loading: bool) -> Result<()> {
@@ -66,13 +65,6 @@ pub async fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignore
     if let Some(debug) = schema.debug() {
         if debug.is_available() {
             load_debug(main_namespace, schema, debug, &mut diagnostics)?;
-        }
-    }
-
-    // load test
-    if let Some(test) = schema.debug() {
-        if test.is_available() {
-            load_test(main_namespace, schema, test, &mut diagnostics)?;
         }
     }
 
