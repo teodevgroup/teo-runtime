@@ -18,7 +18,6 @@ use crate::value::Value;
 use crate::arguments::Arguments;
 use crate::value::interface_enum_variant::InterfaceEnumVariant;
 use crate::namespace::Namespace;
-use crate::object::Object;
 use crate::object::traits::PrimitiveStruct;
 use crate::schema::fetch::fetch_argument_list::{fetch_argument_list, fetch_argument_list_or_empty};
 use crate::schema::fetch::fetch_expression::fetch_expression;
@@ -27,29 +26,29 @@ use crate::value::option_variant::OptionVariant;
 
 #[derive(Debug)]
 pub(super) enum UnitFetchResult {
-    Reference(ReferenceInfo, Option<Object>),
-    Object(Object),
+    Reference(ReferenceInfo, Option<Value>),
+    Value(Value),
 }
 
 impl UnitFetchResult {
 
-    pub(super) fn into_object(self) -> Result<Object> {
+    pub(super) fn into_object(self) -> Result<Value> {
         match self {
-            UnitFetchResult::Object(o) => Ok(o),
+            UnitFetchResult::Value(o) => Ok(o),
             UnitFetchResult::Reference(reference_info, _) => {
                 match reference_info.r#type() {
-                    ReferenceType::Model => Ok(Object::from(Value::from(reference_info.reference().string_path().clone()))),
-                    ReferenceType::DataSet => Ok(Object::from(Value::from(reference_info.reference().string_path().clone()))),
-                    ReferenceType::ModelField => Ok(Object::from(Value::String(reference_info.reference.string_path().last().unwrap().clone()))),
-                    ReferenceType::EnumMember => Ok(Object::from(Value::String(reference_info.reference.string_path().last().unwrap().clone()))),
-                    _ => Err(Error::new("cannot convert reference into object"))?,
+                    ReferenceType::Model => Ok(Value::from(reference_info.reference().string_path().clone())),
+                    ReferenceType::DataSet => Ok(Value::from(reference_info.reference().string_path().clone())),
+                    ReferenceType::ModelField => Ok(Value::String(reference_info.reference.string_path().last().unwrap().clone())),
+                    ReferenceType::EnumMember => Ok(Value::String(reference_info.reference.string_path().last().unwrap().clone())),
+                    _ => Err(Error::new("cannot convert reference into value"))?,
                 }
             }
         }
     }
 }
 
-pub fn fetch_unit<I>(unit: &Unit, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Object> where I: InfoProvider {
+pub fn fetch_unit<I>(unit: &Unit, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Value> where I: InfoProvider {
     if unit.expressions().count() == 1 {
         fetch_expression(unit.expression_at(0).unwrap(), schema, info_provider, expect, namespace)
     } else {
@@ -69,16 +68,16 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
             let top = fetch_identifier_to_node(identifier, schema, info_provider, &expected, &top_filter_for_reference_type(ReferenceSpace::Default))?;
             let expr_info = fetch_identifier_to_expr_info(identifier, schema, info_provider, &expected,  &top_filter_for_reference_type(ReferenceSpace::Default))?;
             if let Some(constant) = top.as_constant_declaration() {
-                UnitFetchResult::Object(fetch_expression(constant.expression(), schema, info_provider, &expected, namespace)?)
+                UnitFetchResult::Value(fetch_expression(constant.expression(), schema, info_provider, &expected, namespace)?)
             } else {
                 UnitFetchResult::Reference(expr_info.reference_info().unwrap().clone(), None)
             }
         } else {
-            UnitFetchResult::Object(fetch_expression(expression, schema, info_provider, &expected, namespace)?)
+            UnitFetchResult::Value(fetch_expression(expression, schema, info_provider, &expected, namespace)?)
         });
     };
     match current {
-        UnitFetchResult::Object(current_value) => {
+        UnitFetchResult::Value(current_value) => {
             if current_value.is_interface_enum_variant() {
                 todo!()
             } else {
@@ -109,7 +108,7 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
                         let only_argument = fetch_expression(subscript.expression(), schema, info_provider, expected, namespace)?;
                         let only_argument_name = only_argument_declaration.name().name();
                         let arguments = Arguments::new(btreemap! {only_argument_name.to_owned() => only_argument});
-                        return Ok(UnitFetchResult::Object(instance_function.body.call(current_value, arguments)?));
+                        return Ok(UnitFetchResult::Value(instance_function.body.call(current_value, arguments)?));
                     }
                     _ => unreachable!(),
                 }
@@ -122,7 +121,7 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
                     match &expression.kind {
                         ExpressionKind::Identifier(identifier) => {
                             if let Some((_, v)) = config.items().iter().find(|(k, v)| k.named_key_without_resolving().unwrap() == identifier.name()) {
-                                return Ok(UnitFetchResult::Object(fetch_expression(v, schema, info_provider, expect, namespace)?));
+                                return Ok(UnitFetchResult::Value(fetch_expression(v, schema, info_provider, expect, namespace)?));
                             } else {
                                 Err(Error::new("config item not found"))?
                             }
@@ -137,7 +136,7 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
                     match &expression.kind {
                         ExpressionKind::Identifier(i) => {
                             if r#enum.option {
-                                Ok(UnitFetchResult::Object(Object::from(Value::OptionVariant(OptionVariant {
+                                Ok(UnitFetchResult::Value(Value::OptionVariant(Value::from(OptionVariant {
                                     value: r#enum.members().find(|m| m.name() == i.name()).unwrap().resolved().to_int().unwrap(),
                                     display: format!(".{}", i.name()),
                                 }))))
@@ -150,13 +149,13 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
                                         None,
                                     ), None))
                                 } else {
-                                    Ok(UnitFetchResult::Object(Object::from(InterfaceEnumVariant {
+                                    Ok(UnitFetchResult::Value(Value::from(InterfaceEnumVariant {
                                         value: i.name().to_owned(),
                                         args: None
                                     })))
                                 }
                             } else {
-                                Ok(UnitFetchResult::Object(Object::from(Value::String(i.name().to_owned()))))
+                                Ok(UnitFetchResult::Value(Value::from(Value::String(i.name().to_owned()))))
                             }
                         }
                         _ => unreachable!()
@@ -168,7 +167,7 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
                     match &expression.kind {
                         ExpressionKind::ArgumentList(argument_list) => {
                             let args = fetch_argument_list_or_empty(Some(argument_list), schema, info_provider, namespace)?;
-                            Ok(UnitFetchResult::Object(Object::from(InterfaceEnumVariant {
+                            Ok(UnitFetchResult::Value(Value::from(InterfaceEnumVariant {
                                 value: member.identifier().name().to_owned(),
                                 args: Some(args)
                             })))
@@ -202,7 +201,7 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
                             let function = r#struct.static_function("new").unwrap();
                             let arguments = fetch_argument_list(argument_list, schema, info_provider, namespace)?;
                             let result = function.body.call(arguments)?;
-                            return Ok(UnitFetchResult::Object(result));
+                            return Ok(UnitFetchResult::Value(result));
                         }
                         ExpressionKind::Identifier(i) => {
                             let static_function_definition = struct_definition.static_function(i.name()).unwrap();
@@ -222,7 +221,7 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
                             let function = r#struct.function(reference_info.reference().str_path().last().unwrap()).unwrap();
                             let arguments = fetch_argument_list(argument_list, schema, info_provider, namespace)?;
                             let result = function.body.call(this.unwrap(), arguments)?;
-                            return Ok(UnitFetchResult::Object(result));
+                            return Ok(UnitFetchResult::Value(result));
                         }
                         _ => unreachable!()
                     }
@@ -234,7 +233,7 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
                             let function = r#struct.static_function(reference_info.reference().str_path().last().unwrap()).unwrap();
                             let arguments = fetch_argument_list(argument_list, schema, info_provider, namespace)?;
                             let result = function.body.call(arguments)?;
-                            return Ok(UnitFetchResult::Object(result));
+                            return Ok(UnitFetchResult::Value(result));
                         }
                         _ => unreachable!()
                     }

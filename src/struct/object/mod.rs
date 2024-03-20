@@ -2,6 +2,7 @@ use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 use std::sync::{Arc, Mutex};
 use serde::{Serialize, Serializer};
+use crate::value::Value;
 
 #[derive(Debug, Clone)]
 pub struct Object {
@@ -10,7 +11,7 @@ pub struct Object {
 
 impl Object {
 
-    pub fn new(struct_path: Vec<String>, fields: BTreeMap<String, crate::object::Object>) -> Self {
+    pub fn new(struct_path: Vec<String>, fields: BTreeMap<String, Value>) -> Self {
         Self {
             inner: Arc::new(ObjectInner {
                 struct_path,
@@ -34,7 +35,7 @@ impl Serialize for Object {
 #[derive(Debug)]
 struct ObjectInner {
     struct_path: Vec<String>,
-    fields: Mutex<BTreeMap<String, crate::object::Object>>
+    fields: Mutex<BTreeMap<String, Value>>
 }
 
 impl Display for Object {

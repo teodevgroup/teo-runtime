@@ -10,10 +10,17 @@ use chrono::{NaiveDate, SecondsFormat};
 use regex::Regex;
 use bigdecimal::{BigDecimal, Zero};
 use itertools::Itertools;
+use teo_parser::r#type::synthesized_shape::SynthesizedShape;
+use teo_parser::r#type::Type;
 use super::file::File;
 use super::range::Range;
 use super::index::Index;
 use teo_result::{Error, Result};
+use crate::{model, r#struct};
+use crate::namespace::extensions::SynthesizedShapeReferenceExtension;
+use crate::namespace::Namespace;
+use crate::object::ObjectInner;
+use crate::pipeline::Pipeline;
 use super::interface_enum_variant::InterfaceEnumVariant;
 use super::option_variant::OptionVariant;
 
@@ -130,6 +137,18 @@ pub enum Value {
     /// Represents a Teon File.
     ///
     File(File),
+
+    /// Represents a model object.
+    ///
+    ModelObject(model::Object),
+
+    /// Represents a struct object.
+    ///
+    StructObject(r#struct::Object),
+
+    /// Represents a pipeline.
+    ///
+    Pipeline(Pipeline),
 }
 
 impl Value {
@@ -415,6 +434,39 @@ impl Value {
         }
     }
 
+    pub fn is_model_object(&self) -> bool {
+        self.as_model_object().is_some()
+    }
+
+    pub fn as_model_object(&self) -> Option<&model::Object> {
+        match self {
+            Value::ModelObject(v) => Some(v),
+            _ => None,
+        }
+    }
+
+    pub fn is_struct_object(&self) -> bool {
+        self.as_struct_object().is_some()
+    }
+
+    pub fn as_struct_object(&self) -> Option<&r#struct::Object> {
+        match self {
+            Value::StructObject(v) => Some(v),
+            _ => None,
+        }
+    }
+
+    pub fn is_pipeline(&self) -> bool {
+        self.as_pipeline().is_some()
+    }
+
+    pub fn as_pipeline(&self) -> Option<&Pipeline> {
+        match self {
+            Value::Pipeline(p) => Some(p),
+            _ => None,
+        }
+    }
+
     // Compound queries
 
     pub fn is_any_int(&self) -> bool {
@@ -495,6 +547,9 @@ impl Value {
             Value::OptionVariant(_) => "OptionVariant",
             Value::Regex(_) => "RegExp",
             Value::File(_) => "File",
+            Value::ModelObject(_) => "ModelObject",
+            Value::StructObject(_) => "StructObject",
+            Value::Pipeline(_) => "Pipeline",
         }
     }
 
@@ -530,6 +585,9 @@ impl Value {
             Value::OptionVariant(o) => o.normal_not(),
             Value::Regex(_) => false,
             Value::File(_) => false,
+            Value::Pipeline(_) => false,
+            Value::ModelObject(_) => false,
+            Value::StructObject(_) => false,
         })
     }
 
@@ -556,6 +614,76 @@ impl Value {
     pub fn is_true(&self) -> bool {
         self.is_bool() && self.as_bool().unwrap() == true
     }
+
+    pub fn try_into_err_prefix<T, E>(self, prefix: impl AsRef<str>) -> Result<T> where Error: From<E>, T: TryFrom<crate::value::Value, Error = E> {
+        let result: std::result::Result<T, E> = self.try_into();
+        match result {
+            Ok(t) => Ok(t),
+            Err(e) => Err(Error::new(format!("{}: {}", prefix.as_ref(), Error::from(e)))),
+        }
+    }
+
+    fn try_into_err_message_inner<T, E>(self) -> Result<T> where Error: From<E>, T: TryFrom<crate::value::Value, Error = E> {
+        Ok(self.try_into()?)
+    }
+
+    pub fn try_into_err_message<T, E>(self, message: impl AsRef<str>) -> Result<T> where Error: From<E>, T: TryFrom<crate::value::Value, Error = E> {
+        let result: Result<T> = self.try_into_err_message_inner();
+        match result {
+            Ok(t) => Ok(t),
+            Err(_) => Err(Error::new(message.as_ref())),
+        }
+    }
+
+    pub fn try_ref_into_err_prefix<'a, T: 'a, E>(&'a self, prefix: impl AsRef<str>) -> Result<T> where Error: From<E>, T: TryFrom<&'a crate::value::Value, Error = E> {
+        let result: std::result::Result<T, E> = self.try_into();
+        match result {
+            Ok(t) => Ok(t),
+            Err(e) => Err(Error::new(format!("{}: {}", prefix.as_ref(), Error::from(e)))),
+        }
+    }
+
+    pub fn try_ref_into_err_message<'a, T: 'a, E>(&'a self, message: impl AsRef<str>) -> Result<T> where Error: From<E>, T: TryFrom<&'a crate::value::Value, Error = E> {
+        let result: std::result::Result<T, E> = self.try_into();
+        match result {
+            Ok(t) => Ok(t),
+            Err(_) => Err(Error::new(message.as_ref())),
+        }
+    }
+
+    pub(crate) fn cast(&self, target: Option<&Type>, namespace: &Namespace) -> Self {
+        if let Some(target) = target {
+            do_cast(self, target, namespace)
+        } else {
+            self.clone()
+        }
+    }
+
+    pub(crate) fn default_struct_path(&self) -> Result<Vec<&'static str>> {
+        Ok(match self {
+            Value::Null => vec!["std", "Null"],
+            Value::Bool(_) => vec!["std", "Bool"],
+            Value::Int(_) => vec!["std", "Int"],
+            Value::Int64(_) => vec!["std", "Int64"],
+            Value::Float32(_) => vec!["std", "Float32"],
+            Value::Float(_) => vec!["std", "Float"],
+            Value::Decimal(_) => vec!["std", "Decimal"],
+            Value::ObjectId(_) => vec!["std", "ObjectId"],
+            Value::String(_) => vec!["std", "String"],
+            Value::Date(_) => vec!["std", "Date"],
+            Value::DateTime(_) => vec!["std", "DateTime"],
+            Value::Array(_) => vec!["std", "Array"],
+            Value::Dictionary(_) => vec!["std", "Dictionary"],
+            Value::Range(_) => vec!["std", "Range"],
+            Value::Tuple(_) => Err(Error::new("tuple struct is not supported"))?,
+            Value::Regex(_) => vec!["std", "Regex"],
+            Value::File(_) => vec!["std", "File"],
+            Value::OptionVariant(_) => Err(Error::new("option variant struct is not supported"))?,
+            _ => Err(Error::new("primitive struct is not supported for this type"))?,
+        })
+    }
+
+
 }
 
 impl Default for Value {
@@ -1012,6 +1140,134 @@ impl Display for Value {
                 f.write_str("/")
             }
             Value::File(file) => Display::fmt(file, f),
+            Value::ModelObject(model_object) => Display::fmt(model_object, f),
+            Value::StructObject(struct_object) => Display::fmt(struct_object, f),
+            Value::Pipeline(pipeline) => Display::fmt(pipeline, f),
         }
     }
+}
+
+
+fn do_cast(value: &Value, target: &Type, namespace: &Namespace) -> Value {
+    match target {
+        Type::Int => do_cast_to_int(value),
+        Type::Int64 => do_cast_to_int64(value),
+        Type::Float32 => do_cast_to_float32(value),
+        Type::Float => do_cast_to_float(value),
+        Type::Union(types) => {
+            let mut result = value.clone();
+            for t in types {
+                result = do_cast(&result, t, namespace);
+            }
+            result
+        }
+        Type::Enumerable(enumerable) => {
+            if let Some(array) = value.as_array() {
+                Value::Array(array.iter().map(|v| do_cast(v, enumerable.as_ref(), namespace)).collect())
+            } else {
+                do_cast(value, enumerable.as_ref(), namespace)
+            }
+        }
+        Type::Optional(inner) => do_cast(value, inner.as_ref(), namespace),
+        Type::Array(inner) => {
+            if let Some(array) = value.as_array() {
+                Value::Array(array.iter().map(|v| do_cast(v, inner.as_ref(), namespace)).collect())
+            } else {
+                value.clone()
+            }
+        }
+        Type::Dictionary(inner) => {
+            if let Some(dictionary) = value.as_dictionary() {
+                Value::Dictionary(dictionary.iter().map(|(k, v)| (k.clone(), do_cast(v, inner.as_ref(), namespace))).collect())
+            } else {
+                value.clone()
+            }
+        }
+        Type::Tuple(types) => {
+            let undetermined = Type::Undetermined;
+            if let Some(array) = value.as_array() {
+                Value::Tuple(array.iter().enumerate().map(|(i, v)| do_cast(v, types.get(i).unwrap_or(&undetermined), namespace)).collect())
+            } else if let Some(array) = value.as_tuple() {
+                Value::Tuple(array.iter().enumerate().map(|(i, v)| do_cast(v, types.get(i).unwrap_or(&undetermined), namespace)).collect())
+            } else {
+                value.clone()
+            }
+        }
+        Type::Range(inner) => {
+            if let Some(range) = value.as_range() {
+                Value::Range(Range {
+                    start: Box::new(do_cast(range.start.as_ref(), inner.as_ref(), namespace)),
+                    end: Box::new(do_cast(range.end.as_ref(), inner.as_ref(), namespace)),
+                    closed: range.closed
+                })
+            } else {
+                value.clone()
+            }
+        }
+        Type::SynthesizedShape(shape) => {
+            if let Some(dictionary) = value.as_dictionary() {
+                Value::Dictionary(do_cast_shape(dictionary, shape, namespace))
+            } else {
+                value.clone()
+            }
+        }
+        Type::SynthesizedShapeReference(reference) => {
+            if let Some(definition) = reference.fetch_synthesized_definition_for_namespace(namespace) {
+                do_cast(value, definition, namespace)
+            } else {
+                value.clone()
+            }
+        }
+        Type::InterfaceObject(reference, gens) => {
+            if let Some(dictionary) = value.as_dictionary() {
+                let interface = namespace.interface_at_path(&reference.str_path()).unwrap();
+                let shape = interface.shape_from_generics(gens);
+                Value::Dictionary(do_cast_shape(dictionary, &shape, namespace))
+            } else {
+                value.clone()
+            }
+        }
+        _ => value.clone(),
+    }
+}
+
+fn do_cast_to_int(value: &Value) -> Value {
+    match value {
+        Value::Float(f) => Value::Int(*f as i32),
+        Value::Float32(f) => Value::Int(*f as i32),
+        Value::Int64(i) => Value::Int(*i as i32),
+        _ => value.clone()
+    }
+}
+
+fn do_cast_to_int64(value: &Value) -> Value {
+    match value {
+        Value::Float(f) => Value::Int64(*f as i64),
+        Value::Float32(f) => Value::Int64(*f as i64),
+        Value::Int(i) => Value::Int64(*i as i64),
+        _ => value.clone(),
+    }
+}
+
+fn do_cast_to_float32(value: &Value) -> Value {
+    match value {
+        Value::Float(f) => Value::Float32(*f as f32),
+        Value::Int(i) => Value::Float32(*i as f32),
+        Value::Int64(i) => Value::Float32(*i as f32),
+        _ => value.clone(),
+    }
+}
+
+fn do_cast_to_float(value: &Value) -> Value {
+    match value {
+        Value::Float32(f) => Value::Float(*f as f64),
+        Value::Int(i) => Value::Float(*i as f64),
+        Value::Int64(i) => Value::Float(*i as f64),
+        _ => value.clone(),
+    }
+}
+
+fn do_cast_shape(dictionary: &IndexMap<String, Value>, shape: &SynthesizedShape, namespace: &Namespace) -> IndexMap<String, Value> {
+    let undetermined = Type::Undetermined;
+    dictionary.iter().map(|(k, v)| (k.clone(), do_cast(v, shape.get(k).unwrap_or(&undetermined), namespace))).collect()
 }

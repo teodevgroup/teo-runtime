@@ -62,11 +62,6 @@ impl Serialize for Value {
                 map.serialize_entry("$tuple", &t)?;
                 map.end()
             }
-            Value::EnumVariant(e) => {
-                let mut map = serializer.serialize_map(Some(1))?;
-                map.serialize_entry("$enumVariant", &e)?;
-                map.end()
-            }
             Value::OptionVariant(o) => {
                 let mut map = serializer.serialize_map(Some(1))?;
                 map.serialize_entry("$optionVariant", &o)?;
@@ -80,6 +75,26 @@ impl Serialize for Value {
             Value::File(f) => {
                 let mut map = serializer.serialize_map(Some(1))?;
                 map.serialize_entry("$file", &f)?;
+                map.end()
+            }
+            Value::ModelObject(model_object) => {
+                let mut map = serializer.serialize_map(Some(1))?;
+                map.serialize_entry("$modelObject", model_object)?;
+                map.end()
+            },
+            Value::StructObject(struct_object) => {
+                let mut map = serializer.serialize_map(Some(1))?;
+                map.serialize_entry("$structObject", struct_object)?;
+                map.end()
+            },
+            Value::Pipeline(pipeline) => {
+                let mut map = serializer.serialize_map(Some(1))?;
+                map.serialize_entry("$pipeline", pipeline)?;
+                map.end()
+            }
+            Value::InterfaceEnumVariant(interface_enum_variant) => {
+                let mut map = serializer.serialize_map(Some(1))?;
+                map.serialize_entry("$interfaceEnumVariant", interface_enum_variant)?;
                 map.end()
             }
         }

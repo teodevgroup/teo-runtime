@@ -7,7 +7,7 @@ impl TryFrom<&Object> for Sort {
 
     type Error = Error;
 
-    fn try_from(value: &Object) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: &Object) -> Result<Self, Self::Error> {
         let teon: Value = value.try_into()?;
         let enum_variant: &str = teon.try_into()?;
         Ok(match enum_variant {
@@ -22,7 +22,7 @@ impl TryFrom<&Value> for Sort {
 
     type Error = Error;
 
-    fn try_from(value: &Value) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: &Value) -> Result<Self, Self::Error> {
         let enum_variant: &str = value.try_into()?;
         Ok(match enum_variant {
             "asc" => Sort::Asc,

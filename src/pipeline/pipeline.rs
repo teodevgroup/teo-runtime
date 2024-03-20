@@ -1,4 +1,5 @@
 use std::fmt::{Display, Formatter};
+use itertools::Itertools;
 use serde::Serialize;
 use crate::pipeline::item::BoundedItem;
 
@@ -30,7 +31,7 @@ impl Display for Pipeline {
             f.write_str(&item.path.join("."))?;
             if !item.arguments.is_empty() {
                 f.write_str("(")?;
-                //f.write_str(&item.arguments.iter().map(|(k, v)| format!("{k}: {}", v)).join(", "))?;
+                f.write_str(&item.arguments.iter().map(|(k, v)| format!("{k}: {}", v)).join(", "))?;
                 f.write_str(")")?;
             }
         }
