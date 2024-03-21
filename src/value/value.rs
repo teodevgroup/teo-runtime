@@ -498,7 +498,7 @@ impl Value {
         }
     }
 
-    pub fn into_vec<T>(self) -> Result<Vec<T>> where T: TryFrom<Value>, T::Error: Display {
+    pub fn wrap_into_vec<T>(self) -> Result<Vec<T>> where T: TryFrom<Value>, T::Error: Display {
         match self {
             Value::Array(array) => {
                 let mut retval = vec![];
