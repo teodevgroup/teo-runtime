@@ -699,6 +699,83 @@ impl Value {
         })
     }
 
+    pub fn is_of_type(&self, t: &Type, namespace: &Namespace) -> bool {
+        match t {
+            Type::Undetermined => false,
+            Type::Ignored => true,
+            Type::Any => true,
+            Type::Union(types) => types.iter().any(|t| self.is_of_type(t, namespace)),
+            Type::Enumerable(inner) => if let Some(array) = self.as_array() {
+                array.iter().all(|v| v.is_of_type(inner, namespace))
+            } else {
+                self.is_of_type(inner, namespace)
+            },
+            Type::Optional(inner) => self.is_null() || self.is_of_type(inner, namespace),
+            Type::FieldType(_, _) => false,
+            Type::FieldName(_) => false,
+            Type::ShapeField(_) => false,
+            Type::GenericItem(_) => false,
+            Type::Keyword(_) => false,
+            Type::Type => self.is_type(),
+            Type::TypeValueAsType(_) => false,
+            Type::Null => self.is_null(),
+            Type::Bool => self.is_bool(),
+            Type::Int => self.is_int(),
+            Type::Int64 => self.is_int64(),
+            Type::Float32 => self.is_float32(),
+            Type::Float => self.is_float(),
+            Type::Decimal => self.is_decimal(),
+            Type::String => self.is_string(),
+            Type::ObjectId => self.is_object_id(),
+            Type::Date => self.is_date(),
+            Type::DateTime => self.is_datetime(),
+            Type::File => self.is_file(),
+            Type::Regex => self.is_regexp(),
+            Type::Array(inner) => if let Some(array) = self.as_array() {
+                array.iter().all(|v| v.is_of_type(inner, namespace))
+            } else {
+                false
+            },
+            Type::Dictionary(inner) => if let Some(dictionary) = self.as_dictionary() {
+                dictionary.values().all(|v| v.is_of_type(inner, namespace))
+            } else {
+                false
+            },
+            Type::Tuple(types) => if let Some(tuple) = self.as_tuple() {
+                types.len() == tuple.len() && tuple.iter().zip(types).all(|(a, b)| a.is_of_type(b, namespace))
+            } else {
+                false
+            },
+            Type::Range(inner) => if let Some(range) = self.as_range() {
+                range.start.is_of_type(inner, namespace) && range.end.is_of_type(inner, namespace)
+            } else {
+                false
+            }
+            Type::SynthesizedShape(_) => false, // todo
+            Type::SynthesizedShapeReference(_) => false, // todo
+            Type::DeclaredSynthesizedShape(_, _) => false, // todo
+            Type::EnumVariant(r) => false, // todo
+            Type::SynthesizedEnum(_) => false, // todo
+            Type::SynthesizedEnumReference(_) => false, // todo
+            Type::SynthesizedInterfaceEnum(_) => false, // todo
+            Type::SynthesizedInterfaceEnumReference(_) => false, // todo
+            Type::Shape => false,
+            Type::Model => false,
+            Type::ModelObject(r) => if let Some(object) = self.as_model_object() {
+                object.model().path() == r.str_path()
+            } else {
+                false
+            },
+            Type::InterfaceObject(_, _) => false, // todo
+            Type::StructObject(_, _) => false, // todo
+            Type::Middleware => false, // todo
+            Type::DataSet => false, // todo
+            Type::DataSetObject(_) => false, // todo
+            Type::DataSetGroup(_) => false, // todo
+            Type::DataSetRecord(_, _) => false, // todo
+            Type::Pipeline(_, _) => false, // todo
+        }
+    }
 
 }
 

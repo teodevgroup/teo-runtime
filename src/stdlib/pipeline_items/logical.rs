@@ -1,3 +1,4 @@
+use teo_parser::r#type::Type;
 use crate::arguments::Arguments;
 use teo_result::Error;
 use crate::namespace::Namespace;
@@ -110,7 +111,13 @@ pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) 
     });
 
     namespace.define_pipeline_item("cast", |args: Arguments, ctx: Ctx| async move {
-        // todo!()
+
+        let target_type: &Type = args.get("target")?;
+        if ctx.value().is_of_type(target_type, ctx.transaction_ctx().namespace()) {
+            Ok(ctx.value().clone())
+        } else {
+            Err(Error::new("cannot cast to target type"))
+        }
     });
 
     namespace.define_pipeline_item("asAny", |args: Arguments, ctx: Ctx| async move {
