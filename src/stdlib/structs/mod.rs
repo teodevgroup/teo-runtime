@@ -119,6 +119,7 @@ pub(in crate::stdlib) fn load_structs(namespace: &mut Namespace) {
                 Value::ModelObject(_) => Err(Error::new("String.new: model object is not valid"))?,
                 Value::StructObject(_) => Err(Error::new("String.new: struct object is not valid"))?,
                 Value::Pipeline(_) => Err(Error::new("String.new: pipeline is not valid"))?,
+                Value::Type(_) => Err(Error::new("String.new: type as value argument is not valid"))?,
             }))
         });
     });

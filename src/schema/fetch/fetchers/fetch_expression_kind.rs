@@ -2,6 +2,7 @@ use teo_parser::ast::expression::{Expression, ExpressionKind};
 use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::ast::schema::Schema;
 use teo_parser::r#type::Type;
+use teo_parser::traits::resolved::Resolve;
 use teo_result::Result;
 use crate::namespace::Namespace;
 use crate::schema::fetch::fetch_expression::fetch_expression;
@@ -34,5 +35,6 @@ pub fn fetch_expression_kind<I>(expression: &Expression, schema: &Schema, info_p
         ExpressionKind::NamedExpression(_) => unreachable!(),
         ExpressionKind::BracketExpression(e) => fetch_expression(e.expression(), schema, info_provider, expect, namespace),
         ExpressionKind::EmptyPipeline(_) => unreachable!(),
+        ExpressionKind::TypeAsValueExpression(t) => Ok(Value::Type(t.type_expr().resolved().clone())),
     }
 }

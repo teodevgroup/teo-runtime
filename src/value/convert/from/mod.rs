@@ -22,3 +22,4 @@ pub mod model_object;
 pub mod pipeline;
 pub mod struct_object;
 pub mod parser_value;
+pub mod r#type;

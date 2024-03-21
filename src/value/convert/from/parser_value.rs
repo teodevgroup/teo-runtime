@@ -25,6 +25,7 @@ impl From<ParserValue> for Value {
             ParserValue::OptionVariant(v) => Value::OptionVariant(OptionVariant::from(v)),
             ParserValue::InterfaceEnumVariant(v) => Value::InterfaceEnumVariant(InterfaceEnumVariant::from(v)),
             ParserValue::Regex(v) => Value::Regex(v),
+            ParserValue::Type(t) => Value::Type(t),
         }
     }
 }

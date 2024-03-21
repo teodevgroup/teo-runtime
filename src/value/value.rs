@@ -148,6 +148,10 @@ pub enum Value {
     /// Represents a pipeline.
     ///
     Pipeline(Pipeline),
+
+    /// Represents a type as value.
+    ///
+    Type(Type),
 }
 
 impl Value {
@@ -466,6 +470,17 @@ impl Value {
         }
     }
 
+    pub fn is_type(&self) -> bool {
+        self.as_type().is_some()
+    }
+
+    pub fn as_type(&self) -> Option<&Type> {
+        match self {
+            Value::Type(p) => Some(p),
+            _ => None,
+        }
+    }
+
     // Compound queries
 
     pub fn is_any_int(&self) -> bool {
@@ -549,6 +564,7 @@ impl Value {
             Value::ModelObject(_) => "ModelObject",
             Value::StructObject(_) => "StructObject",
             Value::Pipeline(_) => "Pipeline",
+            Value::Type(_) => "Type",
         }
     }
 
@@ -587,6 +603,7 @@ impl Value {
             Value::Pipeline(_) => false,
             Value::ModelObject(_) => false,
             Value::StructObject(_) => false,
+            Value::Type(_) => false,
         })
     }
 
@@ -614,7 +631,7 @@ impl Value {
         self.is_bool() && self.as_bool().unwrap() == true
     }
 
-    pub fn try_into_err_prefix<T, E>(self, prefix: impl AsRef<str>) -> Result<T> where Error: From<E>, T: TryFrom<crate::value::Value, Error = E> {
+    pub fn try_into_err_prefix<T, E>(self, prefix: impl AsRef<str>) -> Result<T> where Error: From<E>, T: TryFrom<Value, Error = E> {
         let result: std::result::Result<T, E> = self.try_into();
         match result {
             Ok(t) => Ok(t),
@@ -622,11 +639,11 @@ impl Value {
         }
     }
 
-    fn try_into_err_message_inner<T, E>(self) -> Result<T> where Error: From<E>, T: TryFrom<crate::value::Value, Error = E> {
+    fn try_into_err_message_inner<T, E>(self) -> Result<T> where Error: From<E>, T: TryFrom<Value, Error = E> {
         Ok(self.try_into()?)
     }
 
-    pub fn try_into_err_message<T, E>(self, message: impl AsRef<str>) -> Result<T> where Error: From<E>, T: TryFrom<crate::value::Value, Error = E> {
+    pub fn try_into_err_message<T, E>(self, message: impl AsRef<str>) -> Result<T> where Error: From<E>, T: TryFrom<Value, Error = E> {
         let result: Result<T> = self.try_into_err_message_inner();
         match result {
             Ok(t) => Ok(t),
@@ -634,7 +651,7 @@ impl Value {
         }
     }
 
-    pub fn try_ref_into_err_prefix<'a, T: 'a, E>(&'a self, prefix: impl AsRef<str>) -> Result<T> where Error: From<E>, T: TryFrom<&'a crate::value::Value, Error = E> {
+    pub fn try_ref_into_err_prefix<'a, T: 'a, E>(&'a self, prefix: impl AsRef<str>) -> Result<T> where Error: From<E>, T: TryFrom<&'a Value, Error = E> {
         let result: std::result::Result<T, E> = self.try_into();
         match result {
             Ok(t) => Ok(t),
@@ -642,7 +659,7 @@ impl Value {
         }
     }
 
-    pub fn try_ref_into_err_message<'a, T: 'a, E>(&'a self, message: impl AsRef<str>) -> Result<T> where Error: From<E>, T: TryFrom<&'a crate::value::Value, Error = E> {
+    pub fn try_ref_into_err_message<'a, T: 'a, E>(&'a self, message: impl AsRef<str>) -> Result<T> where Error: From<E>, T: TryFrom<&'a Value, Error = E> {
         let result: std::result::Result<T, E> = self.try_into();
         match result {
             Ok(t) => Ok(t),
@@ -1142,6 +1159,7 @@ impl Display for Value {
             Value::ModelObject(model_object) => Display::fmt(model_object, f),
             Value::StructObject(struct_object) => Display::fmt(struct_object, f),
             Value::Pipeline(pipeline) => Display::fmt(pipeline, f),
+            Value::Type(t) => Display::fmt(t, f),
         }
     }
 }

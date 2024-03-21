@@ -97,6 +97,11 @@ impl Serialize for Value {
                 map.serialize_entry("$interfaceEnumVariant", interface_enum_variant)?;
                 map.end()
             }
+            Value::Type(t) => {
+                let mut map = serializer.serialize_map(Some(1))?;
+                map.serialize_entry("$type", t)?;
+                map.end()
+            }
         }
     }
 }

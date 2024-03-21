@@ -23,6 +23,7 @@ pub mod file;
 pub mod model_object;
 pub mod struct_object;
 pub mod pipeline;
+pub mod r#type;
 
 pub mod action;
 pub mod client_host;
