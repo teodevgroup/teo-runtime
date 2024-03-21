@@ -66,15 +66,15 @@ pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) 
         }
     });
 
-    // namespace.define_pipeline_item("all", |args: Arguments, ctx: Ctx| async move {
-    //     let pipelines: Vec<&Pipeline> = args.get("pipeline").error_message_prefixed("all")?;
-    //     Ok(ctx.value().clone())
-    // });
-    //
-    // namespace.define_pipeline_item("any", |args: Arguments, ctx: Ctx| async move {
-    //     let pipelines: Vec<&Pipeline> = args.get("pipelines").error_message_prefixed("any")?;
-    //     Ok(ctx.value().clone())
-    // });
+    namespace.define_pipeline_item("all", |args: Arguments, ctx: Ctx| async move {
+        // let pipelines: Vec<&Pipeline> = args.get("pipeline").error_message_prefixed("all")?;
+        // Ok(ctx.value().clone())
+    });
+
+    namespace.define_pipeline_item("any", |args: Arguments, ctx: Ctx| async move {
+        // let pipelines: Vec<&Pipeline> = args.get("pipelines").error_message_prefixed("any")?;
+        // Ok(ctx.value().clone())
+    });
 
     namespace.define_pipeline_item("when", |args: Arguments, ctx: Ctx| async move {
         let action: Action = args.get("action")?;
@@ -90,5 +90,21 @@ pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) 
         } else {
             Ok(ctx.value().clone())
         }
+    });
+
+    namespace.define_pipeline_item("match", |args: Arguments, ctx: Ctx| async move {
+        // todo!()
+    });
+
+    namespace.define_pipeline_item("case", |args: Arguments, ctx: Ctx| async move {
+        // todo!()
+    });
+
+    namespace.define_pipeline_item("cast", |args: Arguments, ctx: Ctx| async move {
+        // todo!()
+    });
+
+    namespace.define_pipeline_item("asAny", |args: Arguments, ctx: Ctx| async move {
+        Ok::<Value, Error>(ctx.value().clone())
     });
 }

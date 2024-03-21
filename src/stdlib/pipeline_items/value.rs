@@ -10,8 +10,33 @@ use crate::value::Value;
 
 pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
 
+    namespace.define_pipeline_item("is", |args: Arguments, ctx: Ctx| async move {
+        let input: &Value = ctx.value();
+        let rhs: Value = ctx.resolve_pipeline_with_err_prefix(
+            args.get_object("value").error_message_prefixed("is(value)")?,
+            "is(value)"
+        ).await?;
+        if input == &rhs {
+            Ok(ctx.value().clone())
+        } else if input.is_model_object() && rhs.is_model_object() {
+            let input = input.as_model_object().unwrap();
+            let rhs = rhs.as_model_object().unwrap();
+            if input.model().path() == rhs.model().path() {
+                if input.identifier() == rhs.identifier() {
+                    Ok(ctx.value().clone())
+                } else {
+                    Err(Error::new("input is not value"))?
+                }
+            } else {
+                Err(Error::new("input is not value"))?
+            }
+        } else {
+            Err(Error::new("input is not value"))?
+        }
+    });
+
     namespace.define_pipeline_item("eq", |args: Arguments, ctx: Ctx| async move {
-        let input: &Value = ctx.value().try_ref_into_err_prefix("eq")?;
+        let input: &Value = ctx.value();
         let rhs_object: Value = ctx.resolve_pipeline_with_err_prefix(
             args.get_object("rhs").error_message_prefixed("eq(rhs)")?,
             "eq(rhs)",
