@@ -29,3 +29,5 @@ pub mod traits;
 pub mod data_set;
 pub mod value;
 pub mod error_ext;
+
+pub use value::Value;
