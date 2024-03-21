@@ -166,7 +166,7 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
             "ids": id_values,
         });
         let pipeline_ctx = pipeline::Ctx::new(Value::from(pipeline_input), object.clone(), path!["credentials"], CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx.transaction_ctx(), Some(req_ctx.clone()));
-        let _ = pipeline_ctx.run_pipeline_ignore_return_value(auth_checker_pipeline).await?;
+        let _ = pipeline_ctx.run_pipeline_ignore_return_value(auth_checker_pipeline).await.map_err(|mut e| { e.code = 401; e})?;
         let credentials_pipeline_ctx = pipeline::Ctx::new(Value::from(Value::Dictionary(credentials.clone())), object.clone(), path!["credentials"], CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx.transaction_ctx(), Some(req_ctx.clone()));
         let self_pipeline_ctx = pipeline::Ctx::new(Value::from(&object), object.clone(), path![], CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx.transaction_ctx(), Some(req_ctx.clone()));
         if let Some(validator) = model.data.get("identity:validateAccount") {
