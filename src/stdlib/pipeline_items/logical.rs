@@ -103,15 +103,36 @@ pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) 
     });
 
     namespace.define_pipeline_item("match", |args: Arguments, ctx: Ctx| async move {
-        // todo!()
+        let value: Value = ctx.resolve_pipeline(args.get_object("value")?).await?;
+        let new_ctx = ctx.alter_value(value);
+        let arms: Vec<&Pipeline> = args.get("arms")?;
+        for arm in arms {
+            match new_ctx.run_pipeline(arm).await {
+                Ok(result_value) => return Ok(result_value),
+                Err(e) => {
+                    if e.message() != "__matchCase_internal__" {
+                        return Err(e);
+                    }
+                }
+            }
+        }
+        Err(Error::new("cannot find a matched match arm"))
     });
 
     namespace.define_pipeline_item("case", |args: Arguments, ctx: Ctx| async move {
-        // todo!()
+        let arm: &Pipeline = args.get("arm")?;
+        let exec: &Pipeline = args.get("exec")?;
+        let check_result: Result<Value> = ctx.run_pipeline(arm).await;
+        match check_result {
+            Ok(new_value) => {
+                let new_ctx = ctx.alter_value(new_value);
+                Ok(new_ctx.run_pipeline(exec).await?)
+            },
+            Err(_) => Err(Error::new("__matchCase_internal__")),
+        }
     });
 
     namespace.define_pipeline_item("cast", |args: Arguments, ctx: Ctx| async move {
-
         let target_type: &Type = args.get("target")?;
         if ctx.value().is_of_type(target_type, ctx.transaction_ctx().namespace()) {
             Ok(ctx.value().clone())
