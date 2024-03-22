@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex, MutexGuard};
 use std::sync::atomic::{AtomicBool, Ordering};
 use serde::{Serialize, Serializer};
 use crate::value::Value;
-use teo_result::{Error, Result};
+use teo_result::{Error, Result, ResultExt};
 use tokio::sync::Mutex as TokioMutex;
 use crate::action::Action;
 use crate::connection::transaction;
@@ -210,25 +210,25 @@ impl Object {
 
     async fn check_model_write_permission<'a>(&self, path: impl AsRef<KeyPath>) -> Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        ctx.run_pipeline_ignore_return_value(&self.model().can_mutate).await?;
+        ctx.run_pipeline_ignore_return_value(&self.model().can_mutate).await.alter_error_code(401)?;
         Ok(())
     }
 
     async fn check_model_read_permission<'a>(&self, path: impl AsRef<KeyPath>) -> Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        ctx.run_pipeline_ignore_return_value(&self.model().can_read).await?;
+        ctx.run_pipeline_ignore_return_value(&self.model().can_read).await.alter_error_code(401)?;
         Ok(())
     }
 
     async fn check_field_write_permission<'a>(&self, field: &Field, path: impl AsRef<KeyPath>) -> Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        ctx.run_pipeline_ignore_return_value(&field.can_mutate).await?;
+        ctx.run_pipeline_ignore_return_value(&field.can_mutate).await.alter_error_code(401)?;
         Ok(())
     }
 
     async fn check_field_read_permission<'a>(&self, field: &Field, path: impl AsRef<KeyPath>) -> Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        ctx.run_pipeline_ignore_return_value(&field.can_read).await?;
+        ctx.run_pipeline_ignore_return_value(&field.can_read).await.alter_error_code(401)?;
         Ok(())
     }
 

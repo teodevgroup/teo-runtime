@@ -11,7 +11,7 @@ repository = "https://github.com/teocloud/teo-runtime"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-teo-result = { version = "0.2.20", path = "../teo-result" }
+teo-result = { version = "0.2.21", path = "../teo-result" }
 teo-parser = { version = "0.2.21", path = "../teo-parser" }
 maplit = "1.0.2"
 indexmap = { version = "2.2.5", features = ["serde"] }

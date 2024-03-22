@@ -88,6 +88,7 @@ pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) 
     namespace.define_pipeline_item("when", |args: Arguments, ctx: Ctx| async move {
         let action: Action = args.get("action")?;
         let pipeline: Pipeline = args.get("pipeline")?;
+        let otherwise: Option<&Pipeline> = args.get_optional("otherwise")?;
         let object_action = if ctx.action().is_empty() {
             ctx.object().action()
         } else {
@@ -97,7 +98,11 @@ pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) 
             let result = ctx.run_pipeline(&pipeline).await?;
             Ok(result)
         } else {
-            Ok(ctx.value().clone())
+            if let Some(otherwise) = otherwise {
+                Ok(ctx.run_pipeline::<Value, _>(otherwise).await?)
+            } else {
+                Ok(ctx.value().clone())
+            }
         }
     });
 
