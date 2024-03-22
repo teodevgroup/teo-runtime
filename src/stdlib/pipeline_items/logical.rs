@@ -5,7 +5,6 @@ use crate::namespace::Namespace;
 use crate::pipeline::Ctx;
 use crate::pipeline::pipeline::Pipeline;
 use teo_result::{Result, ResultExt};
-use tokio::net::unix::pipe::pipe;
 use crate::action::Action;
 use crate::value::Value;
 
