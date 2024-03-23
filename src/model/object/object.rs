@@ -119,8 +119,10 @@ impl Object {
     pub async fn set_teon_with_path_and_user_mode(&self, value: &Value, path: &KeyPath, bypass_permission_check: bool) -> teo_result::Result<()> {
         let model = self.model();
         // permission
-        if !bypass_permission_check {
-            self.check_model_write_permission(path).await?;
+        if !self.is_new() {
+            if !bypass_permission_check {
+                self.check_model_write_permission(path).await?;
+            }
         }
         // get value map
         let value_map = value.as_dictionary().unwrap();
@@ -192,6 +194,12 @@ impl Object {
                 }
             }
         };
+        // permission
+        if self.is_new() {
+            if !bypass_permission_check {
+                self.check_model_write_permission(path).await?;
+            }
+        }
         // set flag
         self.inner.is_initialized.store(true, Ordering::SeqCst);
         Ok(())
