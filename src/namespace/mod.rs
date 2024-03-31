@@ -31,13 +31,14 @@ use educe::Educe;
 use serde::Serialize;
 use teo_parser::ast::handler::HandlerInputFormat;
 use teo_parser::r#type::Type;
+use crate::config::admin::Admin;
 use crate::handler::ctx_argument::HandlerCtxArgument;
 use crate::handler::Handler;
 use crate::handler::handler::Method;
 use crate::pipeline::item::callback::{CallbackArgument, CallbackResult};
 use crate::pipeline::item::compare::CompareArgument;
 use crate::pipeline::item::transform::{TransformArgument, TransformResult};
-use crate::pipeline::item::validator::{ValidateArgument, ValidateResult, Validity};
+use crate::pipeline::item::validator::{ValidateArgument, ValidateResult};
 use crate::traits::named::Named;
 use crate::value::Value;
 
@@ -71,6 +72,7 @@ pub struct Namespace {
     pub clients: BTreeMap<String, Client>,
     pub entities: BTreeMap<String, Entity>,
     pub debug: Option<Debug>,
+    pub admin: Option<Admin>,
     pub middlewares_block: Option<middleware::Block>,
     pub database: Option<Database>,
     pub connector_reference: Option<Vec<String>>,
@@ -118,6 +120,7 @@ impl Namespace {
             clients: btreemap! {},
             entities: btreemap! {},
             debug: None,
+            admin: None,
             middlewares_block: None,
             database: None,
             connector_reference: None,

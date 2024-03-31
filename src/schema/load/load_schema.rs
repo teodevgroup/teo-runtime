@@ -11,6 +11,7 @@ use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::traits::node_trait::NodeTrait;
 use crate::namespace::Namespace;
 use teo_result::Result;
+use crate::schema::load::load_admin::load_admin;
 use crate::schema::load::load_client::load_client;
 use crate::schema::load::load_connector::load_connector;
 use crate::schema::load::load_database_information::load_database_information;
@@ -79,6 +80,13 @@ pub async fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignore
     for debug in schema.clients() {
         if debug.is_available() {
             load_client(main_namespace, schema, debug, &mut diagnostics)?;
+        }
+    }
+
+    // load admin dashboard
+    if let Some(admin) = schema.admin() {
+        if admin.is_available() {
+            load_admin(main_namespace, schema, admin, &mut diagnostics)?;
         }
     }
 
