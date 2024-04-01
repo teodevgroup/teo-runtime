@@ -1,4 +1,5 @@
 use crate::namespace::Namespace;
+use crate::stdlib::admin::load_admin_library;
 use crate::stdlib::decorators::enum_decorators::load_enum_decorators;
 use crate::stdlib::decorators::enum_member_decorators::load_enum_member_decorators;
 use crate::stdlib::decorators::handler_decorators::load_handler_decorators;
@@ -60,4 +61,5 @@ pub fn load(namespace: &mut Namespace) {
     load_log_request_middleware(std_namespace);
     // libraries
     load_identity_library(std_namespace);
+    load_admin_library(std_namespace);
 }

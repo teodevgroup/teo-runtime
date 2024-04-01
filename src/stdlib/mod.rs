@@ -4,3 +4,4 @@ mod decorators;
 mod middlewares;
 mod structs;
 mod identity;
+mod admin;
