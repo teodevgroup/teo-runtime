@@ -217,12 +217,18 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
         let teon_value: Value = Value::from(claims.id);
         let object: Option<model::Object> = model_ctx.find_unique(&teon_value).await?;
         if let Some(object) = object {
-            return Ok(Response::data(object.to_teon().await?));
+            let include = req_ctx.body().get("include");
+            let select = req_ctx.body().get("select");
+            let obj = object.refreshed(include, select).await?;
+            let obj_teon = obj.to_teon().await?;
+            return Ok(Response::data_meta(obj_teon, teon!({
+                "token": token
+            })));
         } else {
             return Err(Error::unauthorized_message("identity not found"));
         }
 
-        Ok::<Response, Error>(Response::html("")?)
+        // Ok::<Response, Error>(Response::html("")?)
     });
 
     identity_namespace.define_middleware("identityFromJwt", |arguments: Arguments| async move {
