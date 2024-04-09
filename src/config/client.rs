@@ -49,7 +49,7 @@ impl ClientLanguage {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub enum ClientHost {
     String(String),
     Inject(String),
