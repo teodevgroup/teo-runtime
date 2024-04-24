@@ -299,13 +299,17 @@ impl Ctx {
         transaction.group_by(model, finder, self.clone(), path).await
     }
 
-    pub async fn sql<T, E>(&self, model: &'static Model, sql: &str) -> Result<T> where T: TryFrom<Value, Error=E>, Error: From<E> {
+    pub async fn sql<T, E>(&self, model: &'static Model, sql: &str) -> Result<Vec<T>> where T: TryFrom<Value, Error=E>, Error: From<E> {
         let transaction = self.transaction_for_model(model).await;
         let value = transaction.sql(model, sql, self.clone()).await?;
-        match value.try_into() {
-            Ok(v) => Ok(v),
-            Err(e) => Err(e.into()),
+        let mut result: Vec<T> = vec![];
+        for v in value {
+            match v.try_into() {
+                Ok(v) => result.push(v),
+                Err(e) => return Err(e.into()),
+            }
         }
+        Ok(result)
     }
 
     // MARK: - Create an object
