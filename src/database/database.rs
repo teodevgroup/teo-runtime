@@ -49,6 +49,13 @@ impl Database {
         }
     }
 
+    pub fn is_sql(&self) -> bool {
+        match self {
+            Database::MongoDB => false,
+            _ => true,
+        }
+    }
+
     pub fn default_database_type(&self, r#type: &Type, parser_namespace: &Schema) -> Result<DatabaseType> {
         match self {
             Database::MongoDB => self.default_mongo_database_type(r#type),

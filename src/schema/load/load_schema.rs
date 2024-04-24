@@ -238,12 +238,6 @@ pub async fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignore
     // load model opposite relations
     load_model_opposite_relations(main_namespace);
 
-
-    // load data set
-    for data_set_declaration in schema.data_sets() {
-
-    }
-
     // diagnostics
     if !ignores_loading {
         print_diagnostics(&diagnostics, true);
