@@ -27,7 +27,7 @@ pub fn load_model(main_namespace: &mut Namespace, schema: &Schema, model_declara
     for decorator in model_declaration.decorators() {
         if let Some(decorator_declaration) = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration() {
             if let Some(decorator_implementation) = main_namespace.model_decorator_at_path(&decorator_declaration.str_path()) {
-                let args = fetch_decorator_arguments(decorator, schema, model_declaration, main_namespace)?;
+                let args = fetch_decorator_arguments(decorator, schema, model_declaration, main_namespace, diagnostics)?;
                 decorator_implementation.call.call(args, &mut model)?;
             }
         }
@@ -84,7 +84,7 @@ fn load_model_field(main_namespace: &mut Namespace, field_declaration: &teo_pars
     for decorator in field_declaration.decorators() {
         if let Some(decorator_declaration) = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration() {
             if let Some(decorator_implementation) = main_namespace.model_field_decorator_at_path(&decorator_declaration.str_path()) {
-                let args = fetch_decorator_arguments(decorator, schema, field_declaration, main_namespace)?;
+                let args = fetch_decorator_arguments(decorator, schema, field_declaration, main_namespace, diagnostics)?;
                 decorator_implementation.call.call(args, &mut field)?;
             }
         }
@@ -127,7 +127,7 @@ fn load_model_relation(main_namespace: &mut Namespace, field_declaration: &teo_p
     for decorator in field_declaration.decorators() {
         if let Some(decorator_declaration) = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration() {
             if let Some(decorator_implementation) = main_namespace.model_relation_decorator_at_path(&decorator_declaration.str_path()) {
-                let args = fetch_decorator_arguments(decorator, schema, field_declaration, main_namespace)?;
+                let args = fetch_decorator_arguments(decorator, schema, field_declaration, main_namespace, diagnostics)?;
                 decorator_implementation.call.call(args, &mut relation)?;
             }
         }
@@ -151,7 +151,7 @@ fn load_model_property(main_namespace: &mut Namespace, field_declaration: &teo_p
     for decorator in field_declaration.decorators() {
         if let Some(decorator_declaration) = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration() {
             if let Some(decorator_implementation) = main_namespace.model_property_decorator_at_path(&decorator_declaration.str_path()) {
-                let args = fetch_decorator_arguments(decorator, schema, field_declaration, main_namespace)?;
+                let args = fetch_decorator_arguments(decorator, schema, field_declaration, main_namespace, diagnostics)?;
                 decorator_implementation.call.call(args, &mut property)?;
             }
         }

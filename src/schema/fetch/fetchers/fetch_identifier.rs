@@ -4,6 +4,7 @@ use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::ast::schema::Schema;
 use teo_parser::ast::node::Node;
 use teo_parser::ast::reference_space::ReferenceSpace;
+use teo_parser::diagnostics::diagnostics::Diagnostics;
 use teo_parser::expr::ExprInfo;
 use teo_parser::r#type::Type;
 use teo_parser::search::search_identifier_path::{search_identifier_path_names_with_filter_to_expr_info, search_identifier_path_names_with_filter_to_top};
@@ -14,11 +15,11 @@ use crate::value::Value;
 use crate::namespace::Namespace;
 use crate::schema::fetch::fetch_expression::fetch_expression;
 
-pub fn fetch_identifier<I>(identifier: &Identifier, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Value> where I: InfoProvider {
+pub fn fetch_identifier<I>(identifier: &Identifier, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace, diagnostics: &mut Diagnostics) -> Result<Value> where I: InfoProvider {
     let top = fetch_identifier_to_node(identifier, schema, info_provider, expect,  &top_filter_for_reference_type(ReferenceSpace::Default))?;
     match top {
         Node::Config(c) => Err(Error::new("cannot resolve")),
-        Node::ConstantDeclaration(c) => fetch_expression(c.expression(), schema, info_provider, expect, namespace),
+        Node::ConstantDeclaration(c) => fetch_expression(c.expression(), schema, info_provider, expect, namespace, diagnostics),
         Node::Enum(e) => Err(Error::new("cannot resolve")),
         Node::Model(m) => Ok(Value::from(m.string_path().clone())),
         Node::DataSet(d) => Ok(Value::from(d.string_path().clone())),

@@ -45,6 +45,10 @@ impl Ctx {
         Ok(self.transaction_ctx.group_by(self.model, finder, path![]).await?.into_iter().map(|t| T::try_from(t)).collect::<Result<Vec<T>, E>>()?)
     }
 
+    pub async fn sql<T, E>(&self, sql: &str) -> teo_result::Result<Vec<T>> where T: TryFrom<Value, Error=E>, teo_result::Error: From<E> {
+        self.transaction_ctx.sql(self.model, sql).await
+    }
+
     pub async fn create_object<T>(&self, input: &Value) -> teo_result::Result<T> where T: From<model::Object> {
         Ok(self.transaction_ctx.create_object(self.model, input, None).await?.into())
     }

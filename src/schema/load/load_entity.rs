@@ -14,8 +14,8 @@ pub fn load_entity(main_namespace: &mut Namespace, schema: &Schema, entity: &Con
     let config_decl = schema.find_config_declaration_by_name("entity", entity.availability()).unwrap();
     let provider_expect = config_decl.get_field("provider").unwrap().type_expr().resolved();
     let dest_expect = config_decl.get_field("dest").unwrap().type_expr().resolved();
-    let provider: Runtime = fetch_expression_or_null(entity.get_item("provider"), schema, entity, provider_expect, main_namespace)?.try_into()?;
-    let dest: String = fetch_expression_or_null(entity.get_item("dest"), schema, entity, dest_expect, main_namespace)?.try_into()?;
+    let provider: Runtime = fetch_expression_or_null(entity.get_item("provider"), schema, entity, provider_expect, main_namespace, diagnostics)?.try_into()?;
+    let dest: String = fetch_expression_or_null(entity.get_item("dest"), schema, entity, dest_expect, main_namespace, diagnostics)?.try_into()?;
     let entity_config = Entity {
         provider,
         dest,

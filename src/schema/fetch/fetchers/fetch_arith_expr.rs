@@ -2,18 +2,21 @@ use std::ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Neg, Not, Rem, Shl, Shr, Su
 use teo_parser::ast::arith_expr::{ArithExpr, ArithExprOperator};
 use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::ast::schema::Schema;
+use teo_parser::diagnostics::diagnostics::{Diagnostics, DiagnosticsError};
 use teo_parser::r#type::Type;
+use teo_parser::traits::identifiable::Identifiable;
+use teo_parser::traits::node_trait::NodeTrait;
 use teo_result::Result;
 use crate::value::range::Range;
 use crate::value::Value;
 use crate::namespace::Namespace;
 use crate::schema::fetch::fetch_expression::fetch_expression;
 
-pub fn fetch_arith_expr<I>(arith_expr: &ArithExpr, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Value> where I: InfoProvider {
+pub fn fetch_arith_expr<I>(arith_expr: &ArithExpr, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace, diagnostics: &mut Diagnostics) -> Result<Value> where I: InfoProvider {
     match arith_expr {
-        ArithExpr::Expression(e) => fetch_expression(e.as_ref(), schema, info_provider, expect, namespace),
+        ArithExpr::Expression(e) => fetch_expression(e.as_ref(), schema, info_provider, expect, namespace, diagnostics),
         ArithExpr::UnaryOperation(u) => {
-            let rhs = fetch_arith_expr(u.rhs(), schema, info_provider, expect, namespace)?;
+            let rhs = fetch_arith_expr(u.rhs(), schema, info_provider, expect, namespace, diagnostics)?;
             match u.op {
                 ArithExprOperator::Neg => Ok(Value::from(rhs.neg()?)),
                 ArithExprOperator::BitNeg => Ok(Value::from(rhs.not()?)),
@@ -22,8 +25,8 @@ pub fn fetch_arith_expr<I>(arith_expr: &ArithExpr, schema: &Schema, info_provide
             }
         }
         ArithExpr::BinaryOperation(b) => {
-            let lhs = fetch_arith_expr(b.lhs(), schema, info_provider, expect, namespace)?;
-            let rhs = fetch_arith_expr(b.rhs(), schema, info_provider, expect, namespace)?;
+            let lhs = fetch_arith_expr(b.lhs(), schema, info_provider, expect, namespace, diagnostics)?;
+            let rhs = fetch_arith_expr(b.rhs(), schema, info_provider, expect, namespace, diagnostics)?;
             match b.op {
                 ArithExprOperator::Add => Ok(Value::from(lhs.add(&rhs)?)),
                 ArithExprOperator::Sub => Ok(Value::from(lhs.sub(&rhs)?)),
@@ -50,7 +53,11 @@ pub fn fetch_arith_expr<I>(arith_expr: &ArithExpr, schema: &Schema, info_provide
             }
         }
         ArithExpr::UnaryPostfixOperation(p) => {
-            fetch_arith_expr(p.lhs(), schema, info_provider, expect, namespace)
+            let value = fetch_arith_expr(p.lhs(), schema, info_provider, expect, namespace, diagnostics)?;
+            if value.is_null() {
+                diagnostics.insert(DiagnosticsError::new(p.span(), "value is null".to_owned(), schema.source(*p.path().get(0).unwrap()).unwrap().file_path.clone()));
+            }
+            Ok(value)
         }
     }
 }

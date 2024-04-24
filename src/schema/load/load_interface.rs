@@ -29,7 +29,7 @@ pub fn load_interface(main_namespace: &mut Namespace, schema: &Schema, interface
     for decorator in interface_declaration.decorators() {
         if let Some(decorator_declaration) = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration() {
             if let Some(decorator_implementation) = main_namespace.interface_decorator_at_path(&decorator_declaration.str_path()) {
-                let args = fetch_decorator_arguments(decorator, schema, interface_declaration, main_namespace)?;
+                let args = fetch_decorator_arguments(decorator, schema, interface_declaration, main_namespace, diagnostics)?;
                 decorator_implementation.call.call(args, &mut interface)?;
             }
         }

@@ -1,4 +1,5 @@
 use teo_parser::ast::schema::Schema;
+use teo_parser::diagnostics::diagnostics::Diagnostics;
 use teo_parser::r#type::Type;
 use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::traits::resolved::Resolve;
@@ -10,7 +11,7 @@ use crate::namespace::Namespace;
 use crate::schema::fetch::fetchers::fetch_literals::fetch_dictionary_literal;
 use crate::traits::named::Named;
 
-pub fn load_data_sets(namespace: &Namespace, names: Option<&Vec<String>>, all: bool, schema: &Schema) -> Result<Vec<DataSet>> {
+pub fn load_data_sets(namespace: &Namespace, names: Option<&Vec<String>>, all: bool, schema: &Schema, diagnostics: &mut Diagnostics) -> Result<Vec<DataSet>> {
     let mut result: Vec<DataSet> = vec![];
     for schema_data_set in schema.data_sets() {
         if all || (names.is_some() && names.unwrap().contains(&schema_data_set.string_path().join("."))) || (names.is_none() && schema_data_set.auto_seed) {
@@ -36,7 +37,7 @@ pub fn load_data_sets(namespace: &Namespace, names: Option<&Vec<String>>, all: b
                 for schema_record in schema_group.records() {
                     let record = Record {
                         name: schema_record.identifier().name().to_owned(),
-                        value: fetch_dictionary_literal(schema_record.dictionary(), schema, schema_record, &Type::Undetermined, namespace)?.clone(),
+                        value: fetch_dictionary_literal(schema_record.dictionary(), schema, schema_record, &Type::Undetermined, namespace, diagnostics)?.clone(),
                     };
                     group.records.push(record);
                 }

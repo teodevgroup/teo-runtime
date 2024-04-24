@@ -195,7 +195,7 @@ pub async fn load_schema(main_namespace: &mut Namespace, schema: &Schema, ignore
         }
 
         // load middlewares
-        load_use_middlewares(main_namespace, schema).await?;
+        load_use_middlewares(main_namespace, schema, &mut diagnostics).await?;
     }
 
     // load enums

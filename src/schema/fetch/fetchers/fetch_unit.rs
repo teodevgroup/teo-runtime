@@ -4,6 +4,7 @@ use teo_parser::ast::reference_space::ReferenceSpace;
 use teo_parser::ast::unit::Unit;
 use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::ast::schema::Schema;
+use teo_parser::diagnostics::diagnostics::Diagnostics;
 use teo_parser::expr::{ExprInfo, ReferenceInfo, ReferenceType};
 use teo_parser::r#type::reference::Reference;
 use teo_parser::r#type::Type;
@@ -47,32 +48,32 @@ impl UnitFetchResult {
     }
 }
 
-pub fn fetch_unit<I>(unit: &Unit, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Value> where I: InfoProvider {
+pub fn fetch_unit<I>(unit: &Unit, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace, diagnostics: &mut Diagnostics) -> Result<Value> where I: InfoProvider {
     if unit.expressions().count() == 1 {
-        fetch_expression(unit.expression_at(0).unwrap(), schema, info_provider, expect, namespace)
+        fetch_expression(unit.expression_at(0).unwrap(), schema, info_provider, expect, namespace, diagnostics)
     } else {
         let mut current = None;
         for expression in unit.expressions() {
-            current = Some(fetch_current_item_for_unit(current, expression, schema, info_provider, &Type::Undetermined, namespace)?);
+            current = Some(fetch_current_item_for_unit(current, expression, schema, info_provider, &Type::Undetermined, namespace, diagnostics)?);
         }
         // here should add coerce
         Ok(current.unwrap().into_object()?)
     }
 }
 
-fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: &Expression, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<UnitFetchResult> where I: InfoProvider {
+fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: &Expression, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace, diagnostics: &mut Diagnostics) -> Result<UnitFetchResult> where I: InfoProvider {
     let Some(current) = current else {
         let expected = Type::Undetermined;
         return Ok(if let Some(identifier) = expression.kind.as_identifier() {
             let top = fetch_identifier_to_node(identifier, schema, info_provider, &expected, &top_filter_for_reference_type(ReferenceSpace::Default))?;
             let expr_info = fetch_identifier_to_expr_info(identifier, schema, info_provider, &expected,  &top_filter_for_reference_type(ReferenceSpace::Default))?;
             if let Some(constant) = top.as_constant_declaration() {
-                UnitFetchResult::Value(fetch_expression(constant.expression(), schema, info_provider, &expected, namespace)?)
+                UnitFetchResult::Value(fetch_expression(constant.expression(), schema, info_provider, &expected, namespace, diagnostics)?)
             } else {
                 UnitFetchResult::Reference(expr_info.reference_info().unwrap().clone(), None)
             }
         } else {
-            UnitFetchResult::Value(fetch_expression(expression, schema, info_provider, &expected, namespace)?)
+            UnitFetchResult::Value(fetch_expression(expression, schema, info_provider, &expected, namespace, diagnostics)?)
         });
     };
     match current {
@@ -102,7 +103,7 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
                         let instance_function_definition = struct_definition.instance_function("subscript").unwrap();
                         let only_argument_declaration = instance_function_definition.argument_list_declaration().argument_declarations().next().unwrap();
                         let expected = only_argument_declaration.type_expr().resolved();
-                        let only_argument = fetch_expression(subscript.expression(), schema, info_provider, expected, namespace)?;
+                        let only_argument = fetch_expression(subscript.expression(), schema, info_provider, expected, namespace, diagnostics)?;
                         let only_argument_name = only_argument_declaration.name().name();
                         let arguments = Arguments::new(btreemap! {only_argument_name.to_owned() => only_argument});
                         return Ok(UnitFetchResult::Value(instance_function.body.call(current_value, arguments)?));
@@ -118,7 +119,7 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
                     match &expression.kind {
                         ExpressionKind::Identifier(identifier) => {
                             if let Some((_, v)) = config.items().iter().find(|(k, v)| k.named_key_without_resolving().unwrap() == identifier.name()) {
-                                return Ok(UnitFetchResult::Value(fetch_expression(v, schema, info_provider, expect, namespace)?));
+                                return Ok(UnitFetchResult::Value(fetch_expression(v, schema, info_provider, expect, namespace, diagnostics)?));
                             } else {
                                 Err(Error::new("config item not found"))?
                             }
@@ -163,7 +164,7 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
                     let member = r#enum.child(*reference_info.reference().path().last().unwrap()).unwrap().as_enum_member().unwrap();
                     match &expression.kind {
                         ExpressionKind::ArgumentList(argument_list) => {
-                            let args = fetch_argument_list_or_empty(Some(argument_list), schema, info_provider, namespace)?;
+                            let args = fetch_argument_list_or_empty(Some(argument_list), schema, info_provider, namespace, diagnostics)?;
                             Ok(UnitFetchResult::Value(Value::from(InterfaceEnumVariant {
                                 value: member.identifier().name().to_owned(),
                                 args: Some(args)
@@ -196,7 +197,7 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
                     match &expression.kind {
                         ExpressionKind::ArgumentList(argument_list) => {
                             let function = r#struct.static_function("new").unwrap();
-                            let arguments = fetch_argument_list(argument_list, schema, info_provider, namespace)?;
+                            let arguments = fetch_argument_list(argument_list, schema, info_provider, namespace, diagnostics)?;
                             let result = function.body.call(arguments)?;
                             return Ok(UnitFetchResult::Value(result));
                         }
@@ -216,7 +217,7 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
                     match &expression.kind {
                         ExpressionKind::ArgumentList(argument_list) => {
                             let function = r#struct.function(reference_info.reference().str_path().last().unwrap()).unwrap();
-                            let arguments = fetch_argument_list(argument_list, schema, info_provider, namespace)?;
+                            let arguments = fetch_argument_list(argument_list, schema, info_provider, namespace, diagnostics)?;
                             let result = function.body.call(this.unwrap(), arguments)?;
                             return Ok(UnitFetchResult::Value(result));
                         }
@@ -228,7 +229,7 @@ fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: 
                     match &expression.kind {
                         ExpressionKind::ArgumentList(argument_list) => {
                             let function = r#struct.static_function(reference_info.reference().str_path().last().unwrap()).unwrap();
-                            let arguments = fetch_argument_list(argument_list, schema, info_provider, namespace)?;
+                            let arguments = fetch_argument_list(argument_list, schema, info_provider, namespace, diagnostics)?;
                             let result = function.body.call(arguments)?;
                             return Ok(UnitFetchResult::Value(result));
                         }

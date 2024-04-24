@@ -19,12 +19,12 @@ pub fn load_client(main_namespace: &mut Namespace, schema: &Schema, client: &Con
     let object_name_expect = config_decl.get_field("objectName").unwrap().type_expr().resolved();
     let git_commit_expect = config_decl.get_field("gitCommit").unwrap().type_expr().resolved();
 
-    let provider: ClientLanguage = fetch_expression_or_null(client.get_item("provider"), schema, client, provider_expect, main_namespace)?.try_into()?;
-    let dest: String = fetch_expression_or_null(client.get_item("dest"), schema, client, dest_expect, main_namespace)?.try_into()?;
-    let package: bool = fetch_expression_or_default(client.get_item("package"), schema, client, true, package_expect, main_namespace)?.try_into()?;
-    let host: ClientHost = fetch_expression_or_null(client.get_item("host"), schema, client, host_expect, main_namespace)?.try_into()?;
-    let object_name: String = fetch_expression_or_default(client.get_item("objectName"), schema, client, "teo", object_name_expect, main_namespace)?.try_into()?;
-    let git_commit: bool = fetch_expression_or_default(client.get_item("gitCommit"), schema, client, false, git_commit_expect, main_namespace)?.try_into()?;
+    let provider: ClientLanguage = fetch_expression_or_null(client.get_item("provider"), schema, client, provider_expect, main_namespace, diagnostics)?.try_into()?;
+    let dest: String = fetch_expression_or_null(client.get_item("dest"), schema, client, dest_expect, main_namespace, diagnostics)?.try_into()?;
+    let package: bool = fetch_expression_or_default(client.get_item("package"), schema, client, true, package_expect, main_namespace, diagnostics)?.try_into()?;
+    let host: ClientHost = fetch_expression_or_null(client.get_item("host"), schema, client, host_expect, main_namespace, diagnostics)?.try_into()?;
+    let object_name: String = fetch_expression_or_default(client.get_item("objectName"), schema, client, "teo", object_name_expect, main_namespace, diagnostics)?.try_into()?;
+    let git_commit: bool = fetch_expression_or_default(client.get_item("gitCommit"), schema, client, false, git_commit_expect, main_namespace, diagnostics)?.try_into()?;
     let client_config = Client {
         provider,
         dest,

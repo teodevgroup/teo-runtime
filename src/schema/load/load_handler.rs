@@ -42,7 +42,7 @@ pub fn load_handler(main_namespace: &mut Namespace, schema: &Schema, handler_dec
     for decorator in handler_declaration.decorators() {
         let decorator_declaration = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration().unwrap();
         if let Some(decorator_implementation) = main_namespace.handler_decorator_at_path(&decorator_declaration.str_path()) {
-            let args = fetch_decorator_arguments(decorator, schema, handler_declaration, main_namespace)?;
+            let args = fetch_decorator_arguments(decorator, schema, handler_declaration, main_namespace, diagnostics)?;
             decorator_implementation.call.call(args, &mut handler)?;
         }
     }

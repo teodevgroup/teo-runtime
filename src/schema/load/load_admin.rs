@@ -13,9 +13,9 @@ use crate::schema::fetch::fetch_expression::fetch_expression_or_null;
 pub fn load_admin(main_namespace: &mut Namespace, schema: &Schema, admin: &Config, diagnostics: &mut Diagnostics) -> Result<()> {
     let config_decl = schema.find_config_declaration_by_name("admin", admin.availability()).unwrap();
     let dest_expect = config_decl.get_field("dest").unwrap().type_expr().resolved();
-    let dest: String = fetch_expression_or_null(admin.get_item("dest"), schema, admin, dest_expect, main_namespace)?.try_into()?;
+    let dest: String = fetch_expression_or_null(admin.get_item("dest"), schema, admin, dest_expect, main_namespace, diagnostics)?.try_into()?;
     let host_expect = config_decl.get_field("host").unwrap().type_expr().resolved();
-    let host: ClientHost = fetch_expression_or_null(admin.get_item("host"), schema, admin, host_expect, main_namespace)?.try_into()?;
+    let host: ClientHost = fetch_expression_or_null(admin.get_item("host"), schema, admin, host_expect, main_namespace, diagnostics)?.try_into()?;
     let admin_config = Admin {
         dest,
         host

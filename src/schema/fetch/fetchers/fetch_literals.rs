@@ -3,6 +3,7 @@ use maplit::btreemap;
 use teo_parser::ast::literals::{TupleLiteral, ArrayLiteral, DictionaryLiteral, EnumVariantLiteral};
 use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::ast::schema::Schema;
+use teo_parser::diagnostics::diagnostics::Diagnostics;
 use teo_parser::r#type::synthesized_enum::SynthesizedEnum;
 use teo_parser::r#type::synthesized_interface_enum::SynthesizedInterfaceEnum;
 use teo_parser::r#type::Type;
@@ -19,19 +20,19 @@ use crate::schema::fetch::fetch_argument_list::fetch_argument_list;
 use crate::schema::fetch::fetch_expression::{fetch_dictionary_key_expression, fetch_expression};
 use crate::utils::ContainsStr;
 
-pub fn fetch_tuple_literal<I>(tuple_literal: &TupleLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Value> where I: InfoProvider {
+pub fn fetch_tuple_literal<I>(tuple_literal: &TupleLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace, diagnostics: &mut Diagnostics) -> Result<Value> where I: InfoProvider {
     let mut result = vec![];
     for (index, expression) in tuple_literal.expressions().enumerate() {
-        result.push(fetch_expression(expression, schema, info_provider, expect.unwrap_optional().unwrap_tuple_index(index).unwrap(), namespace)?.clone());
+        result.push(fetch_expression(expression, schema, info_provider, expect.unwrap_optional().unwrap_tuple_index(index).unwrap(), namespace, diagnostics)?.clone());
     }
     Ok(Value::from(Value::Tuple(result)))
 }
 
-pub fn fetch_array_literal<I>(array_literal: &ArrayLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Value> where I: InfoProvider {
+pub fn fetch_array_literal<I>(array_literal: &ArrayLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace, diagnostics: &mut Diagnostics) -> Result<Value> where I: InfoProvider {
     let mut teon_result = vec![];
     let mut array_result = vec![];
     for expression in array_literal.expressions() {
-        let expression_result = fetch_expression(expression, schema, info_provider, expect.unwrap_optional().unwrap_array(), namespace)?;
+        let expression_result = fetch_expression(expression, schema, info_provider, expect.unwrap_optional().unwrap_array(), namespace, diagnostics)?;
         if expression_result.is_interface_enum_variant() {
             array_result.push(expression_result);
         } else {
@@ -45,24 +46,24 @@ pub fn fetch_array_literal<I>(array_literal: &ArrayLiteral, schema: &Schema, inf
     }
 }
 
-pub fn fetch_dictionary_literal<I>(dictionary_literal: &DictionaryLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Value> where I: InfoProvider {
+pub fn fetch_dictionary_literal<I>(dictionary_literal: &DictionaryLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace, diagnostics: &mut Diagnostics) -> Result<Value> where I: InfoProvider {
     let mut result = indexmap!{};
     for named_expression in dictionary_literal.expressions() {
-        let k = fetch_dictionary_key_expression(named_expression.key(), schema, info_provider, namespace)?.as_str().unwrap().to_owned();
-        let v = fetch_expression(named_expression.value(), schema, info_provider, expect.unwrap_optional().unwrap_dictionary(), namespace)?.clone();
+        let k = fetch_dictionary_key_expression(named_expression.key(), schema, info_provider, namespace, diagnostics)?.as_str().unwrap().to_owned();
+        let v = fetch_expression(named_expression.value(), schema, info_provider, expect.unwrap_optional().unwrap_dictionary(), namespace, diagnostics)?.clone();
         result.insert(k, v);
     }
     Ok(Value::from(Value::Dictionary(result)))
 }
 
-pub fn fetch_enum_variant_literal<I>(e: &EnumVariantLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace) -> Result<Value> where I: InfoProvider {
+pub fn fetch_enum_variant_literal<I>(e: &EnumVariantLiteral, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace, diagnostics: &mut Diagnostics) -> Result<Value> where I: InfoProvider {
     match expect {
         Type::EnumVariant(reference) => {
             let r#enum = schema.find_top_by_path(reference.path()).unwrap().as_enum().unwrap();
             if let Some(member) = r#enum.members().find(|m| m.identifier().name() == e.identifier().name()) {
                 let mut args = None;
                 if let Some(argument_list) = e.argument_list() {
-                    args = Some(fetch_argument_list(argument_list, schema, info_provider, namespace)?);
+                    args = Some(fetch_argument_list(argument_list, schema, info_provider, namespace, diagnostics)?);
                 } else if member.argument_list_declaration().is_some() {
                     args = Some(Arguments::new(btreemap! {}))
                 }
