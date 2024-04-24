@@ -299,6 +299,15 @@ impl Ctx {
         transaction.group_by(model, finder, self.clone(), path).await
     }
 
+    pub async fn sql<T, E>(&self, model: &'static Model, sql: &str) -> Result<T> where T: TryFrom<Value, Error=E>, Error: From<E> {
+        let transaction = self.transaction_for_model(model).await;
+        let value = transaction.sql(model, sql, self.clone()).await?;
+        match value.try_into() {
+            Ok(v) => Ok(v),
+            Err(e) => Err(e.into()),
+        }
+    }
+
     // MARK: - Create an object
 
     pub fn new_object(&self, model: &'static Model, action: Action, req_ctx: Option<request::Ctx>) -> Result<model::Object> {

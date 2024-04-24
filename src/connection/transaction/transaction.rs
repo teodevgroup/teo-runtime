@@ -45,6 +45,8 @@ pub trait Transaction: Send + Sync + Debug {
 
     async fn group_by(&self, model: &'static Model, finder: &Value, transaction_ctx: transaction::Ctx, path: KeyPath) -> teo_result::Result<Vec<Value>>;
 
+    async fn sql(&self, model: &'static Model, sql: &str, transaction_ctx: transaction::Ctx) -> Result<Value>;
+
     // Transaction
 
     fn is_committed(&self) -> bool;
