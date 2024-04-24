@@ -221,8 +221,6 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
         } else {
             return Err(Error::unauthorized_message("identity not found"));
         }
-
-        Ok::<Response, Error>(Response::html("")?)
     });
 
     identity_namespace.define_middleware("identityFromJwt", |arguments: Arguments| async move {
