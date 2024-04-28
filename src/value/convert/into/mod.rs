@@ -35,3 +35,4 @@ pub mod method;
 pub mod runtime;
 pub mod sort;
 pub mod type_script_http_provider;
+pub mod language;
