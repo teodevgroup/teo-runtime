@@ -730,6 +730,20 @@ impl Namespace {
             (model, relation)
         }).collect()
     }
+
+    pub fn collect_models<F>(&self, f: F) -> Vec<&Model> where F: Fn(&Model) -> bool {
+        let filter = &f;
+        self._collect_models(filter)
+    }
+
+    pub fn _collect_models<F>(&self, f: &F) -> Vec<&Model> where F: Fn(&Model) -> bool {
+        let mut result = vec![];
+        result.extend(self.models.values().filter(|m| f(*m)));
+        for n in self.namespaces.values() {
+            result.extend(n._collect_models(f));
+        }
+        return result
+    }
 }
 
 impl Named for Namespace {
