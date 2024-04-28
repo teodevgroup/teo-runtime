@@ -24,6 +24,11 @@ pub(super) fn load_admin_library(std_namespace: &mut Namespace) {
         Ok(())
     });
 
+    admin_namespace.define_model_field_decorator("secureInput", |_, field| {
+        field.data.insert("admin:secureInput".to_owned(), true.into());
+        Ok(())
+    });
+
     admin_namespace.define_model_relation_decorator("embedded", |_, field| {
         field.data.insert("admin:embedded".to_owned(), true.into());
         Ok(())
