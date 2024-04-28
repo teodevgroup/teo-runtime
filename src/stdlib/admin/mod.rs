@@ -9,6 +9,11 @@ pub(super) fn load_admin_library(std_namespace: &mut Namespace) {
         Ok(())
     });
 
+    admin_namespace.define_model_decorator("ignore", |_, model| {
+        model.data.insert("admin:ignore".to_owned(), true.into());
+        Ok(())
+    });
+
     admin_namespace.define_model_field_decorator("title", |_, field| {
         field.data.insert("admin:title".to_owned(), true.into());
         Ok(())
