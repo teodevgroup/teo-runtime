@@ -1,7 +1,7 @@
 use serde::Serialize;
 use teo_result::{Result, Error};
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub enum Language {
     EnUs,
     EnUk,
