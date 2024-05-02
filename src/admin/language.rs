@@ -50,4 +50,20 @@ impl Language {
             Language::ZhTw => "zhTw",
         }
     }
+
+    pub fn display(&self) -> &'static str {
+        match self {
+            Language::EnUs => "English (United States)",
+            Language::EnUk => "English (United Kingdom)",
+            Language::De => "Deutsch",
+            Language::Fr => "Français",
+            Language::Es => "Español",
+            Language::Hi => "हिन्दी",
+            Language::He => "עברית",
+            Language::Ja => "日本語",
+            Language::Ko => "한국어",
+            Language::ZhCn => "中文（简体）",
+            Language::ZhTw => "中文（繁體）",
+        }
+    }
 }
