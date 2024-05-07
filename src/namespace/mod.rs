@@ -744,6 +744,20 @@ impl Namespace {
         }
         return result
     }
+
+    pub fn collect_enums<F>(&self, f: F) -> Vec<&Enum> where F: Fn(&Enum) -> bool {
+        let filter = &f;
+        self._collect_enums(filter)
+    }
+
+    pub fn _collect_enums<F>(&self, f: &F) -> Vec<&Enum> where F: Fn(&Enum) -> bool {
+        let mut result = vec![];
+        result.extend(self.enums.values().filter(|m| f(*m)));
+        for n in self.namespaces.values() {
+            result.extend(n._collect_enums(f));
+        }
+        return result
+    }
 }
 
 impl Named for Namespace {
