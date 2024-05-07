@@ -34,6 +34,10 @@ impl Enum {
         }
     }
 
+    pub fn path(&self) -> Vec<&str> {
+        self.path.iter().map(AsRef::as_ref).collect()
+    }
+
     pub fn finalize(&mut self) {
         self.cache.member_names = self.members.iter().map(|m| m.name.clone()).collect();
     }
