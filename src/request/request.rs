@@ -1,5 +1,7 @@
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
+use teo_result::Result;
+use crate::request::cookie::readonly::Cookie;
 use crate::request::Ctx;
 use crate::request::ctx::extract::ExtractFromRequestCtx;
 use crate::request::header::readonly::HeaderMap;
@@ -34,6 +36,10 @@ impl Request {
     pub fn headers(&self) -> &HeaderMap {
         self.inner.headers()
     }
+
+    pub fn cookies(&self) -> Result<Vec<Cookie>> {
+        self.inner.cookies()
+    }
 }
 
 impl Debug for Request {
@@ -49,7 +55,9 @@ impl Debug for Request {
 }
 
 pub mod r#trait {
+    use crate::request::cookie::readonly::Cookie;
     use crate::request::header::readonly::HeaderMap;
+    use teo_result::Result;
 
     pub trait Request {
         fn method(&self) -> &str;
@@ -57,6 +65,7 @@ pub mod r#trait {
         fn query_string(&self) -> &str;
         fn content_type(&self) -> &str;
         fn headers(&self) -> &HeaderMap;
+        fn cookies(&self) -> Result<Vec<Cookie>>;
     }
 }
 
