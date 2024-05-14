@@ -29,7 +29,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
     namespace.define_pipeline_item("isEmail", |args: Arguments, ctx: Ctx| async move {
         let input: &str = ctx.value().try_ref_into_err_prefix("isEmail")?;
         if !EMAIL_REGEX.is_match(input) {
-            Err(Error::new("input is not email"))?
+            Err(Error::new_with_code("input is not email", 400))?
         }
         Ok(ctx.value().clone())
     });
@@ -37,7 +37,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
     namespace.define_pipeline_item("isHexColor", |args: Arguments, ctx: Ctx| async move {
         let input: &str = ctx.value().try_ref_into_err_prefix("isHexColor")?;
         if !HEX_COLOR_REGEX.is_match(input) {
-            Err(Error::new("input is not hex color"))?
+            Err(Error::new_with_code("input is not hex color", 400))?
         }
         Ok(ctx.value().clone())
     });
@@ -46,7 +46,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
         let input: &str = ctx.value().try_ref_into_err_prefix("isSecurePassword")?;
         for regex in SECURE_PASSWORD_REGEXES.iter() {
             if !regex.is_match(input) {
-                Err(Error::new("input is not secure password"))?
+                Err(Error::new_with_code("input is not secure password", 400))?
             }
         }
         Ok(ctx.value().clone())
@@ -56,7 +56,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
         let input: &str = ctx.value().try_ref_into_err_prefix("isNumeric")?;
         for c in input.chars(){
             if !c.is_numeric(){
-                Err(Error::new("input is not numeric"))?
+                Err(Error::new_with_code("input is not numeric", 400))?
             }
         }
         Ok(ctx.value().clone())
@@ -66,7 +66,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
         let input: &str = ctx.value().try_ref_into_err_prefix("isAlphanumeric")?;
         for c in input.chars(){
             if !c.is_alphanumeric(){
-                Err(Error::new("input is not alphanumeric"))?
+                Err(Error::new_with_code("input is not alphanumeric", 400))?
             }
         }
         Ok(ctx.value().clone())
@@ -76,7 +76,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
         let input: &str = ctx.value().try_ref_into_err_prefix("isAlphabetic")?;
         for c in input.chars(){
             if !c.is_alphabetic(){
-                Err(Error::new("input is not alphabetic"))?
+                Err(Error::new_with_code("input is not alphabetic", 400))?
             }
         }
         Ok(ctx.value().clone())
@@ -90,7 +90,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
         ).await?;
         let arg: &str = arg_object.try_ref_into_err_prefix("isSuffixOf")?;
         if !arg.ends_with(input) {
-            Err(Error::new(format!("input is not suffix of \"{arg}\"")))?
+            Err(Error::new_with_code(format!("input is not suffix of \"{arg}\""), 400))?
         }
         Ok(ctx.value().clone())
     });
@@ -103,7 +103,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
         ).await?;
         let arg: &str = arg_object.try_ref_into_err_prefix("hasSuffix")?;
         if !input.ends_with(arg) {
-            Err(Error::new(format!("input doesn't have suffix \"{arg}\"")))?
+            Err(Error::new_with_code(format!("input doesn't have suffix \"{arg}\""), 400))?
         }
         Ok(ctx.value().clone())
     });
@@ -116,7 +116,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
         ).await?;
         let arg: &str = arg_object.try_ref_into_err_prefix("isPrefixOf")?;
         if !arg.starts_with(input) {
-            Err(Error::new(format!("input is not prefix of \"{arg}\"")))?
+            Err(Error::new_with_code(format!("input is not prefix of \"{arg}\""), 400))?
         }
         Ok(ctx.value().clone())
     });
@@ -129,7 +129,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
         ).await?;
         let arg: &str = arg_object.try_ref_into_err_prefix("hasPrefix")?;
         if !input.starts_with(arg) {
-            Err(Error::new(format!("input doesn't have suffix \"{arg}\"")))?
+            Err(Error::new_with_code(format!("input doesn't have suffix \"{arg}\""), 400))?
         }
         Ok(ctx.value().clone())
     });
@@ -138,7 +138,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut N
         let input: &str = ctx.value().try_ref_into_err_prefix("regexMatch")?;
         let regex: &Regex = args.get("regex").error_message_prefixed("regexMatch")?;
         if !regex.is_match(input){
-            Err(Error::new(format!("input doesn't match regex")))?
+            Err(Error::new_with_code(format!("input doesn't match regex"), 400))?
         }
         Ok(ctx.value().clone())
     });

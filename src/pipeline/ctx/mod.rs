@@ -88,7 +88,7 @@ impl Ctx {
 
     pub async fn run_pipeline<T, E>(&self, pipeline: &Pipeline) -> Result<T> where T: TryFrom<Value, Error=E>, Error: From<E> {
         let result = self.run_pipeline_inner(pipeline).await;
-        result.map_err(|e| e.path_prefixed(self.path().to_string()))
+        result.map_err(|e| e.pathed(self.path().to_string()))
     }
 
     pub async fn run_pipeline_ignore_return_value(&self, pipeline: &Pipeline) -> Result<()> {
