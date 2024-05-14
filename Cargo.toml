@@ -9,7 +9,7 @@ documentation = "https://teocloud.io/docs"
 repository = "https://github.com/teocloud/teo-runtime"
 
 [dependencies]
-teo-result = { version = "0.2.23", path = "../teo-result" }
+teo-result = { version = "0.2.32", path = "../teo-result" }
 teo-parser = { version = "0.2.28", path = "../teo-parser" }
 maplit = "1.0.2"
 indexmap = { version = "2.2.6", features = ["serde"] }
