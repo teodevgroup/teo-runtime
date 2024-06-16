@@ -11,6 +11,10 @@ repository = "https://github.com/teocloud/teo-runtime"
 [dependencies]
 teo-result = { version = "0.2.32", path = "../teo-result" }
 teo-parser = { version = "0.2.28", path = "../teo-parser" }
+tokio = { version = "1.0", features = ["full"] }
+hyper = { version = "1.0", features = ["full"] }
+http-body-util = "0.1"
+hyper-util = { version = "0.1", features = ["full"] }
 maplit = "1.0.2"
 indexmap = { version = "2.2.6", features = ["serde"] }
 serde = { version = "1.0.190", features = ["derive"] }
@@ -36,6 +40,5 @@ chrono = { version = "0.4.31", features = ["serde"] }
 jsonwebtoken = "9.2"
 log = "0.4.20"
 bson = { version = "2.9.0", features = ["chrono-0_4", "serde_with"] }
-tokio = { version = "1.0", features = ["full"] }
 itertools = "0.12.0"
 bcrypt = "0.15.0"
