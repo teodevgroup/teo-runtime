@@ -1,32 +1,16 @@
 use educe::Educe;
-use serde::Serialize;
+use hyper::Method;
+use serde::{Serialize, Serializer};
 use teo_parser::ast::handler::HandlerInputFormat;
 use teo_parser::r#type::Type;
 use crate::middleware::next::Next;
-use crate::model::Model;
 use crate::traits::named::Named;
 
-#[derive(Debug, Serialize, Copy, Clone, Hash, Eq, PartialEq)]
-pub enum Method {
-    Get,
-    Post,
-    Patch,
-    Put,
-    Delete,
-    Options,
-}
-
-impl Method {
-    pub fn capitalized_name(&self) -> &'static str {
-        match self {
-            Method::Get => "GET",
-            Method::Post => "POST",
-            Method::Patch => "PATCH",
-            Method::Put => "PUT",
-            Method::Delete => "DELETE",
-            Method::Options => "OPTIONS",
-        }
-    }
+fn serialize_method<S>(method: &Method, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    s.serialize_str(method.as_str())
 }
 
 #[derive(Educe)]
@@ -39,6 +23,7 @@ pub struct Handler {
     pub output_type: Type,
     pub nonapi: bool,
     pub format: HandlerInputFormat,
+    #[serde(serialize_with = "serialize_method")]
     pub method: Method,
     pub url: Option<String>,
     pub interface: Option<String>,
@@ -58,7 +43,7 @@ impl Handler {
     }
 
     pub fn has_body_input(&self) -> bool {
-        !(self.method == Method::Get || self.method == Method::Delete)
+        !(self.method == Method::GET || self.method == Method::DELETE)
     }
 
     pub fn custom_url_args_path(&self) -> Option<Vec<String>> {

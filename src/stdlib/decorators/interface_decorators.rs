@@ -1,4 +1,3 @@
-use crate::handler::handler::Method;
 use crate::namespace::Namespace;
 
 pub(in crate::stdlib) fn load_interface_decorators(namespace: &mut Namespace) {

@@ -7,7 +7,7 @@ use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::traits::resolved::Resolve;
 use teo_result::Result;
 use crate::handler::Handler;
-use crate::handler::handler::Method;
+use hyper::Method;
 use crate::namespace::Namespace;
 use teo_result::Error;
 use crate::request;
@@ -26,7 +26,7 @@ pub fn load_handler(main_namespace: &mut Namespace, schema: &Schema, handler_dec
             format: HandlerInputFormat::Json,
             path: handler_declaration.string_path().clone(),
             ignore_prefix: false,
-            method: Method::Post,
+            method: Method::POST,
             interface: None,
             url: None,
             namespace_path: handler_declaration.namespace_str_path().iter().map(|s| s.to_string()).collect(),
@@ -46,7 +46,7 @@ pub fn load_handler(main_namespace: &mut Namespace, schema: &Schema, handler_dec
             decorator_implementation.call.call(args, &mut handler)?;
         }
     }
-    if (handler.method != Method::Post) || handler.url.is_some() {
+    if (handler.method != Method::POST) || handler.url.is_some() {
         let parent_string_path = handler_declaration.parent_string_path();
         main_namespace.handler_map.add_record(
             &handler_declaration.namespace_str_path(),
@@ -56,7 +56,7 @@ pub fn load_handler(main_namespace: &mut Namespace, schema: &Schema, handler_dec
                 None
             },
             handler_declaration.name(),
-            handler.method,
+            handler.method.clone(),
             handler.url.as_ref().map(|u| u.as_str()),
             handler.ignore_prefix,
         );

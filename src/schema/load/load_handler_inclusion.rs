@@ -8,7 +8,7 @@ use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::traits::resolved::Resolve;
 use teo_result::Result;
 use crate::handler::Handler;
-use crate::handler::handler::Method;
+use hyper::Method;
 use crate::namespace::Namespace;
 use teo_result::Error;
 use crate::request;
@@ -28,7 +28,7 @@ pub fn load_handler_inclusion(main_namespace: &mut Namespace, schema: &Schema, h
             format: HandlerInputFormat::Json,
             path: handler_inclusion.string_path().clone(),
             ignore_prefix: false,
-            method: Method::Post,
+            method: Method::POST,
             interface: None,
             url: None,
             namespace_path: handler_inclusion.namespace_str_path().iter().map(|s| s.to_string()).collect(),
@@ -48,7 +48,7 @@ pub fn load_handler_inclusion(main_namespace: &mut Namespace, schema: &Schema, h
             decorator_implementation.call.call(args, &mut handler)?;
         }
     }
-    if (handler.method != Method::Post) || handler.url.is_some() {
+    if (handler.method != Method::POST) || handler.url.is_some() {
         let parent_string_path = handler_inclusion.parent_string_path();
         main_namespace.handler_map.add_record(
             &handler_inclusion.namespace_str_path(),
@@ -58,12 +58,12 @@ pub fn load_handler_inclusion(main_namespace: &mut Namespace, schema: &Schema, h
                 None
             },
             handler_inclusion.name(),
-            handler.method,
+            handler.method.clone(),
             handler.url.as_ref().map(|u| u.as_str()),
             handler.ignore_prefix,
         );
     }
-    if (handler.method != Method::Post) || handler.url.is_some() {
+    if (handler.method != Method::POST) || handler.url.is_some() {
         let parent_string_path = handler_inclusion.parent_string_path();
         main_namespace.handler_map.add_record(
             &handler_inclusion.namespace_str_path(),
@@ -73,7 +73,7 @@ pub fn load_handler_inclusion(main_namespace: &mut Namespace, schema: &Schema, h
                 None
             },
             handler_inclusion.name(),
-            handler.method,
+            handler.method.clone(),
             handler.url.as_ref().map(|u| u.as_str()),
             handler.ignore_prefix,
         );

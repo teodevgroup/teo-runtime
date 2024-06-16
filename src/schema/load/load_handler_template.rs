@@ -1,3 +1,4 @@
+use hyper::Method;
 use teo_parser::ast::handler::HandlerInputFormat;
 use teo_parser::ast::schema::Schema;
 use teo_parser::diagnostics::diagnostics::Diagnostics;
@@ -7,7 +8,6 @@ use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::traits::resolved::Resolve;
 use teo_result::Result;
 use crate::handler::Handler;
-use crate::handler::handler::Method;
 use crate::namespace::Namespace;
 use teo_result::Error;
 use crate::request;
@@ -26,7 +26,7 @@ pub fn load_handler_template(main_namespace: &mut Namespace, schema: &Schema, ha
             format: HandlerInputFormat::Json,
             path: handler_template_declaration.string_path().clone(),
             ignore_prefix: false,
-            method: Method::Post,
+            method: Method::POST,
             interface: None,
             url: None,
             namespace_path: handler_template_declaration.namespace_str_path().iter().map(|s| s.to_string()).collect(),

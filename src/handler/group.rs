@@ -4,7 +4,7 @@ use teo_parser::ast::handler::HandlerInputFormat;
 use teo_parser::r#type::Type;
 use crate::handler::ctx_argument::HandlerCtxArgument;
 use crate::handler::Handler;
-use crate::handler::handler::Method;
+use hyper::Method;
 use crate::request;
 use crate::traits::named::Named;
 use crate::utils::next_path;
@@ -31,7 +31,7 @@ impl Group {
             format: HandlerInputFormat::Json,
             path: next_path(&self.path, name),
             ignore_prefix: false,
-            method: Method::Post,
+            method: Method::POST,
             interface: None,
             url: None,
             call: Box::leak(Box::new(|ctx: request::Ctx| async {
