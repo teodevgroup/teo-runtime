@@ -207,7 +207,7 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
         if authorization.len() < 7 {
             return Err(Error::unauthorized_message("invalid jwt token"));
         }
-        let token = &authorization[7..];
+        let token = &authorization.to_str().unwrap()[7..];
         let Ok(claims) = decode_token(token, jwt_secret.as_str()) else {
             return Err(Error::unauthorized_message("invalid jwt token"));
         };
@@ -237,7 +237,7 @@ pub(super) fn load_identity_library(std_namespace: &mut Namespace) {
                 if authorization.len() < 7 {
                     return Err(Error::unauthorized_message("invalid jwt token"));
                 }
-                let token = &authorization[7..];
+                let token = &authorization.to_str().unwrap()[7..];
                 match decode_token(token, &secret) {
                     Ok(claims) => {
                         let json_identifier = &claims.id;

@@ -1,71 +1,60 @@
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
-use teo_result::Result;
-use crate::request::cookie::readonly::Cookie;
+use hyper::body::Incoming;
+use hyper::{HeaderMap, Uri};
+use hyper::http::HeaderValue;
 use crate::request::Ctx;
 use crate::request::ctx::extract::ExtractFromRequestCtx;
-use crate::request::header::readonly::HeaderMap;
 
 #[derive(Clone)]
 pub struct Request {
-    inner: Arc<dyn r#trait::Request>
+    inner: Arc<hyper::Request<Incoming>>
 }
 
 impl Request {
 
-    pub fn new(inner: Arc<dyn r#trait::Request>) -> Self {
+    pub fn new(inner: Arc<hyper::Request<Incoming>>) -> Self {
         Self { inner }
     }
 
     pub fn method(&self) -> &str {
-        self.inner.method()
+        self.inner.method().as_str()
+    }
+
+    pub fn uri(&self) -> &Uri {
+        self.inner.uri()
     }
 
     pub fn path(&self) -> &str {
-        self.inner.path()
+        self.inner.uri().path()
     }
 
     pub fn query_string(&self) -> &str {
-        self.inner.query_string()
+        self.inner.uri().query().unwrap_or("")
     }
 
     pub fn content_type(&self) -> &str {
-        self.inner.content_type()
+        self.inner.headers().get("content-type").map(|c| c.to_str().unwrap()).unwrap_or("")
     }
 
-    pub fn headers(&self) -> &HeaderMap {
+    pub fn headers(&self) -> &HeaderMap<HeaderValue> {
         self.inner.headers()
     }
 
-    pub fn cookies(&self) -> Result<Vec<Cookie>> {
-        self.inner.cookies()
-    }
+    // pub fn cookies(&self) -> Result<Vec<Cookie>> {
+    //     self.inner.cookies()
+    // }
 }
 
 impl Debug for Request {
 
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut debug_struct = f.debug_struct("Request");
-        debug_struct.field("method", &self.inner.method());
-        debug_struct.field("path", &self.inner.path());
-        debug_struct.field("query_string", &self.inner.query_string());
-        debug_struct.field("content_type", &self.inner.content_type());
+        debug_struct.field("method", &self.method());
+        debug_struct.field("path", &self.path());
+        debug_struct.field("query_string", &self.query_string());
+        debug_struct.field("content_type", &self.content_type());
         debug_struct.finish()
-    }
-}
-
-pub mod r#trait {
-    use crate::request::cookie::readonly::Cookie;
-    use crate::request::header::readonly::HeaderMap;
-    use teo_result::Result;
-
-    pub trait Request {
-        fn method(&self) -> &str;
-        fn path(&self) -> &str;
-        fn query_string(&self) -> &str;
-        fn content_type(&self) -> &str;
-        fn headers(&self) -> &HeaderMap;
-        fn cookies(&self) -> Result<Vec<Cookie>>;
     }
 }
 
