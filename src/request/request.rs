@@ -3,18 +3,20 @@ use std::sync::Arc;
 use hyper::body::Incoming;
 use hyper::{HeaderMap, Uri};
 use hyper::http::HeaderValue;
+use crate::handler::r#match::HandlerMatch;
 use crate::request::Ctx;
 use crate::request::ctx::extract::ExtractFromRequestCtx;
 
 #[derive(Clone)]
 pub struct Request {
-    inner: Arc<hyper::Request<Incoming>>
+    inner: Arc<hyper::Request<Incoming>>,
+    handler_match: Arc<HandlerMatch>,
 }
 
 impl Request {
 
-    pub fn new(inner: Arc<hyper::Request<Incoming>>) -> Self {
-        Self { inner }
+    pub fn new(inner: hyper::Request<Incoming>, handler_match: HandlerMatch) -> Self {
+        Self { inner: Arc::new(inner), handler_match: Arc::new(handler_match) }
     }
 
     pub fn method(&self) -> &str {
@@ -39,6 +41,10 @@ impl Request {
 
     pub fn headers(&self) -> &HeaderMap<HeaderValue> {
         self.inner.headers()
+    }
+
+    pub fn handler_match(&self) -> &HandlerMatch {
+        self.handler_match.as_ref()
     }
 
     // pub fn cookies(&self) -> Result<Vec<Cookie>> {

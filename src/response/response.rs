@@ -7,34 +7,32 @@ use teo_result::Result;
 use crate::response::body::Body;
 use crate::response::header::readwrite::HeaderMap;
 
-#[derive(Clone)]
+#[derive(Debug)]
 pub struct Response {
-    inner: Arc<Mutex<ResponseInner>>
+    inner: hyper::Response<Vec<u8>>,
 }
 
 impl Response {
 
     pub fn empty() -> Response {
         Self {
-            inner: Arc::new(Mutex::new(ResponseInner::new())),
+            inner: hyper::Response::builder().body(vec![]).unwrap(),
         }
     }
 
     pub fn string(content: impl Into<String>, content_type: &str) -> Response {
-        let mut inner = ResponseInner::new();
-        inner.body = Body::string(content.into());
-        inner.headers.set("content-type", content_type);
-        Self {
-            inner: Arc::new(Mutex::new(inner)),
-        }
+        let string: String = content.into();
+        let inner = hyper::Response::builder()
+            .header("content-type", content_type)
+            .body(string.into_bytes()).unwrap();
+        Self { inner }
     }
 
     pub fn teon(value: Value) -> Response {
-        let mut inner = ResponseInner::new();
-        inner.body = Body::teon(value);
-        Self {
-            inner: Arc::new(Mutex::new(inner))
-        }
+        let inner = hyper::Response::builder()
+            .header("content-type", "application/json")
+            .body(serde_json::Value::from(&value).to_string().into_bytes()).unwrap();
+        Self { inner }
     }
 
     pub fn html(content: impl Into<String>) -> Result<Response> {
@@ -47,15 +45,6 @@ impl Response {
 
     pub fn data_meta(data: Value, meta: Value) -> Response {
         Self::teon(teon!({"data": data, "meta": meta}))
-    }
-
-    pub fn error(error: impl Into<teo_result::Error>) -> Response {
-        let path_error = error.into();
-        let code = path_error.code;
-        let value: Value = path_error.into();
-        let res = Self::teon(value);
-        res.set_code(code);
-        res
     }
 
     pub fn file(path: PathBuf) -> Response {
