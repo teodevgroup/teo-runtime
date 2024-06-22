@@ -16,7 +16,7 @@ use crate::value::Value;
 
 #[derive(Educe)]
 #[educe(Debug)]
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct Item {
     pub path: Vec<String>,
     #[educe(Debug(ignore))] #[serde(skip)]

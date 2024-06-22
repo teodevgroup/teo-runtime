@@ -8,9 +8,10 @@ use teo_parser::traits::resolved::Resolve;
 use crate::config::server::Server;
 use crate::namespace::Namespace;
 use teo_result::Result;
+use crate::namespace::builder::NamespaceBuilder;
 use crate::schema::fetch::fetch_expression::fetch_expression_or_null;
 
-pub fn load_server(main_namespace: &mut Namespace, schema: &Schema, server: &Config, diagnostics: &mut Diagnostics) -> Result<()> {
+pub fn load_server(main_namespace: &NamespaceBuilder, schema: &Schema, server: &Config, diagnostics: &mut Diagnostics) -> Result<()> {
     let config_decl = schema.find_config_declaration_by_name("server", server.availability()).unwrap();
     let path_prefix_expect = config_decl.get_field("pathPrefix").unwrap().type_expr().resolved();
     let path_prefix: Option<String> = fetch_expression_or_null(server.get_item("pathPrefix"), schema, server, path_prefix_expect, main_namespace, diagnostics)?.try_into()?;

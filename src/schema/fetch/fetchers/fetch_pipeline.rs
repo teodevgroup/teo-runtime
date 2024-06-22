@@ -9,6 +9,7 @@ use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::traits::resolved::Resolve;
 use teo_parser::utils::top_filter::top_filter_for_pipeline;
 use teo_result::{Error, Result};
+use crate::namespace::builder::NamespaceBuilder;
 use crate::namespace::Namespace;
 use crate::pipeline::item::BoundedItem;
 use crate::pipeline::Pipeline;
@@ -16,11 +17,11 @@ use crate::schema::fetch::fetch_argument_list::fetch_argument_list_or_empty;
 use crate::schema::fetch::fetchers::fetch_identifier::fetch_identifier_to_node;
 use crate::value::Value;
 
-pub fn fetch_pipeline<I>(pipeline: &teo_parser::ast::pipeline::Pipeline, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace, diagnostics: &mut Diagnostics) -> Result<Value> where I: InfoProvider {
+pub fn fetch_pipeline<I>(pipeline: &teo_parser::ast::pipeline::Pipeline, schema: &Schema, info_provider: &I, expect: &Type, namespace: &NamespaceBuilder, diagnostics: &mut Diagnostics) -> Result<Value> where I: InfoProvider {
     fetch_pipeline_unit(&pipeline.resolved().replace_generics(expect.clone()), pipeline.unit(), schema, info_provider, expect, namespace, diagnostics)
 }
 
-fn fetch_pipeline_unit<I>(pipeline_resolved: &PipelineResolved, unit: &Unit, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace, diagnostics: &mut Diagnostics) -> Result<Value> where I: InfoProvider {
+fn fetch_pipeline_unit<I>(pipeline_resolved: &PipelineResolved, unit: &Unit, schema: &Schema, info_provider: &I, expect: &Type, namespace: &NamespaceBuilder, diagnostics: &mut Diagnostics) -> Result<Value> where I: InfoProvider {
     let mut pipeline = Pipeline::new();
     let mut current_space: Option<&teo_parser::ast::namespace::Namespace> = None;
     let mut item_index = 0;

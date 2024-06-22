@@ -11,11 +11,12 @@ use teo_parser::search::search_identifier_path::{search_identifier_path_names_wi
 use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::utils::top_filter::top_filter_for_reference_type;
 use teo_result::{Error, Result};
+use crate::namespace::builder::NamespaceBuilder;
 use crate::value::Value;
 use crate::namespace::Namespace;
 use crate::schema::fetch::fetch_expression::fetch_expression;
 
-pub fn fetch_identifier<I>(identifier: &Identifier, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace, diagnostics: &mut Diagnostics) -> Result<Value> where I: InfoProvider {
+pub fn fetch_identifier<I>(identifier: &Identifier, schema: &Schema, info_provider: &I, expect: &Type, namespace: &NamespaceBuilder, diagnostics: &mut Diagnostics) -> Result<Value> where I: InfoProvider {
     let top = fetch_identifier_to_node(identifier, schema, info_provider, expect,  &top_filter_for_reference_type(ReferenceSpace::Default))?;
     match top {
         Node::Config(c) => Err(Error::new("cannot resolve")),

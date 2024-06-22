@@ -27,7 +27,7 @@ use crate::pipeline::pipeline::Pipeline;
 use crate::traits::documentable::Documentable;
 use crate::value::Value;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct Model {
     pub path: Vec<String>,
     pub parser_path: Vec<usize>,

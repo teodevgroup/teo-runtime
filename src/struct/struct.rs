@@ -8,7 +8,7 @@ use crate::r#struct::function::static_function;
 use crate::r#struct::function::static_function::StaticFunction;
 use crate::utils::next_path;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct Struct {
     pub path: Vec<String>,
     #[serde(rename = "staticFunctions")]

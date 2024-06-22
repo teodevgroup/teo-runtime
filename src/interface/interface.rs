@@ -10,7 +10,7 @@ use crate::interface::field::Field;
 use crate::traits::documentable::Documentable;
 use crate::traits::named::Named;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct Interface {
     pub path: Vec<String>,
     pub parser_path: Vec<usize>,

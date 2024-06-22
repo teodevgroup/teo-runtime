@@ -8,9 +8,10 @@ use crate::config::connector::{Connector};
 use crate::namespace::Namespace;
 use teo_result::Result;
 use crate::database::database::Database;
+use crate::namespace::builder::NamespaceBuilder;
 use crate::schema::fetch::fetch_expression::fetch_expression_or_null;
 
-pub fn load_connector(main_namespace: &mut Namespace, schema: &Schema, connector: &Config, diagnostics: &mut Diagnostics) -> Result<()> {
+pub fn load_connector(main_namespace: &NamespaceBuilder, schema: &Schema, connector: &Config, diagnostics: &mut Diagnostics) -> Result<()> {
     let config_decl = schema.find_config_declaration_by_name("connector", connector.availability()).unwrap();
     let provider_expect = config_decl.get_field("provider").unwrap().type_expr().resolved();
     let url_expect = config_decl.get_field("url").unwrap().type_expr().resolved();

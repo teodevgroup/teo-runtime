@@ -17,6 +17,7 @@ use teo_parser::utils::top_filter::top_filter_for_reference_type;
 use teo_result::{Error, Result};
 use crate::value::Value;
 use crate::arguments::Arguments;
+use crate::namespace::builder::NamespaceBuilder;
 use crate::value::interface_enum_variant::InterfaceEnumVariant;
 use crate::namespace::Namespace;
 use crate::schema::fetch::fetch_argument_list::{fetch_argument_list, fetch_argument_list_or_empty};
@@ -48,7 +49,7 @@ impl UnitFetchResult {
     }
 }
 
-pub fn fetch_unit<I>(unit: &Unit, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace, diagnostics: &mut Diagnostics) -> Result<Value> where I: InfoProvider {
+pub fn fetch_unit<I>(unit: &Unit, schema: &Schema, info_provider: &I, expect: &Type, namespace: &NamespaceBuilder, diagnostics: &mut Diagnostics) -> Result<Value> where I: InfoProvider {
     if unit.expressions().count() == 1 {
         fetch_expression(unit.expression_at(0).unwrap(), schema, info_provider, expect, namespace, diagnostics)
     } else {
@@ -61,7 +62,7 @@ pub fn fetch_unit<I>(unit: &Unit, schema: &Schema, info_provider: &I, expect: &T
     }
 }
 
-fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: &Expression, schema: &Schema, info_provider: &I, expect: &Type, namespace: &Namespace, diagnostics: &mut Diagnostics) -> Result<UnitFetchResult> where I: InfoProvider {
+fn fetch_current_item_for_unit<I>(current: Option<UnitFetchResult>, expression: &Expression, schema: &Schema, info_provider: &I, expect: &Type, namespace: &NamespaceBuilder, diagnostics: &mut Diagnostics) -> Result<UnitFetchResult> where I: InfoProvider {
     let Some(current) = current else {
         let expected = Type::Undetermined;
         return Ok(if let Some(identifier) = expression.kind.as_identifier() {

@@ -6,21 +6,47 @@ use teo_result::Result;
 
 use super::Handler;
 
-#[derive(Educe, Serialize)]
+pub trait Call {
+    fn call(&self, args: Arguments, handler: &mut Handler) -> Result<()>;
+}
+
+impl<F> Call for F where
+    F: Fn(Arguments, &mut Handler) -> Result<()> {
+    fn call(&self, args: Arguments, handler: &mut Handler) -> Result<()> {
+        self(args, handler)
+    }
+}
+
+#[derive(Educe, Serialize, Clone)]
 #[educe(Debug)]
 pub struct Decorator {
+    inner: Arc<DecoratorInner>
+}
+
+#[derive(Educe, Serialize)]
+#[educe(Debug)]
+struct DecoratorInner {
     pub path: Vec<String>,
     #[educe(Debug(ignore))] #[serde(skip)]
     pub(crate) call: Arc<dyn Call>,
 }
 
-pub trait Call {
-    fn call(&self, args: Arguments, field: &mut Handler) -> Result<()>;
-}
+impl Decorator {
 
-impl<F> Call for F where
-        F: Fn(Arguments, &mut Handler) -> Result<()> {
-    fn call(&self, args: Arguments, field: &mut Handler) -> Result<()> {
-        self(args, field)
-    }
+        pub fn new<T>(path: Vec<String>, call: T) -> Self where T: Call + 'static {
+            Self {
+                inner: Arc::new(DecoratorInner {
+                    path,
+                    call: Arc::new(call),
+                }),
+            }
+        }
+
+        pub fn path(&self) -> &Vec<String> {
+            &self.inner.path
+        }
+
+        pub fn call(&self) -> &dyn Call {
+            self.inner.call.as_ref()
+        }
 }

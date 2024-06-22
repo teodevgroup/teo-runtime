@@ -1,4 +1,6 @@
 use std::collections::BTreeMap;
+use std::sync::{Arc, Mutex};
+use maplit::btreemap;
 use serde::Serialize;
 use teo_parser::ast::handler::HandlerInputFormat;
 use teo_parser::r#type::Type;
@@ -9,19 +11,44 @@ use crate::request;
 use crate::traits::named::Named;
 use crate::utils::next_path;
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub struct Group {
+    inner: Arc<GroupInner>
+}
+
+#[derive(Serialize, Debug)]
+struct GroupInner {
     pub path: Vec<String>,
-    pub handlers: BTreeMap<String, Handler>,
+    pub(crate) handlers: Arc<Mutex<BTreeMap<String, Handler>>>,
+
 }
 
 impl Group {
 
-    pub fn define_handler<T, F>(&mut self, name: &str, call: F) where T: 'static, F: 'static + HandlerCtxArgument<T> {
+    pub fn new(path: Vec<String>) -> Self {
+        Self {
+            inner: Arc::new(GroupInner {
+                path,
+                handlers: Arc::new(Mutex::new(btreemap! {}))
+            })
+        }
+    }
+
+    pub fn handler(&self, name: &str) -> Option<Handler> {
+        let handlers = self.inner.handlers.lock().unwrap();
+        handlers.get(name).cloned()
+    }
+
+    pub fn insert_handler(&self, name: &str, handler: Handler) {
+        let mut handlers = self.inner.handlers.lock().unwrap();
+        handlers.insert(name.to_owned(), handler);
+    }
+
+    pub fn define_handler<T, F>(&self, name: &str, call: F) where T: 'static, F: 'static + HandlerCtxArgument<T> {
         let wrapped_call = Box::leak(Box::new(call));
         let handler = Handler {
             namespace_path: {
-                let mut result = self.path.clone();
+                let mut result = self.inner.path.clone();
                 result.pop();
                 result
             },
@@ -29,7 +56,7 @@ impl Group {
             output_type: Type::Undetermined,
             nonapi: false,
             format: HandlerInputFormat::Json,
-            path: next_path(&self.path, name),
+            path: next_path(&self.inner.path, name),
             ignore_prefix: false,
             method: Method::Post,
             interface: None,
@@ -38,12 +65,13 @@ impl Group {
                 wrapped_call.call(ctx).await
             })),
         };
-        self.handlers.insert(name.to_owned(), handler);
+        let mut handlers = self.inner.handlers.lock().unwrap();
+        handlers.insert(name.to_owned(), handler);
     }
 }
 
 impl Named for Group {
     fn name(&self) -> &str {
-        self.path.last().unwrap().as_str()
+        self.inner.path.last().unwrap().as_str()
     }
 }

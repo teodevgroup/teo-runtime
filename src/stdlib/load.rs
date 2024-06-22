@@ -1,3 +1,4 @@
+use crate::namespace::builder::NamespaceBuilder;
 use crate::namespace::Namespace;
 use crate::stdlib::admin::load_admin_library;
 use crate::stdlib::decorators::enum_decorators::load_enum_decorators;
@@ -26,7 +27,7 @@ use crate::stdlib::structs::load_structs;
 use crate::stdlib::identity::load_identity_library;
 use crate::stdlib::pipeline_items::request::load_pipeline_request_items;
 
-pub fn load(namespace: &mut Namespace) {
+pub fn load(namespace: &NamespaceBuilder) {
     if !namespace.path.is_empty() {
         panic!("Please load standard library in the main namespace.")
     }

@@ -5,7 +5,7 @@ use crate::arguments::Arguments;
 use teo_result::Result;
 use crate::value::Value;
 
-#[derive(Educe, Serialize)]
+#[derive(Educe, Serialize, Clone)]
 #[educe(Debug)]
 pub struct Definition {
     pub path: Vec<String>,
