@@ -2,7 +2,7 @@ pub mod extensions;
 
 use std::collections::BTreeMap;
 use std::ops::Deref;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use maplit::btreemap;
 use crate::{interface, middleware, model, model::Model, r#enum, request};
 use crate::arguments::Arguments;
@@ -77,7 +77,7 @@ pub struct Namespace {
     pub database: Option<Database>,
     pub connector_reference: Option<Vec<String>>,
     #[serde(skip)]
-    pub connection: Option<Arc<dyn Connection>>,
+    pub connection: Arc<Mutex<Option<Arc<dyn Connection>>>>,
     #[educe(Debug(ignore))] #[serde(skip)]
     pub middleware_stack: &'static dyn Middleware,
     #[educe(Debug(ignore))] #[serde(skip)]
@@ -124,7 +124,7 @@ impl Namespace {
             middlewares_block: None,
             database: None,
             connector_reference: None,
-            connection: None,
+            connection: Arc::new(Mutex::new(None)),
             middleware_stack: empty_middleware(),
             handler_map: handler::Map::new(),
             model_opposite_relations_map: btreemap! {},
