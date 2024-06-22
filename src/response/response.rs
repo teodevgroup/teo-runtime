@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use crate::value::Value;
 use crate::teon;
+use cookie::Cookie;
 use teo_result::Result;
 use crate::response::body::Body;
 use crate::response::header::readwrite::HeaderMap;
@@ -73,6 +74,10 @@ impl Response {
 
     pub fn set_code(&self, code: u16) {
         self.inner.lock().unwrap().code = code;
+    }
+
+    pub fn set_cookie(&mut self, cookie: &Cookie<'_>) {
+        self.inner.lock().unwrap().headers.set("set-cookie", cookie.to_string())
     }
 
     pub fn code(&self) -> u16 {
