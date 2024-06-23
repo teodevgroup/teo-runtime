@@ -6,9 +6,11 @@ pub mod object;
 pub mod index;
 pub mod migration;
 pub mod model;
+pub mod builder;
 pub mod ctx;
 
 pub use model::Model;
+pub use builder::Builder;
 pub use object::Object;
 pub use decorator::Decorator;
 pub use index::Index;

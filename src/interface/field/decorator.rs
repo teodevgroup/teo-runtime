@@ -39,11 +39,11 @@ impl Decorator {
         }
     }
 
-        pub fn path(&self) -> &Vec<String> {
-            &self.inner.path
-        }
+    pub fn path(&self) -> &Vec<String> {
+        &self.inner.path
+    }
 
-        pub fn call(&self) -> &dyn Call {
-            &self.inner.call
-        }
+    pub fn call(&self) -> &dyn Call {
+        &self.inner.call
+    }
 }

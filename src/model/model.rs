@@ -342,7 +342,6 @@ impl Model {
     }
 
     fn figure_out_builtin_handlers(&self) -> Vec<Action> {
-        // TODO: filter
         let mut result = vec![];
         for action in Action::builtin_handlers() {
             result.push(*action);
