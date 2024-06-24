@@ -1,13 +1,9 @@
 use std::collections::BTreeMap;
-use maplit::btreemap;
 use serde::Serialize;
-use teo_parser::ast::schema::Schema;
 use teo_parser::availability::Availability;
-use teo_result::Result;
 use teo_parser::r#type::Type;
 pub use super::decorator::Decorator;
 use crate::comment::Comment;
-use crate::database::database::Database;
 use crate::database::r#type::DatabaseType;
 use crate::model::field::column_named::ColumnNamed;
 use crate::model::field::Index;
@@ -58,59 +54,8 @@ pub struct Field {
 
 impl Field {
 
-    pub fn new() -> Self {
-        Self {
-            name: "".to_string(),
-            column_name: "".to_string(),
-            foreign_key: false,
-            dropped: false,
-            migration: None,
-            comment: None,
-            r#type: Type::Undetermined,
-            database_type: DatabaseType::Undetermined,
-            optionality: Optionality::Optional,
-            atomic: false,
-            copy: true,
-            read: Read::Read,
-            write: Write::Write,
-            r#virtual: false,
-            input_omissible: false,
-            output_omissible: false,
-            index: None,
-            queryable: false,
-            sortable: false,
-            auto: false,
-            auto_increment: false,
-            default: None,
-            on_set: Pipeline::new(),
-            on_save: Pipeline::new(),
-            on_output: Pipeline::new(),
-            can_mutate: Pipeline::new(),
-            can_read: Pipeline::new(),
-            data: btreemap! {},
-            availability: Availability::none(),
-        }
-    }
-
     pub fn migration(&self) -> Option<&Migration> {
         self.migration.as_ref()
-    }
-
-    pub fn finalize(&mut self, database: Database, schema: &Schema) -> Result<()> {
-
-        // do not copy primary field and unique field
-        if self.index.is_some() && self.index().unwrap().r#type.is_unique_or_primary() {
-            self.copy = false;
-        }
-        // set default column name
-        if self.column_name.is_empty() {
-            self.column_name = self.name.clone();
-        }
-        // set default database type
-        if self.database_type.is_undetermined() {
-            self.database_type = database.default_database_type(&self.r#type, schema)?;
-        }
-        Ok(())
     }
 }
 

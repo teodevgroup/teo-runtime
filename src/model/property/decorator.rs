@@ -2,16 +2,16 @@ use std::sync::Arc;
 use educe::Educe;
 use serde::Serialize;
 use crate::arguments::Arguments;
-use crate::model::property::Property;
+use crate::model::property::{Builder, Property};
 use teo_result::Result;
 
 pub trait Call {
-    fn call(&self, args: Arguments, field: &mut Property) -> Result<()>;
+    fn call(&self, args: Arguments, field: &Builder) -> Result<()>;
 }
 
 impl<F> Call for F where
-    F: Fn(Arguments, &mut Property) -> Result<()> {
-    fn call(&self, args: Arguments, field: &mut Property) -> Result<()> {
+    F: Fn(Arguments, &Builder) -> Result<()> {
+    fn call(&self, args: Arguments, field: &Builder) -> Result<()> {
         self(args, field)
     }
 }

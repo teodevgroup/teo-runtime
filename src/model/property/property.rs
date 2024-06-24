@@ -1,6 +1,5 @@
 use std::collections::BTreeMap;
 use serde::Serialize;
-use teo_parser::ast::namespace::Namespace;
 use teo_parser::ast::schema::Schema;
 use teo_parser::r#type::Type;
 use teo_result::Result;
