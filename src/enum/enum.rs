@@ -10,60 +10,50 @@ use crate::value::Value;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct Enum {
-    inner: Arc<EnumInner>,
-}
-
-#[derive(Debug, Serialize)]
-struct EnumInner {
-    pub path: Vec<String>,
-    pub comment: Option<Comment>,
-    pub option: bool,
-    pub interface: bool,
-    pub members: Vec<Member>,
-    pub data: BTreeMap<String, Value>,
-    pub cache: Cache,
+    pub(super) path: Vec<String>,
+    pub(super) comment: Option<Comment>,
+    pub(super) option: bool,
+    pub(super) interface: bool,
+    pub(super) members: Vec<Member>,
+    pub(super) data: BTreeMap<String, Value>,
+    pub(super) member_names: Vec<String>,
 }
 
 impl Enum {
 
-    pub fn new() -> Self {
-        Self {
-            inner: Arc::new(EnumInner {
-                path: vec![],
-                comment: None,
-                option: false,
-                interface: false,
-                members: vec![],
-                data: btreemap! {},
-                cache: Cache {
-                    member_names: vec![]
-                }
-            })
-        }
+    pub fn path(&self) -> &Vec<String> {
+        &self.path
     }
 
-    pub fn path(&self) -> Vec<&str> {
-        self.inner.path.iter().map(AsRef::as_ref).collect()
+    pub fn comment(&self) -> Option<&Comment> {
+        self.comment.as_ref()
     }
 
-    pub fn finalize(&mut self) {
-        self.inner.cache.member_names = self.inner.members.iter().map(|m| m.name.clone()).collect();
+    pub fn option(&self) -> bool {
+        self.option
+    }
+
+    pub fn interface(&self) -> bool {
+        self.interface
     }
 
     pub fn members(&self) -> &Vec<Member> {
-        &self.inner.members
+        &self.members
     }
-}
 
-#[derive(Debug, Serialize)]
-pub struct Cache {
-    pub member_names: Vec<String>,
+    pub fn data(&self) -> &BTreeMap<String, Value> {
+        &self.data
+    }
+
+    pub fn member_names(&self) -> &Vec<String> {
+        &self.member_names
+    }
 }
 
 impl Named for Enum {
 
     fn name(&self) -> &str {
-        self.inner.path.last().unwrap().as_str()
+        self.path.last().unwrap().as_str()
     }
 }
 
