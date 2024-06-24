@@ -56,7 +56,7 @@ impl Group {
             output_type: Type::Undetermined,
             nonapi: false,
             format: HandlerInputFormat::Json,
-            path: next_path(&self.inner.path, name),
+            path: next_path(self.path(), name),
             ignore_prefix: false,
             method: Method::Post,
             interface: None,

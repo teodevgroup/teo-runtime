@@ -1,5 +1,4 @@
 use crate::namespace::builder::NamespaceBuilder;
-use crate::namespace::Namespace;
 use crate::stdlib::admin::load_admin_library;
 use crate::stdlib::decorators::enum_decorators::load_enum_decorators;
 use crate::stdlib::decorators::enum_member_decorators::load_enum_member_decorators;
@@ -27,40 +26,40 @@ use crate::stdlib::structs::load_structs;
 use crate::stdlib::identity::load_identity_library;
 use crate::stdlib::pipeline_items::request::load_pipeline_request_items;
 
-pub fn load(namespace: &NamespaceBuilder) {
-    if !namespace.path.is_empty() {
+pub fn load(namespace_builder: &NamespaceBuilder) {
+    if !namespace_builder.path().is_empty() {
         panic!("Please load standard library in the main namespace.")
     }
-    let std_namespace = namespace.namespace_mut_or_create("std");
+    let std_namespace_builder = namespace_builder.namespace_or_create("std");
     // structs
-    load_structs(std_namespace);
+    load_structs(&std_namespace_builder);
     // decorators
-    load_model_decorators(std_namespace);
-    load_model_field_decorators(std_namespace);
-    load_model_relation_decorators(std_namespace);
-    load_model_property_decorators(std_namespace);
-    load_enum_decorators(std_namespace);
-    load_enum_member_decorators(std_namespace);
-    load_interface_decorators(std_namespace);
-    load_handler_decorators(std_namespace);
+    load_model_decorators(&std_namespace_builder);
+    load_model_field_decorators(&std_namespace_builder);
+    load_model_relation_decorators(&std_namespace_builder);
+    load_model_property_decorators(&std_namespace_builder);
+    load_enum_decorators(&std_namespace_builder);
+    load_enum_member_decorators(&std_namespace_builder);
+    load_interface_decorators(&std_namespace_builder);
+    load_handler_decorators(&std_namespace_builder);
     // pipeline items
-    load_pipeline_math_items(std_namespace);
-    load_pipeline_number_items(std_namespace);
-    load_pipeline_string_generation_items(std_namespace);
-    load_pipeline_string_transform_items(std_namespace);
-    load_pipeline_string_validation_items(std_namespace);
-    load_pipeline_value_items(std_namespace);
-    load_pipeline_model_object_items(std_namespace);
-    load_pipeline_logical_items(std_namespace);
-    load_pipeline_array_items(std_namespace);
-    load_pipeline_vector_items(std_namespace);
-    load_pipeline_datetime_items(std_namespace);
-    load_pipeline_request_items(std_namespace);
-    load_debug_items(std_namespace);
-    load_bcrypt_items(std_namespace);
+    load_pipeline_math_items(&std_namespace_builder);
+    load_pipeline_number_items(&std_namespace_builder);
+    load_pipeline_string_generation_items(&std_namespace_builder);
+    load_pipeline_string_transform_items(&std_namespace_builder);
+    load_pipeline_string_validation_items(&std_namespace_builder);
+    load_pipeline_value_items(&std_namespace_builder);
+    load_pipeline_model_object_items(&std_namespace_builder);
+    load_pipeline_logical_items(&std_namespace_builder);
+    load_pipeline_array_items(&std_namespace_builder);
+    load_pipeline_vector_items(&std_namespace_builder);
+    load_pipeline_datetime_items(&std_namespace_builder);
+    load_pipeline_request_items(&std_namespace_builder);
+    load_debug_items(&std_namespace_builder);
+    load_bcrypt_items(&std_namespace_builder);
     // middlewares
-    load_log_request_middleware(std_namespace);
+    load_log_request_middleware(&std_namespace_builder);
     // libraries
-    load_identity_library(std_namespace);
-    load_admin_library(std_namespace);
+    load_identity_library(&std_namespace_builder);
+    load_admin_library(&std_namespace_builder);
 }

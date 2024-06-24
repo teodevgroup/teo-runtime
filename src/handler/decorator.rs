@@ -3,29 +3,28 @@ use educe::Educe;
 use serde::Serialize;
 use crate::arguments::Arguments;
 use teo_result::Result;
-
-use super::Handler;
+use super::Builder;
 
 pub trait Call {
-    fn call(&self, args: Arguments, handler: &mut Handler) -> Result<()>;
+    fn call(&self, args: Arguments, handler_builder: &Builder) -> Result<()>;
 }
 
 impl<F> Call for F where
-    F: Fn(Arguments, &mut Handler) -> Result<()> {
-    fn call(&self, args: Arguments, handler: &mut Handler) -> Result<()> {
-        self(args, handler)
+    F: Fn(Arguments, &Builder) -> Result<()> {
+    fn call(&self, args: Arguments, handler_builder: &Builder) -> Result<()> {
+        self(args, handler_builder)
     }
 }
 
 #[derive(Educe, Serialize, Clone)]
 #[educe(Debug)]
 pub struct Decorator {
-    inner: Arc<DecoratorInner>
+    inner: Arc<Inner>
 }
 
 #[derive(Educe, Serialize)]
 #[educe(Debug)]
-struct DecoratorInner {
+struct Inner {
     pub path: Vec<String>,
     #[educe(Debug(ignore))] #[serde(skip)]
     pub(crate) call: Arc<dyn Call>,
@@ -35,7 +34,7 @@ impl Decorator {
 
         pub fn new<T>(path: Vec<String>, call: T) -> Self where T: Call + 'static {
             Self {
-                inner: Arc::new(DecoratorInner {
+                inner: Arc::new(Inner {
                     path,
                     call: Arc::new(call),
                 }),

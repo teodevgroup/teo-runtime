@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
-use indexmap::{indexmap, IndexMap};
+use std::sync::Arc;
+use indexmap::IndexMap;
 use maplit::btreemap;
 use serde::Serialize;
 use teo_parser::r#type::reference::Reference;
@@ -11,33 +12,70 @@ use crate::traits::documentable::Documentable;
 use crate::traits::named::Named;
 use crate::Value;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct Interface {
-    pub path: Vec<String>,
-    pub parser_path: Vec<usize>,
-    pub comment: Option<Comment>,
-    pub fields: IndexMap<String, Field>,
-    pub generic_names: Vec<String>,
-    pub extends: Vec<Type>,
-    pub shape: SynthesizedShape,
-    pub generate_client: bool,
-    pub generate_entity: bool,
-    pub data: BTreeMap<String, Value>,
+    inner: Arc<Inner>
+}
+
+#[derive(Debug, Serialize)]
+struct Inner {
+    pub(super) path: Vec<String>,
+    pub(super) parser_path: Vec<usize>,
+    pub(super) comment: Option<Comment>,
+    pub(super) fields: IndexMap<String, Field>,
+    pub(super) generic_names: Vec<String>,
+    pub(super) extends: Vec<Type>,
+    pub(super) shape: SynthesizedShape,
+    pub(super) generate_client: bool,
+    pub(super) generate_entity: bool,
+    pub(super) data: BTreeMap<String, Value>,
 }
 
 impl Interface {
 
-    pub fn generic_names(&self) -> Vec<&str> {
-        self.generic_names.iter().map(|g| g.as_str()).collect()
+    pub fn path(&self) -> &Vec<String> {
+        &self.inner.path
+    }
+
+    pub fn parser_path(&self) -> &Vec<usize> {
+        &self.inner.parser_path
+    }
+
+    pub fn comment(&self) -> Option<&Comment> {
+        self.inner.comment.as_ref()
+    }
+
+    pub fn fields(&self) -> &IndexMap<String, Field> {
+        &self.inner.fields
+    }
+
+    pub fn generic_names(&self) -> &Vec<String> {
+        &self.inner.generic_names
     }
 
     pub fn extends(&self) -> &Vec<Type> {
-        &self.extends
+        &self.inner.extends
+    }
+
+    pub fn shape(&self) -> &SynthesizedShape {
+        &self.inner.shape
+    }
+
+    pub fn generate_client(&self) -> bool {
+        self.inner.generate_client
+    }
+
+    pub fn generate_entity(&self) -> bool {
+        self.inner.generate_entity
+    }
+
+    pub fn data(&self) -> &BTreeMap<String, Value> {
+        &self.inner.data
     }
 
     pub fn shape_from_generics(&self, generics: &Vec<Type>) -> SynthesizedShape {
         let map = self.calculate_generics_map(generics);
-        self.shape.replace_generics(&map)
+        self.inner.shape.replace_generics(&map)
     }
 
     pub fn calculate_generics_map(&self, types: &Vec<Type>) -> BTreeMap<String, Type> {
@@ -48,21 +86,21 @@ impl Interface {
     }
 
     pub fn as_type_reference(&self) -> Reference {
-        Reference::new(self.parser_path.clone(), self.path.clone())
+        Reference::new(self.inner.parser_path.clone(), self.inner.path.clone())
     }
 }
 
 impl Named for Interface {
 
     fn name(&self) -> &str {
-        self.path.last().map(|s| s.as_str()).unwrap()
+        self.inner.path.last().map(|s| s.as_str()).unwrap()
     }
 }
 
 impl Documentable for Interface {
 
     fn comment(&self) -> Option<&Comment> {
-        self.comment.as_ref()
+        self.inner.comment.as_ref()
     }
 
     fn kind(&self) -> &'static str {

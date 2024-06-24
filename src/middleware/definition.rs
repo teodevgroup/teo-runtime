@@ -3,10 +3,35 @@ use educe::Educe;
 use serde::Serialize;
 use super::creator::Creator;
 
-#[derive(Educe, Serialize, Clone)]
-#[educe(Debug)]
+#[derive(Debug, Clone)]
 pub struct Definition {
-    pub path: Vec<String>,
+    inner: Arc<Inner>,
+}
+
+#[derive(Educe, Serialize)]
+#[educe(Debug)]
+struct Inner {
+    path: Vec<String>,
     #[educe(Debug(ignore))] #[serde(skip)]
-    pub creator: Arc<dyn Creator>,
+    creator: Arc<dyn Creator>,
+}
+
+impl Definition {
+
+    pub fn new(path: Vec<String>, creator: Arc<dyn Creator>) -> Self {
+        Self {
+            inner: Arc::new(Inner {
+                path,
+                creator,
+            }),
+        }
+    }
+
+    pub fn path(&self) -> &Vec<String> {
+        &self.inner.path
+    }
+
+    pub fn creator(&self) -> Arc<dyn Creator> {
+        self.inner.creator.clone()
+    }
 }

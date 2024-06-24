@@ -3,12 +3,13 @@ use crate::value::Value;
 use crate::namespace::Namespace;
 use teo_result::Result;
 use crate::action::Action;
+use crate::namespace::builder::NamespaceBuilder;
 use crate::pipeline::pipeline::Pipeline;
 use crate::stdlib::decorators::model_indexable_decorators::{model_id_decorator, model_index_decorator, model_unique_decorator};
 
-pub(in crate::stdlib) fn load_model_decorators(namespace: &mut Namespace) {
+pub(in crate::stdlib) fn load_model_decorators(namespace_builder: &NamespaceBuilder) {
 
-    namespace.define_model_decorator("map", |arguments, model| {
+    namespace_builder.define_model_decorator("map", |arguments, model| {
         let table_name: String = arguments.get("tableName")?;
         let mut namespace_prefix = model.namespace_path().join("_");
         if !namespace_prefix.is_empty() {

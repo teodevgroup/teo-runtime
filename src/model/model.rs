@@ -1,5 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::BitOr;
+use std::sync::Arc;
 use indexmap::IndexMap;
 use maplit::{btreemap, btreeset};
 use serde::Serialize;
@@ -27,50 +28,56 @@ use crate::pipeline::pipeline::Pipeline;
 use crate::traits::documentable::Documentable;
 use crate::value::Value;
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Clone)]
 pub struct Model {
-    pub path: Vec<String>,
-    pub parser_path: Vec<usize>,
-    pub comment: Option<Comment>,
+    pub(super) inner: Arc<Inner>,
+}
+
+#[derive(Debug, Serialize)]
+struct Inner {
+    pub(super) path: Vec<String>,
+    pub(super) parser_path: Vec<usize>,
+    pub(super) namespace_path: Vec<String>,
+    pub(super) comment: Option<Comment>,
     #[serde(rename = "tableName")]
-    pub table_name: String,
-    pub actions: Vec<Action>,
+    pub(super) table_name: String,
+    pub(super) actions: Vec<Action>,
     #[serde(rename = "generateClient")]
-    pub generate_client: bool,
+    pub(super) generate_client: bool,
     #[serde(rename = "generateEntity")]
-    pub generate_entity: bool,
+    pub(super) generate_entity: bool,
     #[serde(rename = "showInStudio")]
-    pub show_in_studio: bool,
+    pub(super) show_in_studio: bool,
     #[serde(rename = "synthesizeShapes")]
-    pub synthesize_shapes: bool,
-    pub fields: IndexMap<String, Field>,
-    pub relations: IndexMap<String, Relation>,
-    pub properties: IndexMap<String, Property>,
-    pub indexes: IndexMap<String, Index>,
+    pub(super) synthesize_shapes: bool,
+    pub(super) fields: IndexMap<String, Field>,
+    pub(super) relations: IndexMap<String, Relation>,
+    pub(super) properties: IndexMap<String, Property>,
+    pub(super) indexes: IndexMap<String, Index>,
     #[serde(rename = "primaryIndex")]
-    pub primary_index: String,
+    pub(super) primary_index: String,
     #[serde(rename = "beforeSave")]
-    pub before_save: Pipeline,
+    pub(super) before_save: Pipeline,
     #[serde(rename = "afterSave")]
-    pub after_save: Pipeline,
+    pub(super) after_save: Pipeline,
     #[serde(rename = "beforeDelete")]
-    pub before_delete: Pipeline,
+    pub(super) before_delete: Pipeline,
     #[serde(rename = "afterDelete")]
-    pub after_delete: Pipeline,
+    pub(super) after_delete: Pipeline,
     #[serde(rename = "canRead")]
-    pub can_read: Pipeline,
+    pub(super) can_read: Pipeline,
     #[serde(rename = "canMutate")]
-    pub can_mutate: Pipeline,
-    pub migration: Migration,
-    pub data: BTreeMap<String, Value>,
-    pub cache: Cache,
-    pub builtin_handlers: Vec<Action>,
+    pub(super) can_mutate: Pipeline,
+    pub(super) migration: Migration,
+    pub(super) builtin_handlers: Vec<Action>,
+    pub(super) data: BTreeMap<String, Value>,
+    pub(super) cache: Cache,
 }
 
 impl PartialEq for Model {
 
     fn eq(&self, other: &Self) -> bool {
-        self.path == other.path
+        self.inner.path == other.inner.path
     }
 }
 
@@ -78,55 +85,148 @@ impl Model {
 
     pub fn new() -> Self {
         Self {
-            path: vec![],
-            parser_path: vec![],
-            table_name: "".to_string(),
-            generate_client: true,
-            generate_entity: true,
-            show_in_studio: true,
-            synthesize_shapes: true,
-            comment: None,
-            fields: Default::default(),
-            relations: Default::default(),
-            properties: Default::default(),
-            indexes: Default::default(),
-            primary_index: "".to_string(),
-            before_save: Pipeline::new(),
-            after_save: Pipeline::new(),
-            before_delete: Pipeline::new(),
-            after_delete: Pipeline::new(),
-            can_read: Pipeline::new(),
-            can_mutate: Pipeline::new(),
-            actions: vec![],
-            migration: Default::default(),
-            data: btreemap! {},
-            cache: Cache::new(),
-            builtin_handlers: vec![],
+            inner: Arc::new(Inner {
+                path: vec![],
+                parser_path: vec![],
+                namespace_path: vec![],
+                table_name: "".to_string(),
+                generate_client: true,
+                generate_entity: true,
+                show_in_studio: true,
+                synthesize_shapes: true,
+                comment: None,
+                fields: Default::default(),
+                relations: Default::default(),
+                properties: Default::default(),
+                indexes: Default::default(),
+                primary_index: "".to_string(),
+                before_save: Pipeline::new(),
+                after_save: Pipeline::new(),
+                before_delete: Pipeline::new(),
+                after_delete: Pipeline::new(),
+                can_read: Pipeline::new(),
+                can_mutate: Pipeline::new(),
+                actions: vec![],
+                migration: Default::default(),
+                data: btreemap! {},
+                cache: Cache::new(),
+                builtin_handlers: vec![],
+            })
         }
     }
 
-    pub fn namespace_path(&self) -> Vec<&str> {
-        self.path.iter().rev().skip(1).rev().map(AsRef::as_ref).collect()
+    pub fn path(&self) -> &Vec<String> {
+        &self.inner.path
+    }
+
+    pub fn parser_path(&self) -> &Vec<usize> {
+        &self.inner.parser_path
+    }
+
+    pub fn namespace_path(&self) -> &Vec<String> {
+        &self.inner.namespace_path
+        //self.path.iter().rev().skip(1).rev().map(AsRef::as_ref).collect()
     }
 
     pub fn table_name(&self) -> &str {
-        &self.table_name
+        &self.inner.table_name
+    }
+
+    pub fn actions(&self) -> &Vec<Action> {
+        &self.inner.actions
+    }
+
+    pub fn generate_client(&self) -> bool {
+        self.inner.generate_client
+    }
+
+    pub fn generate_entity(&self) -> bool {
+        self.inner.generate_entity
+    }
+
+    pub fn show_in_studio(&self) -> bool {
+        self.inner.show_in_studio
+    }
+
+    pub fn synthesize_shapes(&self) -> bool {
+        self.inner.synthesize_shapes
+    }
+
+    pub fn fields(&self) -> &IndexMap<String, Field> {
+        &self.inner.fields
+    }
+
+    pub fn relations(&self) -> &IndexMap<String, Relation> {
+        &self.inner.relations
+    }
+
+    pub fn properties(&self) -> &IndexMap<String, Property> {
+        &self.inner.properties
+    }
+
+    pub fn indexes(&self) -> &IndexMap<String, Index> {
+        &self.inner.indexes
+    }
+
+    pub fn primary_index_name(&self) -> &str {
+        &self.inner.primary_index
+    }
+
+    pub fn primary_index(&self) -> Option<&Index> {
+        self.indexes().values().find(|i| i.r#type().is_primary())
+    }
+
+
+    pub fn before_save(&self) -> &Pipeline {
+        &self.inner.before_save
+    }
+
+    pub fn after_save(&self) -> &Pipeline {
+        &self.inner.after_save
+    }
+
+    pub fn before_delete(&self) -> &Pipeline {
+        &self.inner.before_delete
+    }
+
+    pub fn after_delete(&self) -> &Pipeline {
+        &self.inner.after_delete
+    }
+
+    pub fn can_read(&self) -> &Pipeline {
+        &self.inner.can_read
+    }
+
+    pub fn can_mutate(&self) -> &Pipeline {
+        &self.inner.can_mutate
+    }
+
+    pub fn migration(&self) -> &Migration {
+        &self.inner.migration
+    }
+
+    pub fn data(&self) -> &BTreeMap<String, Value> {
+        &self.inner.data
+    }
+
+    pub fn cache(&self) -> &Cache {
+        &self.inner.cache
     }
 
     pub fn field(&self, name: &str) -> Option<&Field> {
-        self.fields.get(name).filter(|f| !f.dropped)
+        self.fields().get(name).filter(|f| !f.dropped)
     }
 
     pub fn dropped_field(&self, name: &str) -> Option<&Field> {
-        self.fields.get(name).filter(|f| f.dropped)
+        self.fields().get(name).filter(|f| f.dropped)
     }
 
     pub fn relation(&self, name: &str) -> Option<&Relation> {
-        self.relations.get(name)
+        self.relations().get(name)
     }
 
     pub fn property(&self, name: &str) -> Option<&Property> {
-        self.properties.get(name)
+        self.properties().get(name)
     }
 
     pub fn field_with_column_name(&self, name: &str) -> Option<&Field> {
@@ -137,30 +237,14 @@ impl Model {
         self.properties().iter().find(|p| p.column_name() == name).map(|p| *p)
     }
 
-    pub fn indexes(&self) -> Vec<&Index> {
-        self.indexes.values().collect()
-    }
-
-    pub fn fields(&self) -> Vec<&Field> {
-        self.fields.values().collect()
-    }
-
-    pub fn relations(&self) -> Vec<&Relation> {
-        self.relations.values().collect()
-    }
-
-    pub fn properties(&self) -> Vec<&Property> {
-        self.properties.values().collect()
-    }
-
     pub fn collect_field_index<I>(&self, indexable: &I) -> Option<Index> where I: Indexable {
         if let Some(field_index) = indexable.index() {
             let name = indexable.name();
-            let index = model::Index::new(field_index.r#type, name.to_owned(), vec![
+            let index = model::Index::new(field_index.r#type(), name.to_owned(), vec![
                 Item::new(
-                    field_index.name.clone(),
-                    field_index.sort,
-                    field_index.length,
+                    field_index.name().to_owned(),
+                    field_index.sort(),
+                    field_index.length(),
                 )
             ]);
             Some(index)
@@ -171,22 +255,14 @@ impl Model {
 
     pub(crate) fn allowed_keys_for_aggregate(&self, name: &str) -> BTreeSet<&str> {
         match name {
-            "_count" => self.cache.scalar_keys.iter().map(|k| k.as_str()).collect::<BTreeSet<&str>>().bitor(&btreeset!{"_all"}),
-            "_min" | "_max" => self.cache.scalar_keys.iter().map(|k| k.as_str()).collect(),
-            _ => self.cache.scalar_number_keys.iter().map(|k| k.as_str()).collect(),
+            "_count" => self.cache().scalar_keys.iter().map(|k| k.as_str()).collect::<BTreeSet<&str>>().bitor(&btreeset!{"_all"}),
+            "_min" | "_max" => self.cache().scalar_keys.iter().map(|k| k.as_str()).collect(),
+            _ => self.cache().scalar_number_keys.iter().map(|k| k.as_str()).collect(),
         }
     }
 
     pub fn allows_drop_when_migrate(&self) -> bool {
-        self.migration.drop
-    }
-
-    pub fn primary_index(&self) -> Option<&Index> {
-        self.indexes.values().find(|i| i.r#type().is_primary())
-    }
-
-    pub fn path(&self) -> Vec<&str> {
-        self.path.iter().map(AsRef::as_ref).collect()
+        self.migration().drop
     }
 
     pub fn finalize(&mut self) -> Result<()> {
@@ -460,7 +536,7 @@ impl Model {
     }
 
     fn as_type_reference(&self) -> Reference {
-        Reference::new(self.parser_path.clone(), self.path.clone())
+        Reference::new(self.parser_path().clone(), self.path().clone())
     }
 }
 
@@ -529,14 +605,14 @@ impl Cache {
 impl Named for Model {
 
     fn name(&self) -> &str {
-        self.path.last().map(|s| s.as_str()).unwrap()
+        self.path().last().map(|s| s.as_str()).unwrap()
     }
 }
 
 impl Documentable for Model {
 
     fn comment(&self) -> Option<&Comment> {
-        self.comment.as_ref()
+        self.comment()
     }
 
     fn kind(&self) -> &'static str {

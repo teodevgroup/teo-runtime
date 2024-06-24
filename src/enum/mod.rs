@@ -5,4 +5,4 @@ pub mod builder;
 
 pub use decorator::Decorator;
 pub use r#enum::Enum;
-
+pub use builder::Builder;

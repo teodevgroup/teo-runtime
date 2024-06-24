@@ -5,14 +5,14 @@ use chrono::{DateTime, NaiveDate, SecondsFormat, Utc};
 use indexmap::IndexMap;
 use maplit::btreemap;
 use crate::value::Value;
-use crate::namespace::Namespace;
 use crate::arguments::Arguments;
 use crate::r#struct;
 use teo_result::Error;
+use crate::namespace::builder::NamespaceBuilder;
 
-pub(in crate::stdlib) fn load_structs(namespace: &mut Namespace) {
+pub(in crate::stdlib) fn load_structs(namespace_builder: &NamespaceBuilder) {
 
-    namespace.define_struct("EnvVars", |path, r#struct| {
+    namespace_builder.define_struct("EnvVars", |path, r#struct| {
         r#struct.define_static_function("new", move |_arguments: Arguments| {
             Ok(Value::from(r#struct::Object::new(path.clone(), btreemap! {})))
         });
@@ -26,13 +26,13 @@ pub(in crate::stdlib) fn load_structs(namespace: &mut Namespace) {
         });
     });
 
-    namespace.define_struct("Null", |path, r#struct| {
+    namespace_builder.define_struct("Null", |path, r#struct| {
         r#struct.define_static_function("new", move |_arguments: Arguments| {
             Ok(Value::from(Value::Null))
         });
     });
 
-    namespace.define_struct("Bool", |path, r#struct| {
+    namespace_builder.define_struct("Bool", |path, r#struct| {
         r#struct.define_static_function("new", move |arguments: Arguments| {
             let from: &str = arguments.get("from")?;
             Ok(Value::from(match from {
@@ -43,7 +43,7 @@ pub(in crate::stdlib) fn load_structs(namespace: &mut Namespace) {
         });
     });
 
-    namespace.define_struct("Int", |path, r#struct| {
+    namespace_builder.define_struct("Int", |path, r#struct| {
         r#struct.define_static_function("new", move |arguments: Arguments| {
             let from: &str = arguments.get("from")?;
             Ok(Value::from(match i32::from_str(from) {
@@ -53,7 +53,7 @@ pub(in crate::stdlib) fn load_structs(namespace: &mut Namespace) {
         });
     });
 
-    namespace.define_struct("Int64", |path, r#struct| {
+    namespace_builder.define_struct("Int64", |path, r#struct| {
         r#struct.define_static_function("new", move |arguments: Arguments| {
             let from: &str = arguments.get("from")?;
             Ok(Value::from(match i64::from_str(from) {
@@ -63,7 +63,7 @@ pub(in crate::stdlib) fn load_structs(namespace: &mut Namespace) {
         });
     });
 
-    namespace.define_struct("Float32", |path, r#struct| {
+    namespace_builder.define_struct("Float32", |path, r#struct| {
         r#struct.define_static_function("new", move |arguments: Arguments| {
             let from: &str = arguments.get("from")?;
             Ok(Value::from(match f32::from_str(from) {
@@ -73,7 +73,7 @@ pub(in crate::stdlib) fn load_structs(namespace: &mut Namespace) {
         });
     });
 
-    namespace.define_struct("Float", |path, r#struct| {
+    namespace_builder.define_struct("Float", |path, r#struct| {
         r#struct.define_static_function("new", move |arguments: Arguments| {
             let from: &str = arguments.get("from")?;
             Ok(Value::from(match f64::from_str(from) {
@@ -83,7 +83,7 @@ pub(in crate::stdlib) fn load_structs(namespace: &mut Namespace) {
         });
     });
 
-    namespace.define_struct("Decimal", |path, r#struct| {
+    namespace_builder.define_struct("Decimal", |path, r#struct| {
         r#struct.define_static_function("new", move |arguments: Arguments| {
             let from: &str = arguments.get("from")?;
             Ok(Value::from(match BigDecimal::from_str(from) {
@@ -93,7 +93,7 @@ pub(in crate::stdlib) fn load_structs(namespace: &mut Namespace) {
         });
     });
 
-    namespace.define_struct("String", |path, r#struct| {
+    namespace_builder.define_struct("String", |path, r#struct| {
         r#struct.define_static_function("new", move |arguments: Arguments| {
             let from: &Value = arguments.get("from")?;
             Ok(Value::from(match from {
@@ -124,7 +124,7 @@ pub(in crate::stdlib) fn load_structs(namespace: &mut Namespace) {
         });
     });
 
-    namespace.define_struct("ObjectId", |path, r#struct| {
+    namespace_builder.define_struct("ObjectId", |path, r#struct| {
         r#struct.define_static_function("new", move |arguments: Arguments| {
             let from: &str = arguments.get("from")?;
             match ObjectId::from_str(from) {
@@ -134,7 +134,7 @@ pub(in crate::stdlib) fn load_structs(namespace: &mut Namespace) {
         });
     });
 
-    namespace.define_struct("Date", |path, r#struct| {
+    namespace_builder.define_struct("Date", |path, r#struct| {
         r#struct.define_static_function("new", move |arguments: Arguments| {
             let from: &str = arguments.get("from")?;
             match NaiveDate::parse_from_str(from, "%Y-%m-%d") {
@@ -144,7 +144,7 @@ pub(in crate::stdlib) fn load_structs(namespace: &mut Namespace) {
         });
     });
 
-    namespace.define_struct("DateTime", |path, r#struct| {
+    namespace_builder.define_struct("DateTime", |path, r#struct| {
         r#struct.define_static_function("new", move |arguments: Arguments| {
             let from: &str = arguments.get("from")?;
             match DateTime::parse_from_rfc3339(from) {
@@ -154,13 +154,13 @@ pub(in crate::stdlib) fn load_structs(namespace: &mut Namespace) {
         });
     });
 
-    namespace.define_struct("File", |path, r#struct| { });
+    namespace_builder.define_struct("File", |path, r#struct| { });
 
-    namespace.define_struct("Regex", |path, r#struct| { });
+    namespace_builder.define_struct("Regex", |path, r#struct| { });
 
-    namespace.define_struct("Range", |path, r#struct| { });
+    namespace_builder.define_struct("Range", |path, r#struct| { });
 
-    namespace.define_struct("Array", |path, r#struct| {
+    namespace_builder.define_struct("Array", |path, r#struct| {
         r#struct.define_static_function("new", move |arguments: Arguments| {
             Ok(Value::from(Vec::<Value>::new()))
         });
@@ -175,7 +175,7 @@ pub(in crate::stdlib) fn load_structs(namespace: &mut Namespace) {
         });
     });
 
-    namespace.define_struct("Dictionary", |path, r#struct| {
+    namespace_builder.define_struct("Dictionary", |path, r#struct| {
         r#struct.define_static_function("new", move |arguments: Arguments| {
             Ok(Value::from(IndexMap::<String, Value>::new()))
         });

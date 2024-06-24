@@ -26,19 +26,18 @@ use crate::pipeline::item::compare::CompareArgument;
 use crate::pipeline::item::transform::{TransformArgument, TransformResult};
 use crate::pipeline::item::validator::{ValidateArgument, ValidateResult};
 use crate::r#enum::Enum;
-use crate::r#enum::member::Member;
 use crate::r#struct::Struct;
 use crate::stdlib::load::load;
 use crate::utils::next_path;
 
 #[derive(Clone)]
-pub struct NamespaceBuilder {
-    inner: Arc<NamespaceBuilderInner>
+pub struct Builder {
+    inner: Arc<Inner>
 }
 
-struct NamespaceBuilderInner {
+struct Inner {
     pub path: Vec<String>,
-    pub namespaces: Arc<Mutex<BTreeMap<String, NamespaceBuilder>>>,
+    pub namespaces: Arc<Mutex<BTreeMap<String, Builder>>>,
     pub structs: Arc<Mutex<BTreeMap<String, Struct>>>,
     pub models: Arc<Mutex<BTreeMap<String, Model>>>,
     pub enums: Arc<Mutex<BTreeMap<String, Enum>>>,
@@ -71,10 +70,10 @@ struct NamespaceBuilderInner {
     pub model_opposite_relations_map: Arc<Mutex<BTreeMap<Vec<String>, Vec<(Vec<String>, String)>>>>
 }
 
-impl NamespaceBuilder {
+impl Builder {
     pub fn main() -> Self {
         Self {
-            inner: Arc::new(NamespaceBuilderInner {
+            inner: Arc::new(Inner {
                 path: vec![],
                 namespaces: Arc::new(Mutex::new(Default::default())),
                 structs: Arc::new(Mutex::new(Default::default())),
@@ -119,8 +118,8 @@ impl NamespaceBuilder {
         Ok(())
     }
 
-    pub fn path(&self) -> Vec<&str> {
-        self.inner.path.iter().map(|s| s.as_str()).collect()
+    pub fn path(&self) -> &Vec<String> {
+        &self.inner.path
     }
 
     pub fn is_main(&self) -> bool {
@@ -128,10 +127,10 @@ impl NamespaceBuilder {
     }
 
     pub fn is_std(&self) -> bool {
-        self.path() == vec!["std"]
+        self.path().len() == 0 && self.path().first().unwrap().as_str() == "std"
     }
 
-    pub fn namespace(&self, name: &str) -> Option<NamespaceBuilder> {
+    pub fn namespace(&self, name: &str) -> Option<Builder> {
         let namespaces = self.inner.namespaces.lock().unwrap();
         if let Some(namespace) = namespaces.get(name) {
             Some(namespace.clone())
@@ -140,15 +139,15 @@ impl NamespaceBuilder {
         }
     }
 
-    pub fn namespace_or_create(&self, name: &str) -> NamespaceBuilder {
+    pub fn namespace_or_create(&self, name: &str) -> Builder {
         let mut namespaces = self.inner.namespaces.lock().unwrap();
         if !namespaces.contains_key(name) {
-            namespaces.insert(name.to_owned(), Namespace::new(next_path(&self.inner.path, name)));
+            namespaces.insert(name.to_owned(), Namespace::new(next_path(self.path(), name)));
         }
         namespaces.get(name).unwrap().cloned()
     }
 
-    pub fn namespace_at_path(&self, path: &Vec<&str>) -> Option<NamespaceBuilder> {
+    pub fn namespace_at_path(&self, path: &Vec<&str>) -> Option<Builder> {
         let mut current = Some(self.clone());
         for item in path {
             if current.is_none() {
@@ -159,7 +158,7 @@ impl NamespaceBuilder {
         current
     }
 
-    pub fn namespace_or_create_at_path(&self, path: &Vec<&str>) -> NamespaceBuilder {
+    pub fn namespace_or_create_at_path(&self, path: &Vec<&str>) -> Builder {
         let mut current = self.clone();
         for item in path {
             current = current.namespace_or_create(*item)
@@ -169,50 +168,47 @@ impl NamespaceBuilder {
 
     pub fn define_model_decorator<F>(&self, name: &str, call: F) where F: Fn(Arguments, &mut Model) -> Result<()> + 'static {
         let mut model_decorators = self.inner.model_decorators.lock().unwrap();
-        model_decorators.insert(name.to_owned(), model::Decorator { path: next_path(&self.inner.path, name), call: Arc::new(call) });
+        model_decorators.insert(name.to_owned(), model::Decorator::new(next_path(self.path(), name), Arc::new(call)));
     }
 
-    pub fn define_model_field_decorator(&self, name: &str, call: impl Fn(Arguments, &mut Field) -> Result<()> + 'static) {
+    pub fn define_model_field_decorator(&self, name: &str, call: impl Fn(Arguments, &model::field::Builder) -> Result<()> + 'static) {
         let mut model_field_decorators = self.inner.model_field_decorators.lock().unwrap();
-        model_field_decorators.insert(name.to_owned(), model::field::Decorator { path: next_path(&self.inner.path, name), call: Arc::new(call) });
+        model_field_decorators.insert(name.to_owned(), model::field::Decorator::new(next_path(self.path(), name), Arc::new(call)));
     }
 
-    pub fn define_model_relation_decorator(&self, name: &str, call: impl Fn(Arguments, &mut Relation) -> Result<()> + 'static) {
+    pub fn define_model_relation_decorator(&self, name: &str, call: impl Fn(Arguments, &model::relation::Builder) -> Result<()> + 'static) {
         let mut model_relation_decorators = self.inner.model_relation_decorators.lock().unwrap();
-        model_relation_decorators.insert(name.to_owned(), model::relation::Decorator { path: next_path(&self.inner.path, name), call: Arc::new(call) });
+        model_relation_decorators.insert(name.to_owned(), model::relation::Decorator::new(next_path(self.path(), name), Arc::new(call)));
     }
 
-    pub fn define_model_property_decorator(&self, name: &str, call: impl Fn(Arguments, &mut Property) -> Result<()> + 'static) {
+    pub fn define_model_property_decorator(&self, name: &str, call: impl Fn(Arguments, &model::property::Builder) -> Result<()> + 'static) {
         let mut model_property_decorators = self.inner.model_property_decorators.lock().unwrap();
-        model_property_decorators.insert(name.to_owned(), model::property::Decorator { path: next_path(&self.inner.path, name), call: Arc::new(call) });
+        model_property_decorators.insert(name.to_owned(), model::property::Decorator::new(next_path(self.path(), name), Arc::new(call)));
     }
 
-    pub fn define_enum_decorator(&self, name: &str, call: impl Fn(Arguments, &mut Enum) -> Result<()> + 'static) {
+    pub fn define_enum_decorator(&self, name: &str, call: impl Fn(Arguments, &r#enum::Builder) -> Result<()> + 'static) {
         let mut enum_decorators = self.inner.enum_decorators.lock().unwrap();
-        enum_decorators.insert(name.to_owned(), r#enum::Decorator { path: next_path(&self.inner.path, name), call: Arc::new(call) });
+        enum_decorators.insert(name.to_owned(), r#enum::Decorator::new(next_path(self.path(), name), Arc::new(call)));
     }
 
-    pub fn define_enum_member_decorator(&self, name: &str, call: impl Fn(Arguments, &mut Member) -> Result<()> + 'static) {
+    pub fn define_enum_member_decorator(&self, name: &str, call: impl Fn(Arguments, &r#enum::member::Decorator) -> Result<()> + 'static) {
         let mut enum_member_decorators = self.inner.enum_member_decorators.lock().unwrap();
-        enum_member_decorators.insert(name.to_owned(), r#enum::member::Decorator { path: next_path(&self.inner.path, name), call: Arc::new(call) });
+        enum_member_decorators.insert(name.to_owned(), r#enum::member::Decorator::new(next_path(self.path(), name), Arc::new(call)));
     }
 
-    pub fn define_interface_decorator<F>(&self, name: &str, call: F) where F: Fn(Arguments, &mut Interface) -> Result<()> + 'static {
+    pub fn define_interface_decorator<F>(&self, name: &str, call: F) where F: Fn(Arguments, &interface::Builder) -> Result<()> + 'static {
         let mut interface_decorators = self.inner.interface_decorators.lock().unwrap();
-        interface_decorators.insert(name.to_owned(), interface::Decorator { path: next_path(&self.inner.path, name), call: Arc::new(call) });
+        interface_decorators.insert(name.to_owned(), interface::Decorator::new(next_path(self.path(), name), Arc::new(call)));
     }
 
-    pub fn define_handler_decorator(&self, name: &str, call: impl Fn(Arguments, &mut Handler) -> Result<()> + 'static) {
+    pub fn define_handler_decorator(&self, name: &str, call: impl Fn(Arguments, &handler::Builder) -> Result<()> + 'static) {
         let mut handler_decorators = self.inner.handler_decorators.lock().unwrap();
-        handler_decorators.insert(name.to_owned(), handler::Decorator { path: next_path(&self.inner.path, name), call: Arc::new(call) });
+        handler_decorators.insert(name.to_owned(), handler::Decorator::new(next_path(self.path(), name), Arc::new(call)));
     }
 
     pub fn define_pipeline_item<T>(&self, name: &str, call: T) where T: pipeline::item::Call + 'static {
         let mut pipeline_items = self.inner.pipeline_items.lock().unwrap();
-        pipeline_items.insert(name.to_owned(), pipeline::Item {
-            path: next_path(&self.inner.path, name),
-            call: Arc::new(call)
-        });
+        pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(call)));
     }
 
     pub fn define_transform_pipeline_item<A, O, F, R>(&self, name: &str, call: F) where
@@ -222,19 +218,16 @@ impl NamespaceBuilder {
         F: TransformArgument<A, O, R> + 'static {
         let wrap_call = Box::leak(Box::new(call));
         let mut pipeline_items = self.inner.pipeline_items.lock().unwrap();
-        pipeline_items.insert(name.to_owned(), pipeline::Item {
-            path: next_path(&self.inner.path, name),
-            call: Arc::new(|args: Arguments, ctx: pipeline::Ctx| async {
-                let transform_result: TransformResult<O> = wrap_call.call(args, ctx).await.into();
-                match transform_result {
-                    TransformResult::Object(t) => Ok(t.into()),
-                    TransformResult::Result(r) => match r {
-                        Ok(t) => Ok(t.into()),
-                        Err(e) => Err(e.into()),
-                    }
+        pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(|args: Arguments, ctx: pipeline::Ctx| async {
+            let transform_result: TransformResult<O> = wrap_call.call(args, ctx).await.into();
+            match transform_result {
+                TransformResult::Object(t) => Ok(t.into()),
+                TransformResult::Result(r) => match r {
+                    Ok(t) => Ok(t.into()),
+                    Err(e) => Err(e.into()),
                 }
-            })
-        });
+            }
+        })));
     }
 
     pub fn define_validator_pipeline_item<T, F, O>(&self, name: &str, call: F) where
@@ -243,32 +236,30 @@ impl NamespaceBuilder {
         O: Into<ValidateResult> + Send + Sync + 'static {
         let wrap_call = Box::leak(Box::new(call));
         let mut pipeline_items = self.inner.pipeline_items.lock().unwrap();
-        pipeline_items.insert(name.to_owned(), pipeline::Item {
-            path: next_path(&self.inner.path, name),
-            call: Arc::new(|args: Arguments, ctx: pipeline::Ctx| async {
-                let ctx_value = ctx.value().clone();
-                let validate_result: ValidateResult = wrap_call.call(args, ctx).await.into();
-                match validate_result {
-                    ValidateResult::Validity(validity) => if validity.is_valid() {
+        pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(|args: Arguments, ctx: pipeline::Ctx| async {
+            let ctx_value = ctx.value().clone();
+            let validate_result: ValidateResult = wrap_call.call(args, ctx).await.into();
+            match validate_result {
+                ValidateResult::Validity(validity) => if validity.is_valid() {
+                    Ok(ctx_value)
+                } else if let Some(reason) = validity.invalid_reason() {
+                    Err(Error::new(reason))
+                } else {
+                    Err(Error::new("value is invalid"))
+                },
+                ValidateResult::Result(result) => match result {
+                    Ok(validity) => if validity.is_valid() {
                         Ok(ctx_value)
                     } else if let Some(reason) = validity.invalid_reason() {
                         Err(Error::new(reason))
                     } else {
                         Err(Error::new("value is invalid"))
                     },
-                    ValidateResult::Result(result) => match result {
-                        Ok(validity) => if validity.is_valid() {
-                            Ok(ctx_value)
-                        } else if let Some(reason) = validity.invalid_reason() {
-                            Err(Error::new(reason))
-                        } else {
-                            Err(Error::new("value is invalid"))
-                        },
-                        Err(err) => Err(err),
-                    }
+                    Err(err) => Err(err),
                 }
-            })
-        });
+            }
+        })));
+
     }
 
     pub fn define_callback_pipeline_item<T, F, O>(&self, name: &str, call: F) where
@@ -277,19 +268,16 @@ impl NamespaceBuilder {
         O: Into<CallbackResult> + Send + Sync + 'static {
         let wrap_call = Box::leak(Box::new(call));
         let mut pipeline_items = self.inner.pipeline_items.lock().unwrap();
-        pipeline_items.insert(name.to_owned(), pipeline::Item {
-            path: next_path(&self.inner.path, name),
-            call: Arc::new(|args: Arguments, ctx: pipeline::Ctx| async {
-                let ctx_value = ctx.value().clone();
-                let callback_result: CallbackResult = wrap_call.call(args, ctx).await.into();
-                match callback_result {
-                    CallbackResult::Result(t) => match t {
-                        Ok(_) => Ok(ctx_value),
-                        Err(err) => Err(err),
-                    },
-                }
-            })
-        });
+        pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(|args: Arguments, ctx: pipeline::Ctx| async {
+            let ctx_value = ctx.value().clone();
+            let callback_result: CallbackResult = wrap_call.call(args, ctx).await.into();
+            match callback_result {
+                CallbackResult::Result(t) => match t {
+                    Ok(_) => Ok(ctx_value),
+                    Err(err) => Err(err),
+                },
+            }
+        })));
     }
 
     pub fn define_compare_pipeline_item<T, O, F, E>(&self, name: &str, call: F) where
@@ -299,53 +287,47 @@ impl NamespaceBuilder {
         F: CompareArgument<T, O, E> + 'static {
         let wrap_call = Box::leak(Box::new(call));
         let mut pipeline_items = self.inner.pipeline_items.lock().unwrap();
-        pipeline_items.insert(name.to_owned(), pipeline::Item {
-            path: next_path(&self.inner.path, name),
-            call: Arc::new(|args: Arguments, ctx: pipeline::Ctx| async {
-                if ctx.object().is_new() {
-                    return Ok(ctx.value().clone());
-                }
-                let key = ctx.path()[ctx.path().len() - 1].as_key().unwrap();
-                let previous_value = ctx.object().get_previous_value(key)?;
-                let current_value = ctx.value().clone().clone();
-                if previous_value == current_value {
-                    return Ok(ctx.value().clone());
-                }
-                let ctx_value = ctx.value().clone();
-                let validate_result: ValidateResult = wrap_call.call(previous_value, current_value, args, ctx).await.into();
-                match validate_result {
-                    ValidateResult::Validity(validity) => if validity.is_valid() {
+        pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(|args: Arguments, ctx: pipeline::Ctx| async {
+            if ctx.object().is_new() {
+                return Ok(ctx.value().clone());
+            }
+            let key = ctx.path()[ctx.path().len() - 1].as_key().unwrap();
+            let previous_value = ctx.object().get_previous_value(key)?;
+            let current_value = ctx.value().clone().clone();
+            if previous_value == current_value {
+                return Ok(ctx.value().clone());
+            }
+            let ctx_value = ctx.value().clone();
+            let validate_result: ValidateResult = wrap_call.call(previous_value, current_value, args, ctx).await.into();
+            match validate_result {
+                ValidateResult::Validity(validity) => if validity.is_valid() {
+                    Ok(ctx_value)
+                } else if let Some(reason) = validity.invalid_reason() {
+                    Err(Error::new(reason))
+                } else {
+                    Err(Error::new("value is invalid"))
+                },
+                ValidateResult::Result(result) => match result {
+                    Ok(validity) => if validity.is_valid() {
                         Ok(ctx_value)
                     } else if let Some(reason) = validity.invalid_reason() {
                         Err(Error::new(reason))
                     } else {
                         Err(Error::new("value is invalid"))
                     },
-                    ValidateResult::Result(result) => match result {
-                        Ok(validity) => if validity.is_valid() {
-                            Ok(ctx_value)
-                        } else if let Some(reason) = validity.invalid_reason() {
-                            Err(Error::new(reason))
-                        } else {
-                            Err(Error::new("value is invalid"))
-                        },
-                        Err(err) => Err(err),
-                    }
+                    Err(err) => Err(err),
                 }
-            })
-        });
+            }
+        })));
     }
 
     pub fn define_middleware<T>(&self, name: &str, call: T) where T: middleware::creator::Creator + 'static {
         let mut middlewares = self.inner.middlewares.lock().unwrap();
-        middlewares.insert(name.to_owned(), middleware::Definition {
-            path: next_path(&self.inner.path, name),
-            creator: Arc::new(call)
-        });
+        middlewares.insert(name.to_owned(), middleware::Definition::new(next_path(self.path(), name), Arc::new(call)));
     }
 
     pub fn define_model_handler_group<T>(&self, name: &str, builder: T) where T: Fn(&handler::Group) {
-        let handler_group = handler::Group::new(next_path(&self.inner.path, name));
+        let handler_group = handler::Group::new(next_path(self.path(), name));
         builder(&handler_group);
         let mut model_handler_groups = self.inner.model_handler_groups.lock().unwrap();
         model_handler_groups.insert(name.to_owned(), handler_group);
@@ -364,7 +346,7 @@ impl NamespaceBuilder {
             output_type: Type::Undetermined,
             nonapi: false,
             format: HandlerInputFormat::Json,
-            path: next_path(&self.inner.path, name),
+            path: next_path(self.path(), name),
             ignore_prefix: false,
             method: Method::Post,
             interface: None,
@@ -385,7 +367,7 @@ impl NamespaceBuilder {
             output_type: Type::Undetermined,
             nonapi: false,
             format: HandlerInputFormat::Json,
-            path: next_path(&self.inner.path, name),
+            path: next_path(self.path(), name),
             ignore_prefix: false,
             method: Method::Post,
             interface: None,
@@ -399,14 +381,14 @@ impl NamespaceBuilder {
     }
 
     pub fn define_handler_group<T>(&self, name: &str, builder: T) where T: Fn(&handler::Group) {
-        let handler_group = handler::Group::new(next_path(&self.inner.path, name));
+        let handler_group = handler::Group::new(next_path(self.path(), name));
         builder(&handler_group);
         let mut handler_groups = self.inner.handler_groups.lock().unwrap();
         handler_groups.insert(name.to_owned(), handler_group);
     }
 
     pub fn define_struct<T>(&self, name: &str, builder: T) where T: Fn(&'static Vec<String>, &mut Struct) {
-        let path = Box::leak(Box::new(next_path(&self.inner.path, name))) as &'static Vec<String>;
+        let path = Box::leak(Box::new(next_path(self.path(), name))) as &'static Vec<String>;
         let mut r#struct = Struct {
             path: path.clone(),
             functions: btreemap! {},
