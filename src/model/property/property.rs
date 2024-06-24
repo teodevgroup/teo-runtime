@@ -55,18 +55,6 @@ impl Property {
             data: Default::default(),
         }
     }
-
-    pub(crate) fn finalize(&mut self, database: Database, parser_namespace: &Schema) -> Result<()> {
-        // set default column name
-        if self.column_name.is_empty() {
-            self.column_name = self.name.clone();
-        }
-        // set default database type
-        if self.database_type.is_undetermined() {
-            self.database_type = database.default_database_type(&self.r#type, parser_namespace)?;
-        }
-        Ok(())
-    }
 }
 
 impl Named for Property {

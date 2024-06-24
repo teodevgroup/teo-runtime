@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct Migration {
     pub renamed: Option<Vec<String>>,
     pub version: Option<String>,

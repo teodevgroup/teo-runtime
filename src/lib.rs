@@ -9,7 +9,6 @@ pub mod r#struct;
 pub mod utils;
 pub mod arguments;
 pub mod comment;
-pub mod index;
 pub mod sort;
 pub mod pipeline;
 pub mod request;

@@ -3,9 +3,11 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicBool;
 use teo_parser::r#type::Type;
 use crate::comment::Comment;
+use crate::model::{Field, Relation};
 use crate::model::relation::delete::Delete;
 use crate::model::relation::update::Update;
 use crate::optionality::Optionality;
+use crate::traits::named::Named;
 use crate::Value;
 
 pub struct Builder {
@@ -171,5 +173,31 @@ impl Builder {
 
     pub fn data_entry(&self, key: &str) -> Option<Value> {
         self.inner.data.lock().unwrap().get(key).cloned()
+    }
+
+    pub(crate) fn build(self, fields: Vec<&Field>) -> Relation {
+        let mut relation = Relation {
+            name: self.inner.name.clone(),
+            comment: self.inner.comment.clone(),
+            r#type: self.inner.r#type.clone(),
+            optionality: self.optionality(),
+            model: self.model(),
+            through: self.through(),
+            local: self.local(),
+            foreign: self.foreign(),
+            is_vec: self.is_vec(),
+            fields: self.fields(),
+            references: self.references(),
+            delete: self.delete(),
+            update: self.update(),
+            has_foreign_key: self.has_foreign_key(),
+            data: self.data(),
+        };
+        relation.has_foreign_key = if relation.through.is_some() {
+            false
+        } else {
+            relation.fields.iter().find(|name| fields.iter().find(|f| f.name() == name.as_str() && f.foreign_key).is_some()).is_some()
+        };
+        relation
     }
 }

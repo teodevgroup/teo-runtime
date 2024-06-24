@@ -1,9 +1,8 @@
-use std::collections::{BTreeMap, BTreeSet};
-use maplit::{btreemap, btreeset};
+use std::collections::BTreeMap;
+use maplit::btreemap;
 use serde::Serialize;
 use teo_parser::r#type::Type;
 use crate::comment::Comment;
-use crate::database::database::Database;
 use crate::model::Field;
 use crate::model::field::is_optional::IsOptional;
 use crate::model::field::typed::Typed;
@@ -55,7 +54,7 @@ impl Relation {
         }
     }
 
-    pub fn finalize(&mut self, database: Database, fields: Vec<&Field>) {
+    pub fn finalize(&mut self, fields: Vec<&Field>) {
         self.has_foreign_key = if self.through.is_some() {
             false
         } else {

@@ -1,10 +1,13 @@
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicBool;
+use teo_parser::ast::schema::Schema;
 use teo_parser::r#type::Type;
 use crate::comment::Comment;
+use crate::database::database::Database;
 use crate::database::r#type::DatabaseType;
 use crate::model::field::Index;
+use crate::model::Property;
 use crate::optionality::Optionality;
 use crate::pipeline::Pipeline;
 use crate::Value;
@@ -163,5 +166,29 @@ impl Builder {
 
     pub fn data_entry(&self, key: &str) -> Option<Value> {
         self.inner.data.lock().unwrap().get(key).cloned()
+    }
+
+    pub(crate) fn build(self, database: Database, schema: &Schema) -> Property {
+        let mut property = Property {
+            name: self.inner.name.clone(),
+            comment: self.inner.comment.clone(),
+            r#type: self.inner.r#type.clone(),
+            column_name: self.inner.column_name.lock().unwrap().clone(),
+            optionality: self.inner.optionality.lock().unwrap().clone(),
+            database_type: self.inner.database_type.lock().unwrap().clone(),
+            dependencies: self.inner.dependencies.lock().unwrap().clone(),
+            setter: self.inner.setter.lock().unwrap().clone(),
+            getter: self.inner.getter.lock().unwrap().clone(),
+            input_omissible: self.inner.input_omissible.load(std::sync::atomic::Ordering::Relaxed),
+            output_omissible: self.inner.output_omissible.load(std::sync::atomic::Ordering::Relaxed),
+            cached: self.inner.cached.load(std::sync::atomic::Ordering::Relaxed),
+            index: self.inner.index.lock().unwrap().clone(),
+            data: self.inner.data.lock().unwrap().clone(),
+        };
+        // set default database type
+        if property.database_type.is_undetermined() {
+            property.database_type = database.default_database_type(&property.r#type, schema)?;
+        }
+        property
     }
 }
