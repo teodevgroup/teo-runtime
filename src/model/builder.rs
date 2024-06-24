@@ -9,10 +9,10 @@ use crate::pipeline::Pipeline;
 use crate::Value;
 
 pub struct Builder {
-    pub inner: Arc<BuilderInner>,
+    inner: Arc<Inner>,
 }
 
-pub struct BuilderInner {
+struct Inner {
     pub path: Vec<String>,
     pub parser_path: Vec<usize>,
     pub comment: Option<Comment>,
@@ -53,16 +53,16 @@ impl Builder {
     pub fn new(path: Vec<String>, parser_path: Vec<usize>, comment: Option<Comment>) -> Self {
         let table_name = path.last().unwrap().to_string();
         Self {
-            inner: Arc::new(BuilderInner {
+            inner: Arc::new(Inner {
                 path,
                 parser_path,
                 comment,
                 table_name: Arc::new(Mutex::new(table_name)),
                 actions: Arc::new(Mutex::new(vec![])),
-                generate_client: Default::default(),
-                generate_entity: Default::default(),
-                show_in_studio: Default::default(),
-                synthesize_shapes: Default::default(),
+                generate_client: AtomicBool::new(true),
+                generate_entity: AtomicBool::new(true),
+                show_in_studio: AtomicBool::new(true),
+                synthesize_shapes: AtomicBool::new(true),
                 fields: Arc::new(Mutex::new(Default::default())),
                 relations: Arc::new(Mutex::new(Default::default())),
                 properties: Arc::new(Mutex::new(Default::default())),

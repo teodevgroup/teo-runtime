@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use indexmap::indexmap;
+use indexmap::{indexmap, IndexMap};
 use maplit::btreemap;
 use serde::Serialize;
 use teo_parser::r#type::reference::Reference;
@@ -9,35 +9,23 @@ use crate::comment::Comment;
 use crate::interface::field::Field;
 use crate::traits::documentable::Documentable;
 use crate::traits::named::Named;
+use crate::Value;
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize)]
 pub struct Interface {
     pub path: Vec<String>,
     pub parser_path: Vec<usize>,
     pub comment: Option<Comment>,
-    pub fields: BTreeMap<String, Field>,
+    pub fields: IndexMap<String, Field>,
     pub generic_names: Vec<String>,
     pub extends: Vec<Type>,
     pub shape: SynthesizedShape,
     pub generate_client: bool,
     pub generate_entity: bool,
+    pub data: BTreeMap<String, Value>,
 }
 
 impl Interface {
-    
-    pub fn new() -> Self {
-        Self {
-            path: vec![],
-            parser_path: vec![],
-            comment: None,
-            fields: Default::default(),
-            generic_names: vec![],
-            extends: vec![],
-            shape: SynthesizedShape::new(indexmap! {}),
-            generate_client: true,
-            generate_entity: true,
-        }
-    }
 
     pub fn generic_names(&self) -> Vec<&str> {
         self.generic_names.iter().map(|g| g.as_str()).collect()

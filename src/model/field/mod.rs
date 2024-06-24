@@ -5,6 +5,7 @@ pub mod migration;
 pub mod indexable;
 pub mod column_named;
 pub mod is_optional;
+pub mod set_optional;
 pub mod typed;
 pub mod builder;
 

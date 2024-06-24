@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use serde::Serialize;
 use teo_parser::r#type::Type;
 use crate::comment::Comment;
@@ -6,24 +7,37 @@ use crate::model::field::typed::Typed;
 use crate::optionality::Optionality;
 use crate::traits::documentable::Documentable;
 use crate::traits::named::Named;
+use crate::Value;
 
 #[derive(Debug, Serialize)]
 pub struct Field {
-    pub name: String,
-    pub comment: Option<Comment>,
-    pub r#type: Type,
-    pub optionality: Optionality,
+    pub(super) name: String,
+    pub(super) comment: Option<Comment>,
+    pub(super) r#type: Type,
+    pub(super) optionality: Optionality,
+    pub(super) data: BTreeMap<String, Value>,
 }
 
 impl Field {
 
-    pub fn new() -> Self {
-        Self {
-            name: "".to_string(),
-            comment: None,
-            r#type: Type::Undetermined,
-            optionality: Optionality::Required,
-        }
+    pub fn name(&self) -> &str {
+        self.name.as_str()
+    }
+
+    pub fn comment(&self) -> Option<&Comment> {
+        self.comment.as_ref()
+    }
+
+    pub fn r#type(&self) -> &Type {
+        &self.r#type
+    }
+
+    pub fn optionality(&self) -> &Optionality {
+        &self.optionality
+    }
+
+    pub fn data(&self) -> &BTreeMap<String, Value> {
+        &self.data
     }
 }
 
@@ -35,14 +49,6 @@ impl IsOptional for Field {
 
     fn is_required(&self) -> bool {
         self.optionality.is_required()
-    }
-
-    fn set_optional(&mut self) {
-        self.optionality = Optionality::Optional;
-    }
-
-    fn set_required(&mut self) {
-        self.optionality = Optionality::Required;
     }
 }
 
