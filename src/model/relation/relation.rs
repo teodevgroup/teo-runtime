@@ -1,9 +1,8 @@
 use std::collections::BTreeMap;
-use maplit::btreemap;
+use std::sync::Arc;
 use serde::Serialize;
 use teo_parser::r#type::Type;
 use crate::comment::Comment;
-use crate::model::Field;
 use crate::model::field::is_optional::IsOptional;
 use crate::model::field::typed::Typed;
 use crate::traits::named::Named;
@@ -13,115 +12,116 @@ use crate::optionality::Optionality;
 use crate::traits::documentable::Documentable;
 use crate::value::Value;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct Relation {
-    pub name: String,
-    pub comment: Option<Comment>,
-    pub r#type: Type,
-    pub optionality: Optionality,
-    pub model: Vec<String>,
-    pub through: Option<Vec<String>>,
-    pub local: Option<String>,
-    pub foreign: Option<String>,
-    pub is_vec: bool,
-    pub fields: Vec<String>,
-    pub references: Vec<String>,
-    pub delete: Delete,
-    pub update: Update,
-    pub has_foreign_key: bool,
-    pub data: BTreeMap<String, Value>,
+    pub(super) inner: Arc<Inner>
+}
+
+#[derive(Debug, Serialize)]
+pub(super) struct Inner {
+    pub(super) name: String,
+    pub(super) comment: Option<Comment>,
+    pub(super) r#type: Type,
+    pub(super) optionality: Optionality,
+    pub(super) model: Vec<String>,
+    pub(super) through: Option<Vec<String>>,
+    pub(super) local: Option<String>,
+    pub(super) foreign: Option<String>,
+    pub(super) is_vec: bool,
+    pub(super) fields: Vec<String>,
+    pub(super) references: Vec<String>,
+    pub(super) delete: Delete,
+    pub(super) update: Update,
+    pub(super) has_foreign_key: bool,
+    pub(super) data: BTreeMap<String, Value>,
 }
 
 impl Relation {
-
-    pub fn new() -> Self {
-        Self {
-            name: "".to_string(),
-            comment: None,
-            r#type: Type::Undetermined,
-            optionality: Optionality::Optional,
-            model: vec![],
-            through: None,
-            is_vec: false,
-            fields: vec![],
-            references: vec![],
-            foreign: None,
-            local: None,
-            delete: Delete::Nullify,
-            update: Update::Nullify,
-            has_foreign_key: false,
-            data: btreemap! {},
-        }
-    }
-
-    pub fn finalize(&mut self, fields: Vec<&Field>) {
-        self.has_foreign_key = if self.through.is_some() {
-            false
-        } else {
-            self.fields.iter().find(|name| fields.iter().find(|f| f.name() == name.as_str() && f.foreign_key).is_some()).is_some()
-        }
-    }
 
     pub fn iter(&self) -> RelationIter {
         RelationIter { index: 0, relation: self }
     }
 
+    pub fn optionality(&self) -> &Optionality {
+        &self.inner.optionality
+    }
+
+    pub fn delete(&self) -> &Delete {
+        &self.inner.delete
+    }
+
+    pub fn update(&self) -> &Update {
+        &self.inner.update
+    }
+
+    pub fn has_foreign_key(&self) -> bool {
+        self.inner.has_foreign_key
+    }
+
+    pub fn model(&self) -> &Vec<String> {
+        &self.inner.model
+    }
+
+    pub fn is_vec(&self) -> bool {
+        self.inner.is_vec
+    }
+
+    pub fn through(&self) -> Option<&Vec<String>> {
+        self.inner.through.as_ref()
+    }
+
     pub fn len(&self) -> usize {
-        self.fields.len()
+        self.inner.fields.len()
     }
 
     pub fn model_path(&self) -> Vec<&str> {
-        self.model.iter().map(AsRef::as_ref).collect()
+        self.inner.model.iter().map(AsRef::as_ref).collect()
     }
 
     pub fn through_path(&self) -> Option<Vec<&str>> {
-        self.through.as_ref().map(|t| t.iter().map(AsRef::as_ref).collect())
+        self.inner.through.as_ref().map(|t| t.iter().map(AsRef::as_ref).collect())
     }
 
     pub fn local(&self) -> Option<&str> {
-        self.local.as_ref().map(AsRef::as_ref)
+        self.inner.local.as_ref().map(AsRef::as_ref)
     }
 
     pub fn foreign(&self) -> Option<&str> {
-        self.foreign.as_ref().map(AsRef::as_ref)
+        self.inner.foreign.as_ref().map(AsRef::as_ref)
     }
 
     pub fn has_join_table(&self) -> bool {
         self.through_path().is_some()
     }
 
-    pub fn fields(&self) -> Vec<&str> {
-        self.fields.iter().map(AsRef::as_ref).collect()
+    pub fn fields(&self) -> &Vec<String> {
+        &self.inner.fields
     }
 
-    pub fn references(&self) -> Vec<&str> {
-        self.references.iter().map(AsRef::as_ref).collect()
+    pub fn references(&self) -> &Vec<String> {
+        &self.inner.references
+    }
+
+    pub fn data(&self) -> &BTreeMap<String, Value> {
+        &self.inner.data
     }
 }
 
 impl Named for Relation {
 
     fn name(&self) -> &str {
-        self.name.as_str()
+        self.inner.name.as_str()
     }
 }
 
 impl IsOptional for Relation {
 
     fn is_optional(&self) -> bool {
-        self.optionality.is_any_optional()
+        self.inner.optionality.is_any_optional()
     }
 
     fn is_required(&self) -> bool {
-        self.optionality.is_required()
-    }
-
-    fn set_optional(&mut self) {
-        self.optionality = Optionality::Optional;
-    }
-
-    fn set_required(&mut self) {
-        self.optionality = Optionality::Required;
+        self.inner.optionality.is_required()
     }
 }
 
@@ -147,7 +147,7 @@ impl<'a> Iterator for RelationIter<'a> {
 impl Documentable for Relation {
 
     fn comment(&self) -> Option<&Comment> {
-        self.comment.as_ref()
+        self.inner.comment.as_ref()
     }
 
     fn kind(&self) -> &'static str {
@@ -158,6 +158,6 @@ impl Documentable for Relation {
 impl Typed for Relation {
 
     fn r#type(&self) -> &Type {
-        &self.r#type
+        &self.inner.r#type
     }
 }

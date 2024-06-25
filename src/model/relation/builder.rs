@@ -5,6 +5,7 @@ use teo_parser::r#type::Type;
 use crate::comment::Comment;
 use crate::model::{Field, Relation};
 use crate::model::relation::delete::Delete;
+use crate::model::relation::relation;
 use crate::model::relation::update::Update;
 use crate::optionality::Optionality;
 use crate::traits::named::Named;
@@ -28,7 +29,6 @@ pub struct Inner {
     pub references: Arc<Mutex<Vec<String>>>,
     pub delete: Arc<Mutex<Delete>>,
     pub update: Arc<Mutex<Update>>,
-    pub has_foreign_key: AtomicBool,
     pub data: Arc<Mutex<BTreeMap<String, Value>>>,
 }
 
@@ -49,7 +49,6 @@ impl Builder {
                 references: Arc::new(Mutex::new(vec![])),
                 delete: Arc::new(Mutex::new(Delete::Nullify)),
                 update: Arc::new(Mutex::new(Update::Nullify)),
-                has_foreign_key: AtomicBool::new(false),
                 data: Arc::new(Mutex::new(BTreeMap::new())),
             })
         }
@@ -147,12 +146,12 @@ impl Builder {
         *self.inner.update.lock().unwrap() = update;
     }
 
-    pub fn has_foreign_key(&self) -> bool {
-        self.inner.has_foreign_key.load(std::sync::atomic::Ordering::Relaxed)
-    }
-
-    pub fn set_has_foreign_key(&self, has_foreign_key: bool) {
-        self.inner.has_foreign_key.store(has_foreign_key, std::sync::atomic::Ordering::Relaxed);
+    pub fn has_foreign_key(&self, fields: Vec<&Field>) -> bool {
+        if self.through().is_some() {
+            false
+        } else {
+            self.fields().iter().find(|name| fields.iter().find(|f| f.name() == name.as_str() && f.foreign_key()).is_some()).is_some()
+        }
     }
 
     pub fn data(&self) -> BTreeMap<String, Value> {
@@ -177,26 +176,23 @@ impl Builder {
 
     pub(crate) fn build(self, fields: Vec<&Field>) -> Relation {
         let mut relation = Relation {
-            name: self.inner.name.clone(),
-            comment: self.inner.comment.clone(),
-            r#type: self.inner.r#type.clone(),
-            optionality: self.optionality(),
-            model: self.model(),
-            through: self.through(),
-            local: self.local(),
-            foreign: self.foreign(),
-            is_vec: self.is_vec(),
-            fields: self.fields(),
-            references: self.references(),
-            delete: self.delete(),
-            update: self.update(),
-            has_foreign_key: self.has_foreign_key(),
-            data: self.data(),
-        };
-        relation.has_foreign_key = if relation.through.is_some() {
-            false
-        } else {
-            relation.fields.iter().find(|name| fields.iter().find(|f| f.name() == name.as_str() && f.foreign_key).is_some()).is_some()
+            inner: Arc::new(relation::Inner {
+                name: self.inner.name.clone(),
+                comment: self.inner.comment.clone(),
+                r#type: self.inner.r#type.clone(),
+                optionality: self.optionality(),
+                model: self.model(),
+                through: self.through(),
+                local: self.local(),
+                foreign: self.foreign(),
+                is_vec: self.is_vec(),
+                fields: self.fields(),
+                references: self.references(),
+                delete: self.delete(),
+                update: self.update(),
+                has_foreign_key: self.has_foreign_key(fields),
+                data: self.data(),
+            })
         };
         relation
     }
