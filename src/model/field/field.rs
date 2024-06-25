@@ -94,16 +94,6 @@ impl IsOptional for Field {
     fn is_required(&self) -> bool {
         self.optionality.is_required()
     }
-
-    fn set_optional(&mut self) {
-        self.optionality = Optionality::Optional;
-        self.input_omissible = true;
-        self.output_omissible = true;
-    }
-
-    fn set_required(&mut self) {
-        self.optionality = Optionality::Required;
-    }
 }
 
 impl Typed for Field {

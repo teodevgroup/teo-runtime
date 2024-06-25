@@ -10,6 +10,11 @@ use crate::value::Value;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct Enum {
+    pub(super) inner: Arc<Inner>
+}
+
+#[derive(Debug)]
+pub(super) struct Inner {
     pub(super) path: Vec<String>,
     pub(super) comment: Option<Comment>,
     pub(super) option: bool,
@@ -22,45 +27,41 @@ pub struct Enum {
 impl Enum {
 
     pub fn path(&self) -> &Vec<String> {
-        &self.path
-    }
-
-    pub fn comment(&self) -> Option<&Comment> {
-        self.comment.as_ref()
+        &self.inner.path
     }
 
     pub fn option(&self) -> bool {
-        self.option
+        self.inner.option
     }
 
     pub fn interface(&self) -> bool {
-        self.interface
+        self.inner.interface
     }
 
     pub fn members(&self) -> &Vec<Member> {
-        &self.members
+        &self.inner.members
     }
 
     pub fn data(&self) -> &BTreeMap<String, Value> {
-        &self.data
+        &self.inner.data
     }
 
     pub fn member_names(&self) -> &Vec<String> {
-        &self.member_names
+        &self.inner.member_names
     }
 }
 
 impl Named for Enum {
 
     fn name(&self) -> &str {
-        self.path.last().unwrap().as_str()
+        self.inner.path.last().unwrap().as_str()
     }
 }
 
 impl Documentable for Enum {
 
     fn comment(&self) -> Option<&Comment> {
-        self.comment.as_ref()
+        self.inner.comment.as_ref()
     }
 
     fn kind(&self) -> &'static str {

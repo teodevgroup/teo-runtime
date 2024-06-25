@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicBool;
 use teo_parser::ast::handler::HandlerInputFormat;
 use teo_parser::r#type::Type;
-use crate::handler::{Handler, Method};
+use crate::handler::{Handler, handler, Method};
 use crate::middleware::next::Next;
 
 #[derive(Debug, Clone)]
@@ -107,17 +107,19 @@ impl Builder {
 
     pub(crate) fn build(self) -> Handler {
         Handler {
-            path: self.inner.path.clone(),
-            namespace_path: self.inner.namespace_path.clone(),
-            input_type: self.inner.input_type.clone(),
-            output_type: self.inner.output_type.clone(),
-            nonapi: self.inner.nonapi,
-            format: self.inner.format,
-            method: self.inner.method.lock().unwrap().clone(),
-            url: self.inner.url.lock().unwrap().clone(),
-            interface: self.inner.interface.lock().unwrap().clone(),
-            ignore_prefix: self.inner.ignore_prefix.load(std::sync::atomic::Ordering::Relaxed),
-            call: self.inner.call,
+            inner: Arc::new(handler::Inner {
+                path: self.inner.path.clone(),
+                namespace_path: self.inner.namespace_path.clone(),
+                input_type: self.inner.input_type.clone(),
+                output_type: self.inner.output_type.clone(),
+                nonapi: self.inner.nonapi,
+                format: self.inner.format,
+                method: self.inner.method.lock().unwrap().clone(),
+                url: self.inner.url.lock().unwrap().clone(),
+                interface: self.inner.interface.lock().unwrap().clone(),
+                ignore_prefix: self.inner.ignore_prefix.load(std::sync::atomic::Ordering::Relaxed),
+                call: self.inner.call,
+            })
         }
     }
 }

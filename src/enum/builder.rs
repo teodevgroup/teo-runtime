@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 use maplit::btreemap;
 use crate::comment::Comment;
-use crate::r#enum::Enum;
+use crate::r#enum::{Enum, r#enum};
 use crate::r#enum::member::Member;
 use crate::Value;
 
@@ -77,13 +77,15 @@ impl Builder {
 
     pub fn build(self) -> Enum {
         Enum {
-            path: self.inner.path.clone(),
-            comment: self.inner.comment.clone(),
-            option: self.inner.option,
-            interface: self.inner.interface,
-            members: self.inner.members.clone(),
-            data: self.inner.data.lock().unwrap().clone(),
-            member_names: self.members().iter().map(|m| m.name.clone()).collect(),
+            inner: Arc::new(r#enum::Inner {
+                path: self.inner.path.clone(),
+                comment: self.inner.comment.clone(),
+                option: self.inner.option,
+                interface: self.inner.interface,
+                members: self.inner.members.clone(),
+                data: self.inner.data.lock().unwrap().clone(),
+                member_names: self.members().iter().map(|m| m.name.clone()).collect(),
+            })
         }
     }
 }

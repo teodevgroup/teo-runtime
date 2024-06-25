@@ -20,6 +20,14 @@ impl Member {
     pub fn new(name: String, value: Value, comment: Option<Comment>) -> Self {
         Self { name, value, comment, data: btreemap! {} }
     }
+
+    pub fn value(&self) -> &Value {
+        &self.value
+    }
+
+    pub fn data(&self) -> &BTreeMap<String, Value> {
+        &self.data
+    }
 }
 
 impl Named for Member {

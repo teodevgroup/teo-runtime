@@ -11,6 +11,7 @@ use crate::database::r#type::DatabaseType;
 use crate::model::Field;
 use crate::model::field::{Index, Migration};
 use crate::model::field::indexable::Indexable;
+use crate::model::field::set_optional::SetOptional;
 use crate::optionality::Optionality;
 use crate::pipeline::Pipeline;
 use crate::readwrite::read::Read;
@@ -351,5 +352,17 @@ impl Builder {
             field.database_type = database.default_database_type(&field.r#type, schema)?;
         }
         field
+    }
+}
+
+impl SetOptional for Builder {
+    fn set_optional(&self) {
+        self.set_optionality(Optionality::Optional);
+        self.set_input_omissible(true);
+        self.set_output_omissible(true);
+    }
+
+    fn set_required(&self) {
+        self.set_optionality(Optionality::Required);
     }
 }
