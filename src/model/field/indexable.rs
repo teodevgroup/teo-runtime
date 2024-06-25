@@ -4,6 +4,8 @@ use crate::traits::named::Named;
 pub trait Indexable: Named {
 
     fn index(&self) -> Option<&field::Index>;
+}
 
-    fn set_index(&mut self, index: field::Index);
+pub trait SetIndex {
+    fn set_index(&self, index: field::Index);
 }

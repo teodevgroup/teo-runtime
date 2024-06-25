@@ -9,7 +9,7 @@ use crate::comment::Comment;
 use crate::database::database::Database;
 use crate::database::r#type::DatabaseType;
 use crate::model::Field;
-use crate::model::field::{Index, Migration};
+use crate::model::field::{field, Index, Migration};
 use crate::model::field::indexable::Indexable;
 use crate::model::field::set_optional::SetOptional;
 use crate::optionality::Optionality;
@@ -97,6 +97,10 @@ impl Builder {
 
     pub fn comment(&self) -> Option<&Comment> {
         self.inner.comment.as_ref()
+    }
+
+    pub fn r#type(&self) -> &Type {
+        &self.inner.r#type
     }
 
     pub fn column_name(&self) -> String {
@@ -313,44 +317,52 @@ impl Builder {
 
     pub fn build(self, database: Database, schema: &Schema) -> Field {
         let mut field = Field {
-            name: self.inner.name.clone(),
-            comment: self.inner.comment.clone(),
-            r#type: self.inner.r#type.clone(),
-            availability: self.inner.availability,
-            column_name: self.inner.column_name.lock().unwrap().clone(),
-            foreign_key: self.inner.foreign_key.load(std::sync::atomic::Ordering::Relaxed),
-            dropped: self.inner.dropped.load(std::sync::atomic::Ordering::Relaxed),
-            migration: self.inner.migration.lock().unwrap().clone(),
-            database_type: self.inner.database_type.lock().unwrap().clone(),
-            optionality: self.inner.optionality.lock().unwrap().clone(),
-            copy: self.inner.copy.load(std::sync::atomic::Ordering::Relaxed),
-            read: self.inner.read.lock().unwrap().clone(),
-            write: self.inner.write.lock().unwrap().clone(),
-            atomic: self.inner.atomic.load(std::sync::atomic::Ordering::Relaxed),
-            r#virtual: self.inner.r#virtual.load(std::sync::atomic::Ordering::Relaxed),
-            input_omissible: self.inner.input_omissible.load(std::sync::atomic::Ordering::Relaxed),
-            output_omissible: self.inner.output_omissible.load(std::sync::atomic::Ordering::Relaxed),
-            index: self.inner.index.lock().unwrap().clone(),
-            queryable: self.inner.queryable.load(std::sync::atomic::Ordering::Relaxed),
-            sortable: self.inner.sortable.load(std::sync::atomic::Ordering::Relaxed),
-            auto: self.inner.auto.load(std::sync::atomic::Ordering::Relaxed),
-            auto_increment: self.inner.auto_increment.load(std::sync::atomic::Ordering::Relaxed),
-            default: self.inner.default.lock().unwrap().clone(),
-            on_set: self.inner.on_set.lock().unwrap().clone(),
-            on_save: self.inner.on_save.lock().unwrap().clone(),
-            on_output: self.inner.on_output.lock().unwrap().clone(),
-            can_mutate: self.inner.can_mutate.lock().unwrap().clone(),
-            can_read: self.inner.can_read.lock().unwrap().clone(),
-            data: self.inner.data.lock().unwrap().clone(),
+            inner: Arc::new(field::Inner {
+                name: self.inner.name.clone(),
+                comment: self.inner.comment.clone(),
+                r#type: self.inner.r#type.clone(),
+                availability: self.inner.availability,
+                column_name: self.inner.column_name.lock().unwrap().clone(),
+                foreign_key: self.inner.foreign_key.load(std::sync::atomic::Ordering::Relaxed),
+                dropped: self.inner.dropped.load(std::sync::atomic::Ordering::Relaxed),
+                migration: self.inner.migration.lock().unwrap().clone(),
+                database_type: {
+                    let mut database_type = self.inner.database_type.lock().unwrap().clone();
+                    // set default database type
+                    if database_type.is_undetermined() {
+                        database_type = database.default_database_type(self.r#type(), schema)?
+                    }
+                    database_type
+                },
+                optionality: self.inner.optionality.lock().unwrap().clone(),
+                copy: {
+                    // do not copy primary field and unique field
+                    let mut copy = self.inner.copy.load(std::sync::atomic::Ordering::Relaxed);
+                    if self.index().is_some() && self.index().unwrap().r#type().is_unique_or_primary() {
+                        copy = false;
+                    }
+                    copy
+                },
+                read: self.inner.read.lock().unwrap().clone(),
+                write: self.inner.write.lock().unwrap().clone(),
+                atomic: self.inner.atomic.load(std::sync::atomic::Ordering::Relaxed),
+                r#virtual: self.inner.r#virtual.load(std::sync::atomic::Ordering::Relaxed),
+                input_omissible: self.inner.input_omissible.load(std::sync::atomic::Ordering::Relaxed),
+                output_omissible: self.inner.output_omissible.load(std::sync::atomic::Ordering::Relaxed),
+                index: self.inner.index.lock().unwrap().clone(),
+                queryable: self.inner.queryable.load(std::sync::atomic::Ordering::Relaxed),
+                sortable: self.inner.sortable.load(std::sync::atomic::Ordering::Relaxed),
+                auto: self.inner.auto.load(std::sync::atomic::Ordering::Relaxed),
+                auto_increment: self.inner.auto_increment.load(std::sync::atomic::Ordering::Relaxed),
+                default: self.inner.default.lock().unwrap().clone(),
+                on_set: self.inner.on_set.lock().unwrap().clone(),
+                on_save: self.inner.on_save.lock().unwrap().clone(),
+                on_output: self.inner.on_output.lock().unwrap().clone(),
+                can_mutate: self.inner.can_mutate.lock().unwrap().clone(),
+                can_read: self.inner.can_read.lock().unwrap().clone(),
+                data: self.inner.data.lock().unwrap().clone(),
+            })
         };
-        // do not copy primary field and unique field
-        if field.index.is_some() && field.index().unwrap().r#type().is_unique_or_primary() {
-            field.copy = false;
-        }
-        // set default database type
-        if field.database_type.is_undetermined() {
-            field.database_type = database.default_database_type(&field.r#type, schema)?;
-        }
         field
     }
 }
