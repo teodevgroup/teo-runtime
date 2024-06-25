@@ -16,20 +16,20 @@ pub struct Builder {
 }
 
 pub struct Inner {
-    pub name: String,
-    pub comment: Option<Comment>,
-    pub r#type: Type,
-    pub optionality: Arc<Mutex<Optionality>>,
-    pub model: Arc<Mutex<Vec<String>>>,
-    pub through: Arc<Mutex<Option<Vec<String>>>>,
-    pub local: Arc<Mutex<Option<String>>>,
-    pub foreign: Arc<Mutex<Option<String>>>,
-    pub is_vec: AtomicBool,
-    pub fields: Arc<Mutex<Vec<String>>>,
-    pub references: Arc<Mutex<Vec<String>>>,
-    pub delete: Arc<Mutex<Delete>>,
-    pub update: Arc<Mutex<Update>>,
-    pub data: Arc<Mutex<BTreeMap<String, Value>>>,
+    name: String,
+    comment: Option<Comment>,
+    r#type: Type,
+    optionality: Arc<Mutex<Optionality>>,
+    model: Arc<Mutex<Vec<String>>>,
+    through: Arc<Mutex<Option<Vec<String>>>>,
+    local: Arc<Mutex<Option<String>>>,
+    foreign: Arc<Mutex<Option<String>>>,
+    is_vec: AtomicBool,
+    fields: Arc<Mutex<Vec<String>>>,
+    references: Arc<Mutex<Vec<String>>>,
+    delete: Arc<Mutex<Delete>>,
+    update: Arc<Mutex<Update>>,
+    data: Arc<Mutex<BTreeMap<String, Value>>>,
 }
 
 impl Builder {

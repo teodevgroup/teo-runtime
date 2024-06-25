@@ -17,20 +17,20 @@ pub struct Builder {
 }
 
 pub struct Inner {
-    pub name: String,
-    pub comment: Option<Comment>,
-    pub r#type: Type,
-    pub column_name: Arc<Mutex<String>>,
-    pub optionality: Arc<Mutex<Optionality>>,
-    pub database_type: Arc<Mutex<DatabaseType>>,
-    pub dependencies: Arc<Mutex<Vec<String>>>,
-    pub setter: Arc<Mutex<Option<Pipeline>>>,
-    pub getter: Arc<Mutex<Option<Pipeline>>>,
-    pub input_omissible: AtomicBool,
-    pub output_omissible: AtomicBool,
-    pub cached: AtomicBool,
-    pub index: Arc<Mutex<Option<Index>>>,
-    pub data: Arc<Mutex<BTreeMap<String, Value>>>,
+    name: String,
+    comment: Option<Comment>,
+    r#type: Type,
+    column_name: Arc<Mutex<String>>,
+    optionality: Arc<Mutex<Optionality>>,
+    database_type: Arc<Mutex<DatabaseType>>,
+    dependencies: Arc<Mutex<Vec<String>>>,
+    setter: Arc<Mutex<Option<Pipeline>>>,
+    getter: Arc<Mutex<Option<Pipeline>>>,
+    input_omissible: AtomicBool,
+    output_omissible: AtomicBool,
+    cached: AtomicBool,
+    index: Arc<Mutex<Option<Index>>>,
+    data: Arc<Mutex<BTreeMap<String, Value>>>,
 }
 
 impl Builder {
