@@ -10,7 +10,7 @@ use crate::database::database::Database;
 use crate::database::r#type::DatabaseType;
 use crate::model::Field;
 use crate::model::field::{field, Index, Migration};
-use crate::model::field::indexable::Indexable;
+use crate::model::field::indexable::{Indexable, SetIndex};
 use crate::model::field::set_optional::SetOptional;
 use crate::optionality::Optionality;
 use crate::pipeline::Pipeline;
@@ -364,6 +364,12 @@ impl Builder {
             })
         };
         field
+    }
+}
+
+impl SetIndex for Builder {
+    fn set_index(&self, index: Index) {
+        self.inner.index.lock().unwrap().replace(index);
     }
 }
 
