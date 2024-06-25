@@ -4,7 +4,7 @@ use std::sync::atomic::AtomicBool;
 use indexmap::IndexMap;
 use crate::action::Action;
 use crate::comment::Comment;
-use crate::model::{field, Index, Migration, property, relation};
+use crate::model::{field, Field, Index, Migration, property, Property, relation, Relation};
 use crate::pipeline::Pipeline;
 use crate::Value;
 
@@ -27,9 +27,9 @@ struct Inner {
     pub show_in_studio: AtomicBool,
     #[serde(rename = "synthesizeShapes")]
     pub synthesize_shapes: AtomicBool,
-    pub fields: Arc<Mutex<IndexMap<String, field::Builder>>>,
-    pub relations: Arc<Mutex<IndexMap<String, relation::Builder>>>,
-    pub properties: Arc<Mutex<IndexMap<String, property::Builder>>>,
+    pub fields: Arc<Mutex<IndexMap<String, Field>>>,
+    pub relations: Arc<Mutex<IndexMap<String, Relation>>>,
+    pub properties: Arc<Mutex<IndexMap<String, Property>>>,
     pub indexes: Arc<Mutex<IndexMap<String, Index>>>,
     #[serde(rename = "primaryIndex")]
     pub primary_index: Arc<Mutex<String>>,
@@ -128,27 +128,27 @@ impl Builder {
         self.inner.synthesize_shapes.store(synthesize_shapes, std::sync::atomic::Ordering::Relaxed);
     }
 
-    pub fn fields(&self) -> IndexMap<String, field::Builder> {
+    pub fn fields(&self) -> IndexMap<String, Field> {
         self.inner.fields.lock().unwrap().clone()
     }
 
-    pub fn set_fields(&self, fields: IndexMap<String, field::Builder>) {
+    pub fn set_fields(&self, fields: IndexMap<String, Field>) {
         *self.inner.fields.lock().unwrap() = fields;
     }
 
-    pub fn relations(&self) -> IndexMap<String, relation::Builder> {
+    pub fn relations(&self) -> IndexMap<String, Relation> {
         self.inner.relations.lock().unwrap().clone()
     }
 
-    pub fn set_relations(&self, relations: IndexMap<String, relation::Builder>) {
+    pub fn set_relations(&self, relations: IndexMap<String, Relation>) {
         *self.inner.relations.lock().unwrap() = relations;
     }
 
-    pub fn properties(&self) -> IndexMap<String, property::Builder> {
+    pub fn properties(&self) -> IndexMap<String, Property> {
         self.inner.properties.lock().unwrap().clone()
     }
 
-    pub fn set_properties(&self, properties: IndexMap<String, property::Builder>) {
+    pub fn set_properties(&self, properties: IndexMap<String, Property>) {
         *self.inner.properties.lock().unwrap() = properties;
     }
 

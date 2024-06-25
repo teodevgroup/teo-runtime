@@ -344,7 +344,7 @@ impl Builder {
             data: self.inner.data.lock().unwrap().clone(),
         };
         // do not copy primary field and unique field
-        if field.index.is_some() && field.index().unwrap().r#type.is_unique_or_primary() {
+        if field.index.is_some() && field.index().unwrap().r#type().is_unique_or_primary() {
             field.copy = false;
         }
         // set default database type

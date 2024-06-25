@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use serde::Serialize;
-use super::index::r#type::Type;
+use super::super::index::Type;
 use crate::sort::Sort;
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
