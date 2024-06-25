@@ -1,31 +1,31 @@
+use crate::namespace;
 use crate::value::Value;
-use crate::namespace::Namespace;
 use crate::pipeline::pipeline::Pipeline;
 use crate::stdlib::decorators::indexable_decorators::{id_decorator, index_decorator, unique_decorator};
 
-pub(in crate::stdlib) fn load_model_property_decorators(namespace: &mut Namespace) {
+pub(in crate::stdlib) fn load_model_property_decorators(namespace: &namespace::Builder) {
 
     namespace.define_model_property_decorator("getter", |arguments, property| {
         let pipeline: Pipeline = arguments.get("pipeline")?;
-        property.getter = Some(pipeline);
+        property.set_getter(Some(pipeline));
         Ok(())
     });
 
     namespace.define_model_property_decorator("setter", |arguments, property| {
         let pipeline: Pipeline = arguments.get("pipeline")?;
-        property.setter = Some(pipeline);
+        property.set_setter(Some(pipeline));
         Ok(())
     });
 
     namespace.define_model_property_decorator("cached", |arguments, property| {
-        property.cached = true;
+        property.set_cached(true);
         Ok(())
     });
 
     namespace.define_model_property_decorator("deps", |arguments, property| {
         let deps: Value = arguments.get("deps")?;
         let deps: Vec<String> = deps.wrap_into_vec()?;
-        property.dependencies = deps;
+        property.set_dependencies(deps);
         Ok(())
     });
 
@@ -42,12 +42,12 @@ pub(in crate::stdlib) fn load_model_property_decorators(namespace: &mut Namespac
     });
 
     namespace.define_model_property_decorator("inputOmissible", |arguments, property| {
-        property.input_omissible = true;
+        property.set_input_omissible(true);
         Ok(())
     });
 
     namespace.define_model_property_decorator("outputOmissible", |arguments, property| {
-        property.output_omissible = true;
+        property.set_output_omissible(true);
         Ok(())
     });
 }

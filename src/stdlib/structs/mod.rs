@@ -6,11 +6,10 @@ use indexmap::IndexMap;
 use maplit::btreemap;
 use crate::value::Value;
 use crate::arguments::Arguments;
-use crate::r#struct;
+use crate::{namespace, r#struct};
 use teo_result::Error;
-use crate::namespace::builder::NamespaceBuilder;
 
-pub(in crate::stdlib) fn load_structs(namespace_builder: &NamespaceBuilder) {
+pub(in crate::stdlib) fn load_structs(namespace_builder: &namespace::Builder) {
 
     namespace_builder.define_struct("EnvVars", |path, r#struct| {
         r#struct.define_static_function("new", move |_arguments: Arguments| {

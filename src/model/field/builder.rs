@@ -103,6 +103,10 @@ impl Builder {
         &self.inner.r#type
     }
 
+    pub fn availability(&self) -> Availability {
+        self.inner.availability
+    }
+
     pub fn column_name(&self) -> String {
         self.inner.column_name.lock().unwrap().clone()
     }

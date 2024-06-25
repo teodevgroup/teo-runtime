@@ -166,7 +166,7 @@ impl Builder {
         current
     }
 
-    pub fn define_model_decorator<F>(&self, name: &str, call: F) where F: Fn(Arguments, &mut Model) -> Result<()> + 'static {
+    pub fn define_model_decorator<F>(&self, name: &str, call: F) where F: Fn(Arguments, &model::Builder) -> Result<()> + 'static {
         let mut model_decorators = self.inner.model_decorators.lock().unwrap();
         model_decorators.insert(name.to_owned(), model::Decorator::new(next_path(self.path(), name), Arc::new(call)));
     }

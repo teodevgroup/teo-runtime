@@ -1,5 +1,5 @@
-use crate::namespace::Namespace;
+use crate::namespace;
 
-pub(in crate::stdlib) fn load_enum_member_decorators(namespace: &mut Namespace) {
+pub(in crate::stdlib) fn load_enum_member_decorators(namespace: &namespace::Builder) {
 
 }

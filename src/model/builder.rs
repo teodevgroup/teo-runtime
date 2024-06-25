@@ -152,6 +152,10 @@ impl Builder {
         *self.inner.properties.lock().unwrap() = properties;
     }
 
+    pub fn insert_index(&self, name: String, index: Index) {
+        self.inner.indexes.lock().unwrap().insert(name, index);
+    }
+
     pub fn indexes(&self) -> IndexMap<String, Index> {
         self.inner.indexes.lock().unwrap().clone()
     }

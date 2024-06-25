@@ -1,7 +1,7 @@
 use crate::value::Value;
 use crate::database::r#type::DatabaseType;
 use crate::model::field::Migration;
-use crate::namespace::Namespace;
+use crate::namespace;
 use crate::optionality::Optionality;
 use crate::pipeline::pipeline::Pipeline;
 use crate::readwrite::read::Read;
@@ -9,214 +9,214 @@ use crate::readwrite::write::Write;
 use crate::stdlib::decorators::indexable_decorators::{id_decorator, index_decorator, unique_decorator};
 use crate::value::interface_enum_variant::InterfaceEnumVariant;
 
-pub(in crate::stdlib) fn load_model_field_decorators(namespace: &mut Namespace) {
+pub(in crate::stdlib) fn load_model_field_decorators(namespace_builder: &namespace::Builder) {
 
-    namespace.define_model_field_decorator("map", |arguments, field| {
+    namespace_builder.define_model_field_decorator("map", |arguments, field| {
         let column_name: String = arguments.get("columnName")?;
-        field.column_name = column_name;
+        field.set_column_name(column_name);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("db", |arguments, field| {
+    namespace_builder.define_model_field_decorator("db", |arguments, field| {
         let interface_enum_variant: &InterfaceEnumVariant = arguments.get("type")?;
-        let database_type = DatabaseType::from_interface_enum_variant(interface_enum_variant, field.availability)?;
-        field.database_type = database_type;
+        let database_type = DatabaseType::from_interface_enum_variant(interface_enum_variant, field.availability())?;
+        field.set_database_type(database_type);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("readonly", |arguments, field| {
-        field.write = Write::NoWrite;
+    namespace_builder.define_model_field_decorator("readonly", |arguments, field| {
+        field.set_write(Write::NoWrite);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("writeonly", |arguments, field| {
-        field.read = Read::NoRead;
+    namespace_builder.define_model_field_decorator("writeonly", |arguments, field| {
+        field.set_read(Read::NoRead);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("internal", |arguments, field| {
-        field.write = Write::NoWrite;
-        field.read = Read::NoRead;
+    namespace_builder.define_model_field_decorator("internal", |arguments, field| {
+        field.set_write(Write::NoWrite);
+        field.set_read(Read::NoRead);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("writeOnCreate", |arguments, field| {
-        field.write = Write::WriteOnCreate;
+    namespace_builder.define_model_field_decorator("writeOnCreate", |arguments, field| {
+        field.set_write(Write::WriteOnCreate);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("writeOnce", |arguments, field| {
-        field.write = Write::WriteOnce;
+    namespace_builder.define_model_field_decorator("writeOnce", |arguments, field| {
+        field.set_write(Write::WriteOnce);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("writeNonNull", |arguments, field| {
-        field.write = Write::WriteNonNull;
+    namespace_builder.define_model_field_decorator("writeNonNull", |arguments, field| {
+        field.set_write(Write::WriteNonNull);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("readwrite", |arguments, field| {
-        field.write = Write::Write;
-        field.read = Read::Read;
+    namespace_builder.define_model_field_decorator("readwrite", |arguments, field| {
+        field.set_write(Write::Write);
+        field.set_read(Read::Read);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("readIf", |arguments, field| {
+    namespace_builder.define_model_field_decorator("readIf", |arguments, field| {
         let cond: Pipeline = arguments.get("cond")?;
-        field.read = Read::ReadIf(cond);
+        field.set_read(Read::ReadIf(cond));
         Ok(())
     });
 
-    namespace.define_model_field_decorator("writeIf", |arguments, field| {
+    namespace_builder.define_model_field_decorator("writeIf", |arguments, field| {
         let cond: Pipeline = arguments.get("cond")?;
-        field.write = Write::WriteIf(cond);
+        field.set_write(Write::WriteIf(cond));
         Ok(())
     });
 
-    namespace.define_model_field_decorator("presentWith", |arguments, field| {
+    namespace_builder.define_model_field_decorator("presentWith", |arguments, field| {
         let fields: Value = arguments.get("fields")?;
         match fields {
-            Value::String(e) => field.optionality = Optionality::PresentWith(vec![e.to_owned()]),
-            Value::Array(a) => field.optionality = Optionality::PresentWith(a.iter().map(|d| d.as_str().unwrap().to_owned()).collect()),
-            _ => panic!()
+            Value::String(e) => field.set_optionality(Optionality::PresentWith(vec![e.to_owned()])),
+            Value::Array(a) => field.set_optionality(Optionality::PresentWith(a.iter().map(|d| d.as_str().unwrap().to_owned()).collect())),
+            _ => unreachable!()
         }
         Ok(())
     });
 
-    namespace.define_model_field_decorator("presentWithout", |arguments, field| {
+    namespace_builder.define_model_field_decorator("presentWithout", |arguments, field| {
         let fields: Value = arguments.get("fields")?;
         match fields {
-            Value::String(e) => field.optionality = Optionality::PresentWithout(vec![e.to_owned()]),
-            Value::Array(a) => field.optionality = Optionality::PresentWithout(a.iter().map(|d| d.as_str().unwrap().to_owned()).collect()),
-            _ => panic!()
+            Value::String(e) => field.set_optionality(Optionality::PresentWithout(vec![e.to_owned()])),
+            Value::Array(a) => field.set_optionality(Optionality::PresentWithout(a.iter().map(|d| d.as_str().unwrap().to_owned()).collect())),
+            _ => unreachable!()
         }
         Ok(())
     });
 
-    namespace.define_model_field_decorator("presentIf", |arguments, field| {
+    namespace_builder.define_model_field_decorator("presentIf", |arguments, field| {
         let cond: Pipeline = arguments.get("cond")?;
-        field.optionality = Optionality::PresentIf(cond);
+        field.set_optionality(Optionality::PresentIf(cond));
         Ok(())
     });
 
-    namespace.define_model_field_decorator("atomic", |arguments, field| {
-        field.atomic = true;
+    namespace_builder.define_model_field_decorator("atomic", |arguments, field| {
+        field.set_atomic(true);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("nonatomic", |arguments, field| {
-        field.atomic = false;
+    namespace_builder.define_model_field_decorator("nonatomic", |arguments, field| {
+        field.set_atomic(false);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("id", |arguments, field| {
+    namespace_builder.define_model_field_decorator("id", |arguments, field| {
         id_decorator(arguments, field)
     });
 
-    namespace.define_model_field_decorator("index", |arguments, field| {
+    namespace_builder.define_model_field_decorator("index", |arguments, field| {
         index_decorator(arguments, field)
     });
 
-    namespace.define_model_field_decorator("unique", |arguments, field| {
+    namespace_builder.define_model_field_decorator("unique", |arguments, field| {
         unique_decorator(arguments, field)
     });
 
-    namespace.define_model_field_decorator("virtual", |arguments, field| {
-        field.r#virtual = true;
+    namespace_builder.define_model_field_decorator("virtual", |arguments, field| {
+        field.set_virtual(true);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("inputOmissible", |arguments, field| {
-        field.input_omissible = true;
+    namespace_builder.define_model_field_decorator("inputOmissible", |arguments, field| {
+        field.set_input_omissible(true);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("outputOmissible", |arguments, field| {
-        field.output_omissible = true;
+    namespace_builder.define_model_field_decorator("outputOmissible", |arguments, field| {
+        field.set_output_omissible(true);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("auto", |arguments, field| {
-        field.auto = true;
-        field.input_omissible = true;
+    namespace_builder.define_model_field_decorator("auto", |arguments, field| {
+        field.set_auto(true);
+        field.set_input_omissible(true);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("autoIncrement", |arguments, field| {
-        field.auto_increment = true;
-        field.input_omissible = true;
+    namespace_builder.define_model_field_decorator("autoIncrement", |arguments, field| {
+        field.set_auto_increment(true);
+        field.set_input_omissible(true);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("default", |arguments, field| {
+    namespace_builder.define_model_field_decorator("default", |arguments, field| {
         let value: Value = arguments.get("value")?;
-        field.default = Some(value);
-        field.input_omissible = true;
+        field.set_default(Some(value));
+        field.set_input_omissible(true);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("foreignKey", |arguments, field| {
-        field.foreign_key = true;
-        field.input_omissible = true;
+    namespace_builder.define_model_field_decorator("foreignKey", |arguments, field| {
+        field.set_foreign_key(true);
+        field.set_input_omissible(true);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("onSet", |arguments, field| {
+    namespace_builder.define_model_field_decorator("onSet", |arguments, field| {
         let pipeline: Pipeline = arguments.get("pipeline")?;
-        field.on_set = pipeline;
+        field.set_on_set(pipeline);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("onSave", |arguments, field| {
+    namespace_builder.define_model_field_decorator("onSave", |arguments, field| {
         let pipeline: Pipeline = arguments.get("pipeline")?;
-        field.on_save = pipeline;
+        field.set_on_save(pipeline);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("onOutput", |arguments, field| {
+    namespace_builder.define_model_field_decorator("onOutput", |arguments, field| {
         let pipeline: Pipeline = arguments.get("pipeline")?;
-        field.on_output = pipeline;
+        field.set_on_output(pipeline);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("queryable", |arguments, field| {
-        field.queryable = true;
+    namespace_builder.define_model_field_decorator("queryable", |arguments, field| {
+        field.set_queryable(true);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("unqueryable", |arguments, field| {
-        field.queryable = false;
+    namespace_builder.define_model_field_decorator("unqueryable", |arguments, field| {
+        field.set_queryable(false);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("sortable", |arguments, field| {
-        field.sortable = true;
+    namespace_builder.define_model_field_decorator("sortable", |arguments, field| {
+        field.set_sortable(true);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("unsortable", |arguments, field| {
-        field.sortable = false;
+    namespace_builder.define_model_field_decorator("unsortable", |arguments, field| {
+        field.set_sortable(false);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("canRead", |arguments, field| {
+    namespace_builder.define_model_field_decorator("canRead", |arguments, field| {
         let pipeline: Pipeline = arguments.get("pipeline")?;
-        field.can_read = pipeline;
+        field.set_can_read(pipeline);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("canMutate", |arguments, field| {
+    namespace_builder.define_model_field_decorator("canMutate", |arguments, field| {
         let pipeline: Pipeline = arguments.get("pipeline")?;
-        field.can_mutate = pipeline;
+        field.set_can_mutate(pipeline);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("dropped", |arguments, field| {
-        field.dropped = true;
+    namespace_builder.define_model_field_decorator("dropped", |arguments, field| {
+        field.set_dropped(true);
         Ok(())
     });
 
-    namespace.define_model_field_decorator("migration", |arguments, field| {
+    namespace_builder.define_model_field_decorator("migration", |arguments, field| {
         let mut migration = Migration {
             renamed: vec![],
             version: None,
@@ -245,7 +245,7 @@ pub(in crate::stdlib) fn load_model_field_decorators(namespace: &mut Namespace) 
         if let Some(priority) = priority {
             migration.priority = Some(priority as i64);
         }
-        field.migration = Some(migration);
+        field.set_migration(Some(migration));
         Ok(())
     });
 }
