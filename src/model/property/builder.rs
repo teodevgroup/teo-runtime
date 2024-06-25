@@ -7,7 +7,10 @@ use crate::comment::Comment;
 use crate::database::database::Database;
 use crate::database::r#type::DatabaseType;
 use crate::model::field::Index;
+use crate::model::field::indexable::SetIndex;
+use crate::model::field::set_optional::SetOptional;
 use crate::model::Property;
+use crate::model::property::property;
 use crate::optionality::Optionality;
 use crate::pipeline::Pipeline;
 use crate::Value;
@@ -169,26 +172,48 @@ impl Builder {
     }
 
     pub(crate) fn build(self, database: Database, schema: &Schema) -> Property {
-        let mut property = Property {
-            name: self.inner.name.clone(),
-            comment: self.inner.comment.clone(),
-            r#type: self.inner.r#type.clone(),
-            column_name: self.inner.column_name.lock().unwrap().clone(),
-            optionality: self.inner.optionality.lock().unwrap().clone(),
-            database_type: self.inner.database_type.lock().unwrap().clone(),
-            dependencies: self.inner.dependencies.lock().unwrap().clone(),
-            setter: self.inner.setter.lock().unwrap().clone(),
-            getter: self.inner.getter.lock().unwrap().clone(),
-            input_omissible: self.inner.input_omissible.load(std::sync::atomic::Ordering::Relaxed),
-            output_omissible: self.inner.output_omissible.load(std::sync::atomic::Ordering::Relaxed),
-            cached: self.inner.cached.load(std::sync::atomic::Ordering::Relaxed),
-            index: self.inner.index.lock().unwrap().clone(),
-            data: self.inner.data.lock().unwrap().clone(),
-        };
-        // set default database type
-        if property.database_type.is_undetermined() {
-            property.database_type = database.default_database_type(&property.r#type, schema)?;
+        Property {
+            inner: Arc::new(property::Inner {
+                name: self.inner.name.clone(),
+                comment: self.inner.comment.clone(),
+                r#type: self.inner.r#type.clone(),
+                column_name: self.inner.column_name.lock().unwrap().clone(),
+                optionality: self.inner.optionality.lock().unwrap().clone(),
+                database_type: {
+                    let mut database_type = self.inner.database_type.lock().unwrap().clone();
+                    if (database_type.is_undetermined()) {
+                        database_type = database.default_database_type(self.r#type(), schema)?;
+                    }
+                    database_type
+                },
+                dependencies: self.inner.dependencies.lock().unwrap().clone(),
+                setter: self.inner.setter.lock().unwrap().clone(),
+                getter: self.inner.getter.lock().unwrap().clone(),
+                input_omissible: self.inner.input_omissible.load(std::sync::atomic::Ordering::Relaxed),
+                output_omissible: self.inner.output_omissible.load(std::sync::atomic::Ordering::Relaxed),
+                cached: self.inner.cached.load(std::sync::atomic::Ordering::Relaxed),
+                index: self.inner.index.lock().unwrap().clone(),
+                data: self.inner.data.lock().unwrap().clone(),
+            })
         }
-        property
+    }
+}
+
+impl SetOptional for Builder {
+
+    fn set_optional(&mut self) {
+        self.set_optionality(Optionality::Optional);
+        self.set_input_omissible(true);
+        self.set_output_omissible(true);
+    }
+
+    fn set_required(&mut self) {
+        self.set_optionality(Optionality::Required);
+    }
+}
+
+impl SetIndex for Builder {
+    fn set_index(&self, index: Index) {
+        *self.inner.index.lock().unwrap() = Some(index)
     }
 }

@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::sync::Arc;
 use serde::Serialize;
 use teo_parser::ast::schema::Schema;
 use teo_parser::r#type::Type;
@@ -17,90 +18,97 @@ use crate::pipeline::pipeline::Pipeline;
 use crate::traits::documentable::Documentable;
 use crate::value::Value;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct Property {
-    pub name: String,
-    pub comment: Option<Comment>,
-    pub column_name: String,
-    pub optionality: Optionality,
-    pub r#type: Type,
-    pub database_type: DatabaseType,
-    pub dependencies: Vec<String>,
-    pub setter: Option<Pipeline>,
-    pub getter: Option<Pipeline>,
-    pub input_omissible: bool,
-    pub output_omissible: bool,
-    pub cached: bool,
-    pub index: Option<Index>,
-    pub data: BTreeMap<String, Value>,
+    pub(super) inner: Arc<Inner>
+}
+
+#[derive(Debug, Serialize)]
+pub(super) struct Inner {
+    pub(super) name: String,
+    pub(super) comment: Option<Comment>,
+    pub(super) column_name: String,
+    pub(super) optionality: Optionality,
+    pub(super) r#type: Type,
+    pub(super) database_type: DatabaseType,
+    pub(super) dependencies: Vec<String>,
+    pub(super) setter: Option<Pipeline>,
+    pub(super) getter: Option<Pipeline>,
+    pub(super) input_omissible: bool,
+    pub(super) output_omissible: bool,
+    pub(super) cached: bool,
+    pub(super) index: Option<Index>,
+    pub(super) data: BTreeMap<String, Value>,
 }
 
 impl Property {
 
-    pub fn new() -> Self {
-        Self {
-            name: "".to_string(),
-            comment: None,
-            column_name: "".to_string(),
-            optionality: Optionality::Required,
-            r#type: Type::Undetermined,
-            database_type: DatabaseType::Undetermined,
-            dependencies: vec![],
-            setter: None,
-            getter: None,
-            input_omissible: false,
-            output_omissible: false,
-            cached: false,
-            index: None,
-            data: Default::default(),
-        }
+    pub fn optionality(&self) -> &Optionality {
+        &self.inner.optionality
+    }
+
+    pub fn database_type(&self) -> &DatabaseType {
+        &self.inner.database_type
+    }
+
+    pub fn dependencies(&self) -> &Vec<String> {
+        &self.inner.dependencies
+    }
+
+    pub fn setter(&self) -> Option<&Pipeline> {
+        self.inner.setter.as_ref()
+    }
+
+    pub fn getter(&self) -> Option<&Pipeline> {
+        self.inner.getter.as_ref()
+    }
+
+    pub fn input_omissible(&self) -> bool {
+        self.inner.input_omissible
+    }
+
+    pub fn output_omissible(&self) -> bool {
+        self.inner.output_omissible
+    }
+
+    pub fn cached(&self) -> bool {
+        self.inner.cached
+    }
+
+    pub fn data(&self) -> &BTreeMap<String, Value> {
+        &self.inner.data
     }
 }
 
 impl Named for Property {
 
     fn name(&self) -> &str {
-        self.name.as_str()
+        self.inner.name.as_str()
     }
 }
 
 impl ColumnNamed for Property {
 
     fn column_name(&self) -> &str {
-        self.column_name.as_str()
+        self.inner.column_name.as_str()
     }
 }
 
 impl Indexable for Property {
 
     fn index(&self) -> Option<&Index> {
-        self.index.as_ref()
+        self.inner.index.as_ref()
     }
-
-    fn set_index(&mut self, index: Index) {
-        self.index = Some(index);
-    }
-
 }
 
 impl IsOptional for Property {
 
     fn is_optional(&self) -> bool {
-        self.optionality.is_any_optional()
+        self.inner.optionality.is_any_optional()
     }
 
     fn is_required(&self) -> bool {
-        self.optionality.is_required()
-    }
-
-    fn set_optional(&mut self) {
-        self.optionality = Optionality::Optional;
-        self.input_omissible = true;
-        self.output_omissible = true;
-    }
-
-    fn set_required(&mut self) {
-        self.optionality = Optionality::Required;
+        self.inner.optionality.is_required()
     }
 }
 
