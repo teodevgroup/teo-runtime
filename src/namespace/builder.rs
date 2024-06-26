@@ -19,7 +19,7 @@ use crate::database::database::Database;
 use crate::handler::ctx_argument::HandlerCtxArgument;
 use crate::handler::Handler;
 use crate::handler::handler::Method;
-use crate::model::{Field, Model, Property, Relation};
+use crate::model::{Model, Relation};
 use crate::namespace::Namespace;
 use crate::pipeline::item::callback::{CallbackArgument, CallbackResult};
 use crate::pipeline::item::compare::CompareArgument;
@@ -340,42 +340,42 @@ impl Builder {
 
     pub fn define_handler<T, F>(&self, name: &str, call: F) where T: 'static, F: 'static + HandlerCtxArgument<T> {
         let wrapped_call = Box::leak(Box::new(call));
-        let handler = Handler {
-            namespace_path: self.inner.path.clone(),
-            input_type: Type::Undetermined,
-            output_type: Type::Undetermined,
-            nonapi: false,
-            format: HandlerInputFormat::Json,
-            path: next_path(self.path(), name),
-            ignore_prefix: false,
-            method: Method::Post,
-            interface: None,
-            url: None,
-            call: Box::leak(Box::new(|ctx: request::Ctx| async {
+        let builder = handler::Builder::new(
+            next_path(self.path(), name),
+            self.inner.path.clone(),
+            Type::Undetermined,
+            Type::Undetermined,
+            false,
+            HandlerInputFormat::Json,
+            Box::leak(Box::new(|ctx: request::Ctx| async {
                 wrapped_call.call(ctx).await
             })),
-        };
+        );
+        builder.set_method(Method::Post);
+        builder.set_interface(None);
+        builder.set_url(None);
+        let handler = builder.build();
         let mut handlers = self.inner.handlers.lock().unwrap();
         handlers.insert(name.to_owned(), handler);
     }
 
     pub fn define_handler_template<T, F>(&self, name: &str, call: F) where T: 'static, F: 'static + HandlerCtxArgument<T> {
         let wrapped_call = Box::leak(Box::new(call));
-        let handler = Handler {
-            namespace_path: self.inner.path.clone(),
-            input_type: Type::Undetermined,
-            output_type: Type::Undetermined,
-            nonapi: false,
-            format: HandlerInputFormat::Json,
-            path: next_path(self.path(), name),
-            ignore_prefix: false,
-            method: Method::Post,
-            interface: None,
-            url: None,
-            call: Box::leak(Box::new(|ctx: request::Ctx| async {
+        let builder = handler::Builder::new(
+            next_path(self.path(), name),
+            self.inner.path.clone(),
+            Type::Undetermined,
+            Type::Undetermined,
+            false,
+            HandlerInputFormat::Json,
+            Box::leak(Box::new(|ctx: request::Ctx| async {
                 wrapped_call.call(ctx).await
             })),
-        };
+        );
+        builder.set_method(Method::Post);
+        builder.set_interface(None);
+        builder.set_url(None);
+        let handler = builder.build();
         let mut handler_templates = self.inner.handler_templates.lock().unwrap();
         handler_templates.insert(name.to_owned(), handler);
     }
@@ -732,7 +732,7 @@ impl Builder {
     ///
     pub fn opposite_relation(&self, relation: &Relation) -> (Model, Option<&Relation>) {
         let opposite_model = self.model_at_path(&relation.model_path()).unwrap();
-        let opposite_relation = opposite_model.relations.values().find(|r| &r.fields == &relation.references && &r.references == &relation.fields);
+        let opposite_relation = opposite_model.relations().values().find(|r| r.fields() == relation.references() && r.references() == relation.fields());
         (opposite_model, opposite_relation)
     }
 
@@ -749,7 +749,7 @@ impl Builder {
     ///
     pub fn through_relation(&self, relation: &Relation) -> (Model, &Relation) {
         let through_model = self.model_at_path(&relation.through_path().unwrap()).unwrap();
-        let through_local_relation = through_model.relation(relation.local.as_ref().unwrap()).unwrap();
+        let through_local_relation = through_model.relation(relation.local().unwrap()).unwrap();
         (through_model, through_local_relation)
     }
 
@@ -766,14 +766,14 @@ impl Builder {
     ///
     pub fn through_opposite_relation(&self, relation: &Relation) -> (Model, &Relation) {
         let through_model = self.model_at_path(&relation.through_path().unwrap()).unwrap();
-        let through_foreign_relation = through_model.relation(relation.foreign.as_ref().unwrap()).unwrap();
+        let through_foreign_relation = through_model.relation(relation.foreign().unwrap()).unwrap();
         (through_model, through_foreign_relation)
     }
 
     /// Get relations of model defined by related model
     pub fn model_opposite_relations(&self, model: &Model) -> Vec<(Model, &Relation)> {
         let model_opposite_relations_map = self.inner.model_opposite_relations_map.lock().unwrap();
-        let result = model_opposite_relations_map.get(&model.path).unwrap();
+        let result = model_opposite_relations_map.get(model.path()).unwrap();
         result.iter().map(|result| {
             let model = self.model_at_path(&result.0.iter().map(AsRef::as_ref).collect()).unwrap();
             let relation = model.relation(result.1.as_str()).unwrap();
