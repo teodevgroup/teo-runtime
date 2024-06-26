@@ -9,7 +9,6 @@ use teo_parser::traits::identifiable::Identifiable;
 use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::traits::node_trait::NodeTrait;
-use crate::namespace::Namespace;
 use teo_result::Result;
 use crate::namespace;
 use crate::schema::load::load_admin::load_admin;
@@ -66,28 +65,28 @@ pub async fn load_schema(main_namespace_builder: &namespace::Builder, schema: &S
     // load debug
     if let Some(debug) = schema.debug() {
         if debug.is_available() {
-            load_debug(main_namespace, schema, debug, &mut diagnostics)?;
+            load_debug(main_namespace_builder, schema, debug, &mut diagnostics)?;
         }
     }
 
     // load entities
     for entity in schema.entities() {
         if entity.is_available() {
-            load_entity(main_namespace, schema, entity, &mut diagnostics)?;
+            load_entity(main_namespace_builder, schema, entity, &mut diagnostics)?;
         }
     }
 
     // load clients
     for debug in schema.clients() {
         if debug.is_available() {
-            load_client(main_namespace, schema, debug, &mut diagnostics)?;
+            load_client(main_namespace_builder, schema, debug, &mut diagnostics)?;
         }
     }
 
     // load admin dashboard
     if let Some(admin) = schema.admin() {
         if admin.is_available() {
-            load_admin(main_namespace, schema, admin, &mut diagnostics)?;
+            load_admin(main_namespace_builder, schema, admin, &mut diagnostics)?;
         }
     }
 
@@ -95,33 +94,33 @@ pub async fn load_schema(main_namespace_builder: &namespace::Builder, schema: &S
 
         // validate decorator declarations
         for decorator_declaration in schema.decorator_declarations() {
-            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&decorator_declaration.namespace_str_path());
+            let dest_namespace_builder = main_namespace_builder.namespace_or_create_at_path(&decorator_declaration.namespace_str_path());
             match decorator_declaration.decorator_class {
-                ReferenceSpace::EnumDecorator => if dest_namespace.enum_decorators.get(decorator_declaration.identifier().name()).is_none() {
+                ReferenceSpace::EnumDecorator => if dest_namespace_builder.enum_decorator(decorator_declaration.identifier().name()).is_none() {
                     diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier().span(), "enum decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
                 },
-                ReferenceSpace::EnumMemberDecorator => if dest_namespace.enum_member_decorators.get(decorator_declaration.identifier().name()).is_none() {
+                ReferenceSpace::EnumMemberDecorator => if dest_namespace_builder.enum_member_decorator(decorator_declaration.identifier().name()).is_none() {
                     diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier().span(), "enum member decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
                 },
-                ReferenceSpace::ModelDecorator => if dest_namespace.model_decorators.get(decorator_declaration.identifier().name()).is_none() {
+                ReferenceSpace::ModelDecorator => if dest_namespace_builder.model_decorator(decorator_declaration.identifier().name()).is_none() {
                     diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier().span(), "model decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
                 },
-                ReferenceSpace::ModelFieldDecorator => if dest_namespace.model_field_decorators.get(decorator_declaration.identifier().name()).is_none() {
+                ReferenceSpace::ModelFieldDecorator => if dest_namespace_builder.model_field_decorator(decorator_declaration.identifier().name()).is_none() {
                     diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier().span(), "model field decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
                 },
-                ReferenceSpace::ModelRelationDecorator => if dest_namespace.model_relation_decorators.get(decorator_declaration.identifier().name()).is_none() {
+                ReferenceSpace::ModelRelationDecorator => if dest_namespace_builder.model_relation_decorator(decorator_declaration.identifier().name()).is_none() {
                     diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier().span(), "model relation decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
                 },
-                ReferenceSpace::ModelPropertyDecorator => if dest_namespace.model_property_decorators.get(decorator_declaration.identifier().name()).is_none() {
+                ReferenceSpace::ModelPropertyDecorator => if dest_namespace_builder.model_property_decorator(decorator_declaration.identifier().name()).is_none() {
                     diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier().span(), "model property decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
                 },
-                ReferenceSpace::InterfaceDecorator => if dest_namespace.interface_decorators.get(decorator_declaration.identifier().name()).is_none() {
+                ReferenceSpace::InterfaceDecorator => if dest_namespace_builder.interface_decorator(decorator_declaration.identifier().name()).is_none() {
                     diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier().span(), "interface decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
                 },
-                ReferenceSpace::InterfaceFieldDecorator => if dest_namespace.interface_field_decorators.get(decorator_declaration.identifier().name()).is_none() {
+                ReferenceSpace::InterfaceFieldDecorator => if dest_namespace_builder.interface_field_decorator(decorator_declaration.identifier().name()).is_none() {
                     diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier().span(), "interface field decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
                 },
-                ReferenceSpace::HandlerDecorator => if dest_namespace.handler_decorators.get(decorator_declaration.identifier().name()).is_none() {
+                ReferenceSpace::HandlerDecorator => if dest_namespace_builder.handler_decorator(decorator_declaration.identifier().name()).is_none() {
                     diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier().span(), "handler decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
                 },
                 _ => (),
@@ -130,16 +129,16 @@ pub async fn load_schema(main_namespace_builder: &namespace::Builder, schema: &S
 
         // validate pipeline item declarations
         for pipeline_item_declaration in schema.pipeline_item_declarations() {
-            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&pipeline_item_declaration.namespace_str_path());
-            if dest_namespace.pipeline_items.get(pipeline_item_declaration.identifier().name()).is_none() {
+            let dest_namespace_builder = main_namespace_builder.namespace_or_create_at_path(&pipeline_item_declaration.namespace_str_path());
+            if dest_namespace_builder.pipeline_item(pipeline_item_declaration.identifier().name()).is_none() {
                 diagnostics.insert(DiagnosticsError::new(pipeline_item_declaration.identifier().span(), "pipeline item implementation is not found", schema.source(pipeline_item_declaration.source_id()).unwrap().file_path.clone()))
             }
         }
 
         // validate struct declarations
         for struct_declaration in schema.struct_declarations() {
-            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&struct_declaration.namespace_str_path());
-            if let Some(struct_implementation) = dest_namespace.structs.get(struct_declaration.identifier().name()) {
+            let dest_namespace_builder = main_namespace_builder.namespace_or_create_at_path(&struct_declaration.namespace_str_path());
+            if let Some(struct_implementation) = dest_namespace_builder.r#struct(struct_declaration.identifier().name()) {
                 for function_declaration in struct_declaration.function_declarations() {
                     if function_declaration.r#static {
                         if struct_implementation.static_functions.get(function_declaration.identifier().name()).is_none() {
@@ -158,29 +157,29 @@ pub async fn load_schema(main_namespace_builder: &namespace::Builder, schema: &S
 
         // validate handlers
         for handler_declaration in schema.handler_declarations() {
-            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&handler_declaration.namespace_str_path());
-            if dest_namespace.handlers.get(handler_declaration.identifier().name()).is_none() {
+            let dest_namespace_builder = main_namespace_builder.namespace_or_create_at_path(&handler_declaration.namespace_str_path());
+            if dest_namespace_builder.handler(handler_declaration.identifier().name()).is_none() {
                 diagnostics.insert(DiagnosticsError::new(handler_declaration.identifier().span(), "handler implementation is not found", schema.source(handler_declaration.source_id()).unwrap().file_path.clone()));
             }
         }
 
         // validate handler templates
         for handler_template_declaration in schema.handler_template_declarations() {
-            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&handler_template_declaration.namespace_str_path());
-            if dest_namespace.handler_templates.get(handler_template_declaration.identifier().name()).is_none() {
+            let dest_namespace_builder = main_namespace_builder.namespace_or_create_at_path(&handler_template_declaration.namespace_str_path());
+            if dest_namespace_builder.handler_template(handler_template_declaration.identifier().name()).is_none() {
                 diagnostics.insert(DiagnosticsError::new(handler_template_declaration.identifier().span(), "handler template implementation is not found", schema.source(handler_template_declaration.source_id()).unwrap().file_path.clone()));
             }
         }
 
         // validate handler groups
         for handler_group_declaration in schema.handler_group_declarations() {
-            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&handler_group_declaration.namespace_str_path());
-            if dest_namespace.handler_groups.get(handler_group_declaration.identifier().name()).is_none() {
+            let dest_namespace_builder = main_namespace_builder.namespace_or_create_at_path(&handler_group_declaration.namespace_str_path());
+            if dest_namespace_builder.handler_group(handler_group_declaration.identifier().name()).is_none() {
                 diagnostics.insert(DiagnosticsError::new(handler_group_declaration.identifier().span(), "handler group implementation is not found", schema.source(handler_group_declaration.source_id()).unwrap().file_path.clone()));
             }
-            if let Some(group) = dest_namespace.handler_groups.get_mut(handler_group_declaration.identifier().name()) {
+            if let Some(group) = dest_namespace_builder.handler_group(handler_group_declaration.identifier().name()) {
                 for handler_declaration in handler_group_declaration.handler_declarations() {
-                    if group.handlers.get(handler_declaration.name()).is_none() {
+                    if group.handler(handler_declaration.name()).is_none() {
                         diagnostics.insert(DiagnosticsError::new(handler_declaration.identifier().span(), "handler implementation is not found", schema.source(handler_group_declaration.source_id()).unwrap().file_path.clone()));
                     }
                 }
@@ -189,27 +188,27 @@ pub async fn load_schema(main_namespace_builder: &namespace::Builder, schema: &S
 
         // validate middleware declarations
         for middleware_declaration in schema.middleware_declarations() {
-            let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&middleware_declaration.namespace_str_path());
-            if dest_namespace.middlewares.get(middleware_declaration.identifier().name()).is_none() {
+            let dest_namespace_builder = main_namespace_builder.namespace_or_create_at_path(&middleware_declaration.namespace_str_path());
+            if dest_namespace_builder.middleware(middleware_declaration.identifier().name()).is_none() {
                 diagnostics.insert(DiagnosticsError::new(middleware_declaration.identifier().span(), "middleware implementation is not found", schema.source(middleware_declaration.source_id()).unwrap().file_path.clone()))
             }
         }
 
         // load middlewares
-        load_use_middlewares(main_namespace, schema, &mut diagnostics).await?;
+        load_use_middlewares(main_namespace_builder, schema, &mut diagnostics).await?;
     }
 
     // load enums
     for enum_declaration in schema.enums() {
         if enum_declaration.is_available() {
-            load_enum(main_namespace, schema, enum_declaration, &mut diagnostics)?;
+            load_enum(main_namespace_builder, schema, enum_declaration, &mut diagnostics)?;
         }
     }
 
     // load interfaces
     for interface_declaration in schema.interfaces() {
         if interface_declaration.is_available() {
-            load_interface(main_namespace, schema, interface_declaration, &mut diagnostics)?;
+            load_interface(main_namespace_builder, schema, interface_declaration, &mut diagnostics)?;
         }
     }
 
@@ -230,7 +229,7 @@ pub async fn load_schema(main_namespace_builder: &namespace::Builder, schema: &S
 
     // load models
     for model_declaration in schema.models() {
-        let database = main_namespace.namespace_mut_or_create_at_path(&model_declaration.namespace_str_path()).database;
+        let database = main_namespace.namespace_or_create_at_path(&model_declaration.namespace_str_path()).database;
         if database.is_some() && model_declaration.is_available() {
             load_model(main_namespace, schema, model_declaration, &mut diagnostics)?;
         }

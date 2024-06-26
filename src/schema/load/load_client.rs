@@ -8,9 +8,10 @@ use teo_parser::traits::resolved::Resolve;
 use crate::config::client::{Client, ClientHost, ClientLanguage};
 use crate::namespace::Namespace;
 use teo_result::Result;
+use crate::namespace;
 use crate::schema::fetch::fetch_expression::{fetch_expression_or_default, fetch_expression_or_null};
 
-pub fn load_client(main_namespace: &mut Namespace, schema: &Schema, client: &Config, diagnostics: &mut Diagnostics) -> Result<()> {
+pub fn load_client(main_namespace: &namespace::Builder, schema: &Schema, client: &Config, diagnostics: &mut Diagnostics) -> Result<()> {
     let config_decl = schema.find_config_declaration_by_name("client", client.availability()).unwrap();
     let provider_expect = config_decl.get_field("provider").unwrap().type_expr().resolved();
     let dest_expect = config_decl.get_field("dest").unwrap().type_expr().resolved();
@@ -33,7 +34,7 @@ pub fn load_client(main_namespace: &mut Namespace, schema: &Schema, client: &Con
         object_name,
         git_commit,
     };
-    let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&client.namespace_str_path());
-    dest_namespace.clients.insert(client.name().to_owned(), client_config);
+    let dest_namespace = main_namespace.namespace_or_create_at_path(&client.namespace_str_path());
+    dest_namespace.insert_client(client.name().to_owned(), client_config);
     Ok(())
 }

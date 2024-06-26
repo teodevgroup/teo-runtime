@@ -10,10 +10,10 @@ use crate::admin::language::Language;
 use crate::config::admin::Admin;
 use crate::config::client::ClientHost;
 use crate::schema::fetch::fetch_expression::{fetch_expression_or_default, fetch_expression_or_null};
-use crate::Value;
+use crate::{namespace, Value};
 use crate::value::interface_enum_variant::InterfaceEnumVariant;
 
-pub fn load_admin(main_namespace: &mut Namespace, schema: &Schema, admin: &Config, diagnostics: &mut Diagnostics) -> Result<()> {
+pub fn load_admin(main_namespace: &namespace::Builder, schema: &Schema, admin: &Config, diagnostics: &mut Diagnostics) -> Result<()> {
     let config_decl = schema.find_config_declaration_by_name("admin", admin.availability()).unwrap();
     let dest_expect = config_decl.get_field("dest").unwrap().type_expr().resolved();
     let dest: String = fetch_expression_or_null(admin.get_item("dest"), schema, admin, dest_expect, main_namespace, diagnostics)?.try_into()?;
@@ -29,7 +29,7 @@ pub fn load_admin(main_namespace: &mut Namespace, schema: &Schema, admin: &Confi
         host,
         languages
     };
-    let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&admin.namespace_str_path());
-    dest_namespace.admin = Some(admin_config);
+    let dest_namespace = main_namespace.namespace_or_create_at_path(&admin.namespace_str_path());
+    dest_namespace.set_admin(Some(admin_config));
     Ok(())
 }

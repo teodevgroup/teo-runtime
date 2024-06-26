@@ -6,11 +6,11 @@ use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::traits::resolved::Resolve;
 use crate::config::entity::{Entity, Runtime};
-use crate::namespace::Namespace;
 use teo_result::Result;
+use crate::namespace;
 use crate::schema::fetch::fetch_expression::fetch_expression_or_null;
 
-pub fn load_entity(main_namespace: &mut Namespace, schema: &Schema, entity: &Config, diagnostics: &mut Diagnostics) -> Result<()> {
+pub fn load_entity(main_namespace: &namespace::Builder, schema: &Schema, entity: &Config, diagnostics: &mut Diagnostics) -> Result<()> {
     let config_decl = schema.find_config_declaration_by_name("entity", entity.availability()).unwrap();
     let provider_expect = config_decl.get_field("provider").unwrap().type_expr().resolved();
     let dest_expect = config_decl.get_field("dest").unwrap().type_expr().resolved();
@@ -20,7 +20,7 @@ pub fn load_entity(main_namespace: &mut Namespace, schema: &Schema, entity: &Con
         provider,
         dest,
     };
-    let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&entity.namespace_str_path());
-    dest_namespace.entities.insert(entity.name().to_owned(), entity_config);
+    let dest_namespace = main_namespace.namespace_or_create_at_path(&entity.namespace_str_path());
+    dest_namespace.insert_entity(entity.name().to_owned(), entity_config);
     Ok(())
 }

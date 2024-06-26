@@ -2,16 +2,16 @@ use std::sync::Arc;
 use educe::Educe;
 use serde::Serialize;
 use crate::arguments::Arguments;
-use crate::interface::Interface;
 use teo_result::Result;
+use crate::interface;
 
 pub trait Call {
-    fn call(&self, args: Arguments, interface: &mut Interface) -> Result<()>;
+    fn call(&self, args: Arguments, interface: &interface::Builder) -> Result<()>;
 }
 
 impl<F> Call for F where
-    F: Fn(Arguments, &mut Interface) -> Result<()> {
-    fn call(&self, args: Arguments, interface: &mut Interface) -> Result<()> {
+    F: Fn(Arguments, &interface::Builder) -> Result<()> {
+    fn call(&self, args: Arguments, interface: &interface::Builder) -> Result<()> {
         self(args, interface)
     }
 }

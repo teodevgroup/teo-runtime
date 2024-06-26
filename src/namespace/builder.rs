@@ -142,6 +142,24 @@ impl Builder {
         self.inner.connector.lock().unwrap().clone()
     }
 
+    pub fn set_debug(&self, debug: Option<Debug>) {
+        *self.inner.debug.lock().unwrap() = debug;
+    }
+
+    pub fn insert_entity(&self, name: String, entity: Entity) {
+        let mut entities = self.inner.entities.lock().unwrap();
+        entities.insert(name, entity);
+    }
+
+    pub fn insert_client(&self, name: String, client: Client) {
+        let mut clients = self.inner.clients.lock().unwrap();
+        clients.insert(name, client);
+    }
+
+    pub fn set_admin(&self, admin: Option<Admin>) {
+        *self.inner.admin.lock().unwrap() = admin;
+    }
+
     pub fn set_database(&self, database: Option<Database>) {
         *self.inner.database.lock().unwrap() = database;
     }
@@ -156,6 +174,25 @@ impl Builder {
 
     pub fn connector_reference(&self) -> Option<Vec<String>> {
         self.inner.connector_reference.lock().unwrap().clone()
+    }
+
+    pub fn middlewares_block(&self) -> Option<middleware::Block> {
+        self.inner.middlewares_block.lock().unwrap().clone()
+    }
+
+    pub fn insert_enum(&self, name: String, r#enum: Enum) {
+        let mut enums = self.inner.enums.lock().unwrap();
+        enums.insert(name, r#enum);
+    }
+
+    pub fn insert_model(&self, name: String, model: Model) {
+        let mut models = self.inner.models.lock().unwrap();
+        models.insert(name, model);
+    }
+
+    pub fn insert_interface(&self, name: String, interface: Interface) {
+        let mut interfaces = self.inner.interfaces.lock().unwrap();
+        interfaces.insert(name, interface);
     }
 
     pub fn namespaces(&self) -> BTreeMap<String, Builder> {

@@ -8,10 +8,11 @@ use teo_parser::diagnostics::diagnostics::Diagnostics;
 use crate::arguments::Arguments;
 use crate::middleware::{Block, Use};
 use crate::middleware::middleware::{combine_middleware, empty_middleware, Middleware};
+use crate::namespace;
 use crate::namespace::Namespace;
 use crate::schema::fetch::fetch_argument_list::{fetch_argument_list, fetch_argument_list_or_empty};
 
-pub(super) async fn load_use_middlewares(main_namespace: &mut Namespace, schema: &Schema, diagnostics: &mut Diagnostics) -> Result<()> {
+pub(super) async fn load_use_middlewares(main_namespace: &namespace::Builder, schema: &Schema, diagnostics: &mut Diagnostics) -> Result<()> {
     // load middleware blocks
     for path in &schema.references.use_middlewares_blocks {
         let use_middlewares_block = schema.find_top_by_path(&path).unwrap().as_use_middlewares_block().unwrap();
@@ -21,15 +22,15 @@ pub(super) async fn load_use_middlewares(main_namespace: &mut Namespace, schema:
                 let path = reference_info.reference.str_path();
                 let mut arguments = Arguments::default();
                 if let Some(middleware) = main_namespace.middleware_at_path(&path) {
-                    let creator = middleware.creator.clone();
+                    let creator = middleware.creator();
                     if let Some(arith_expr) = expression.kind.as_arith_expr() {
                         match arith_expr {
                             ArithExpr::Expression(expression) => {
                                 if expression.kind.is_unit() {
-                                    let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&use_middlewares_block.namespace_str_path());
+                                    let dest_namespace = main_namespace.namespace_or_create_at_path(&use_middlewares_block.namespace_str_path());
                                     let last_expression = expression.kind.as_unit().unwrap().expression_at(expression.kind.as_unit().unwrap().expressions().count() - 1).unwrap();
                                     if let Some(argument_list) = last_expression.kind.as_argument_list() {
-                                        let new_arguments = fetch_argument_list(argument_list, schema, use_middlewares_block, dest_namespace, diagnostics)?;
+                                        let new_arguments = fetch_argument_list(argument_list, schema, use_middlewares_block, &dest_namespace, diagnostics)?;
                                         arguments = new_arguments;
                                     }
                                 }
@@ -37,16 +38,12 @@ pub(super) async fn load_use_middlewares(main_namespace: &mut Namespace, schema:
                             _ => ()
                         }
                     }
-                    block.uses.push(Use {
-                        path: path.iter().map(|s| s.to_string()).collect(),
-                        creator,
-                        arguments,
-                    })
+                    block.uses.push(Use::new(path.iter().map(|s| s.to_string()).collect(), creator, arguments));
                 }
             }
         }
-        let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&use_middlewares_block.namespace_str_path());
-        dest_namespace.middlewares_block = Some(block);
+        let dest_namespace = main_namespace.namespace_or_create_at_path(&use_middlewares_block.namespace_str_path());
+        dest_namespace.set_middlewares_block(Some(block));
     }
 
     // load middleware stack
@@ -60,7 +57,7 @@ async fn load_middleware_stack(namespace: &mut Namespace, parent_stack: &'static
         let mut middlewares = vec![];
         middlewares.push(parent_stack);
         for r#use in &block.uses {
-            let middleware = r#use.creator.call(r#use.arguments.clone()).await?;
+            let middleware = r#use.creator().call(r#use.arguments().clone()).await?;
             middlewares.push(middleware);
         }
         middlewares.reverse();

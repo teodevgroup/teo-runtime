@@ -3,6 +3,7 @@ use std::sync::{Arc, Mutex};
 use teo_parser::r#type::Type;
 use crate::comment::Comment;
 use crate::interface::Field;
+use crate::model::field::set_optional::SetOptional;
 use crate::optionality::Optionality;
 use crate::Value;
 
@@ -79,5 +80,15 @@ impl Builder {
             optionality: self.optionality(),
             data: self.data(),
         }
+    }
+}
+
+impl SetOptional for Builder {
+    fn set_optional(&self) {
+        self.set_optionality(Optionality::Optional);
+    }
+
+    fn set_required(&self) {
+        self.set_optionality(Optionality::Required);
     }
 }

@@ -32,7 +32,7 @@ pub fn load_model(main_namespace: &mut Namespace, schema: &Schema, model_declara
             }
         }
     }
-    let database = main_namespace.namespace_mut_or_create_at_path(&model_declaration.namespace_str_path()).database;
+    let database = main_namespace.namespace_or_create_at_path(&model_declaration.namespace_str_path()).database;
     for field_declaration in model_declaration.fields() {
         if field_declaration.resolved().class.is_model_primitive_field() {
             if field_declaration.is_available() {
@@ -59,7 +59,7 @@ pub fn load_model(main_namespace: &mut Namespace, schema: &Schema, model_declara
     }
     model.finalize()?;
     model.cache.shape = model_declaration.resolved().clone();
-    let dest_namespace = main_namespace.namespace_mut_or_create_at_path(&model_declaration.namespace_str_path());
+    let dest_namespace = main_namespace.namespace_or_create_at_path(&model_declaration.namespace_str_path());
     dest_namespace.models.insert(model_declaration.identifier().name().to_owned(), model);
     for handler_declaration in model_declaration.handlers() {
         load_handler(main_namespace, schema, handler_declaration, diagnostics)?;

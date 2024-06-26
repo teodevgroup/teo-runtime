@@ -4,14 +4,43 @@ use serde::Serialize;
 use crate::arguments::Arguments;
 use crate::middleware::creator::Creator;
 
+#[derive(Debug, Clone)]
+pub struct Use {
+    inner: Arc<Inner>,
+}
+
 #[derive(Educe)]
 #[educe(Debug)]
 #[derive(Serialize)]
-pub struct Use {
-    pub path: Vec<String>,
+struct Inner {
+    path: Vec<String>,
     #[educe(Debug(ignore))] #[serde(skip)]
-    pub creator: Arc<dyn Creator>,
-    pub arguments: Arguments,
+    creator: Arc<dyn Creator>,
+    arguments: Arguments,
+}
+
+impl Use {
+    pub fn new(path: Vec<String>, creator: Arc<dyn Creator>, arguments: Arguments) -> Self {
+        Self {
+            inner: Arc::new(Inner {
+                path,
+                creator,
+                arguments,
+            }),
+        }
+    }
+
+    pub fn path(&self) -> &Vec<String> {
+        &self.inner.path
+    }
+
+    pub fn creator(&self) -> &Arc<dyn Creator> {
+        &self.inner.creator
+    }
+
+    pub fn arguments(&self) -> &Arguments {
+        &self.inner.arguments
+    }
 }
 
 unsafe impl Send for Use { }
