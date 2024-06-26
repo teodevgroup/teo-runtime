@@ -11,7 +11,7 @@ use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::traits::node_trait::NodeTrait;
 use crate::namespace::Namespace;
 use teo_result::Result;
-use crate::namespace::builder::NamespaceBuilder;
+use crate::namespace;
 use crate::schema::load::load_admin::load_admin;
 use crate::schema::load::load_client::load_client;
 use crate::schema::load::load_connector::load_connector;
@@ -28,7 +28,7 @@ use crate::schema::load::load_model_opposite_relations::load_model_opposite_rela
 use crate::schema::load::load_server::load_server;
 use crate::schema::load::load_use_middlewares::load_use_middlewares;
 
-pub async fn load_schema(main_namespace: &NamespaceBuilder, schema: &Schema, ignores_loading: bool) -> Result<()> {
+pub async fn load_schema(main_namespace_builder: &namespace::Builder, schema: &Schema, ignores_loading: bool) -> Result<()> {
 
     // diagnostics for schema loading
     let mut diagnostics = Diagnostics::new();
@@ -37,14 +37,14 @@ pub async fn load_schema(main_namespace: &NamespaceBuilder, schema: &Schema, ign
 
     // setup namespaces, this is used for recursively setting database information
     for namespace in schema.namespaces() {
-        let _ = main_namespace.namespace_or_create_at_path(&namespace.str_path());
+        let _ = main_namespace_builder.namespace_or_create_at_path(&namespace.str_path());
     }
 
     // load server
     let mut server_loaded = false;
     if let Some(server) = schema.server() {
         if server.is_available() {
-            load_server(main_namespace, schema, server, &mut diagnostics)?;
+            load_server(main_namespace_builder, schema, server, &mut diagnostics)?;
             server_loaded = true;
         }
     }
@@ -56,12 +56,12 @@ pub async fn load_schema(main_namespace: &NamespaceBuilder, schema: &Schema, ign
     // load connectors
     for connector in schema.connectors() {
         if connector.is_available() {
-            load_connector(main_namespace, schema, connector, &mut diagnostics)?;
+            load_connector(main_namespace_builder, schema, connector, &mut diagnostics)?;
         }
     }
 
     // setting up database information
-    load_database_information(main_namespace);
+    load_database_information(main_namespace_builder);
 
     // load debug
     if let Some(debug) = schema.debug() {

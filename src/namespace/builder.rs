@@ -110,7 +110,7 @@ impl Builder {
         }
     }
 
-    pub fn load_standard_library(&self) -> teo_result::Result<()> {
+    pub fn load_standard_library(&self) -> Result<()> {
         if self.inner.path.is_empty() {
             Err(Error::new("Standard library can only be loaded on main namespace"))?
         }
@@ -128,6 +128,38 @@ impl Builder {
 
     pub fn is_std(&self) -> bool {
         self.path().len() == 0 && self.path().first().unwrap().as_str() == "std"
+    }
+
+    pub fn set_server(&self, server: Option<Server>) {
+        *self.inner.server.lock().unwrap() = server;
+    }
+
+    pub fn set_connector(&self, connector: Option<Connector>) {
+        *self.inner.connector.lock().unwrap() = connector;
+    }
+
+    pub fn connector(&self) -> Option<Connector> {
+        self.inner.connector.lock().unwrap().clone()
+    }
+
+    pub fn set_database(&self, database: Option<Database>) {
+        *self.inner.database.lock().unwrap() = database;
+    }
+
+    pub fn database(&self) -> Option<Database> {
+        *self.inner.database.lock().unwrap()
+    }
+
+    pub fn set_connector_reference(&self, connector_reference: Option<Vec<String>>) {
+        *self.inner.connector_reference.lock().unwrap() = connector_reference;
+    }
+
+    pub fn connector_reference(&self) -> Option<Vec<String>> {
+        self.inner.connector_reference.lock().unwrap().clone()
+    }
+
+    pub fn namespaces(&self) -> BTreeMap<String, Builder> {
+        self.inner.namespaces.lock().unwrap().clone()
     }
 
     pub fn namespace(&self, name: &str) -> Option<Builder> {
