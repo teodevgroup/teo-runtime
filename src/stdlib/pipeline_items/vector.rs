@@ -1,12 +1,12 @@
-use crate::namespace::Namespace;
 use crate::arguments::Arguments;
 use crate::pipeline::Ctx;
 use teo_result::ResultExt;
 use teo_result::Error;
+use crate::namespace;
 use crate::value::range::Range;
 use crate::value::Value;
 
-pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &mut Namespace) {
+pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &namespace::Builder) {
 
     namespace.define_pipeline_item("append", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("append")?;

@@ -1,11 +1,11 @@
-use crate::namespace::Namespace;
 use crate::arguments::Arguments;
 use crate::pipeline::{Ctx, Pipeline};
 use bcrypt::{DEFAULT_COST, hash, verify};
 use teo_result::{Error, ResultExt};
+use crate::namespace;
 use crate::value::Value;
 
-pub(in crate::stdlib) fn load_bcrypt_items(namespace: &mut Namespace) {
+pub(in crate::stdlib) fn load_bcrypt_items(namespace: &namespace::Builder) {
 
     let mut bcrypt_namespace = namespace.namespace_mut_or_create("bcrypt");
 

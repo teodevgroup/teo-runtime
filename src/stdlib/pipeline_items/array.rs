@@ -1,11 +1,11 @@
-use crate::namespace::Namespace;
 use crate::arguments::Arguments;
 use crate::pipeline::Ctx;
 use teo_result::ResultExt;
+use crate::namespace;
 use crate::value::Value;
 use crate::pipeline::pipeline::Pipeline;
 
-pub(in crate::stdlib) fn load_pipeline_array_items(namespace: &mut Namespace) {
+pub(in crate::stdlib) fn load_pipeline_array_items(namespace: &namespace::Builder) {
 
     namespace.define_pipeline_item("join", |args: Arguments, ctx: Ctx| async move {
         let input: Vec<&str> = ctx.value().try_ref_into_err_prefix("join")?;

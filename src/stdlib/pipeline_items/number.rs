@@ -3,12 +3,12 @@ use crate::value::range::Range;
 use crate::value::Value;
 use crate::arguments::Arguments;
 use teo_result::Error;
-use crate::namespace::Namespace;
 use crate::pipeline::Ctx;
 use teo_result::{Result, ResultExt};
 use rand::{thread_rng, Rng};
+use crate::namespace;
 
-pub(in crate::stdlib) fn load_pipeline_number_items(namespace: &mut Namespace) {
+pub(in crate::stdlib) fn load_pipeline_number_items(namespace: &namespace::Builder) {
 
     namespace.define_pipeline_item("isEven", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("isEven")?;

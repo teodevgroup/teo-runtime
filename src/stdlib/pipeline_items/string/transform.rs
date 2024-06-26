@@ -1,4 +1,3 @@
-use crate::namespace::Namespace;
 use crate::arguments::Arguments;
 use crate::pipeline::Ctx;
 use teo_result::ResultExt;
@@ -7,8 +6,9 @@ use inflector::Inflector;
 use regex::Regex;
 use crate::value::Value;
 use teo_result::Error;
+use crate::namespace;
 
-pub(in crate::stdlib) fn load_pipeline_string_transform_items(namespace: &mut Namespace) {
+pub(in crate::stdlib) fn load_pipeline_string_transform_items(namespace: &namespace::Builder) {
 
     namespace.define_pipeline_item("regexReplace", |args: Arguments, ctx: Ctx| async move {
         let input: &str = ctx.value().try_ref_into_err_prefix("regexReplace")?;

@@ -1,4 +1,3 @@
-use crate::namespace::Namespace;
 use crate::arguments::Arguments;
 use crate::pipeline::Ctx;
 use teo_result::ResultExt;
@@ -6,9 +5,10 @@ use cuid2::create_id;
 use random_string::generate;
 use cuid::{cuid, slug};
 use uuid::Uuid;
+use crate::namespace;
 use crate::value::Value;
 
-pub(in crate::stdlib) fn load_pipeline_string_generation_items(namespace: &mut Namespace) {
+pub(in crate::stdlib) fn load_pipeline_string_generation_items(namespace: &namespace::Builder) {
 
     namespace.define_pipeline_item("cuid", |args: Arguments, ctx: Ctx| async move {
         Ok(Value::from(cuid().unwrap()))

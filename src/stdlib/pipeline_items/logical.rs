@@ -1,14 +1,14 @@
 use teo_parser::r#type::Type;
 use crate::arguments::Arguments;
 use teo_result::Error;
-use crate::namespace::Namespace;
 use crate::pipeline::Ctx;
 use crate::pipeline::pipeline::Pipeline;
 use teo_result::{Result, ResultExt};
 use crate::action::Action;
+use crate::namespace;
 use crate::value::Value;
 
-pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &mut Namespace) {
+pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &namespace::Builder) {
 
     namespace.define_pipeline_item("valid", |args: Arguments, ctx: Ctx| async move {
         Ok(ctx.value().clone())

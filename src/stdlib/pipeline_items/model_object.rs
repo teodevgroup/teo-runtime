@@ -1,16 +1,12 @@
-use std::collections::HashMap;
 use indexmap::IndexMap;
-use num_integer::Integer;
-use crate::value::range::Range;
 use crate::value::Value;
 use crate::arguments::Arguments;
 use teo_result::Error;
-use crate::namespace::Namespace;
 use crate::pipeline::Ctx;
 use teo_result::{Result, ResultExt};
-use crate::model;
+use crate::{model, namespace};
 
-pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &mut Namespace) {
+pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &namespace::Builder) {
 
     namespace.define_pipeline_item("self", |args: Arguments, ctx: Ctx| async move {
         Ok(Value::from(ctx.object()))

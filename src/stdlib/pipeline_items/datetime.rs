@@ -1,11 +1,11 @@
-use crate::namespace::Namespace;
 use crate::arguments::Arguments;
 use crate::pipeline::Ctx;
 use teo_result::ResultExt;
 use chrono::{DateTime, Duration, Utc};
+use crate::namespace;
 use crate::value::Value;
 
-pub(in crate::stdlib) fn load_pipeline_datetime_items(namespace: &mut Namespace) {
+pub(in crate::stdlib) fn load_pipeline_datetime_items(namespace: &namespace::Builder) {
 
     namespace.define_pipeline_item("now", |args: Arguments, ctx: Ctx| async move {
         Ok(Value::from(Utc::now()))

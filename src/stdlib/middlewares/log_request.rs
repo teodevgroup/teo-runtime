@@ -1,10 +1,11 @@
 use crate::arguments::Arguments;
 use crate::middleware::middleware::Middleware;
 use crate::middleware::next::Next;
+use crate::namespace;
 use crate::namespace::Namespace;
 use crate::request::ctx::Ctx;
 
-pub(in crate::stdlib) fn load_log_request_middleware(namespace: &mut Namespace) {
+pub(in crate::stdlib) fn load_log_request_middleware(namespace: &namespace::Builder) {
     namespace.define_middleware("logRequest", |arguments: Arguments| async move {
         let timing: bool = arguments.get("timing")?;
         Ok(Box::leak(Box::new(move |ctx: Ctx, next: &'static dyn Next| async move {

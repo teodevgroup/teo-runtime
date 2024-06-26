@@ -1,14 +1,11 @@
-use crate::namespace::Namespace;
 use crate::arguments::Arguments;
 use crate::pipeline::Ctx;
 use teo_result::ResultExt;
 use teo_result::Error;
-use pad::{PadStr, Alignment};
-use inflector::Inflector;
-use regex::Regex;
+use crate::namespace;
 use crate::value::Value;
 
-pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &mut Namespace) {
+pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &namespace::Builder) {
 
     namespace.define_pipeline_item("is", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value();

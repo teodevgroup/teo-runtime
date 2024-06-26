@@ -5,11 +5,11 @@ use bigdecimal::BigDecimal;
 use crate::value::Value;
 use crate::arguments::Arguments;
 use teo_result::Error;
-use crate::namespace::Namespace;
 use crate::pipeline::Ctx;
 use teo_result::ResultExt;
+use crate::namespace;
 
-pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &mut Namespace) {
+pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder) {
 
     namespace.define_pipeline_item("add", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("add")?;

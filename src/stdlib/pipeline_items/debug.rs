@@ -1,8 +1,8 @@
-use crate::namespace::Namespace;
 use crate::arguments::Arguments;
+use crate::namespace;
 use crate::pipeline::{Ctx, Pipeline};
 
-pub(in crate::stdlib) fn load_debug_items(namespace: &mut Namespace) {
+pub(in crate::stdlib) fn load_debug_items(namespace: &namespace::Builder) {
 
     namespace.define_pipeline_item("print", |args: Arguments, ctx: Ctx| async move {
         let label: Option<&str> = args.get_optional("label")?;

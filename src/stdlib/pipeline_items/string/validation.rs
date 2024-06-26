@@ -1,10 +1,10 @@
 use regex::Regex;
 use crate::arguments::Arguments;
-use crate::namespace::Namespace;
 use crate::pipeline::Ctx;
 use once_cell::sync::Lazy;
 use teo_result::Error;
 use teo_result::ResultExt;
+use crate::namespace;
 use crate::value::Value;
 
 pub(super) static EMAIL_REGEX: Lazy<Regex> = Lazy::new(|| {
@@ -24,7 +24,7 @@ pub(super) static SECURE_PASSWORD_REGEXES: Lazy<Vec<Regex>> = Lazy::new(|| {
     ]
 });
 
-pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &mut Namespace) {
+pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &namespace::Builder) {
 
     namespace.define_pipeline_item("isEmail", |args: Arguments, ctx: Ctx| async move {
         let input: &str = ctx.value().try_ref_into_err_prefix("isEmail")?;
