@@ -5,13 +5,12 @@ use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::traits::resolved::Resolve;
 use teo_result::Result;
 use crate::value::Value;
-use crate::teon;
+use crate::{namespace, teon};
 use crate::data_set::{DataSet, Group, Record};
-use crate::namespace::Namespace;
 use crate::schema::fetch::fetchers::fetch_literals::fetch_dictionary_literal;
 use crate::traits::named::Named;
 
-pub fn load_data_sets(namespace: &Namespace, names: Option<&Vec<String>>, all: bool, schema: &Schema, diagnostics: &mut Diagnostics) -> Result<Vec<DataSet>> {
+pub fn load_data_sets(namespace: &namespace::Builder, names: Option<&Vec<String>>, all: bool, schema: &Schema, diagnostics: &mut Diagnostics) -> Result<Vec<DataSet>> {
     let mut result: Vec<DataSet> = vec![];
     for schema_data_set in schema.data_sets() {
         if all || (names.is_some() && names.unwrap().contains(&schema_data_set.string_path().join("."))) || (names.is_none() && schema_data_set.auto_seed) {
@@ -48,7 +47,7 @@ pub fn load_data_sets(namespace: &Namespace, names: Option<&Vec<String>>, all: b
     Ok(result)
 }
 
-pub(crate) fn normalize_dataset_relations<'a>(dataset: &mut DataSet, namespace: &Namespace) {
+pub(crate) fn normalize_dataset_relations<'a>(dataset: &mut DataSet, namespace: &namespace::Builder) {
     let mut assign_relation_other_sides = vec![];
     for group in &dataset.groups {
         let model = namespace.model_at_path(&group.model_path()).unwrap();
@@ -61,12 +60,12 @@ pub(crate) fn normalize_dataset_relations<'a>(dataset: &mut DataSet, namespace: 
                         continue
                     }
                     let opposite_rel = opposite_rel.unwrap();
-                    if relation.is_vec {
+                    if relation.is_vec() {
                         for v in v.as_array().unwrap() {
-                            assign_relation_other_sides.push((dataset.name.clone(), opposite_model.path.clone(), v.as_str().unwrap().to_owned(), opposite_rel.name.clone(), record.name.clone()));
+                            assign_relation_other_sides.push((dataset.name.clone(), opposite_model.path().clone(), v.as_str().unwrap().to_owned(), opposite_rel.name().to_string(), record.name.clone()));
                         }
                     } else {
-                        assign_relation_other_sides.push((dataset.name.clone(), opposite_model.path.clone(), v.as_str().unwrap().to_owned(), opposite_rel.name.clone(), record.name.clone()));
+                        assign_relation_other_sides.push((dataset.name.clone(), opposite_model.path().clone(), v.as_str().unwrap().to_owned(), opposite_rel.name().to_string(), record.name.clone()));
                     }
                 }
             }
@@ -77,12 +76,12 @@ pub(crate) fn normalize_dataset_relations<'a>(dataset: &mut DataSet, namespace: 
     }
 }
 
-fn assign_relation_other_side(dataset: &mut DataSet, data_set_name: &Vec<String>, model_name: &Vec<String>, record_name: &String, field_name: &String, value_name: &String, namespace: &Namespace) {
+fn assign_relation_other_side(dataset: &mut DataSet, data_set_name: &Vec<String>, model_name: &Vec<String>, record_name: &String, field_name: &String, value_name: &String, namespace: &namespace::Builder) {
     let that_group = dataset.groups.iter_mut().find(|g| &g.name == model_name).unwrap();
     let that_record = that_group.records.iter_mut().find(|r| &r.name == record_name).unwrap();
     let model = namespace.model_at_path(&model_name.iter().map(AsRef::as_ref).collect()).unwrap();
     let relation = model.relation(field_name).unwrap();
-    if relation.is_vec {
+    if relation.is_vec() {
         if that_record.value.as_dictionary_mut().unwrap().contains_key(relation.name()) {
             let array = that_record.value.as_dictionary_mut().unwrap().get_mut(relation.name()).unwrap().as_array_mut().unwrap();
             let to_insert = Value::String(value_name.clone());

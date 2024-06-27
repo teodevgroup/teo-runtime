@@ -20,7 +20,7 @@ pub fn load_debug(main_namespace: &namespace::Builder, schema: &Schema, debug: &
         log_queries,
         log_seed_records,
     };
-    let dest_namespace = main_namespace.namespace_or_create_at_path(&debug.namespace_str_path());
+    let dest_namespace = main_namespace.namespace_or_create_at_path(&debug.namespace_string_path());
     dest_namespace.set_debug(Some(debug_conf));
     Ok(())
 }

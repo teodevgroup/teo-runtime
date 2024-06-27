@@ -95,7 +95,7 @@ impl Namespace {
 
     pub fn model_decorator_at_path(&self, path: &Vec<&str>) -> Option<&model::Decorator> {
         let decorator_name = path.last().unwrap().deref();
-        let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.clone()).collect();
+        let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.model_decorators.get(decorator_name)
         } else {
@@ -145,7 +145,7 @@ impl Namespace {
 
     pub fn enum_member_decorator_at_path(&self, path: &Vec<&str>) -> Option<&r#enum::member::Decorator> {
         let decorator_name = path.last().unwrap().deref();
-        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.enum_member_decorators.get(decorator_name)
         } else {
@@ -155,7 +155,7 @@ impl Namespace {
 
     pub fn interface_decorator_at_path(&self, path: &Vec<&str>) -> Option<&interface::Decorator> {
         let decorator_name = path.last().unwrap().deref();
-        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.interface_decorators.get(decorator_name)
         } else {
@@ -165,7 +165,7 @@ impl Namespace {
 
     pub fn interface_field_decorator_at_path(&self, path: &Vec<&str>) -> Option<&interface::field::Decorator> {
         let decorator_name = path.last().unwrap().deref();
-        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.interface_field_decorators.get(decorator_name)
         } else {
@@ -175,7 +175,7 @@ impl Namespace {
 
     pub fn handler_decorator_at_path(&self, path: &Vec<&str>) -> Option<&handler::Decorator> {
         let decorator_name = path.last().unwrap().deref();
-        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.handler_decorators.get(decorator_name)
         } else {
@@ -185,7 +185,7 @@ impl Namespace {
 
     pub fn pipeline_item_at_path(&self, path: &Vec<&str>) -> Option<&pipeline::Item> {
         let pipeline_item_name = path.last().unwrap().deref();
-        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.pipeline_items.get(pipeline_item_name)
         } else {
@@ -195,7 +195,7 @@ impl Namespace {
 
     pub fn struct_at_path(&self, path: &Vec<&str>) -> Option<&Struct> {
         let struct_name = *path.last().unwrap();
-        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.structs.get(struct_name)
         } else {
@@ -205,7 +205,7 @@ impl Namespace {
 
     pub fn enum_at_path(&self, path: &Vec<&str>) -> Option<&Enum> {
         let enum_name = path.last().unwrap().deref();
-        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.enums.get(enum_name)
         } else {
@@ -215,7 +215,7 @@ impl Namespace {
 
     pub fn model_at_path(&self, path: &Vec<&str>) -> Option<&Model> {
         let model_name = path.last().unwrap().deref();
-        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.models.get(model_name)
         } else {
@@ -225,7 +225,7 @@ impl Namespace {
 
     pub fn interface_at_path(&self, path: &Vec<&str>) -> Option<&Interface> {
         let interface_name = path.last().unwrap().deref();
-        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.interfaces.get(interface_name)
         } else {
@@ -235,7 +235,7 @@ impl Namespace {
 
     pub fn middleware_at_path(&self, path: &Vec<&str>) -> Option<&middleware::Definition> {
         let middleware_name = path.last().unwrap().deref();
-        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.middlewares.get(middleware_name)
         } else {
@@ -249,7 +249,7 @@ impl Namespace {
             self.handler_templates.get(handler_name)
         } else {
             // try find a namespace first
-            let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+            let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
             if let Some(dest_namespace) = self.namespace_at_path(&namespace_path) {
                 dest_namespace.handler_templates.get(handler_name)
             } else {

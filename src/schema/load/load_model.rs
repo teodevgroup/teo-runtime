@@ -33,7 +33,7 @@ pub fn load_model(main_namespace: &namespace::Builder, schema: &Schema, model_de
             }
         }
     }
-    let database = main_namespace.namespace_or_create_at_path(&model_declaration.namespace_str_path()).database();
+    let database = main_namespace.namespace_or_create_at_path(&model_declaration.namespace_string_path()).database();
     for field_declaration in model_declaration.fields() {
         if field_declaration.resolved().class.is_model_primitive_field() {
             if field_declaration.is_available() {
@@ -58,9 +58,8 @@ pub fn load_model(main_namespace: &namespace::Builder, schema: &Schema, model_de
             }
         }
     }
-    let mut model = model_builder.build()?;
-    model.cache().shape = model_declaration.resolved().clone();
-    let dest_namespace = main_namespace.namespace_or_create_at_path(&model_declaration.namespace_str_path());
+    let mut model = model_builder.build(model_declaration.resolved().clone())?;
+    let dest_namespace = main_namespace.namespace_or_create_at_path(&model_declaration.namespace_string_path());
     dest_namespace.insert_model(model_declaration.identifier().name().to_owned(), model);
     for handler_declaration in model_declaration.handlers() {
         load_handler(main_namespace, schema, handler_declaration, diagnostics)?;
@@ -91,7 +90,7 @@ fn load_model_field(main_namespace: &namespace::Builder, field_declaration: &teo
             }
         }
     }
-    Ok(field_builder.build(database.unwrap(), schema))
+    field_builder.build(database.unwrap(), schema)
 }
 
 fn load_model_relation(main_namespace: &namespace::Builder, field_declaration: &teo_parser::ast::field::Field, schema: &Schema, _database: Option<Database>, fields: Vec<&Field>, diagnostics: &mut Diagnostics) -> Result<model::Relation> {
@@ -157,5 +156,5 @@ fn load_model_property(main_namespace: &namespace::Builder, field_declaration: &
             }
         }
     }
-    Ok(property_builder.build(database.unwrap(), schema))
+    property_builder.build(database.unwrap(), schema)
 }

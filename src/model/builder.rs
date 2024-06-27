@@ -3,6 +3,7 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicBool;
 use indexmap::IndexMap;
 use itertools::Itertools;
+use teo_parser::ast::model::ModelResolved;
 use teo_result::{Error, Result};
 use crate::action::Action;
 use crate::comment::Comment;
@@ -266,7 +267,7 @@ impl Builder {
         self.inner.data.lock().unwrap().get(key).cloned()
     }
 
-    pub(crate) fn build(self) -> Result<Model> {
+    pub(crate) fn build(self, shape: ModelResolved) -> Result<Model> {
         // set primary index if it is set through model decorator
         let mut primary_index_name = "".to_owned();
         for index in self.indexes().values() {
@@ -405,6 +406,7 @@ impl Builder {
             }
             map
         };
+        cache.shape = shape;
         Ok(Model {
             inner: Arc::new(model::model::Inner {
                 path: self.inner.path.clone(),

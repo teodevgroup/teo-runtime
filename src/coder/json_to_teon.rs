@@ -29,7 +29,12 @@ pub fn fetch_synthesized_interface_enum<'a>(reference: &SynthesizedInterfaceEnum
     model.resolved().interface_enums.get(&reference.kind).unwrap()
 }
 
-pub fn fetch_synthesized_enum<'a>(reference: &SynthesizedEnumReference, main_namespace: &'a namespace::Builder) -> &'a SynthesizedEnum {
+pub fn fetch_synthesized_enum<'a>(reference: &SynthesizedEnumReference, main_namespace: &'a namespace::Builder) -> SynthesizedEnum {
+    let model = main_namespace.model_at_path(&reference.owner.as_model_object().unwrap().str_path()).unwrap();
+    model.cache().shape.enums.get(&reference.kind).unwrap().clone()
+}
+
+pub fn fetch_synthesized_enum_from_namespace<'a>(reference: &SynthesizedEnumReference, main_namespace: &'a Namespace) -> &'a SynthesizedEnum {
     let model = main_namespace.model_at_path(&reference.owner.as_model_object().unwrap().str_path()).unwrap();
     model.cache().shape.enums.get(&reference.kind).unwrap()
 }
@@ -168,7 +173,7 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
             json_to_teon(json, path, input, main_namespace)
         },
         Type::SynthesizedEnumReference(enum_reference) => {
-            let synthesized_enum = fetch_synthesized_enum(enum_reference, main_namespace);
+            let synthesized_enum = fetch_synthesized_enum_from_namespace(enum_reference, main_namespace);
             json_to_teon_with_synthesized_enum(json, path, synthesized_enum)
         },
         Type::SynthesizedEnum(synthesized_enum) => json_to_teon_with_synthesized_enum(json, path, synthesized_enum),
@@ -176,7 +181,7 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
         Type::DeclaredSynthesizedShape(synthesized_shape_reference, model_type) => {
             if let Some(model_reference) = model_type.as_model_object() {
                 let m = main_namespace.model_at_path(&model_reference.str_path()).unwrap();
-                if let Some(shape) = m.cache.shape.get_declared(synthesized_shape_reference.string_path()) {
+                if let Some(shape) = m.cache().shape.get_declared(synthesized_shape_reference.string_path()) {
                     json_to_teon_with_shape(json, path, shape, main_namespace)
                 } else {
                     Err(Error::invalid_request_pathed(path.clone(), "unexpected type"))?

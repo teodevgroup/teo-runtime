@@ -29,7 +29,7 @@ pub fn load_admin(main_namespace: &namespace::Builder, schema: &Schema, admin: &
         host,
         languages
     };
-    let dest_namespace = main_namespace.namespace_or_create_at_path(&admin.namespace_str_path());
+    let dest_namespace = main_namespace.namespace_or_create_at_path(&admin.namespace_string_path());
     dest_namespace.set_admin(Some(admin_config));
     Ok(())
 }

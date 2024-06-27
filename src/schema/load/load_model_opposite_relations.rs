@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 use maplit::btreemap;
 use crate::namespace;
+use crate::traits::named::Named;
 
 pub(super) fn load_model_opposite_relations(main_namespace: &namespace::Builder) {
     let relations = fetch_model_opposite_relations(main_namespace);
@@ -15,9 +16,9 @@ fn fetch_model_opposite_relations(namespace: &namespace::Builder) -> BTreeMap<Ve
 
 fn add_model_opposite_relations_from_namespace(namespace: &namespace::Builder, result: &mut BTreeMap<Vec<String>, Vec<(Vec<String>, String)>>) {
     for model in namespace.models().values() {
-        ensure_entry_for_model(&model.path, result);
-        for relation in model.relations.values() {
-            install_entry_for_model(&relation.model, result, &model.path, &relation.name);
+        ensure_entry_for_model(model.path(), result);
+        for relation in model.relations().values() {
+            install_entry_for_model(relation.model(), result, model.path(), relation.name());
         }
     }
     for namespace in namespace.namespaces().values() {
@@ -35,8 +36,8 @@ fn install_entry_for_model(
     model_path: &Vec<String>,
     result: &mut BTreeMap<Vec<String>, Vec<(Vec<String>, String)>>,
     model: &Vec<String>,
-    relation: &String,
+    relation: &str,
 ) {
     ensure_entry_for_model(model_path, result);
-    result.get_mut(model_path).unwrap().push((model.clone(), relation.clone()));
+    result.get_mut(model_path).unwrap().push((model.clone(), relation.to_string()));
 }

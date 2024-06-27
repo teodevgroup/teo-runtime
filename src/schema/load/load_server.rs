@@ -19,7 +19,7 @@ pub fn load_server(main_namespace: &namespace::Builder, schema: &Schema, server:
         bind,
         path_prefix,
     };
-    let dest_namespace = main_namespace.namespace_or_create_at_path(&server.namespace_str_path());
+    let dest_namespace = main_namespace.namespace_or_create_at_path(&server.namespace_string_path());
     dest_namespace.set_server(Some(server_conf));
     Ok(())
 }

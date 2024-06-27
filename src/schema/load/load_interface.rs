@@ -52,7 +52,7 @@ pub fn load_interface(main_namespace_builder: &namespace::Builder, schema: &Sche
             }
         }
     }
-    let dest_namespace = main_namespace_builder.namespace_or_create_at_path(&interface_declaration.namespace_str_path());
+    let dest_namespace = main_namespace_builder.namespace_or_create_at_path(&interface_declaration.namespace_string_path());
     dest_namespace.insert_interface(interface_declaration.identifier().name().to_owned(), interface_builder.build());
     Ok(())
 }

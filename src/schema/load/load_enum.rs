@@ -30,7 +30,7 @@ pub fn load_enum(main_namespace: &namespace::Builder, schema: &Schema, enum_decl
         members
     );
     let r#enum = enum_builder.build();
-    let dest_namespace = main_namespace.namespace_or_create_at_path(&enum_declaration.namespace_str_path());
+    let dest_namespace = main_namespace.namespace_or_create_at_path(&enum_declaration.namespace_string_path());
     dest_namespace.insert_enum(enum_declaration.identifier().name().to_owned(), r#enum);
     Ok(())
 }
