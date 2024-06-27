@@ -17,7 +17,7 @@ struct Inner {
     input_type: Type,
     output_type: Type,
     nonapi: bool,
-    format: HandlerInputFormat,
+    format: Arc<Mutex<HandlerInputFormat>>,
     method: Arc<Mutex<Method>>,
     url: Arc<Mutex<Option<String>>>,
     interface: Arc<Mutex<Option<String>>>,
@@ -35,7 +35,7 @@ impl Builder {
                 input_type,
                 output_type,
                 nonapi,
-                format,
+                format: Arc::new(Mutex::new(format)),
                 method: Arc::new(Mutex::new(Method::Post)),
                 url: Arc::new(Mutex::new(None)),
                 interface: Arc::new(Mutex::new(None)),
@@ -66,7 +66,11 @@ impl Builder {
     }
 
     pub fn format(&self) -> HandlerInputFormat {
-        self.inner.format
+        *self.inner.format.lock().unwrap()
+    }
+
+    pub fn set_format(&self, format: HandlerInputFormat) {
+        *self.inner.format.lock().unwrap() = format
     }
 
     pub fn method(&self) -> Method {

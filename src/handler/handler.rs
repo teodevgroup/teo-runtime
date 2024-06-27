@@ -53,8 +53,8 @@ impl Handler {
         self.inner.nonapi
     }
 
-    pub fn format(&self) -> &HandlerInputFormat {
-        &self.inner.format
+    pub fn format(&self) -> HandlerInputFormat {
+        self.inner.format
     }
 
     pub fn method(&self) -> &Method {

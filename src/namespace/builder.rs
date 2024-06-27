@@ -67,7 +67,8 @@ struct Inner {
     pub database: Arc<Mutex<Option<Database>>>,
     pub connector_reference: Arc<Mutex<Option<Vec<String>>>>,
     pub connection: Arc<Mutex<Option<Arc<dyn Connection>>>>,
-    pub model_opposite_relations_map: Arc<Mutex<BTreeMap<Vec<String>, Vec<(Vec<String>, String)>>>>
+    pub model_opposite_relations_map: Arc<Mutex<BTreeMap<Vec<String>, Vec<(Vec<String>, String)>>>>,
+    pub handler_map: Arc<Mutex<handler::Map>>,
 }
 
 impl Builder {
@@ -106,6 +107,7 @@ impl Builder {
                 connector_reference: Arc::new(Mutex::new(None)),
                 connection: Arc::new(Mutex::new(None)),
                 model_opposite_relations_map: Arc::new(Mutex::new(Default::default())),
+                handler_map: Arc::new(Mutex::new(handler::Map::new()))
             })
         }
     }
@@ -787,6 +789,10 @@ impl Builder {
         } else {
             dest_namespace.insert_handler(handler_name, handler);
         }
+    }
+
+    pub fn handler_map(&self) -> Arc<Mutex<handler::Map>> {
+        self.inner.handler_map.clone()
     }
 
     /// Returns the opposite relation of the argument relation.

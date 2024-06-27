@@ -214,12 +214,12 @@ pub async fn load_schema(main_namespace_builder: &namespace::Builder, schema: &S
 
     // load handler templates
     for handler_template_declaration in schema.handler_template_declarations() {
-        load_handler_template(main_namespace, schema, handler_template_declaration, &mut diagnostics)?;
+        load_handler_template(main_namespace_builder, schema, handler_template_declaration, &mut diagnostics)?;
     }
 
     // load handlers
     for handler_declaration in schema.handler_declarations() {
-        load_handler(main_namespace, schema, handler_declaration, &mut diagnostics)?;
+        load_handler(main_namespace_builder, schema, handler_declaration, &mut diagnostics)?;
     }
 
     // load handler groups
