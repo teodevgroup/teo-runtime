@@ -5,7 +5,7 @@ use teo_parser::traits::identifiable::Identifiable;
 use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::traits::resolved::Resolve;
-use crate::model::{Field, Model};
+use crate::model::Field;
 use crate::{model, namespace};
 use teo_result::Result;
 use crate::database::database::Database;
@@ -94,7 +94,7 @@ fn load_model_field(main_namespace: &namespace::Builder, field_declaration: &teo
     Ok(field_builder.build(database.unwrap(), schema))
 }
 
-fn load_model_relation(main_namespace: &namespace::Builder, field_declaration: &teo_parser::ast::field::Field, schema: &Schema, database: Option<Database>, fields: Vec<Field>, diagnostics: &mut Diagnostics) -> Result<model::Relation> {
+fn load_model_relation(main_namespace: &namespace::Builder, field_declaration: &teo_parser::ast::field::Field, schema: &Schema, _database: Option<Database>, fields: Vec<Field>, diagnostics: &mut Diagnostics) -> Result<model::Relation> {
     let mut r#type = field_declaration.type_expr().resolved();
     let relation_builder = model::relation::Builder::new(
         field_declaration.identifier().name().to_owned(),

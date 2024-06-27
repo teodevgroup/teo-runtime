@@ -46,12 +46,12 @@ impl Relation {
         &self.inner.optionality
     }
 
-    pub fn delete(&self) -> &Delete {
-        &self.inner.delete
+    pub fn delete(&self) -> Delete {
+        self.inner.delete
     }
 
-    pub fn update(&self) -> &Update {
-        &self.inner.update
+    pub fn update(&self) -> Update {
+        self.inner.update
     }
 
     pub fn has_foreign_key(&self) -> bool {
