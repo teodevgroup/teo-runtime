@@ -3,7 +3,7 @@ use serde::Serialize;
 use super::super::index::Type;
 use crate::sort::Sort;
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Index {
     inner: Arc<Inner>
 }
@@ -43,5 +43,11 @@ impl Index {
 
     pub fn length(&self) -> Option<usize> {
         self.inner.length
+    }
+}
+
+impl Serialize for Index {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
+        self.inner.serialize(serializer)
     }
 }

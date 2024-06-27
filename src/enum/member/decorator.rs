@@ -3,21 +3,20 @@ use educe::Educe;
 use serde::Serialize;
 use crate::arguments::Arguments;
 use teo_result::Result;
-
-use super::Member;
+use crate::r#enum;
 
 pub trait Call {
-    fn call(&self, args: Arguments, field: &mut Member) -> Result<()>;
+    fn call(&self, args: Arguments, member: &r#enum::member::Builder) -> Result<()>;
 }
 
 impl<F> Call for F where
-    F: Fn(Arguments, &mut Member) -> Result<()> {
-    fn call(&self, args: Arguments, field: &mut Member) -> Result<()> {
-        self(args, field)
+    F: Fn(Arguments, &r#enum::member::Builder) -> Result<()> {
+    fn call(&self, args: Arguments, member: &r#enum::member::Builder) -> Result<()> {
+        self(args, member)
     }
 }
 
-#[derive(Educe, Serialize, Clone)]
+#[derive(Educe, Clone)]
 #[educe(Debug)]
 pub struct Decorator {
     inner: Arc<Inner>,
@@ -46,7 +45,14 @@ impl Decorator {
         &self.inner.path
     }
 
-    pub fn call(&self) -> &dyn crate::model::decorator::Call {
+    pub fn call(&self) -> &dyn Call {
         self.inner.call.as_ref()
+    }
+}
+
+impl Serialize for Decorator {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where
+        S: serde::Serializer {
+        self.inner.serialize(serializer)
     }
 }

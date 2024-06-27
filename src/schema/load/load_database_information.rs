@@ -11,7 +11,7 @@ fn load_database_for_child_database(namespace: &namespace::Builder, parent_datab
     if current_database.is_some() {
         namespace.set_database(current_database);
         namespace.set_database(current_database);
-        namespace.setconnector_reference(current_ref);
+        namespace.set_connector_reference(current_ref);
     } else {
         namespace.set_database(parent_database);
         namespace.set_connector_reference(parent_ref);

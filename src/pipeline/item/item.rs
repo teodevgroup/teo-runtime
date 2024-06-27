@@ -19,7 +19,7 @@ impl<F, Fut> Call for F where
     }
 }
 
-#[derive(Educe, Serialize, Clone)]
+#[derive(Educe, Clone)]
 #[educe(Debug)]
 pub struct Item {
     inner: Arc<Inner>
@@ -50,5 +50,11 @@ impl Item {
 
     pub fn call(&self) -> Arc<dyn Call> {
         self.inner.call.clone()
+    }
+}
+
+impl Serialize for Item {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer {
+        self.inner.serialize(serializer)
     }
 }

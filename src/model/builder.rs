@@ -3,7 +3,6 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicBool;
 use indexmap::IndexMap;
 use itertools::Itertools;
-use serde::Serialize;
 use teo_result::{Error, Result};
 use crate::action::Action;
 use crate::comment::Comment;
@@ -20,39 +19,27 @@ pub struct Builder {
     inner: Arc<Inner>,
 }
 
-#[derive(Serialize)]
 struct Inner {
     pub path: Vec<String>,
+    pub namespace_path: Vec<String>,
     pub parser_path: Vec<usize>,
     pub comment: Option<Comment>,
-    #[serde(rename = "tableName")]
     pub table_name: Arc<Mutex<String>>,
     pub actions: Arc<Mutex<Vec<Action>>>,
-    #[serde(rename = "generateClient")]
     pub generate_client: AtomicBool,
-    #[serde(rename = "generateEntity")]
     pub generate_entity: AtomicBool,
-    #[serde(rename = "showInStudio")]
     pub show_in_studio: AtomicBool,
-    #[serde(rename = "synthesizeShapes")]
     pub synthesize_shapes: AtomicBool,
     pub fields: Arc<Mutex<IndexMap<String, Field>>>,
     pub relations: Arc<Mutex<IndexMap<String, Relation>>>,
     pub properties: Arc<Mutex<IndexMap<String, Property>>>,
     pub indexes: Arc<Mutex<IndexMap<String, Index>>>,
-    #[serde(rename = "primaryIndex")]
     pub primary_index: Arc<Mutex<String>>,
-    #[serde(rename = "beforeSave")]
     pub before_save: Arc<Mutex<Pipeline>>,
-    #[serde(rename = "afterSave")]
     pub after_save: Arc<Mutex<Pipeline>>,
-    #[serde(rename = "beforeDelete")]
     pub before_delete: Arc<Mutex<Pipeline>>,
-    #[serde(rename = "afterDelete")]
     pub after_delete: Arc<Mutex<Pipeline>>,
-    #[serde(rename = "canRead")]
     pub can_read: Arc<Mutex<Pipeline>>,
-    #[serde(rename = "canMutate")]
     pub can_mutate: Arc<Mutex<Pipeline>>,
     pub migration: Arc<Mutex<Migration>>,
     pub data: Arc<Mutex<BTreeMap<String, Value>>>,
@@ -65,9 +52,11 @@ impl Builder {
             table_name_namespace_prefix += "__";
         }
         let table_name = table_name_namespace_prefix + path.last().unwrap();
+        let namespace_path = path.iter().take(path.len() - 1).map(|s| s.to_string()).collect();
         Self {
             inner: Arc::new(Inner {
                 path,
+                namespace_path,
                 parser_path,
                 comment,
                 table_name: Arc::new(Mutex::new(table_name)),
@@ -91,6 +80,10 @@ impl Builder {
                 data: Arc::new(Mutex::new(Default::default())),
             })
         }
+    }
+
+    pub fn namespace_path(&self) -> &Vec<String> {
+        &self.inner.namespace_path
     }
 
     pub fn table_name(&self) -> String {
@@ -320,9 +313,9 @@ impl Builder {
         all_keys.extend(all_field_keys.clone());
         all_keys.extend(all_relation_keys.clone());
         all_keys.extend(all_property_keys.clone());
-        let input_field_keys: Vec<String> = self.fields().values().filter(|&f| !f.write().is_no_write()).map(|f| f.name().clone()).collect();
+        let input_field_keys: Vec<String> = self.fields().values().filter(|&f| !f.write().is_no_write()).map(|f| f.name().to_string()).collect();
         let input_relation_keys = all_relation_keys.clone();
-        let input_property_keys: Vec<String> = self.properties().values().filter(|p| p.setter().is_some()).map(|p| p.name().clone()).collect();
+        let input_property_keys: Vec<String> = self.properties().values().filter(|p| p.setter().is_some()).map(|p| p.name().to_string()).collect();
         let mut input_keys = vec![];
         input_keys.extend(input_field_keys);
         input_keys.extend(input_relation_keys);
@@ -335,9 +328,9 @@ impl Builder {
         let mut save_keys_and_virtual_keys = vec![];
         save_keys_and_virtual_keys.extend(all_field_keys.clone());
         save_keys_and_virtual_keys.extend(property_save_keys);
-        let output_field_keys: Vec<String> = self.fields().values().filter(|&f| { !f.read().is_no_read() }).map(|f| { f.name().clone() }).collect();
+        let output_field_keys: Vec<String> = self.fields().values().filter(|&f| { !f.read().is_no_read() }).map(|f| { f.name().to_string() }).collect();
         let output_relation_keys = all_relation_keys.clone();
-        let output_property_keys: Vec<String> = self.properties().values().filter(|p| p.getter().is_some()).map(|p| p.name().clone()).collect();
+        let output_property_keys: Vec<String> = self.properties().values().filter(|p| p.getter().is_some()).map(|p| p.name().to_string()).collect();
         let mut output_keys = vec![];
         output_keys.extend(output_field_keys.clone());
         output_keys.extend(output_relation_keys.clone());
@@ -369,7 +362,7 @@ impl Builder {
         let deny_relation_keys: Vec<String> = self.relations()
             .values()
             .filter(|&r| { r.delete() == Delete::Deny })
-            .map(|r| r.name().clone())
+            .map(|r| r.name().to_string())
             .collect();
         let scalar_keys: Vec<String> = self.fields()
             .values()

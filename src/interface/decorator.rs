@@ -5,12 +5,12 @@ use crate::arguments::Arguments;
 use teo_result::Result;
 use crate::interface;
 
-pub trait Call {
+pub trait Call: Send + Sync {
     fn call(&self, args: Arguments, interface: &interface::Builder) -> Result<()>;
 }
 
 impl<F> Call for F where
-    F: Fn(Arguments, &interface::Builder) -> Result<()> {
+    F: Fn(Arguments, &interface::Builder) -> Result<()> + Sync + Send {
     fn call(&self, args: Arguments, interface: &interface::Builder) -> Result<()> {
         self(args, interface)
     }

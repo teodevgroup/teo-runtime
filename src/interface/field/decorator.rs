@@ -1,29 +1,31 @@
 use std::sync::Arc;
+use educe::Educe;
 use serde::Serialize;
 use crate::arguments::Arguments;
-use crate::interface::field::Field;
 use teo_result::Result;
+use crate::interface;
 
 pub trait Call {
-    fn call(&self, args: Arguments, field: &mut Field) -> Result<()>;
+    fn call(&self, args: Arguments, field: &interface::field::Builder) -> Result<()>;
 }
 
-impl<F> crate::interface::decorator::Call for F where
-    F: Fn(Arguments, &mut Field) -> Result<()> {
-    fn call(&self, args: Arguments, field: &mut Field) -> Result<()> {
+impl<F> Call for F where
+    F: Fn(Arguments, &interface::field::Builder) -> Result<()> {
+    fn call(&self, args: Arguments, field: &interface::field::Builder) -> Result<()> {
         self(args, field)
     }
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Clone)]
 pub struct Decorator {
-    inner: Arc<DecoratorInner>,
+    inner: Arc<Inner>,
 }
 
-#[derive(Debug, Serialize)]
-pub struct DecoratorInner {
+#[derive(Educe, Serialize)]
+#[educe(Debug)]
+struct Inner {
     pub path: Vec<String>,
-    #[serde(skip)]
+    #[serde(skip)] #[educe(Debug(ignore))]
     pub(crate) call: Arc<dyn Call>,
 
 }
@@ -32,7 +34,7 @@ impl Decorator {
 
     pub fn new<T>(path: Vec<String>, call: T) -> Self where T: Call + 'static {
         Self {
-            inner: Arc::new(DecoratorInner {
+            inner: Arc::new(Inner {
                 path,
                 call: Arc::new(call),
             })
@@ -44,6 +46,12 @@ impl Decorator {
     }
 
     pub fn call(&self) -> &dyn Call {
-        &self.inner.call
+        self.inner.call.as_ref()
+    }
+}
+
+impl Serialize for Decorator {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer {
+        self.inner.serialize(serializer)
     }
 }

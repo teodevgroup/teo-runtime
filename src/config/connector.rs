@@ -2,7 +2,7 @@ use std::sync::Arc;
 use serde::Serialize;
 use crate::database::database::Database;
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Clone)]
 pub struct Connector {
     pub(crate) inner: Arc<Inner>,
 }
@@ -29,5 +29,11 @@ impl Connector {
 
     pub fn url(&self) -> &str {
         &self.inner.url
+    }
+}
+
+impl Serialize for Connector {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer {
+        self.inner.serialize(serializer)
     }
 }

@@ -5,18 +5,18 @@ use crate::arguments::Arguments;
 use teo_result::Result;
 use crate::model;
 
-pub trait Call {
+pub trait Call: Send + Sync {
     fn call(&self, args: Arguments, model_builder: &model::Builder) -> Result<()>;
 }
 
 impl<F> Call for F where
-    F: Fn(Arguments, &model::Builder) -> Result<()> {
+    F: Fn(Arguments, &model::Builder) -> Result<()> + Send + Sync {
     fn call(&self, args: Arguments, model_builder: &model::Builder) -> Result<()> {
         self(args, model_builder)
     }
 }
 
-#[derive(Educe, Serialize, Clone)]
+#[derive(Educe, Clone)]
 #[educe(Debug)]
 pub struct Decorator {
     inner: Arc<Inner>,
@@ -47,5 +47,11 @@ impl Decorator {
 
     pub fn call(&self) -> &dyn Call {
         self.inner.call.as_ref()
+    }
+}
+
+impl Serialize for Decorator {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer {
+        self.inner.serialize(serializer)
     }
 }

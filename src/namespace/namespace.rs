@@ -71,7 +71,7 @@ impl Namespace {
     }
 
     pub fn is_std(&self) -> bool {
-        self.path() == vec!["std"]
+        self.path().len() == 1 && self.path().first().unwrap().as_str() == "std"
     }
 
     pub fn path(&self) -> &Vec<String> {
@@ -82,7 +82,7 @@ impl Namespace {
         self.namespaces.get(name)
     }
 
-    pub fn namespace_at_path(&self, path: &Vec<&str>) -> Option<&Namespace> {
+    pub fn namespace_at_path(&self, path: &Vec<String>) -> Option<&Namespace> {
         let mut current = Some(self);
         for item in path {
             if current.is_none() {
@@ -95,7 +95,7 @@ impl Namespace {
 
     pub fn model_decorator_at_path(&self, path: &Vec<&str>) -> Option<&model::Decorator> {
         let decorator_name = path.last().unwrap().deref();
-        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.clone()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.model_decorators.get(decorator_name)
         } else {
@@ -105,7 +105,7 @@ impl Namespace {
 
     pub fn model_field_decorator_at_path(&self, path: &Vec<&str>) -> Option<&model::field::Decorator> {
         let decorator_name = path.last().unwrap().deref();
-        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.model_field_decorators.get(decorator_name)
         } else {
@@ -115,7 +115,7 @@ impl Namespace {
 
     pub fn model_relation_decorator_at_path(&self, path: &Vec<&str>) -> Option<&model::relation::Decorator> {
         let decorator_name = path.last().unwrap().deref();
-        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.model_relation_decorators.get(decorator_name)
         } else {
@@ -125,7 +125,7 @@ impl Namespace {
 
     pub fn model_property_decorator_at_path(&self, path: &Vec<&str>) -> Option<&model::property::Decorator> {
         let decorator_name = path.last().unwrap().deref();
-        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.model_property_decorators.get(decorator_name)
         } else {
@@ -135,7 +135,7 @@ impl Namespace {
 
     pub fn enum_decorator_at_path(&self, path: &Vec<&str>) -> Option<&r#enum::Decorator> {
         let decorator_name = path.last().unwrap().deref();
-        let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+        let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.enum_decorators.get(decorator_name)
         } else {
@@ -258,25 +258,25 @@ impl Namespace {
         }
     }
 
-    pub fn handler_at_path(&self, path: &Vec<&str>) -> Option<&Handler> {
+    pub fn handler_at_path(&self, path: &Vec<String>) -> Option<&Handler> {
         let handler_name = path.last().unwrap().deref();
         if path.len() == 1 {
             self.handlers.get(handler_name)
         } else {
-            // try find a namespace first
-            let namespace_path: Vec<&str> = path.into_iter().rev().skip(1).rev().map(|i| *i).collect();
+            // try finding a namespace first
+            let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.clone()).collect();
             if let Some(dest_namespace) = self.namespace_at_path(&namespace_path) {
                 dest_namespace.handlers.get(handler_name)
             } else {
-                // try find in group
+                // try finding in group
                 let handler_name = path.last().unwrap().deref();
                 let group_name = path.get(path.len() - 2).unwrap().deref();
-                let namespace_path: Vec<&str> = path.into_iter().rev().skip(2).rev().map(|i| *i).collect();
+                let namespace_path: Vec<String> = path.into_iter().rev().skip(2).rev().map(|i| i.clone()).collect();
                 if let Some(dest_namespace) = self.namespace_at_path(&namespace_path) {
                     if let Some(group) = dest_namespace.handler_groups.get(group_name) {
-                        group.handlers.get(handler_name)
+                        group.handler(handler_name)
                     } else if let Some(group) = dest_namespace.model_handler_groups.get(group_name) {
-                        group.handlers.get(handler_name)
+                        group.handler(handler_name)
                     } else {
                         None
                     }
@@ -287,8 +287,8 @@ impl Namespace {
         }
     }
 
-    pub fn connector_reference(&self) -> Option<Vec<&str>> {
-        self.connector_reference.as_ref().map(|r| r.iter().map(AsRef::as_ref).collect())
+    pub fn connector_reference(&self) -> Option<&Vec<String>> {
+        self.connector_reference.as_ref()
     }
 
     /// Returns the opposite relation of the argument relation.
@@ -303,7 +303,7 @@ impl Namespace {
     ///
     pub fn opposite_relation(&self, relation: &Relation) -> (&Model, Option<&Relation>) {
         let opposite_model = self.model_at_path(&relation.model_path()).unwrap();
-        let opposite_relation = opposite_model.relations.values().find(|r| &r.fields == &relation.references && &r.references == &relation.fields);
+        let opposite_relation = opposite_model.relations().values().find(|r| r.fields() == relation.references() && r.references() == relation.fields());
         (opposite_model, opposite_relation)
     }
 
@@ -320,7 +320,7 @@ impl Namespace {
     ///
     pub fn through_relation(&self, relation: &Relation) -> (&Model, &Relation) {
         let through_model = self.model_at_path(&relation.through_path().unwrap()).unwrap();
-        let through_local_relation = through_model.relation(relation.local.as_ref().unwrap()).unwrap();
+        let through_local_relation = through_model.relation(relation.local().unwrap()).unwrap();
         (through_model, through_local_relation)
     }
 
@@ -337,7 +337,7 @@ impl Namespace {
     ///
     pub fn through_opposite_relation(&self, relation: &Relation) -> (&Model, &Relation) {
         let through_model = self.model_at_path(&relation.through_path().unwrap()).unwrap();
-        let through_foreign_relation = through_model.relation(relation.foreign.as_ref().unwrap()).unwrap();
+        let through_foreign_relation = through_model.relation(relation.foreign().unwrap()).unwrap();
         (through_model, through_foreign_relation)
     }
 
@@ -356,7 +356,7 @@ impl Namespace {
 
     /// Get relations of model defined by related model
     pub fn model_opposite_relations(&self, model: &Model) -> Vec<(&Model, &Relation)> {
-        let result = self.model_opposite_relations_map.get(&model.path).unwrap();
+        let result = self.model_opposite_relations_map.get(model.path()).unwrap();
         result.iter().map(|result| {
             let model = self.model_at_path(&result.0.iter().map(AsRef::as_ref).collect()).unwrap();
             let relation = model.relation(result.1.as_str()).unwrap();
@@ -399,7 +399,7 @@ impl Named for Namespace {
         if self.path().is_empty() {
             "main"
         } else {
-            *self.path().last().unwrap()
+            self.path().last().unwrap()
         }
     }
 }

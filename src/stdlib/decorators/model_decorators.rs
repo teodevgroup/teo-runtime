@@ -19,15 +19,15 @@ pub(in crate::stdlib) fn load_model_decorators(namespace_builder: &namespace::Bu
     });
 
     namespace_builder.define_model_decorator("id", |arguments, model| {
-        model_id_decorator(arguments, model)
+        model_id_decorator(arguments, &model)
     });
 
     namespace_builder.define_model_decorator("index", |arguments, model| {
-        model_index_decorator(arguments, model)
+        model_index_decorator(arguments, &model)
     });
 
     namespace_builder.define_model_decorator("unique", |arguments, model| {
-        model_unique_decorator(arguments, model)
+        model_unique_decorator(arguments, &model)
     });
 
     namespace_builder.define_model_decorator("migration", |arguments, model| {

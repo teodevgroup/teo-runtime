@@ -143,7 +143,7 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
         }
         Type::EnumVariant(reference) => if json.is_string() {
             let e = main_namespace.enum_at_path(&reference.str_path()).unwrap();
-            if e.cache.member_names.contains_str(json.as_str().unwrap()) {
+            if e.member_names().contains_str(json.as_str().unwrap()) {
                 Ok(Value::String(json.as_str().unwrap().to_owned()))
             } else {
                 Err(Error::invalid_request_pathed(path.clone(), "expect enum member"))

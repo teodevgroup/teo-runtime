@@ -45,12 +45,12 @@ impl Ctx {
         }
     }
 
-    pub(in crate::connection) fn connection_for_namespace_path(&self, path: &Vec<&str>) -> Option<Arc<dyn Connection>> {
+    pub(in crate::connection) fn connection_for_namespace_path(&self, path: &Vec<String>) -> Option<Arc<dyn Connection>> {
         let namespace = self.namespace().namespace_at_path(path).unwrap();
         if let Some(connection) = namespace.connection.lock().unwrap().as_ref().cloned() {
             Some(connection.clone())
         } else if let Some(reference) = namespace.connector_reference() {
-            self.connection_for_namespace_path(&reference)
+            self.connection_for_namespace_path(reference)
         } else {
             None
         }

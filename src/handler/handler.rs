@@ -9,7 +9,7 @@ use crate::traits::named::Named;
 
 #[derive(Educe)]
 #[educe(Debug)]
-#[derive(Serialize, Clone)]
+#[derive(Clone)]
 pub struct Handler {
     pub(super) inner: Arc<Inner>
 }
@@ -104,5 +104,11 @@ impl Named for Handler {
 
     fn name(&self) -> &str {
         self.inner.path.last().map(|s| s.as_str()).unwrap()
+    }
+}
+
+impl Serialize for Handler {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer {
+        self.inner.serialize(serializer)
     }
 }

@@ -762,7 +762,7 @@ impl Value {
             Type::Shape => false,
             Type::Model => false,
             Type::ModelObject(r) => if let Some(object) = self.as_model_object() {
-                object.model().path() == r.str_path()
+                object.model().path() == r.string_path()
             } else {
                 false
             },

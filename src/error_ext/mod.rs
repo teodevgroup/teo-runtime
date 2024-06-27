@@ -24,7 +24,7 @@ pub fn cannot_disconnect_previous_relation(path: KeyPath) -> Error {
 }
 
 pub fn invalid_key_on_model(path: KeyPath, key: impl AsRef<str>, model: &Model) -> Error {
-    Error::invalid_request_pathed(path, format!("key '{}' is invalid on model {}", key.as_ref(), model.path.join(".")))
+    Error::invalid_request_pathed(path, format!("key '{}' is invalid on model {}", key.as_ref(), model.path().join(".")))
 }
 
 pub fn deletion_denied(path: KeyPath, relation_name: &str) -> Error {

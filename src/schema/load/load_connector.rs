@@ -16,10 +16,7 @@ pub fn load_connector(main_namespace: &namespace::Builder, schema: &Schema, conn
     let url_expect = config_decl.get_field("url").unwrap().type_expr().resolved();
     let provider: Database = fetch_expression_or_null(connector.get_item("provider"), schema, connector, provider_expect, main_namespace, diagnostics)?.try_into()?;
     let url: String = fetch_expression_or_null(connector.get_item("url"), schema, connector, url_expect, main_namespace, diagnostics)?.try_into()?;
-    let connector_conf = Connector {
-        provider,
-        url,
-    };
+    let connector_conf = Connector::new(provider, url);
     let dest_namespace = main_namespace.namespace_or_create_at_path(&connector.namespace_str_path());
     dest_namespace.set_connector(Some(connector_conf));
     Ok(())

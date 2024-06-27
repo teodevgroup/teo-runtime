@@ -6,7 +6,7 @@ use teo_parser::ast::handler::HandlerInputFormat;
 use teo_parser::r#type::Type;
 use teo_result::{Error, Result};
 use crate::interface::Interface;
-use crate::{handler, interface, middleware, model, pipeline, r#enum, request, Value};
+use crate::{handler, interface, middleware, model, namespace, pipeline, r#enum, request, Value};
 use crate::arguments::Arguments;
 use crate::config::admin::Admin;
 use crate::config::client::Client;
@@ -19,6 +19,7 @@ use crate::database::database::Database;
 use crate::handler::ctx_argument::HandlerCtxArgument;
 use crate::handler::Handler;
 use crate::handler::Method;
+use crate::middleware::middleware::{empty_middleware, Middleware};
 use crate::model::{Model, Relation};
 use crate::namespace::Namespace;
 use crate::pipeline::item::callback::{CallbackArgument, CallbackResult};
@@ -55,8 +56,8 @@ struct Inner {
     pub middlewares: Arc<Mutex<BTreeMap<String, middleware::Definition>>>,
     pub handlers: Arc<Mutex<BTreeMap<String, Handler>>>,
     pub handler_templates: Arc<Mutex<BTreeMap<String, Handler>>>,
-    pub model_handler_groups: Arc<Mutex<BTreeMap<String, handler::Group>>>,
-    pub handler_groups: Arc<Mutex<BTreeMap<String, handler::Group>>>,
+    pub model_handler_groups: Arc<Mutex<BTreeMap<String, handler::group::Builder>>>,
+    pub handler_groups: Arc<Mutex<BTreeMap<String, handler::group::Builder>>>,
     pub server: Arc<Mutex<Option<Server>>>,
     pub connector: Arc<Mutex<Option<Connector>>>,
     pub clients: Arc<Mutex<BTreeMap<String, Client>>>,
@@ -69,13 +70,15 @@ struct Inner {
     pub connection: Arc<Mutex<Option<Arc<dyn Connection>>>>,
     pub model_opposite_relations_map: Arc<Mutex<BTreeMap<Vec<String>, Vec<(Vec<String>, String)>>>>,
     pub handler_map: Arc<Mutex<handler::Map>>,
+    pub middleware_stack: Arc<Mutex<&'static dyn Middleware>>,
 }
 
 impl Builder {
-    pub fn main() -> Self {
+
+    fn new(path: Vec<String>) -> Self {
         Self {
             inner: Arc::new(Inner {
-                path: vec![],
+                path,
                 namespaces: Arc::new(Mutex::new(Default::default())),
                 structs: Arc::new(Mutex::new(Default::default())),
                 models: Arc::new(Mutex::new(Default::default())),
@@ -107,9 +110,14 @@ impl Builder {
                 connector_reference: Arc::new(Mutex::new(None)),
                 connection: Arc::new(Mutex::new(None)),
                 model_opposite_relations_map: Arc::new(Mutex::new(Default::default())),
-                handler_map: Arc::new(Mutex::new(handler::Map::new()))
+                handler_map: Arc::new(Mutex::new(handler::Map::new())),
+                middleware_stack: Arc::new(Mutex::new(empty_middleware()))
             })
         }
+    }
+
+    pub fn main() -> Self {
+        Self::new(vec![])
     }
 
     pub fn load_standard_library(&self) -> Result<()> {
@@ -213,9 +221,9 @@ impl Builder {
     pub fn namespace_or_create(&self, name: &str) -> Builder {
         let mut namespaces = self.inner.namespaces.lock().unwrap();
         if !namespaces.contains_key(name) {
-            namespaces.insert(name.to_owned(), Namespace::new(next_path(self.path(), name)));
+            namespaces.insert(name.to_owned(), Builder::new(next_path(self.path(), name)));
         }
-        namespaces.get(name).unwrap().cloned()
+        namespaces.get(name).unwrap().clone()
     }
 
     pub fn namespace_at_path(&self, path: &Vec<&str>) -> Option<Builder> {
@@ -237,44 +245,44 @@ impl Builder {
         current
     }
 
-    pub fn define_model_decorator<F>(&self, name: &str, call: F) where F: Fn(Arguments, &model::Builder) -> Result<()> + 'static {
+    pub fn define_model_decorator<F>(&self, name: &str, call: F) where F: Fn(Arguments, &model::Builder) -> Result<()> + 'static + Send + Sync {
         let mut model_decorators = self.inner.model_decorators.lock().unwrap();
-        model_decorators.insert(name.to_owned(), model::Decorator::new(next_path(self.path(), name), Arc::new(call)));
+        model_decorators.insert(name.to_owned(), model::Decorator::new(next_path(self.path(), name), call));
     }
 
-    pub fn define_model_field_decorator(&self, name: &str, call: impl Fn(Arguments, &model::field::Builder) -> Result<()> + 'static) {
+    pub fn define_model_field_decorator(&self, name: &str, call: impl Fn(Arguments, &model::field::Builder) -> Result<()> + 'static + Send + Sync) {
         let mut model_field_decorators = self.inner.model_field_decorators.lock().unwrap();
-        model_field_decorators.insert(name.to_owned(), model::field::Decorator::new(next_path(self.path(), name), Arc::new(call)));
+        model_field_decorators.insert(name.to_owned(), model::field::Decorator::new(next_path(self.path(), name), call));
     }
 
     pub fn define_model_relation_decorator(&self, name: &str, call: impl Fn(Arguments, &model::relation::Builder) -> Result<()> + 'static) {
         let mut model_relation_decorators = self.inner.model_relation_decorators.lock().unwrap();
-        model_relation_decorators.insert(name.to_owned(), model::relation::Decorator::new(next_path(self.path(), name), Arc::new(call)));
+        model_relation_decorators.insert(name.to_owned(), model::relation::Decorator::new(next_path(self.path(), name), call));
     }
 
     pub fn define_model_property_decorator(&self, name: &str, call: impl Fn(Arguments, &model::property::Builder) -> Result<()> + 'static) {
         let mut model_property_decorators = self.inner.model_property_decorators.lock().unwrap();
-        model_property_decorators.insert(name.to_owned(), model::property::Decorator::new(next_path(self.path(), name), Arc::new(call)));
+        model_property_decorators.insert(name.to_owned(), model::property::Decorator::new(next_path(self.path(), name), call));
     }
 
-    pub fn define_enum_decorator(&self, name: &str, call: impl Fn(Arguments, &r#enum::Builder) -> Result<()> + 'static) {
+    pub fn define_enum_decorator(&self, name: &str, call: impl Fn(Arguments, &r#enum::Builder) -> Result<()> + 'static + Send + Sync) {
         let mut enum_decorators = self.inner.enum_decorators.lock().unwrap();
-        enum_decorators.insert(name.to_owned(), r#enum::Decorator::new(next_path(self.path(), name), Arc::new(call)));
+        enum_decorators.insert(name.to_owned(), r#enum::Decorator::new(next_path(self.path(), name), call));
     }
 
-    pub fn define_enum_member_decorator(&self, name: &str, call: impl Fn(Arguments, &r#enum::member::Decorator) -> Result<()> + 'static) {
+    pub fn define_enum_member_decorator(&self, name: &str, call: impl Fn(Arguments, &r#enum::member::Builder) -> Result<()> + 'static + Send + Sync) {
         let mut enum_member_decorators = self.inner.enum_member_decorators.lock().unwrap();
-        enum_member_decorators.insert(name.to_owned(), r#enum::member::Decorator::new(next_path(self.path(), name), Arc::new(call)));
+        enum_member_decorators.insert(name.to_owned(), r#enum::member::Decorator::new(next_path(self.path(), name), call));
     }
 
-    pub fn define_interface_decorator<F>(&self, name: &str, call: F) where F: Fn(Arguments, &interface::Builder) -> Result<()> + 'static {
+    pub fn define_interface_decorator<F>(&self, name: &str, call: F) where F: Fn(Arguments, &interface::Builder) -> Result<()> + 'static + Send + Sync {
         let mut interface_decorators = self.inner.interface_decorators.lock().unwrap();
-        interface_decorators.insert(name.to_owned(), interface::Decorator::new(next_path(self.path(), name), Arc::new(call)));
+        interface_decorators.insert(name.to_owned(), interface::Decorator::new(next_path(self.path(), name), call));
     }
 
-    pub fn define_handler_decorator(&self, name: &str, call: impl Fn(Arguments, &handler::Builder) -> Result<()> + 'static) {
+    pub fn define_handler_decorator(&self, name: &str, call: impl Fn(Arguments, &handler::Builder) -> Result<()> + 'static + Send + Sync) {
         let mut handler_decorators = self.inner.handler_decorators.lock().unwrap();
-        handler_decorators.insert(name.to_owned(), handler::Decorator::new(next_path(self.path(), name), Arc::new(call)));
+        handler_decorators.insert(name.to_owned(), handler::Decorator::new(next_path(self.path(), name), call));
     }
 
     pub fn define_pipeline_item<T>(&self, name: &str, call: T) where T: pipeline::item::Call + 'static {
@@ -397,11 +405,11 @@ impl Builder {
         middlewares.insert(name.to_owned(), middleware::Definition::new(next_path(self.path(), name), Arc::new(call)));
     }
 
-    pub fn define_model_handler_group<T>(&self, name: &str, builder: T) where T: Fn(&handler::Group) {
-        let handler_group = handler::Group::new(next_path(self.path(), name));
-        builder(&handler_group);
+    pub fn define_model_handler_group<T>(&self, name: &str, builder: T) where T: Fn(&handler::group::Builder) {
+        let handler_group_builder = handler::group::Builder::new(next_path(self.path(), name));
+        builder(&handler_group_builder);
         let mut model_handler_groups = self.inner.model_handler_groups.lock().unwrap();
-        model_handler_groups.insert(name.to_owned(), handler_group);
+        model_handler_groups.insert(name.to_owned(), handler_group_builder);
     }
 
     pub fn insert_handler(&self, name: &str, handler: Handler) {
@@ -451,11 +459,11 @@ impl Builder {
         handler_templates.insert(name.to_owned(), handler);
     }
 
-    pub fn define_handler_group<T>(&self, name: &str, builder: T) where T: Fn(&handler::Group) {
-        let handler_group = handler::Group::new(next_path(self.path(), name));
-        builder(&handler_group);
+    pub fn define_handler_group<T>(&self, name: &str, builder: T) where T: Fn(&handler::group::Builder) {
+        let handler_group_builder = handler::group::Builder::new(next_path(self.path(), name));
+        builder(&handler_group_builder);
         let mut handler_groups = self.inner.handler_groups.lock().unwrap();
-        handler_groups.insert(name.to_owned(), handler_group);
+        handler_groups.insert(name.to_owned(), handler_group_builder);
     }
 
     pub fn define_struct<T>(&self, name: &str, builder: T) where T: Fn(&'static Vec<String>, &mut Struct) {
@@ -720,12 +728,12 @@ impl Builder {
         handlers.get(name).cloned()
     }
 
-    pub fn handler_group(&self, name: &str) -> Option<handler::Group> {
+    pub fn handler_group(&self, name: &str) -> Option<handler::group::Builder> {
         let handler_groups = self.inner.handler_groups.lock().unwrap();
         handler_groups.get(name).cloned()
     }
 
-    pub fn model_handler_group(&self, name: &str) -> Option<handler::Group> {
+    pub fn model_handler_group(&self, name: &str) -> Option<handler::group::Builder> {
         let model_handler_groups = self.inner.model_handler_groups.lock().unwrap();
         model_handler_groups.get(name).cloned()
     }
@@ -805,10 +813,10 @@ impl Builder {
     ///
     /// A tuple of opposite relation's model and opposite relation.
     ///
-    pub fn opposite_relation(&self, relation: &Relation) -> (Model, Option<&Relation>) {
+    pub fn opposite_relation(&self, relation: &Relation) -> (Model, Option<Relation>) {
         let opposite_model = self.model_at_path(&relation.model_path()).unwrap();
         let opposite_relation = opposite_model.relations().values().find(|r| r.fields() == relation.references() && r.references() == relation.fields());
-        (opposite_model, opposite_relation)
+        (opposite_model.clone(), opposite_relation.cloned())
     }
 
     /// Returns the through relation of the argument relation.
@@ -822,10 +830,10 @@ impl Builder {
     ///
     /// A tuple of through relation's model and through model's local relation.
     ///
-    pub fn through_relation(&self, relation: &Relation) -> (Model, &Relation) {
+    pub fn through_relation(&self, relation: &Relation) -> (Model, Relation) {
         let through_model = self.model_at_path(&relation.through_path().unwrap()).unwrap();
         let through_local_relation = through_model.relation(relation.local().unwrap()).unwrap();
-        (through_model, through_local_relation)
+        (through_model.clone(), through_local_relation.clone())
     }
 
     /// Returns the through opposite relation of the argument relation.
@@ -839,24 +847,36 @@ impl Builder {
     ///
     /// A tuple of through relation's model and through model's foreign relation.
     ///
-    pub fn through_opposite_relation(&self, relation: &Relation) -> (Model, &Relation) {
+    pub fn through_opposite_relation(&self, relation: &Relation) -> (Model, Relation) {
         let through_model = self.model_at_path(&relation.through_path().unwrap()).unwrap();
         let through_foreign_relation = through_model.relation(relation.foreign().unwrap()).unwrap();
-        (through_model, through_foreign_relation)
+        (through_model.clone(), through_foreign_relation.clone())
     }
 
     /// Get relations of model defined by related model
-    pub fn model_opposite_relations(&self, model: &Model) -> Vec<(Model, &Relation)> {
+    pub fn model_opposite_relations(&self, model: &Model) -> Vec<(Model, Relation)> {
         let model_opposite_relations_map = self.inner.model_opposite_relations_map.lock().unwrap();
         let result = model_opposite_relations_map.get(model.path()).unwrap();
         result.iter().map(|result| {
             let model = self.model_at_path(&result.0.iter().map(AsRef::as_ref).collect()).unwrap();
             let relation = model.relation(result.1.as_str()).unwrap();
-            (model, relation)
+            (model.clone(), relation.clone())
         }).collect()
     }
 
     pub fn set_model_opposite_relations_map(&self, map: BTreeMap<Vec<String>, Vec<(Vec<String>, String)>>) {
         *self.inner.model_opposite_relations_map.lock().unwrap() = map;
+    }
+
+    pub fn set_middlewares_block(&self, block: Option<middleware::Block>) {
+        *self.inner.middlewares_block.lock().unwrap() = block;
+    }
+
+    pub fn middleware_stack(&self) -> &'static dyn Middleware {
+        *self.inner.middleware_stack.lock().unwrap()
+    }
+
+    pub fn set_middleware_stack(&self, stack: &'static dyn Middleware) {
+        *self.inner.middleware_stack.lock().unwrap() = stack;
     }
 }

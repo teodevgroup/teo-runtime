@@ -1,5 +1,6 @@
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicBool;
+use educe::Educe;
 use teo_parser::ast::handler::HandlerInputFormat;
 use teo_parser::r#type::Type;
 use crate::handler::{Handler, handler, Method};
@@ -10,7 +11,8 @@ pub struct Builder {
     inner: Arc<Inner>
 }
 
-#[derive(Debug)]
+#[derive(Educe)]
+#[educe(Debug)]
 struct Inner {
     path: Vec<String>,
     namespace_path: Vec<String>,
@@ -22,6 +24,7 @@ struct Inner {
     url: Arc<Mutex<Option<String>>>,
     interface: Arc<Mutex<Option<String>>>,
     ignore_prefix: AtomicBool,
+    #[educe(Debug(ignore))]
     call: &'static dyn Next,
 }
 
@@ -117,7 +120,7 @@ impl Builder {
                 input_type: self.inner.input_type.clone(),
                 output_type: self.inner.output_type.clone(),
                 nonapi: self.inner.nonapi,
-                format: self.inner.format,
+                format: self.inner.format.lock().unwrap().clone(),
                 method: self.inner.method.lock().unwrap().clone(),
                 url: self.inner.url.lock().unwrap().clone(),
                 interface: self.inner.interface.lock().unwrap().clone(),

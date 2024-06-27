@@ -12,7 +12,7 @@ use crate::optionality::Optionality;
 use crate::traits::documentable::Documentable;
 use crate::value::Value;
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Clone)]
 pub struct Relation {
     pub(super) inner: Arc<Inner>
 }
@@ -134,8 +134,8 @@ impl<'a> Iterator for RelationIter<'a> {
     type Item = (&'a str, &'a str);
 
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(f) = self.relation.fields.get(self.index) {
-            let result = Some((f.as_str(), self.relation.references.get(self.index).unwrap().as_str()));
+        if let Some(f) = self.relation.fields().get(self.index) {
+            let result = Some((f.as_str(), self.relation.references().get(self.index).unwrap().as_str()));
             self.index += 1;
             result
         } else {
@@ -160,4 +160,11 @@ impl Typed for Relation {
     fn r#type(&self) -> &Type {
         &self.inner.r#type
     }
+}
+
+impl Serialize for Relation {
+
+        fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer {
+            self.inner.serialize(serializer)
+        }
 }

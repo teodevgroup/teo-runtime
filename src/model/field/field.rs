@@ -20,7 +20,7 @@ use crate::readwrite::write::Write;
 use crate::traits::documentable::Documentable;
 use crate::value::Value;
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Clone)]
 pub struct Field {
     pub(super) inner: Arc<Inner>,
 }
@@ -206,4 +206,11 @@ impl Documentable for Field {
     fn kind(&self) -> &'static str {
         "field"
     }
+}
+
+impl Serialize for Field {
+
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
+            self.inner.serialize(serializer)
+        }
 }

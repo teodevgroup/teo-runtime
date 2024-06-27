@@ -12,7 +12,7 @@ use crate::traits::documentable::Documentable;
 use crate::traits::named::Named;
 use crate::Value;
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Clone)]
 pub struct Interface {
     pub(super) inner: Arc<Inner>
 }
@@ -105,5 +105,11 @@ impl Documentable for Interface {
 
     fn kind(&self) -> &'static str {
         "interface"
+    }
+}
+
+impl Serialize for Interface {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
+        self.inner.serialize(serializer)
     }
 }

@@ -5,6 +5,7 @@ use maplit::btreemap;
 use teo_parser::ast::schema::Schema;
 use teo_parser::availability::Availability;
 use teo_parser::r#type::Type;
+use teo_result::Result;
 use crate::comment::Comment;
 use crate::database::database::Database;
 use crate::database::r#type::DatabaseType;
@@ -132,8 +133,8 @@ impl Builder {
         self.inner.dropped.store(dropped, std::sync::atomic::Ordering::Relaxed);
     }
 
-    pub fn migration(&self) -> Option<&Migration> {
-        self.inner.migration.lock().unwrap().as_ref()
+    pub fn migration(&self) -> Option<Migration> {
+        self.inner.migration.lock().unwrap().clone()
     }
 
     pub fn set_migration(&self, migration: Option<Migration>) {
@@ -320,7 +321,7 @@ impl Builder {
         self.inner.data.lock().unwrap().get(key).cloned()
     }
 
-    pub fn build(self, database: Database, schema: &Schema) -> Field {
+    pub fn build(self, database: Database, schema: &Schema) -> Result<Field> {
         let mut field = Field {
             inner: Arc::new(field::Inner {
                 name: self.inner.name.clone(),
@@ -368,7 +369,7 @@ impl Builder {
                 data: self.inner.data.lock().unwrap().clone(),
             })
         };
-        field
+        Ok(field)
     }
 }
 

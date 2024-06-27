@@ -41,9 +41,9 @@ fn fetch_pipeline_unit<I>(pipeline_resolved: &PipelineResolved, unit: &Unit, sch
                         let arguments = fetch_argument_list_or_empty(argument_list, schema, info_provider, namespace, diagnostics)?;
                         if let Some(pipeline_item) = namespace.pipeline_item_at_path(&pipeline_item_declaration.str_path()) {
                             pipeline.items.push(BoundedItem {
-                                path: pipeline_item.path.clone(),
+                                path: pipeline_item.path().clone(),
                                 arguments,
-                                call: pipeline_item.call.clone(),
+                                call: pipeline_item.call().clone(),
                                 cast_output_type: pipeline_resolved.items_resolved.get(item_index).map(|r| r.output_type.clone()),
                             });
                         }

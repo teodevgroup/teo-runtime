@@ -82,7 +82,7 @@ impl Ctx {
         self.inner.connection_ctx.connection_for_namespace(namespace)
     }
 
-    fn connection_for_namespace_path(&self, path: &Vec<&str>) -> Option<Arc<dyn Connection>> {
+    fn connection_for_namespace_path(&self, path: &Vec<String>) -> Option<Arc<dyn Connection>> {
         self.inner.connection_ctx.connection_for_namespace_path(path)
     }
 

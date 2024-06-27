@@ -1,11 +1,10 @@
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
-use serde::Serialize;
 use crate::comment::Comment;
 use crate::r#enum::member::Member;
 use crate::Value;
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Clone)]
 pub struct Builder {
     inner: Arc<Inner>
 }

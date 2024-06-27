@@ -16,7 +16,7 @@ impl<F> Call for F where
     }
 }
 
-#[derive(Educe, Serialize, Clone)]
+#[derive(Educe, Clone)]
 #[educe(Debug)]
 pub struct Decorator {
     inner: Arc<Inner>
@@ -48,4 +48,10 @@ impl Decorator {
         pub fn call(&self) -> &dyn Call {
             self.inner.call.as_ref()
         }
+}
+
+impl Serialize for Decorator {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer {
+        self.inner.serialize(serializer)
+    }
 }

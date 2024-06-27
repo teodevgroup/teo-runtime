@@ -1,4 +1,3 @@
-pub mod group;
 pub mod handler;
 pub mod decorator;
 pub mod default;
@@ -9,8 +8,9 @@ pub mod input;
 pub mod ctx_argument;
 pub mod builder;
 pub mod method;
+pub mod group;
 
-pub use group::Group;
+pub use group::group::Group;
 pub use handler::Handler;
 pub use decorator::Decorator;
 pub use map::Map;
