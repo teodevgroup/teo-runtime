@@ -7,13 +7,13 @@ use teo_parser::r#type::Type;
 use teo_parser::traits::identifiable::Identifiable;
 use teo_parser::traits::node_trait::NodeTrait;
 use teo_result::Result;
-use crate::namespace::builder::NamespaceBuilder;
+use crate::namespace;
 use crate::value::range::Range;
 use crate::value::Value;
 use crate::namespace::Namespace;
 use crate::schema::fetch::fetch_expression::fetch_expression;
 
-pub fn fetch_arith_expr<I>(arith_expr: &ArithExpr, schema: &Schema, info_provider: &I, expect: &Type, namespace: &NamespaceBuilder, diagnostics: &mut Diagnostics) -> Result<Value> where I: InfoProvider {
+pub fn fetch_arith_expr<I>(arith_expr: &ArithExpr, schema: &Schema, info_provider: &I, expect: &Type, namespace: &namespace::Builder, diagnostics: &mut Diagnostics) -> Result<Value> where I: InfoProvider {
     match arith_expr {
         ArithExpr::Expression(e) => fetch_expression(e.as_ref(), schema, info_provider, expect, namespace, diagnostics),
         ArithExpr::UnaryOperation(u) => {

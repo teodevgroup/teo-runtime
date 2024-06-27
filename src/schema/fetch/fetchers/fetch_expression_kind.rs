@@ -5,7 +5,7 @@ use teo_parser::diagnostics::diagnostics::Diagnostics;
 use teo_parser::r#type::Type;
 use teo_parser::traits::resolved::Resolve;
 use teo_result::Result;
-use crate::namespace::builder::NamespaceBuilder;
+use crate::namespace;
 use crate::namespace::Namespace;
 use crate::schema::fetch::fetch_expression::fetch_expression;
 use crate::schema::fetch::fetchers::fetch_arith_expr::fetch_arith_expr;
@@ -15,7 +15,7 @@ use crate::schema::fetch::fetchers::fetch_pipeline::fetch_pipeline;
 use crate::schema::fetch::fetchers::fetch_unit::fetch_unit;
 use crate::value::Value;
 
-pub fn fetch_expression_kind<I>(expression: &Expression, schema: &Schema, info_provider: &I, expect: &Type, namespace: &NamespaceBuilder, diagnostics: &mut Diagnostics) -> Result<Value> where I: InfoProvider {
+pub fn fetch_expression_kind<I>(expression: &Expression, schema: &Schema, info_provider: &I, expect: &Type, namespace: &namespace::Builder, diagnostics: &mut Diagnostics) -> Result<Value> where I: InfoProvider {
     match &expression.kind {
         ExpressionKind::Group(g) => fetch_expression(g.expression(), schema, info_provider, expect, namespace, diagnostics),
         ExpressionKind::ArithExpr(a) => fetch_arith_expr(a, schema, info_provider, expect, namespace, diagnostics),

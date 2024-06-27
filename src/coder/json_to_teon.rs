@@ -20,7 +20,7 @@ use crate::value::file::File;
 use crate::interface::Interface;
 use crate::namespace::Namespace;
 use teo_result::Error;
-use crate::namespace::builder::NamespaceBuilder;
+use crate::namespace;
 use crate::utils::ContainsStr;
 
 
@@ -29,7 +29,7 @@ pub fn fetch_synthesized_interface_enum<'a>(reference: &SynthesizedInterfaceEnum
     model.resolved().interface_enums.get(&reference.kind).unwrap()
 }
 
-pub fn fetch_synthesized_enum<'a>(reference: &SynthesizedEnumReference, main_namespace: &'a NamespaceBuilder) -> &'a SynthesizedEnum {
+pub fn fetch_synthesized_enum<'a>(reference: &SynthesizedEnumReference, main_namespace: &'a namespace::Builder) -> &'a SynthesizedEnum {
     let model = main_namespace.model_at_path(&reference.owner.as_model_object().unwrap().str_path()).unwrap();
     model.cache.shape.enums.get(&reference.kind).unwrap()
 }
