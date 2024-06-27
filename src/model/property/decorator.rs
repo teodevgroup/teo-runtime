@@ -2,7 +2,7 @@ use std::sync::Arc;
 use educe::Educe;
 use serde::Serialize;
 use crate::arguments::Arguments;
-use crate::model::property::{Builder, Property};
+use crate::model::property::Builder;
 use teo_result::Result;
 
 pub trait Call {
@@ -43,7 +43,7 @@ impl Decorator {
         &self.inner.path
     }
 
-    pub fn call(&self) -> &dyn crate::model::decorator::Call {
+    pub fn call(&self) -> &dyn Call {
         self.inner.call.as_ref()
     }
 }

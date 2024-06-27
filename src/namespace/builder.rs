@@ -855,4 +855,8 @@ impl Builder {
             (model, relation)
         }).collect()
     }
+
+    pub fn set_model_opposite_relations_map(&self, map: BTreeMap<Vec<String>, Vec<(Vec<String>, String)>>) {
+        *self.inner.model_opposite_relations_map.lock().unwrap() = map;
+    }
 }

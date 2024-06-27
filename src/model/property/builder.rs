@@ -201,13 +201,13 @@ impl Builder {
 
 impl SetOptional for Builder {
 
-    fn set_optional(&mut self) {
+    fn set_optional(&self) {
         self.set_optionality(Optionality::Optional);
         self.set_input_omissible(true);
         self.set_output_omissible(true);
     }
 
-    fn set_required(&mut self) {
+    fn set_required(&self) {
         self.set_optionality(Optionality::Required);
     }
 }

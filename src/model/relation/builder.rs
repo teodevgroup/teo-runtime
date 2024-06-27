@@ -146,7 +146,7 @@ impl Builder {
         *self.inner.update.lock().unwrap() = update;
     }
 
-    pub fn has_foreign_key(&self, fields: Vec<&Field>) -> bool {
+    pub fn has_foreign_key(&self, fields: Vec<Field>) -> bool {
         if self.through().is_some() {
             false
         } else {
@@ -174,7 +174,7 @@ impl Builder {
         self.inner.data.lock().unwrap().get(key).cloned()
     }
 
-    pub(crate) fn build(self, fields: Vec<&Field>) -> Relation {
+    pub(crate) fn build(self, fields: Vec<Field>) -> Relation {
         let mut relation = Relation {
             inner: Arc::new(relation::Inner {
                 name: self.inner.name.clone(),

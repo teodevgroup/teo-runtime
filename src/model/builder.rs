@@ -128,6 +128,10 @@ impl Builder {
         self.inner.synthesize_shapes.store(synthesize_shapes, std::sync::atomic::Ordering::Relaxed);
     }
 
+    pub fn insert_field(&self, name: String, field: Field) {
+        self.inner.fields.lock().unwrap().insert(name, field);
+    }
+
     pub fn fields(&self) -> IndexMap<String, Field> {
         self.inner.fields.lock().unwrap().clone()
     }
@@ -136,12 +140,20 @@ impl Builder {
         *self.inner.fields.lock().unwrap() = fields;
     }
 
+    pub fn insert_relation(&self, name: String, relation: Relation) {
+        self.inner.relations.lock().unwrap().insert(name, relation);
+    }
+
     pub fn relations(&self) -> IndexMap<String, Relation> {
         self.inner.relations.lock().unwrap().clone()
     }
 
     pub fn set_relations(&self, relations: IndexMap<String, Relation>) {
         *self.inner.relations.lock().unwrap() = relations;
+    }
+
+    pub fn insert_property(&self, name: String, property: Property) {
+        self.inner.properties.lock().unwrap().insert(name, property);
     }
 
     pub fn properties(&self) -> IndexMap<String, Property> {

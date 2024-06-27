@@ -115,14 +115,14 @@ impl IsOptional for Property {
 impl Typed for Property {
 
     fn r#type(&self) -> &Type {
-        &self.r#type
+        &self.inner.r#type
     }
 }
 
 impl Documentable for Property {
 
     fn comment(&self) -> Option<&Comment> {
-        self.comment.as_ref()
+        self.inner.comment.as_ref()
     }
 
     fn kind(&self) -> &'static str {

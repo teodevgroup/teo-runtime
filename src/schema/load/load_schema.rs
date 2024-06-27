@@ -224,19 +224,19 @@ pub async fn load_schema(main_namespace_builder: &namespace::Builder, schema: &S
 
     // load handler groups
     for handler_group_declaration in schema.handler_group_declarations() {
-        load_handler_group(main_namespace, schema, handler_group_declaration, &mut diagnostics)?;
+        load_handler_group(main_namespace_builder, schema, handler_group_declaration, &mut diagnostics)?;
     }
 
     // load models
     for model_declaration in schema.models() {
-        let database = main_namespace.namespace_or_create_at_path(&model_declaration.namespace_str_path()).database;
+        let database = main_namespace_builder.namespace_or_create_at_path(&model_declaration.namespace_str_path()).database();
         if database.is_some() && model_declaration.is_available() {
-            load_model(main_namespace, schema, model_declaration, &mut diagnostics)?;
+            load_model(main_namespace_builder, schema, model_declaration, &mut diagnostics)?;
         }
     }
 
     // load model opposite relations
-    load_model_opposite_relations(main_namespace);
+    load_model_opposite_relations(main_namespace_builder);
 
     // diagnostics
     if !ignores_loading {
