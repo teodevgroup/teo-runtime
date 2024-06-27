@@ -23,6 +23,8 @@ pub struct Decorator {
     inner: Arc<DecoratorInner>
 }
 
+#[derive(Educe, Serialize)]
+#[educe(Debug)]
 struct DecoratorInner {
     path: Vec<String>,
     #[educe(Debug(ignore))] #[serde(skip)]

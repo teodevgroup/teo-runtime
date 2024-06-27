@@ -1,4 +1,4 @@
-use crate::handler::handler::Method;
+use crate::handler::Method;
 use crate::namespace;
 
 pub(in crate::stdlib) fn load_handler_decorators(namespace: &namespace::Builder) {

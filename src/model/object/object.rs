@@ -100,12 +100,12 @@ impl Object {
     }
 
     pub async fn update_teon(&self, value: &Value) -> Result<()> {
-        check_user_json_keys(value.as_dictionary().unwrap(), &self.model().cache.input_keys.iter().map(|k| k.as_str()).collect(), self.model())?;
+        check_user_json_keys(value.as_dictionary().unwrap(), &self.model().cache().input_keys.iter().map(|k| k.as_str()).collect(), self.model())?;
         for (key, value) in value.as_dictionary().unwrap() {
             if let Some(field) = self.model().field(key) {
-                self.set_value(key, value.cast(Some(&field.r#type), self.namespace()))?;
+                self.set_value(key, value.cast(Some(field.r#type()), self.namespace()))?;
             } else if let Some(field) = self.model().property(key) {
-                self.set_property(key, value.cast(Some(&field.r#type), self.namespace())).await?;
+                self.set_property(key, value.cast(Some(field.r#type()), self.namespace())).await?;
             }
         }
         self.inner.is_initialized.store(true, Ordering::SeqCst);
@@ -129,14 +129,14 @@ impl Object {
         let value_map_keys: Vec<&str> = value_map.keys().map(|k| k.as_str()).collect();
         // check keys
         if bypass_permission_check {
-            check_user_json_keys(value_map, &model.cache.input_keys.iter().map(|k| k.as_str()).collect(), model)?;
+            check_user_json_keys(value_map, &model.cache().input_keys.iter().map(|k| k.as_str()).collect(), model)?;
         }
         // find keys to iterate
         let initialized = self.inner.is_initialized.load(Ordering::SeqCst);
         let keys = if initialized {
-            self.model().cache.all_keys.iter().filter(|k| value_map_keys.contains(&k.as_str())).map(|k| k.as_str()).collect::<Vec<&str>>()
+            self.model().cache().all_keys.iter().filter(|k| value_map_keys.contains(&k.as_str())).map(|k| k.as_str()).collect::<Vec<&str>>()
         } else {
-            self.model().cache.all_keys.iter().map(|k| k.as_str()).collect()
+            self.model().cache().all_keys.iter().map(|k| k.as_str()).collect()
         };
         // assign values
         for key in keys {
@@ -147,7 +147,7 @@ impl Object {
                 };
                 if need_to_trigger_default_value {
                     // apply default values
-                    if let Some(default) = &field.default {
+                    if let Some(default) = field.default() {
                         if let Some(pipeline) = default.as_pipeline() {
                             let ctx = self.pipeline_ctx_for_path_and_value(path.clone(), Value::Null);
                             let value: Value = ctx.run_pipeline(pipeline).await?;
@@ -167,7 +167,7 @@ impl Object {
                         SetValue(value) => {
                             // on set pipeline
                             let ctx = self.pipeline_ctx_for_path_and_value(path.clone(), value.cast(Some(field.r#type()), self.namespace()));
-                            let value: Value = ctx.run_pipeline(&field.on_set).await?;
+                            let value: Value = ctx.run_pipeline(field.on_set()).await?;
                             self.check_write_rule(key, &value, &path).await?;
                             self.set_value_to_value_map(key, value.clone());
                         }
@@ -181,7 +181,7 @@ impl Object {
                 self.set_value_to_relation_manipulation_map(key, manipulation).await;
             } else if let Some(property) = self.model().property(key) {
                 if value_map_keys.contains(&key) {
-                    if let Some(setter) = property.setter.as_ref() {
+                    if let Some(setter) = property.setter() {
                         let value = value_map.get(&key.to_string()).unwrap();
                         let input_result = Input::decode_field(value);
                         let value = match input_result {
@@ -209,7 +209,7 @@ impl Object {
         let mut map = indexmap! {};
         for (k, v) in self.inner.value_map.lock().unwrap().iter() {
             let field = self.model().field(k).unwrap();
-            if field.copy {
+            if field.copy() {
                 map.insert(k.to_owned(), v.clone());
             }
         }
@@ -218,25 +218,25 @@ impl Object {
 
     async fn check_model_write_permission<'a>(&self, path: impl AsRef<KeyPath>) -> Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        ctx.run_pipeline_ignore_return_value(&self.model().can_mutate).await.alter_error_code(401)?;
+        ctx.run_pipeline_ignore_return_value(self.model().can_mutate()).await.alter_error_code(401)?;
         Ok(())
     }
 
     async fn check_model_read_permission<'a>(&self, path: impl AsRef<KeyPath>) -> Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        ctx.run_pipeline_ignore_return_value(&self.model().can_read).await.alter_error_code(401)?;
+        ctx.run_pipeline_ignore_return_value(self.model().can_read()).await.alter_error_code(401)?;
         Ok(())
     }
 
     async fn check_field_write_permission<'a>(&self, field: &Field, path: impl AsRef<KeyPath>) -> Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        ctx.run_pipeline_ignore_return_value(&field.can_mutate).await.alter_error_code(401)?;
+        ctx.run_pipeline_ignore_return_value(field.can_mutate()).await.alter_error_code(401)?;
         Ok(())
     }
 
     async fn check_field_read_permission<'a>(&self, field: &Field, path: impl AsRef<KeyPath>) -> Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        ctx.run_pipeline_ignore_return_value(&field.can_read).await.alter_error_code(401)?;
+        ctx.run_pipeline_ignore_return_value(field.can_read()).await.alter_error_code(401)?;
         Ok(())
     }
 
@@ -252,7 +252,7 @@ impl Object {
     async fn check_write_rule(&self, key: impl AsRef<str>, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
         let field = self.model().field(key.as_ref()).unwrap();
         let is_new = self.is_new();
-        let valid = match &field.write {
+        let valid = match field.write() {
             Write::NoWrite => false,
             Write::Write => true,
             Write::WriteOnCreate => is_new,
@@ -292,7 +292,7 @@ impl Object {
     }
 
     pub fn set_value(&self, key: impl AsRef<str>, value: Value) -> Result<()> {
-        let model_keys = &self.model().cache.save_keys_and_virtual_keys;
+        let model_keys = &self.model().cache().save_keys_and_virtual_keys;
         if !model_keys.contains_str(key.as_ref()) {
             return Err(Error::new(format!("invalid key {}", key.as_ref())));
         }
@@ -303,7 +303,7 @@ impl Object {
 
     pub async fn set_property(&self, key: &str, value: impl Into<Value>) -> Result<()> {
         let property = self.model().property(key).unwrap();
-        let setter = property.setter.as_ref().unwrap();
+        let setter = property.setter().unwrap();
         let value: Value = value.into();
         let ctx = self.pipeline_ctx_for_path_and_value(path![key], value.cast(Some(property.r#type()), self.namespace()));
         ctx.run_pipeline_ignore_return_value(setter).await?;
@@ -321,7 +321,7 @@ impl Object {
                 let inner_select = include_arg.as_dictionary().map(|m| m.get("select")).flatten();
                 let inner_include = include_arg.as_dictionary().map(|m| m.get("include")).flatten();
                 for v in v.as_array().unwrap() {
-                    let action = FIND | (if relation.is_vec { MANY } else { SINGLE }) | NESTED ;
+                    let action = FIND | (if relation.is_vec() { MANY } else { SINGLE }) | NESTED ;
                     let object = self.transaction_ctx().new_object(self.namespace().model_at_path(&relation.model_path()).unwrap(), action, self.request_ctx()).unwrap();
                     object.set_from_database_result_value(v, inner_select, inner_include);
                     self.inner.relation_query_map.lock().unwrap().get_mut(k).unwrap().push(object);
@@ -351,7 +351,7 @@ impl Object {
         if !self.is_new() {
             self.inner.is_modified.store(true, Ordering::SeqCst);
             self.inner.modified_fields.lock().unwrap().insert(key.to_string());
-            if let Some(properties) = self.model().cache.field_property_map.get(key) {
+            if let Some(properties) = self.model().cache().field_property_map.get(key) {
                 for property in properties {
                     self.inner.modified_fields.lock().unwrap().insert(property.to_string());
                     self.inner.cached_property_map.lock().unwrap().remove(&property.to_string());
@@ -362,7 +362,7 @@ impl Object {
 
     pub fn get_query_relation_object(&self, key: impl AsRef<str>, path: &KeyPath) -> Result<Option<Object>> {
         let key = key.as_ref();
-        let model_keys = &self.model().cache.all_keys;
+        let model_keys = &self.model().cache().all_keys;
         if !model_keys.contains_str(&key) {
             Err(error_ext::invalid_key_on_model(path.clone(), key, self.model()))?;
         }
@@ -374,7 +374,7 @@ impl Object {
 
     pub fn get_mutation_relation_object(&self, key: impl AsRef<str>) -> Result<Option<Object>> {
         let key = key.as_ref();
-        let model_keys = &self.model().cache.all_keys;
+        let model_keys = &self.model().cache().all_keys;
         if !model_keys.contains_str(&key) {
             Err(error_ext::invalid_key_on_model(Default::default(), key, self.model()))?;
         }
@@ -394,7 +394,7 @@ impl Object {
 
     pub fn get_relation_vec(&self, key: impl AsRef<str>) -> Result<Vec<Object>> {
         let key = key.as_ref();
-        let model_keys = &self.model().cache.all_keys;
+        let model_keys = &self.model().cache().all_keys;
         if !model_keys.contains_str(key) {
             return Err(error_ext::invalid_key_on_model(Default::default(), key, self.model()))?;
         }
@@ -410,15 +410,15 @@ impl Object {
 
     pub async fn get_property_value(&self, key: &str) -> Result<Value> {
         let property = self.model().property(key.as_ref()).unwrap();
-        if property.cached {
+        if property.cached() {
             if let Some(value) = self.inner.cached_property_map.lock().unwrap().get(key) {
                 return Ok(value.clone());
             }
         }
-        let getter = property.getter.as_ref().unwrap();
+        let getter = property.getter().unwrap();
         let ctx = self.pipeline_ctx_for_path_and_value(path![key], Value::Null);
         let value: Value = ctx.run_pipeline(getter).await?;
-        if property.cached {
+        if property.cached() {
             self.inner.cached_property_map.lock().unwrap().insert(key.to_string(), value.clone());
         }
         Ok(value)
@@ -437,7 +437,7 @@ impl Object {
 
     pub fn get_previous_value(&self, key: impl AsRef<str>) -> Result<Value> {
         let key = key.as_ref();
-        let model_keys = &self.model().cache.all_keys;
+        let model_keys = &self.model().cache().all_keys;
         if !model_keys.contains_str(key) {
             let model = self.model();
             Err(error_ext::invalid_key_on_model(Default::default(), key, model))?;
@@ -466,7 +466,7 @@ impl Object {
     }
 
     pub fn get_value(&self, key: impl AsRef<str>) -> Result<Value> {
-        let model_keys = &self.model().cache.all_keys;
+        let model_keys = &self.model().cache().all_keys;
         if !model_keys.contains_str(key.as_ref()) {
             Err(error_ext::invalid_key_on_model(KeyPath::default(), key.as_ref(), self.model()))?;
         }
@@ -504,14 +504,14 @@ impl Object {
         } else if !false_empty {
             // all - false
             let mut result: Vec<String> = vec![];
-            self.model().cache.all_keys.iter().for_each(|k| {
+            self.model().cache().all_keys.iter().for_each(|k| {
                 if let Some(field) = self.model().field(k) {
                     if !false_list.contains(&&***&k) {
-                        result.push(field.name.to_string());
+                        result.push(field.name().to_string());
                     }
                 } else if let Some(property) = self.model().property(k) {
                     if !false_list.contains(&&***&k) {
-                        result.push(property.name.to_string());
+                        result.push(property.name().to_string());
                     }
                 }
             });
@@ -520,14 +520,14 @@ impl Object {
         } else {
             // true
             let mut result: Vec<String> = vec![];
-            self.model().cache.all_keys.iter().for_each(|k| {
+            self.model().cache().all_keys.iter().for_each(|k| {
                 if let Some(field) = self.model().field(k) {
                     if true_list.contains(&k.as_str()) {
-                        result.push(field.name.to_string());
+                        result.push(field.name().to_string());
                     }
                 } else if let Some(property) = self.model().property(k) {
                     if true_list.contains(&k.as_str()) {
-                        result.push(property.name.to_string());
+                        result.push(property.name().to_string());
                     }
                 }
             });
@@ -539,14 +539,14 @@ impl Object {
     #[async_recursion]
     pub async fn apply_on_save_pipeline_and_validate_required_fields(&self, path: &KeyPath, ignore_required_relation: bool) -> teo_result::Result<()> {
         // apply on save pipeline first
-        let model_keys = &self.model().cache.save_keys;
+        let model_keys = &self.model().cache().save_keys;
         for key in model_keys {
             let field = self.model().field(key);
             if field.is_none() {
                 continue;
             }
             let field = field.unwrap();
-            if !field.on_save.is_empty() {
+            if !field.on_save().is_empty() {
                 let initial_value = match self.inner.value_map.lock().unwrap().deref().get(&key.to_string()) {
                     Some(value) => {
                         value.clone()
@@ -556,7 +556,7 @@ impl Object {
                     }
                 };
                 let ctx = self.pipeline_ctx_for_path_and_value(path + field.name(), initial_value);
-                let value: Value = ctx.run_pipeline(&field.on_save).await?;
+                let value: Value = ctx.run_pipeline(field.on_save()).await?;
                 self.inner.value_map.lock().unwrap().insert(key.to_string(), value);
                 self.set_modified_field(key);
             }
@@ -564,10 +564,10 @@ impl Object {
         // validate required fields
         for key in model_keys {
             if let Some(field) = self.model().field(key) {
-                if field.auto || field.auto_increment || field.foreign_key {
+                if field.auto() || field.auto_increment() || field.foreign_key() {
                     continue
                 }
-                match &field.optionality {
+                match field.optionality() {
                     Optionality::Optional => (),
                     Optionality::Required => {
                         let value = self.get_value(key).unwrap();
@@ -614,14 +614,14 @@ impl Object {
             }
         }
         // validate required relations
-        for key in &self.model().cache.relation_output_keys {
+        for key in &self.model().cache().relation_output_keys {
             if let Some(relation) = self.model().relation(key) {
                 if let Some(ignore) = self.inner.ignore_relation.lock().unwrap().as_ref() {
                     if ignore.as_str() == relation.name() {
                         continue
                     }
                 }
-                if self.is_new() && relation.is_required() && !relation.is_vec {
+                if self.is_new() && relation.is_required() && !relation.is_vec() {
                     if ignore_required_relation {
                         continue
                     }
@@ -630,7 +630,7 @@ impl Object {
                     if map.get(&key.to_string()).is_some() {
                         continue
                     }
-                    for field_name in &relation.fields {
+                    for field_name in relation.fields() {
                         if self.get_value(field_name).unwrap().is_null() {
                             return Err(error_ext::missing_required_input(path + key.as_str()));
                         }
@@ -661,7 +661,7 @@ impl Object {
         let namespace = self.namespace();
         // check deny first
         for (opposite_model, opposite_relation) in namespace.model_opposite_relations(model) {
-            if opposite_relation.delete == Delete::Deny {
+            if opposite_relation.delete() == Delete::Deny {
                 let finder = self.intrinsic_where_unique_for_opposite_relation(opposite_relation);
                 let count = self.transaction_ctx().count_objects(opposite_model, &finder, path.clone()).await.unwrap();
                 if count > 0 {
@@ -673,13 +673,13 @@ impl Object {
         self.transaction_ctx().transaction_for_model(self.model()).await.delete_object(self, path.clone()).await?;
         // nullify and cascade
         for (opposite_model, opposite_relation) in namespace.model_opposite_relations(model) {
-            match opposite_relation.delete {
+            match opposite_relation.delete() {
                 Delete::NoAction => {} // do nothing
                 Delete::Deny => {}, // done before
                 Delete::Nullify => {
                     let finder = self.intrinsic_where_unique_for_opposite_relation(opposite_relation);
                     self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | SINGLE, self.request_ctx(), path.clone(), |object| async move {
-                        for key in &opposite_relation.fields {
+                        for key in opposite_relation.fields() {
                             object.set_value(key, Value::Null)?;
                         }
                         object.save_with_session_and_path( &path![]).await?;
@@ -696,9 +696,9 @@ impl Object {
                 Delete::Default => {
                     let finder = self.intrinsic_where_unique_for_opposite_relation(opposite_relation);
                     self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | SINGLE, self.request_ctx(), path.clone(), |object| async move {
-                        for key in &opposite_relation.fields {
+                        for key in opposite_relation.fields() {
                             let field = opposite_model.field(key).unwrap();
-                            if let Some(default) = &field.default {
+                            if let Some(default) = field.default() {
                                 if let Some(pipeline) = default.as_pipeline() {
                                     let pipeline_ctx = pipeline::Ctx::new(Value::Null.into(), object.clone(), path![], CODE_NAME | DISCONNECT | SINGLE, self.transaction_ctx(), self.request_ctx());
                                     let value: Value = pipeline_ctx.run_pipeline(pipeline).await?;
@@ -708,7 +708,7 @@ impl Object {
                                     object.set_value(key, default.clone())?;
                                 }
                             } else {
-                                Err(Error::new(format!("default value is not defined: {}.{}", opposite_model.path.join("."), key)))?;
+                                Err(Error::new(format!("default value is not defined: {}.{}", opposite_model.path().join("."), key)))?;
                             }
                         }
                         object.save_with_session_and_path(&path![]).await?;
@@ -728,10 +728,10 @@ impl Object {
             let model = self.model();
             // check deny first
             for (opposite_model, opposite_relation) in namespace.model_opposite_relations(model) {
-                if opposite_relation.update == Update::Deny {
+                if opposite_relation.update() == Update::Deny {
                     let mut contains = false;
                     for f_name in modified_fields.iter() {
-                        if opposite_relation.references.contains(f_name) {
+                        if opposite_relation.references().contains(f_name) {
                             contains = true;
                         }
                     }
@@ -749,19 +749,19 @@ impl Object {
                 let mut contains = false;
                 let mut relation_modified_fields = vec![];
                 for f_name in modified_fields.iter() {
-                    if opposite_relation.references.contains(f_name) {
+                    if opposite_relation.references().contains(f_name) {
                         relation_modified_fields.push(f_name.as_str());
                         contains = true;
                     }
                 }
                 if contains && !self.every_field_is_null_previously(relation_modified_fields)? {
-                    match opposite_relation.update {
+                    match opposite_relation.update() {
                         Update::NoAction => {} // do nothing
                         Update::Deny => {}, // done before
                         Update::Nullify => {
                             let finder = self.intrinsic_where_unique_for_opposite_relation_with_prev_value(opposite_relation);
                             self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | SINGLE, self.request_ctx(), path.clone(), |object| async move {
-                                for key in &opposite_relation.fields {
+                                for key in opposite_relation.fields() {
                                     object.set_value(key, Value::Null)?;
                                 }
                                 object.save_with_session_and_path( &path![]).await?;
@@ -791,9 +791,9 @@ impl Object {
                         Update::Default => {
                             let finder = self.intrinsic_where_unique_for_opposite_relation_with_prev_value(opposite_relation);
                             self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | SINGLE, self.request_ctx(), path.clone(), |object| async move {
-                                for key in &opposite_relation.fields {
+                                for key in opposite_relation.fields() {
                                     let field = opposite_model.field(key).unwrap();
-                                    if let Some(default) = &field.default {
+                                    if let Some(default) = field.default() {
                                         if let Some(pipeline) = default.as_pipeline() {
                                             let pipeline_ctx = pipeline::Ctx::new(Value::Null.into(), object.clone(), path![], CODE_NAME | DISCONNECT | SINGLE, self.transaction_ctx(), self.request_ctx());
                                             let value: Value = pipeline_ctx.run_pipeline(pipeline).await?;
@@ -802,7 +802,7 @@ impl Object {
                                             object.set_value(key, default.clone())?;
                                         }
                                     } else {
-                                        Err(Error::new(format!("default value is not defined: {}.{}", opposite_model.path.join("."), key)))?;
+                                        Err(Error::new(format!("default value is not defined: {}.{}", opposite_model.path().join("."), key)))?;
                                     }
                                 }
                                 object.save_with_session_and_path(&path![]).await?;
@@ -842,14 +842,14 @@ impl Object {
             self.apply_on_save_pipeline_and_validate_required_fields(path, ignore_required_relation).await?;
             self.trigger_before_save_callbacks(path).await?;
             // perform relation manipulations (has foreign key)
-            self.perform_relation_manipulations(|r| r.has_foreign_key, path, is_new, is_modified).await?;
+            self.perform_relation_manipulations(|r| r.has_foreign_key(), path, is_new, is_modified).await?;
             self.save_to_database(path).await?;
         } else {
             // perform relation manipulations (has foreign key)
-            self.perform_relation_manipulations(|r| r.has_foreign_key, path, is_new, is_modified).await?;
+            self.perform_relation_manipulations(|r| r.has_foreign_key(), path, is_new, is_modified).await?;
         }
         // perform relation manipulations (doesn't have foreign key)
-        self.perform_relation_manipulations(|r| !r.has_foreign_key, path, is_new, is_modified).await?;
+        self.perform_relation_manipulations(|r| !r.has_foreign_key(), path, is_new, is_modified).await?;
         // clear properties
         self.clear_state();
         if is_modified || is_new {
@@ -869,19 +869,19 @@ impl Object {
 
     async fn trigger_before_delete_callbacks<'a>(&self, path: impl AsRef<KeyPath>) -> teo_result::Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        ctx.run_pipeline_ignore_return_value(&self.model().before_delete).await?;
+        ctx.run_pipeline_ignore_return_value(self.model().before_delete()).await?;
         Ok(())
     }
 
     async fn trigger_after_delete_callbacks<'a>(&self, path: impl AsRef<KeyPath>) -> teo_result::Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        ctx.run_pipeline_ignore_return_value(&self.model().after_delete).await?;
+        ctx.run_pipeline_ignore_return_value(self.model().after_delete()).await?;
         Ok(())
     }
 
-    async fn trigger_before_save_callbacks<'a>(&self, path: impl AsRef<KeyPath>) -> teo_result::Result<()> {
+    async fn trigger_before_save_callbacks<'a>(&self, path: impl AsRef<KeyPath>) -> Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        ctx.run_pipeline_ignore_return_value(&self.model().before_save).await?;
+        ctx.run_pipeline_ignore_return_value(self.model().before_save()).await?;
         Ok(())
     }
 
@@ -892,7 +892,7 @@ impl Object {
         }
         self.inner.inside_after_save_callback.store(true, Ordering::SeqCst);
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
-        ctx.run_pipeline_ignore_return_value(&self.model().after_save).await?;
+        ctx.run_pipeline_ignore_return_value(self.model().after_save()).await?;
         self.inner.inside_after_save_callback.store(false, Ordering::SeqCst);
         Ok(())
     }
@@ -922,11 +922,11 @@ impl Object {
         let select_list = self.inner.selected_fields.lock().unwrap().clone();
         let select_filter = if select_list.is_empty() { false } else { true };
         let mut map: IndexMap<String, Value> = IndexMap::new();
-        let keys = &self.model().cache.output_keys;
+        let keys = &self.model().cache().output_keys;
         for key in keys {
             if let Some(relation) = self.model().relation(key) {
                 if self.has_query_relation_fetched(relation.name()) {
-                    if !relation.is_vec {
+                    if !relation.is_vec() {
                         let o = self.get_query_relation_object(key, &(path + key)).unwrap();
                         match o {
                             Some(o) => {
@@ -950,18 +950,18 @@ impl Object {
                         continue
                     }
                     let ctx = self.pipeline_ctx_for_path_and_value(path![key], value);
-                    let value: Value = ctx.run_pipeline(&field.on_output).await?;
+                    let value: Value = ctx.run_pipeline(field.on_output()).await?;
                     if !value.is_null() {
                         map.insert(key.to_string(), value);
                     }
                 } else if let Some(property) = self.model().property(key) {
-                    if property.cached && self.inner.cached_property_map.lock().unwrap().contains_key(&key.to_string()) {
+                    if property.cached() && self.inner.cached_property_map.lock().unwrap().contains_key(&key.to_string()) {
                         let value = self.inner.cached_property_map.lock().unwrap().get(&key.to_string()).unwrap().clone();
                         if !value.is_null() {
                             map.insert(key.to_string(), value);
                         }
                     } else {
-                        if let Some(getter) = &property.getter {
+                        if let Some(getter) = property.getter() {
                             let ctx = self.pipeline_ctx_for_path_and_value(path![key], Value::Null);
                             let value: Value = ctx.run_pipeline(&getter).await?;
                             if !value.is_null() {
@@ -1032,9 +1032,9 @@ impl Object {
     }
 
     async fn perform_relation_manipulations<F: Fn(&'static Relation) -> bool>(&self, f: F, path: &KeyPath, is_new: bool, is_modified: bool) -> Result<()> {
-        for relation in self.model().relations() {
+        for (_relation_name, relation) in self.model().relations() {
             if f(relation) {
-                let many = relation.is_vec;
+                let many = relation.is_vec();
                 // programming code set
                 if many {
                     let object_set_many_map = self.inner.object_set_many_map.lock().await;
@@ -1066,7 +1066,7 @@ impl Object {
                     for object in objects_to_disconnect {
                         if relation.has_join_table() {
                             self.delete_join_object(object, relation, self.namespace().opposite_relation(relation).1.unwrap(), path).await?;
-                        } else if relation.has_foreign_key {
+                        } else if relation.has_foreign_key() {
                             self.remove_linked_values_from_related_relation(relation);
                         } else {
                             object.remove_linked_values_from_related_relation_on_related_object(relation, &object);
@@ -1152,14 +1152,14 @@ impl Object {
         let mut linked = false;
         let (_, opposite_relation) = self.namespace().opposite_relation(relation);
         if let Some(opposite_relation) = opposite_relation {
-            if opposite_relation.has_foreign_key {
+            if opposite_relation.has_foreign_key() {
                 self.assign_linked_values_to_related_object(object, opposite_relation);
                 linked = true;
             }
         }
         object.save_with_session_and_path(path).await?;
         if !linked {
-            if relation.has_foreign_key {
+            if relation.has_foreign_key() {
                 object.assign_linked_values_to_related_object(self, relation);
             } else if relation.has_join_table() {
                 self.create_join_object(object, relation, opposite_relation.unwrap(), path).await?;
@@ -1206,7 +1206,7 @@ impl Object {
     }
 
     async fn nested_set_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
-        if !(relation.has_foreign_key && relation.is_required()) {
+        if !(relation.has_foreign_key() && relation.is_required()) {
             // disconnect old
             let disconnect_value = self.intrinsic_where_unique_for_relation(relation);
             let _ = self.nested_disconnect_relation_object_no_check(relation, &disconnect_value, path).await;
@@ -1264,10 +1264,10 @@ impl Object {
     }
 
     async fn nested_disconnect_relation_object_object(&self, relation: &'static Relation, object: &Object, path: &KeyPath) -> teo_result::Result<()> {
-        if !relation.is_vec && relation.is_required() {
+        if !relation.is_vec() && relation.is_required() {
             return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "Cannot disconnect required relation."));
         }
-        if relation.has_foreign_key {
+        if relation.has_foreign_key() {
             self.remove_linked_values_from_related_relation(relation);
         } else if relation.has_join_table() {
             self.delete_join_object(object, relation, self.namespace().opposite_relation(relation).1.unwrap(), path).await?;
@@ -1279,7 +1279,7 @@ impl Object {
     }
 
     async fn nested_disconnect_relation_object_no_check(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
-        if relation.has_foreign_key {
+        if relation.has_foreign_key() {
             self.remove_linked_values_from_related_relation(relation);
         } else {
             let r#where = value;
@@ -1295,7 +1295,7 @@ impl Object {
     }
 
     async fn nested_disconnect_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
-        if !relation.is_vec && relation.is_required() {
+        if !relation.is_vec() && relation.is_required() {
             return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "Cannot disconnect required relation."));
         }
         self.nested_disconnect_relation_object_no_check(relation, value, path).await?;
@@ -1442,7 +1442,7 @@ impl Object {
     }
 
     async fn nested_delete_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
-        if !relation.is_vec && relation.is_required() {
+        if !relation.is_vec() && relation.is_required() {
             return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "Cannot delete required relation."));
         }
         let r#where = value.get("where").unwrap();
@@ -1456,7 +1456,7 @@ impl Object {
             let opposite_relation = self.namespace().opposite_relation(relation).1.unwrap();
             self.delete_join_object(&object, relation, opposite_relation, path).await?;
         }
-        if relation.has_foreign_key {
+        if relation.has_foreign_key() {
             self.remove_linked_values_from_related_relation(relation);
         }
         Ok(())
@@ -1505,7 +1505,7 @@ impl Object {
     }
 
     async fn perform_relation_manipulation_one_inner(&self, relation: &'static Relation, action: Action, value: &Value, path: &KeyPath, is_new: bool, is_modified: bool) -> Result<()> {
-        if !relation.is_vec && !relation.has_foreign_key && !is_new {
+        if !relation.is_vec() && !relation.has_foreign_key() && !is_new {
             match action {
                 NESTED_CREATE_ACTION | NESTED_CONNECT_ACTION | NESTED_CONNECT_OR_CREATE_ACTION => {
                     let disconnect_value = self.intrinsic_where_unique_for_relation(relation);
@@ -1514,9 +1514,9 @@ impl Object {
                 _ => ()
             }
         }
-        if !relation.is_vec && relation.has_foreign_key {
+        if !relation.is_vec() && relation.has_foreign_key() {
             if let Some(opposite_relation) = self.namespace().opposite_relation(relation).1 {
-                if !opposite_relation.is_vec {
+                if !opposite_relation.is_vec() {
                     match action {
                         NESTED_CONNECT_ACTION | NESTED_SET_ACTION => {
                             if !value.is_null() {
@@ -1635,7 +1635,7 @@ impl Object {
         let target = self.transaction_ctx().find_unique_internal(self.model(), &finder, false, self.action(), self.request_ctx(), path![]).await.into_not_found_error(path![]);
         match target {
             Ok(obj) => {
-                if self.model().cache.has_virtual_fields {
+                if self.model().cache().has_virtual_fields {
                     self.copy_virtual_fields(&obj);
                 }
                 Ok(obj)
@@ -1645,8 +1645,8 @@ impl Object {
     }
 
     fn copy_virtual_fields(&self, other: &Object) {
-        for field in self.model().fields() {
-            if field.r#virtual {
+        for (_field_name, field) in self.model().fields() {
+            if field.r#virtual() {
                 let result = self.get_value(field.name()).unwrap();
                 other.set(field.name(), result).unwrap();
             }
@@ -1750,8 +1750,8 @@ impl Object {
             if finder.as_dictionary().unwrap().get("where").is_none() {
                 finder.as_dictionary_mut().unwrap().insert("where".to_string(), teon!({}));
             }
-            for (index, local_field_name) in relation.fields.iter().enumerate() {
-                let foreign_field_name = relation.references.get(index).unwrap();
+            for (index, local_field_name) in relation.fields().iter().enumerate() {
+                let foreign_field_name = relation.references().get(index).unwrap();
                 let value = self.get_value(local_field_name).unwrap();
                 if value == Value::Null {
                     return Ok(vec![]);
@@ -1767,9 +1767,9 @@ impl Object {
 
     pub fn keys_for_save(&self) -> Vec<&str> {
         if self.is_new() {
-            self.model().cache.save_keys.iter().map(|k| k.as_str()).collect()
+            self.model().cache().save_keys.iter().map(|k| k.as_str()).collect()
         } else {
-            self.model().cache.save_keys.iter().filter(|k| {
+            self.model().cache().save_keys.iter().filter(|k| {
                 self.inner.modified_fields.lock().unwrap().contains(&k.to_string()) ||
                     self.inner.atomic_updater_map.lock().unwrap().contains_key(&k.to_string())
             }).map(|k| k.as_str()).collect()
@@ -1840,7 +1840,7 @@ fn check_user_json_keys<'a>(map: &IndexMap<String, Value>, allowed: &HashSet<&st
 impl Debug for Object {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut result = f.debug_struct(self.model().name());
-        for field in self.model().fields() {
+        for (_field_name, field) in self.model().fields() {
             let map = self.inner.value_map.lock().unwrap();
             let value = map.get(field.name()).unwrap_or(&Value::Null);
             result.field(field.name(), value);
@@ -1852,7 +1852,7 @@ impl Debug for Object {
 impl Display for Object {
 
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str(format!("{} {{ {} }}", self.model().name(), self.model().fields().iter().map(|field| {
+        f.write_str(format!("{} {{ {} }}", self.model().name(), self.model().fields().values().map(|field| {
             let map = self.inner.value_map.lock().unwrap();
             let value = map.get(field.name()).unwrap_or(&Value::Null);
             format!("{}: {}", field.name(), value)

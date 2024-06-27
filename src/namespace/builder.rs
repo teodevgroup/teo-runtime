@@ -18,7 +18,7 @@ use crate::connection::connection::Connection;
 use crate::database::database::Database;
 use crate::handler::ctx_argument::HandlerCtxArgument;
 use crate::handler::Handler;
-use crate::handler::handler::Method;
+use crate::handler::Method;
 use crate::model::{Model, Relation};
 use crate::namespace::Namespace;
 use crate::pipeline::item::callback::{CallbackArgument, CallbackResult};

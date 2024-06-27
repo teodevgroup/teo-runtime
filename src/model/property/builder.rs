@@ -3,6 +3,7 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicBool;
 use teo_parser::ast::schema::Schema;
 use teo_parser::r#type::Type;
+use teo_result::Result;
 use crate::comment::Comment;
 use crate::database::database::Database;
 use crate::database::r#type::DatabaseType;
@@ -13,6 +14,7 @@ use crate::model::Property;
 use crate::model::property::property;
 use crate::optionality::Optionality;
 use crate::pipeline::Pipeline;
+use crate::traits::named::Named;
 use crate::Value;
 
 pub struct Builder {
@@ -171,8 +173,8 @@ impl Builder {
         self.inner.data.lock().unwrap().get(key).cloned()
     }
 
-    pub(crate) fn build(self, database: Database, schema: &Schema) -> Property {
-        Property {
+    pub(crate) fn build(self, database: Database, schema: &Schema) -> Result<Property> {
+        Ok(Property {
             inner: Arc::new(property::Inner {
                 name: self.inner.name.clone(),
                 comment: self.inner.comment.clone(),
@@ -195,7 +197,7 @@ impl Builder {
                 index: self.inner.index.lock().unwrap().clone(),
                 data: self.inner.data.lock().unwrap().clone(),
             })
-        }
+        })
     }
 }
 
@@ -209,6 +211,12 @@ impl SetOptional for Builder {
 
     fn set_required(&self) {
         self.set_optionality(Optionality::Required);
+    }
+}
+
+impl Named for Builder {
+    fn name(&self) -> &str {
+        self.inner.name.as_str()
     }
 }
 

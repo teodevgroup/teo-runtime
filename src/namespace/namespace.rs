@@ -1,49 +1,29 @@
-
 use std::collections::BTreeMap;
 use std::ops::Deref;
 use std::sync::{Arc, Mutex};
-use maplit::btreemap;
-use crate::{interface, middleware, model, model::Model, r#enum, request};
-use crate::arguments::Arguments;
+use crate::{interface, middleware, model, model::Model, r#enum};
 use crate::config::client::Client;
 use crate::config::connector::Connector;
 use crate::config::debug::Debug;
 use crate::config::entity::Entity;
 use crate::config::server::Server;
 use crate::connection::connection::Connection;
-use teo_result::Error;
 use crate::handler;
 use crate::interface::Interface;
-use crate::model::field::Field;
-use crate::model::property::Property;
 use crate::model::relation::Relation;
 use crate::r#enum::Enum;
-use crate::r#enum::member::Member;
 use crate::r#struct::Struct;
-use crate::utils::next_path;
-use teo_result::Result;
 use crate::database::database::Database;
-use crate::middleware::middleware::{empty_middleware, Middleware};
+use crate::middleware::middleware::Middleware;
 use crate::pipeline;
-use crate::stdlib::load::load;
 use educe::Educe;
 use serde::Serialize;
-use teo_parser::ast::handler::HandlerInputFormat;
-use teo_parser::r#type::Type;
 use crate::config::admin::Admin;
-use crate::handler::ctx_argument::HandlerCtxArgument;
 use crate::handler::Handler;
-use crate::handler::handler::Method;
-use crate::pipeline::item::callback::{CallbackArgument, CallbackResult};
-use crate::pipeline::item::compare::CompareArgument;
-use crate::pipeline::item::transform::{TransformArgument, TransformResult};
-use crate::pipeline::item::validator::{ValidateArgument, ValidateResult};
 use crate::traits::named::Named;
-use crate::value::Value;
 
-#[derive(Educe)]
+#[derive(Educe, Serialize)]
 #[educe(Debug)]
-#[derive(Serialize)]
 pub struct Namespace {
     pub path: Vec<String>,
     pub namespaces: BTreeMap<String, Namespace>,
@@ -94,8 +74,8 @@ impl Namespace {
         self.path() == vec!["std"]
     }
 
-    pub fn path(&self) -> Vec<&str> {
-        self.path.iter().map(|s| s.as_str()).collect()
+    pub fn path(&self) -> &Vec<String> {
+        &self.path
     }
 
     pub fn namespace(&self, name: &str) -> Option<&Namespace> {

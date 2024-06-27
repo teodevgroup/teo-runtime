@@ -9,7 +9,7 @@ use crate::traits::documentable::Documentable;
 use crate::traits::named::Named;
 use crate::Value;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct Field {
     pub(super) name: String,
     pub(super) comment: Option<Comment>,

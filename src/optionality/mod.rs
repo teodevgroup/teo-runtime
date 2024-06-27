@@ -1,7 +1,7 @@
 use serde::Serialize;
 use crate::pipeline::pipeline::Pipeline;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub enum Optionality {
     Required,
     Optional,

@@ -91,22 +91,22 @@ impl Ctx {
     }
 
     async fn set_transaction_for_model(&self, model: &Model, transaction: Arc<dyn Transaction>) {
-        self.set_transaction_for_namespace_path(&model.namespace_path(), transaction).await
+        self.set_transaction_for_namespace_path(model.namespace_path(), transaction).await
     }
 
     async fn set_transaction_for_namespace(&self, namespace: &Namespace, transaction: Arc<dyn Transaction>) {
-        self.set_transaction_for_namespace_path(&namespace.path(), transaction).await
+        self.set_transaction_for_namespace_path(namespace.path(), transaction).await
     }
 
-    async fn set_transaction_for_namespace_path(&self, path: &Vec<&str>, transaction: Arc<dyn Transaction>) {
+    async fn set_transaction_for_namespace_path(&self, path: &Vec<String>, transaction: Arc<dyn Transaction>) {
         self.inner.transactions.lock().await.insert(
-            path.iter().map(ToString::to_string).collect(),
+            path.clone(),
             transaction
         );
     }
 
     pub(crate) async fn transaction_for_model(&self, model: &Model) -> Arc<dyn Transaction> {
-        if let Some(transaction) = self.transaction_for_namespace_path(&model.namespace_path()).await {
+        if let Some(transaction) = self.transaction_for_namespace_path(model.namespace_path()).await {
             transaction
         } else {
             if self.inner.is_transaction.load(Ordering::SeqCst) {
@@ -118,12 +118,11 @@ impl Ctx {
     }
 
     async fn transaction_for_namespace(&self, namespace: &Namespace) -> Option<Arc<dyn Transaction>> {
-        self.transaction_for_namespace_path(&namespace.path()).await
+        self.transaction_for_namespace_path(namespace.path()).await
     }
 
-    async fn transaction_for_namespace_path(&self, path: &Vec<&str>) -> Option<Arc<dyn Transaction>> {
-        let path: Vec<String> = path.iter().map(ToString::to_string).collect();
-        self.inner.transactions.lock().await.get(&path).cloned()
+    async fn transaction_for_namespace_path(&self, path: &Vec<String>) -> Option<Arc<dyn Transaction>> {
+        self.inner.transactions.lock().await.get(path).cloned()
     }
 
     async fn transaction_for_model_or_create(&self, model: &Model) -> Result<Arc<dyn Transaction>> {

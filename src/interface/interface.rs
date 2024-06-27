@@ -14,11 +14,11 @@ use crate::Value;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct Interface {
-    inner: Arc<Inner>
+    pub(super) inner: Arc<Inner>
 }
 
 #[derive(Debug, Serialize)]
-struct Inner {
+pub(super) struct Inner {
     pub(super) path: Vec<String>,
     pub(super) parser_path: Vec<usize>,
     pub(super) comment: Option<Comment>,

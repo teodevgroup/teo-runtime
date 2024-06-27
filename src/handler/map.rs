@@ -1,6 +1,6 @@
 use indexmap::{IndexMap, indexmap};
 use regex::Regex;
-use crate::handler::handler::Method;
+use crate::handler::Method;
 use crate::handler::r#match::HandlerMatch;
 
 #[derive(Debug)]

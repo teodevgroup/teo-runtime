@@ -16,6 +16,7 @@ use crate::optionality::Optionality;
 use crate::pipeline::Pipeline;
 use crate::readwrite::read::Read;
 use crate::readwrite::write::Write;
+use crate::traits::named::Named;
 use crate::Value;
 
 pub struct Builder {
@@ -368,6 +369,12 @@ impl Builder {
             })
         };
         field
+    }
+}
+
+impl Named for Builder {
+    fn name(&self) -> &str {
+        self.inner.name.as_str()
     }
 }
 

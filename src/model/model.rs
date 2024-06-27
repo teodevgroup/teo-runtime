@@ -3,25 +3,20 @@ use std::ops::BitOr;
 use std::sync::Arc;
 use indexmap::IndexMap;
 use maplit::{btreemap, btreeset};
-use serde::Serialize;
+use serde::{Serialize, Serializer};
 use teo_parser::ast::model::ModelResolved;
 use teo_parser::r#type::reference::Reference;
 use teo_parser::r#type::synthesized_shape_reference::SynthesizedShapeReference;
 use teo_parser::r#type::Type;
-use teo_result::{Result, Error};
 use crate::action::Action;
 use crate::action::action::{AGGREGATE_HANDLER, COPY_HANDLER, COPY_MANY_HANDLER, COUNT_HANDLER, CREATE_HANDLER, CREATE_MANY_HANDLER, DELETE_HANDLER, DELETE_MANY_HANDLER, FIND_FIRST_HANDLER, FIND_MANY_HANDLER, FIND_UNIQUE_HANDLER, GROUP_BY_HANDLER, UPDATE_HANDLER, UPDATE_MANY_HANDLER, UPSERT_HANDLER};
 use crate::comment::Comment;
-use crate::model;
 use crate::model::field::column_named::ColumnNamed;
 use crate::model::field::Field;
-use crate::model::field::indexable::Indexable;
 use crate::traits::named::Named;
 use crate::model::Index;
-use crate::model::index::Item;
 use crate::model::migration::Migration;
 use crate::model::property::Property;
-use crate::model::relation::delete::Delete;
 use crate::model::relation::Relation;
 use crate::namespace::Namespace;
 use crate::pipeline::pipeline::Pipeline;
@@ -214,11 +209,11 @@ impl Model {
     }
 
     pub fn field(&self, name: &str) -> Option<&Field> {
-        self.fields().get(name).filter(|f| !f.dropped)
+        self.fields().get(name).filter(|f| !f.dropped())
     }
 
     pub fn dropped_field(&self, name: &str) -> Option<&Field> {
-        self.fields().get(name).filter(|f| f.dropped)
+        self.fields().get(name).filter(|f| f.dropped())
     }
 
     pub fn relation(&self, name: &str) -> Option<&Relation> {
@@ -230,11 +225,11 @@ impl Model {
     }
 
     pub fn field_with_column_name(&self, name: &str) -> Option<&Field> {
-        self.fields().iter().find(|f| f.column_name() == name).map(|f| *f)
+        self.fields().values().find(|f| f.column_name() == name)
     }
 
     pub fn property_with_column_name(&self, name: &str) -> Option<&Property> {
-        self.properties().iter().find(|p| p.column_name() == name).map(|p| *p)
+        self.properties().values().find(|p| p.column_name() == name)
     }
 
     pub(crate) fn allowed_keys_for_aggregate(&self, name: &str) -> BTreeSet<&str> {
@@ -441,5 +436,14 @@ impl Documentable for Model {
 
     fn kind(&self) -> &'static str {
         "model"
+    }
+}
+
+impl Serialize for Model {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        self.inner.serialize(serializer)
     }
 }

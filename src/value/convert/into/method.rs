@@ -1,5 +1,5 @@
 use teo_result::Error;
-use crate::handler::handler::Method;
+use crate::handler::Method;
 use crate::value::interface_enum_variant::InterfaceEnumVariant;
 use crate::value::Value;
 

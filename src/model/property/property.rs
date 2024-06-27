@@ -1,11 +1,8 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
-use serde::Serialize;
-use teo_parser::ast::schema::Schema;
+use serde::{Serialize, Serializer};
 use teo_parser::r#type::Type;
-use teo_result::Result;
 use crate::comment::Comment;
-use crate::database::database::Database;
 use crate::database::r#type::DatabaseType;
 use crate::model::field::column_named::ColumnNamed;
 use crate::model::field::Index;
@@ -18,12 +15,12 @@ use crate::pipeline::pipeline::Pipeline;
 use crate::traits::documentable::Documentable;
 use crate::value::Value;
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Clone)]
 pub struct Property {
     pub(super) inner: Arc<Inner>
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
 pub(super) struct Inner {
     pub(super) name: String,
     pub(super) comment: Option<Comment>,
@@ -127,5 +124,14 @@ impl Documentable for Property {
 
     fn kind(&self) -> &'static str {
         "property"
+    }
+}
+
+impl Serialize for Property {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        todo!()
     }
 }

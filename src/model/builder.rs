@@ -3,6 +3,7 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicBool;
 use indexmap::IndexMap;
 use itertools::Itertools;
+use serde::Serialize;
 use teo_result::{Error, Result};
 use crate::action::Action;
 use crate::comment::Comment;
@@ -19,6 +20,7 @@ pub struct Builder {
     inner: Arc<Inner>,
 }
 
+#[derive(Serialize)]
 struct Inner {
     pub path: Vec<String>,
     pub parser_path: Vec<usize>,

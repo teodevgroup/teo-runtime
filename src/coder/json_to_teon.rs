@@ -31,15 +31,15 @@ pub fn fetch_synthesized_interface_enum<'a>(reference: &SynthesizedInterfaceEnum
 
 pub fn fetch_synthesized_enum<'a>(reference: &SynthesizedEnumReference, main_namespace: &'a namespace::Builder) -> &'a SynthesizedEnum {
     let model = main_namespace.model_at_path(&reference.owner.as_model_object().unwrap().str_path()).unwrap();
-    model.cache.shape.enums.get(&reference.kind).unwrap()
+    model.cache().shape.enums.get(&reference.kind).unwrap()
 }
 
 pub fn fetch_input<'a>(reference: &SynthesizedShapeReference, main_namespace: &'a Namespace) -> &'a Type {
     let model = main_namespace.model_at_path(&reference.owner.as_model_object().unwrap().str_path()).unwrap();
     if reference.kind.requires_without() {
-        model.cache.shape.get_without(reference.kind, reference.without.as_ref().unwrap()).unwrap()
+        model.cache().shape.get_without(reference.kind, reference.without.as_ref().unwrap()).unwrap()
     } else {
-        model.cache.shape.get(reference.kind).unwrap()
+        model.cache().shape.get(reference.kind).unwrap()
     }
 }
 

@@ -1,4 +1,3 @@
-use maplit::btreemap;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use serde::Serialize;
@@ -8,12 +7,12 @@ use crate::traits::documentable::Documentable;
 use crate::traits::named::Named;
 use crate::value::Value;
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Clone)]
 pub struct Enum {
     pub(super) inner: Arc<Inner>
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub(super) struct Inner {
     pub(super) path: Vec<String>,
     pub(super) comment: Option<Comment>,
@@ -21,6 +20,7 @@ pub(super) struct Inner {
     pub(super) interface: bool,
     pub(super) members: Vec<Member>,
     pub(super) data: BTreeMap<String, Value>,
+    #[serde(skip)]
     pub(super) member_names: Vec<String>,
 }
 
@@ -66,5 +66,11 @@ impl Documentable for Enum {
 
     fn kind(&self) -> &'static str {
         "enum"
+    }
+}
+
+impl Serialize for Enum {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer {
+        self.inner.serialize(serializer)
     }
 }

@@ -6,6 +6,6 @@ pub trait Indexable: Named {
     fn index(&self) -> Option<&field::Index>;
 }
 
-pub trait SetIndex {
+pub trait SetIndex: Named {
     fn set_index(&self, index: field::Index);
 }

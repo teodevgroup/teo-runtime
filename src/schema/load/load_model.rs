@@ -59,7 +59,7 @@ pub fn load_model(main_namespace: &namespace::Builder, schema: &Schema, model_de
         }
     }
     let mut model = model_builder.build()?;
-    model.cache.shape = model_declaration.resolved().clone();
+    model.cache().shape = model_declaration.resolved().clone();
     let dest_namespace = main_namespace.namespace_or_create_at_path(&model_declaration.namespace_str_path());
     dest_namespace.insert_model(model_declaration.identifier().name().to_owned(), model);
     for handler_declaration in model_declaration.handlers() {

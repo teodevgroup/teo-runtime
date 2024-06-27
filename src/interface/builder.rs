@@ -6,7 +6,7 @@ use maplit::btreemap;
 use teo_parser::r#type::synthesized_shape::SynthesizedShape;
 use teo_parser::r#type::Type;
 use crate::comment::Comment;
-use crate::interface::{Field, Interface};
+use crate::interface::{Field, Interface, interface};
 use crate::Value;
 
 #[derive(Debug, Clone)]
@@ -112,16 +112,18 @@ impl Builder {
 
     pub(crate) fn build(self) -> Interface {
         Interface {
-            path: self.inner.path.clone(),
-            parser_path: self.inner.parser_path.clone(),
-            comment: self.inner.comment.clone(),
-            fields: self.inner.fields.clone(),
-            generic_names: self.inner.generic_names.clone(),
-            extends: self.inner.extends.clone(),
-            shape: self.inner.shape.clone(),
-            generate_client: self.inner.generate_client.load(std::sync::atomic::Ordering::Relaxed),
-            generate_entity: self.inner.generate_entity.load(std::sync::atomic::Ordering::Relaxed),
-            data: self.inner.data.lock().unwrap().clone(),
+            inner: Arc::new(interface::Inner {
+                path: self.inner.path.clone(),
+                parser_path: self.inner.parser_path.clone(),
+                comment: self.inner.comment.clone(),
+                fields: self.inner.fields.clone(),
+                generic_names: self.inner.generic_names.clone(),
+                extends: self.inner.extends.clone(),
+                shape: self.inner.shape.clone(),
+                generate_client: self.inner.generate_client.load(std::sync::atomic::Ordering::Relaxed),
+                generate_entity: self.inner.generate_entity.load(std::sync::atomic::Ordering::Relaxed),
+                data: self.inner.data.lock().unwrap().clone(),
+            })
         }
     }
 }

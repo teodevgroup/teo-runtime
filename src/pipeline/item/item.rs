@@ -19,13 +19,14 @@ impl<F, Fut> Call for F where
     }
 }
 
-#[derive(Educe)]
+#[derive(Educe, Serialize, Clone)]
 #[educe(Debug)]
-#[derive(Serialize, Clone)]
 pub struct Item {
     inner: Arc<Inner>
 }
 
+#[derive(Educe, Serialize)]
+#[educe(Debug)]
 struct Inner {
     pub path: Vec<String>,
     #[educe(Debug(ignore))] #[serde(skip)]
