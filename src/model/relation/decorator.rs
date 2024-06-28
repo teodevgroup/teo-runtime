@@ -3,15 +3,15 @@ use educe::Educe;
 use serde::{Serialize, Serializer};
 use serde::ser::SerializeStruct;
 use crate::arguments::Arguments;
-use crate::model::relation::{Builder, Relation};
+use crate::model::relation::Builder;
 use teo_result::Result;
 
-pub trait Call {
+pub trait Call: Send + Sync {
     fn call(&self, args: Arguments, field: &Builder) -> Result<()>;
 }
 
 impl<F> Call for F where
-    F: Fn(Arguments, &Builder) -> Result<()> {
+    F: Fn(Arguments, &Builder) -> Result<()> + Send + Sync {
     fn call(&self, args: Arguments, field: &Builder) -> Result<()> {
         self(args, field)
     }

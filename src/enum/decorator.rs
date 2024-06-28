@@ -5,14 +5,12 @@ use crate::arguments::Arguments;
 use teo_result::Result;
 use crate::r#enum;
 
-use super::Enum;
-
-pub trait Call {
+pub trait Call: Send + Sync {
     fn call(&self, args: Arguments, r#enum: &r#enum::Builder) -> Result<()>;
 }
 
 impl<F> Call for F where
-    F: Fn(Arguments, &r#enum::Builder) -> Result<()> {
+    F: Fn(Arguments, &r#enum::Builder) -> Result<()> + Send + Sync {
     fn call(&self, args: Arguments, r#enum: &r#enum::Builder) -> Result<()> {
         self(args, r#enum)
     }

@@ -255,12 +255,12 @@ impl Builder {
         model_field_decorators.insert(name.to_owned(), model::field::Decorator::new(next_path(self.path(), name), call));
     }
 
-    pub fn define_model_relation_decorator(&self, name: &str, call: impl Fn(Arguments, &model::relation::Builder) -> Result<()> + 'static) {
+    pub fn define_model_relation_decorator(&self, name: &str, call: impl Fn(Arguments, &model::relation::Builder) -> Result<()> + 'static + Send + Sync) {
         let mut model_relation_decorators = self.inner.model_relation_decorators.lock().unwrap();
         model_relation_decorators.insert(name.to_owned(), model::relation::Decorator::new(next_path(self.path(), name), call));
     }
 
-    pub fn define_model_property_decorator(&self, name: &str, call: impl Fn(Arguments, &model::property::Builder) -> Result<()> + 'static) {
+    pub fn define_model_property_decorator(&self, name: &str, call: impl Fn(Arguments, &model::property::Builder) -> Result<()> + 'static + Send + Sync) {
         let mut model_property_decorators = self.inner.model_property_decorators.lock().unwrap();
         model_property_decorators.insert(name.to_owned(), model::property::Decorator::new(next_path(self.path(), name), call));
     }
