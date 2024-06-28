@@ -9,7 +9,7 @@ use crate::arguments::Arguments;
 use crate::middleware::{Use};
 use crate::middleware::middleware::{combine_middleware, empty_middleware, Middleware};
 use crate::{middleware, namespace};
-use crate::schema::fetch::fetch_argument_list::{fetch_argument_list, fetch_argument_list_or_empty};
+use crate::schema::fetch::fetch_argument_list::{fetch_argument_list};
 
 pub(super) async fn load_use_middlewares(main_namespace: &namespace::Builder, schema: &Schema, diagnostics: &mut Diagnostics) -> Result<()> {
     // load middleware blocks

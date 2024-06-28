@@ -2,7 +2,6 @@ use crate::arguments::Arguments;
 use crate::middleware::middleware::Middleware;
 use crate::middleware::next::Next;
 use crate::namespace;
-use crate::namespace::Namespace;
 use crate::request::ctx::Ctx;
 
 pub(in crate::stdlib) fn load_log_request_middleware(namespace: &namespace::Builder) {

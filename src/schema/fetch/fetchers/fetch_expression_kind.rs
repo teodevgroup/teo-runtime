@@ -6,7 +6,6 @@ use teo_parser::r#type::Type;
 use teo_parser::traits::resolved::Resolve;
 use teo_result::Result;
 use crate::namespace;
-use crate::namespace::Namespace;
 use crate::schema::fetch::fetch_expression::fetch_expression;
 use crate::schema::fetch::fetchers::fetch_arith_expr::fetch_arith_expr;
 use crate::schema::fetch::fetchers::fetch_identifier::fetch_identifier;

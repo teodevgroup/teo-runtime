@@ -2,7 +2,7 @@ use crate::namespace;
 
 pub(super) fn load_admin_library(std_namespace: &namespace::Builder) {
 
-    let mut admin_namespace = std_namespace.namespace_or_create("admin");
+    let admin_namespace = std_namespace.namespace_or_create("admin");
 
     admin_namespace.define_model_decorator("administrator", |_, model| {
         model.insert_data_entry("admin:administrator".to_owned(), true.into());

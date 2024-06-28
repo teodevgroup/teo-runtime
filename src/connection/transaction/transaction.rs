@@ -5,7 +5,6 @@ use key_path::KeyPath;
 use crate::value::Value;
 use crate::action::Action;
 use teo_result::Result;
-use crate::connection::connection::Connection;
 use crate::{model, request};
 use crate::connection::transaction;
 use crate::model::Model;

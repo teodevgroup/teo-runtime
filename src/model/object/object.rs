@@ -1368,7 +1368,7 @@ impl Object {
                 }
                 Ok(results)
             } else {
-                return Err(error_ext::unexpected_input_value_with_reason((path + "where"), "Object is not found."));
+                return Err(error_ext::unexpected_input_value_with_reason(path + "where", "Object is not found."));
             }
         } else {
             let mut r#where = self.intrinsic_where_unique_for_relation(relation);
@@ -1398,7 +1398,7 @@ impl Object {
                 let object = join_object.get_query_relation_object(self.namespace().through_opposite_relation(relation).1.name(), path)?.unwrap();
                 Ok(object)
             } else {
-                return Err(error_ext::unexpected_input_value_with_reason((path + "where"), "Object is not found."));
+                return Err(error_ext::unexpected_input_value_with_reason(path + "where", "Object is not found."));
             }
         } else {
             let mut r#where = self.intrinsic_where_unique_for_relation(relation);

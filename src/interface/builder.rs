@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicBool;
-use indexmap::{IndexMap, indexmap};
+use indexmap::{IndexMap};
 use maplit::btreemap;
 use teo_parser::r#type::synthesized_shape::SynthesizedShape;
 use teo_parser::r#type::Type;

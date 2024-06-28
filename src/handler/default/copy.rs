@@ -5,8 +5,6 @@ use crate::request;
 use crate::response::Response;
 use crate::action::action::*;
 use crate::connection::transaction;
-use crate::handler::default::internal::create::create_internal;
-use crate::handler::default::internal::update::update_internal;
 use crate::model::object::object::ErrorIfNotFound;
 
 pub async fn copy(req_ctx: &request::Ctx) -> teo_result::Result<Response> {

@@ -10,7 +10,6 @@ use teo_result::Result;
 use crate::namespace;
 use crate::value::range::Range;
 use crate::value::Value;
-use crate::namespace::Namespace;
 use crate::schema::fetch::fetch_expression::fetch_expression;
 
 pub fn fetch_arith_expr<I>(arith_expr: &ArithExpr, schema: &Schema, info_provider: &I, expect: &Type, namespace: &namespace::Builder, diagnostics: &mut Diagnostics) -> Result<Value> where I: InfoProvider {

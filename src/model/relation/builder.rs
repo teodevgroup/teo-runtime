@@ -175,7 +175,7 @@ impl Builder {
     }
 
     pub(crate) fn build(self, fields: Vec<&Field>) -> Relation {
-        let mut relation = Relation {
+        let relation = Relation {
             inner: Arc::new(relation::Inner {
                 name: self.inner.name.clone(),
                 comment: self.inner.comment.clone(),

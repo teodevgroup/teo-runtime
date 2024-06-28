@@ -16,7 +16,6 @@ use crate::arguments::Arguments;
 use crate::coder::json_to_teon::{fetch_synthesized_enum, fetch_synthesized_interface_enum};
 use crate::namespace;
 use crate::value::interface_enum_variant::InterfaceEnumVariant;
-use crate::namespace::Namespace;
 use crate::schema::fetch::fetch_argument_list::fetch_argument_list;
 use crate::schema::fetch::fetch_expression::{fetch_dictionary_key_expression, fetch_expression};
 use crate::utils::ContainsStr;

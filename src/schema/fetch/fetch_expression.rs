@@ -7,7 +7,6 @@ use teo_parser::traits::resolved::Resolve;
 use crate::value::Value;
 use teo_result::Result;
 use crate::namespace;
-use crate::namespace::Namespace;
 use crate::schema::fetch::fetchers::fetch_expression_kind::fetch_expression_kind;
 
 pub fn fetch_expression<I>(expression: &Expression, schema: &Schema, info_provider: &I, expect: &Type, namespace: &namespace::Builder, diagnostics: &mut Diagnostics) -> Result<Value> where I: InfoProvider {

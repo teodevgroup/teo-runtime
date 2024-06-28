@@ -1,6 +1,5 @@
 use key_path::path;
 use crate::value::Value;
-use teo_result::Error;
 use crate::connection::transaction;
 use crate::model;
 use crate::model::Model;

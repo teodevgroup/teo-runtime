@@ -37,7 +37,7 @@ pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &namespace::Build
             args.get_object("value").error_message_prefixed("prepend(value)")?,
             "prepend(value)" ,
         ).await?;
-        let mut arg: Value = arg_object.try_into_err_prefix("prepend(value)")?;
+        let arg: Value = arg_object.try_into_err_prefix("prepend(value)")?;
         match input {
             Value::String(s) => {
                 if !arg.is_string() {

@@ -183,7 +183,7 @@ impl Builder {
                 optionality: self.inner.optionality.lock().unwrap().clone(),
                 database_type: {
                     let mut database_type = self.inner.database_type.lock().unwrap().clone();
-                    if (database_type.is_undetermined()) {
+                    if database_type.is_undetermined() {
                         database_type = database.default_database_type(self.r#type(), schema)?;
                     }
                     database_type

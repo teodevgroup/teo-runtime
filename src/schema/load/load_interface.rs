@@ -1,5 +1,4 @@
 use indexmap::indexmap;
-use maplit::btreemap;
 use teo_parser::ast::schema::Schema;
 use teo_parser::diagnostics::diagnostics::Diagnostics;
 use teo_parser::traits::has_availability::HasAvailability;
@@ -9,7 +8,6 @@ use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::traits::resolved::Resolve;
 use teo_result::Result;
 use crate::{interface, namespace};
-use crate::interface::Interface;
 use crate::model::field::is_optional::{IsOptional};
 use crate::model::field::set_optional::SetOptional;
 use crate::schema::fetch::fetch_decorator_arguments::fetch_decorator_arguments;

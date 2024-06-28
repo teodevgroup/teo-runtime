@@ -4,7 +4,6 @@ use jsonwebtoken::{decode, DecodingKey, encode, EncodingKey, Header, Validation}
 use key_path::path;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
-use crate::namespace::Namespace;
 use crate::pipeline::Pipeline;
 use crate::{namespace, pipeline, request};
 use teo_result::Error;
@@ -44,7 +43,7 @@ pub fn decode_token(token: &str, secret: &str) -> Result<JwtClaims, jsonwebtoken
 
 pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
 
-    let mut identity_namespace = std_namespace.namespace_or_create("identity");
+    let identity_namespace = std_namespace.namespace_or_create("identity");
 
     identity_namespace.define_model_decorator("tokenIssuer", |arguments, model| {
         let pipeline: Pipeline = arguments.get("pipeline")?;

@@ -2,7 +2,6 @@ use itertools::Itertools;
 use crate::arguments::Arguments;
 use teo_result::Result;
 use crate::model;
-use crate::model::field::indexable::Indexable;
 use crate::sort::Sort;
 use crate::value::interface_enum_variant::InterfaceEnumVariant;
 

@@ -1,4 +1,3 @@
-use std::fmt::Display;
 use teo_result::Error;
 use crate::value::Value;
 

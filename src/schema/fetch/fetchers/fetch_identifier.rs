@@ -13,7 +13,6 @@ use teo_parser::utils::top_filter::top_filter_for_reference_type;
 use teo_result::{Error, Result};
 use crate::namespace;
 use crate::value::Value;
-use crate::namespace::Namespace;
 use crate::schema::fetch::fetch_expression::fetch_expression;
 
 pub fn fetch_identifier<I>(identifier: &Identifier, schema: &Schema, info_provider: &I, expect: &Type, namespace: &namespace::Builder, diagnostics: &mut Diagnostics) -> Result<Value> where I: InfoProvider {

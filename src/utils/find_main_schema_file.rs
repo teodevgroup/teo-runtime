@@ -1,5 +1,4 @@
 use teo_result::{Error, Result};
-use std::env::current_dir;
 use std::path::{Path, PathBuf};
 
 pub fn find_main_schema_file(file: Option<&str>, base_directory: &Path) -> Result<PathBuf> {

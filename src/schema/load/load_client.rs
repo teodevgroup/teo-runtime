@@ -6,7 +6,6 @@ use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::traits::resolved::Resolve;
 use crate::config::client::{Client, ClientHost, ClientLanguage};
-use crate::namespace::Namespace;
 use teo_result::Result;
 use crate::namespace;
 use crate::schema::fetch::fetch_expression::{fetch_expression_or_default, fetch_expression_or_null};

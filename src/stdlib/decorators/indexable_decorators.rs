@@ -1,7 +1,7 @@
 use teo_result::Result;
 use crate::arguments::Arguments;
 use crate::model::field;
-use crate::model::field::indexable::{Indexable, SetIndex};
+use crate::model::field::indexable::{SetIndex};
 use crate::sort::Sort;
 use crate::model;
 

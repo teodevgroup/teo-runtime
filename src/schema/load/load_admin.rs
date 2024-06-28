@@ -4,7 +4,6 @@ use teo_parser::diagnostics::diagnostics::Diagnostics;
 use teo_parser::traits::has_availability::HasAvailability;
 use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::traits::resolved::Resolve;
-use crate::namespace::Namespace;
 use teo_result::Result;
 use crate::admin::language::Language;
 use crate::config::admin::Admin;

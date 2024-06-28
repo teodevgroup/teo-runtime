@@ -10,7 +10,6 @@ use teo_parser::traits::resolved::Resolve;
 use teo_parser::utils::top_filter::top_filter_for_pipeline;
 use teo_result::{Error, Result};
 use crate::namespace;
-use crate::namespace::Namespace;
 use crate::pipeline::item::BoundedItem;
 use crate::pipeline::Pipeline;
 use crate::schema::fetch::fetch_argument_list::fetch_argument_list_or_empty;

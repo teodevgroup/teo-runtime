@@ -3,7 +3,6 @@ use crate::value::Value;
 use crate::model::relation::delete::Delete;
 use crate::model::relation::update::Update;
 use crate::namespace;
-use crate::namespace::Namespace;
 
 pub(in crate::stdlib) fn load_model_relation_decorators(namespace: &namespace::Builder) {
 

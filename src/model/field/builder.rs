@@ -322,7 +322,7 @@ impl Builder {
     }
 
     pub fn build(self, database: Database, schema: &Schema) -> Result<Field> {
-        let mut field = Field {
+        let field = Field {
             inner: Arc::new(field::Inner {
                 name: self.inner.name.clone(),
                 comment: self.inner.comment.clone(),

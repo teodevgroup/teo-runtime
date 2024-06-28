@@ -1,4 +1,3 @@
-use crate::model;
 use crate::pipeline::Pipeline;
 use crate::value::Value;
 
