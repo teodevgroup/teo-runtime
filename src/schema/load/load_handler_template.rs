@@ -11,7 +11,7 @@ use crate::schema::fetch::fetch_decorator_arguments::fetch_decorator_arguments;
 
 
 pub fn load_handler_template(main_namespace: &namespace::Builder, schema: &Schema, handler_template_declaration: &teo_parser::ast::handler_template_declaration::HandlerTemplateDeclaration, diagnostics: &mut Diagnostics) -> Result<()> {
-    let handler_builder = if let Some(handler) = main_namespace.handler_template_at_path(&handler_template_declaration.str_path()) {
+    let handler_builder = if let Some(handler) = main_namespace.handler_template_at_path(handler_template_declaration.string_path()) {
         handler::Builder::new(
             handler.path().clone(),
             handler.namespace_path().clone(),

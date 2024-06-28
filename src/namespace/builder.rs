@@ -712,7 +712,7 @@ impl Builder {
         handler_templates.get(name).cloned()
     }
 
-    pub fn handler_template_at_path(&self, path: &Vec<&str>) -> Option<Handler> {
+    pub fn handler_template_at_path(&self, path: &Vec<String>) -> Option<Handler> {
         let handler_name = path.last().unwrap().deref();
         if path.len() == 1 {
             self.handler_template(handler_name)
