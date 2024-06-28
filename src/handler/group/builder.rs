@@ -4,7 +4,8 @@ use maplit::btreemap;
 use teo_parser::ast::handler::HandlerInputFormat;
 use teo_parser::r#type::Type;
 use crate::handler::ctx_argument::HandlerCtxArgument;
-use crate::handler::{Handler, handler};
+use crate::handler::{Group, Handler, handler};
+use crate::handler::group::group;
 use crate::handler::Method;
 use crate::request;
 use crate::traits::named::Named;
@@ -72,6 +73,15 @@ impl Builder {
         };
         let mut handlers = self.inner.handlers.lock().unwrap();
         handlers.insert(name.to_owned(), handler);
+    }
+
+    pub fn build(self) -> Group {
+        Group {
+            inner: Arc::new(group::Inner {
+                path: self.path().clone(),
+                handlers: self.inner.handlers.lock().unwrap().clone(),
+            })
+        }
     }
 }
 

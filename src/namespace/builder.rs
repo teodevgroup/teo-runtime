@@ -6,7 +6,7 @@ use teo_parser::ast::handler::HandlerInputFormat;
 use teo_parser::r#type::Type;
 use teo_result::{Error, Result};
 use crate::interface::Interface;
-use crate::{handler, interface, middleware, model, namespace, pipeline, r#enum, request, Value};
+use crate::{handler, interface, middleware, model, pipeline, r#enum, request, Value};
 use crate::arguments::Arguments;
 use crate::config::admin::Admin;
 use crate::config::client::Client;
@@ -905,8 +905,8 @@ impl Builder {
             middlewares: self.inner.middlewares.lock().unwrap().clone(),
             handlers: self.inner.handlers.lock().unwrap().clone(),
             handler_templates: self.inner.handler_templates.lock().unwrap().clone(),
-            model_handler_groups: self.inner.model_handler_groups.lock().unwrap().iter().map(|(k, v)| (k.to_string(), v.build())).collect(),
-            handler_groups: self.inner.handler_groups.lock().unwrap().iter().map(|(k, v)| (k.to_string(), v.build())).collect(),
+            model_handler_groups: self.inner.model_handler_groups.lock().unwrap().clone().into_iter().map(|(k, v)| (k.to_string(), v.build())).collect(),
+            handler_groups: self.inner.handler_groups.lock().unwrap().clone().into_iter().map(|(k, v)| (k.to_string(), v.build())).collect(),
             server: self.inner.server.lock().unwrap().clone(),
             connector: self.inner.connector.lock().unwrap().clone(),
             clients: self.inner.clients.lock().unwrap().clone(),
