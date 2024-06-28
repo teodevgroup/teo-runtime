@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Copy, Clone)]
 pub enum TypeScriptHTTPProvider {
     Fetch,
     Taro,
@@ -30,7 +30,7 @@ impl TypeScriptHTTPProvider {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Copy, Clone)]
 pub enum ClientLanguage {
     TypeScript(TypeScriptHTTPProvider),
     Swift,
@@ -71,7 +71,7 @@ impl ClientHost {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct Client {
     pub provider: ClientLanguage,
     pub dest: String,

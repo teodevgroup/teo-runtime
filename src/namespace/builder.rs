@@ -883,4 +883,43 @@ impl Builder {
     pub fn set_middleware_stack(&self, stack: &'static dyn Middleware) {
         *self.inner.middleware_stack.lock().unwrap() = stack;
     }
+
+    pub fn build(&self) -> Namespace {
+        Namespace {
+            path: self.inner.path.clone(),
+            namespaces: self.namespaces().into_iter().map(|(k, n)| (k.to_string(), n.build())).collect(),
+            structs: self.inner.structs.lock().unwrap().clone(),
+            models: self.inner.models.lock().unwrap().clone(),
+            enums: self.inner.enums.lock().unwrap().clone(),
+            interfaces: self.inner.interfaces.lock().unwrap().clone(),
+            model_decorators: self.inner.model_decorators.lock().unwrap().clone(),
+            model_field_decorators: self.inner.model_field_decorators.lock().unwrap().clone(),
+            model_relation_decorators: self.inner.model_relation_decorators.lock().unwrap().clone(),
+            model_property_decorators: self.inner.model_property_decorators.lock().unwrap().clone(),
+            enum_decorators: self.inner.enum_decorators.lock().unwrap().clone(),
+            enum_member_decorators: self.inner.enum_member_decorators.lock().unwrap().clone(),
+            interface_decorators: self.inner.interface_decorators.lock().unwrap().clone(),
+            interface_field_decorators: self.inner.interface_field_decorators.lock().unwrap().clone(),
+            handler_decorators: self.inner.handler_decorators.lock().unwrap().clone(),
+            pipeline_items: self.inner.pipeline_items.lock().unwrap().clone(),
+            middlewares: self.inner.middlewares.lock().unwrap().clone(),
+            handlers: self.inner.handlers.lock().unwrap().clone(),
+            handler_templates: self.inner.handler_templates.lock().unwrap().clone(),
+            model_handler_groups: self.inner.model_handler_groups.lock().unwrap().iter().map(|(k, v)| (k.to_string(), v.build())).collect(),
+            handler_groups: self.inner.handler_groups.lock().unwrap().iter().map(|(k, v)| (k.to_string(), v.build())).collect(),
+            server: self.inner.server.lock().unwrap().clone(),
+            connector: self.inner.connector.lock().unwrap().clone(),
+            clients: self.inner.clients.lock().unwrap().clone(),
+            entities: self.inner.entities.lock().unwrap().clone(),
+            debug: self.inner.debug.lock().unwrap().clone(),
+            admin: self.inner.admin.lock().unwrap().clone(),
+            middlewares_block: self.inner.middlewares_block.lock().unwrap().clone(),
+            database: self.inner.database.lock().unwrap().clone(),
+            connector_reference: self.inner.connector_reference.lock().unwrap().clone(),
+            connection: self.inner.connection.clone(),
+            middleware_stack: self.inner.middleware_stack.lock().unwrap().clone(),
+            handler_map: self.inner.handler_map.lock().unwrap().clone(),
+            model_opposite_relations_map: self.inner.model_opposite_relations_map.lock().unwrap().clone(),
+        }
+    }
 }

@@ -3,7 +3,7 @@ use regex::Regex;
 use crate::handler::Method;
 use crate::handler::r#match::HandlerMatch;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Map {
     records: IndexMap<(Method, String), (Vec<String>, String)>
 }

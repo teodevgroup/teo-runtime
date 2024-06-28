@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct Debug {
     #[serde(rename = "logQueries")]
     pub log_queries: bool,
