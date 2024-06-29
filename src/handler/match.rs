@@ -2,23 +2,35 @@ use indexmap::IndexMap;
 
 #[derive(Debug, Clone)]
 pub struct HandlerMatch {
-    pub path: Vec<String>,
-    pub name: String,
-    pub captures: IndexMap<String, String>,
+    path: Vec<String>,
+    name: String,
+    captures: IndexMap<String, String>,
+    path_without_last: Vec<String>,
 }
 
 impl HandlerMatch {
 
-    pub fn path_without_last(&self) -> Vec<&str> {
-        self.path.iter().rev().skip(1).rev().map(AsRef::as_ref).collect()
+    pub fn new(path: Vec<String>, name: String, captures: IndexMap<String, String>) -> Self {
+        let mut path_without_last = path.clone();
+        path_without_last.pop();
+        Self {
+            path,
+            name,
+            captures,
+            path_without_last,
+        }
+    }
+
+    pub fn path_without_last(&self) -> &Vec<String> {
+        &self.path_without_last
     }
 
     pub fn group_name(&self) -> &str {
         self.path().last().unwrap()
     }
 
-    pub fn path(&self) -> Vec<&str> {
-        self.path.iter().map(AsRef::as_ref).collect()
+    pub fn path(&self) -> &Vec<String> {
+        &self.path
     }
 
     pub fn handler_name(&self) -> &str {

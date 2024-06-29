@@ -73,17 +73,9 @@ impl Map {
                         retval.insert(arg_names.get(index - 1).unwrap().to_owned(), r#match.as_str().to_owned());
                     }
                 }
-                return Some(HandlerMatch {
-                    path: record.1.0.clone(),
-                    name: record.1.1.clone(),
-                    captures: retval
-                })
+                return Some(HandlerMatch::new(record.1.0.clone(), record.1.1.clone(), retval))
             } else {
-                return Some(HandlerMatch {
-                    path: record.1.0.clone(),
-                    name: record.1.1.clone(),
-                    captures: indexmap!{},
-                })
+                return Some(HandlerMatch::new(record.1.0.clone(), record.1.1.clone(), indexmap!{}))
             }
         }
         None
@@ -124,11 +116,7 @@ impl Map {
         }
         let mut result: Vec<String> = parts.map(|p| p.to_string()).collect();
         let action = result.pop().unwrap().to_string();
-        Some(HandlerMatch {
-            path: result,
-            name: action,
-            captures: indexmap! {}
-        })
+        Some(HandlerMatch::new(result, action, indexmap!{}))
     }
 
     pub fn remove_path_prefix<'a>(&self, path: &'a str, prefix: Option<&'a str>) -> &'a str {

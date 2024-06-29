@@ -24,6 +24,10 @@ impl Group {
     pub fn handler(&self, name: &str) -> Option<&Handler> {
         self.inner.handlers.get(name)
     }
+
+    pub fn handlers(&self) -> &BTreeMap<String, Handler> {
+        &self.inner.handlers
+    }
 }
 
 impl Named for Group {

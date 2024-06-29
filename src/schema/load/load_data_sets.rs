@@ -79,7 +79,7 @@ pub(crate) fn normalize_dataset_relations<'a>(dataset: &mut DataSet, namespace: 
 fn assign_relation_other_side(dataset: &mut DataSet, data_set_name: &Vec<String>, model_name: &Vec<String>, record_name: &String, field_name: &String, value_name: &String, namespace: &namespace::Builder) {
     let that_group = dataset.groups.iter_mut().find(|g| &g.name == model_name).unwrap();
     let that_record = that_group.records.iter_mut().find(|r| &r.name == record_name).unwrap();
-    let model = namespace.model_at_path(&model_name.iter().map(AsRef::as_ref).collect()).unwrap();
+    let model = namespace.model_at_path(model_name).unwrap();
     let relation = model.relation(field_name).unwrap();
     if relation.is_vec() {
         if that_record.value.as_dictionary_mut().unwrap().contains_key(relation.name()) {

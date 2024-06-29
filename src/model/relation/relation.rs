@@ -74,12 +74,12 @@ impl Relation {
         self.inner.fields.len()
     }
 
-    pub fn model_path(&self) -> Vec<&str> {
-        self.inner.model.iter().map(AsRef::as_ref).collect()
+    pub fn model_path(&self) -> &Vec<String> {
+        &self.inner.model
     }
 
-    pub fn through_path(&self) -> Option<Vec<&str>> {
-        self.inner.through.as_ref().map(|t| t.iter().map(AsRef::as_ref).collect())
+    pub fn through_path(&self) -> Option<&Vec<String>> {
+        self.inner.through.as_ref()
     }
 
     pub fn local(&self) -> Option<&str> {

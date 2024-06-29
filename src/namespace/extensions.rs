@@ -9,7 +9,7 @@ pub trait SynthesizedShapeReferenceExtension {
 impl SynthesizedShapeReferenceExtension for SynthesizedShapeReference {
 
     fn fetch_synthesized_definition_for_namespace<'a>(&'a self, namespace: &'a Namespace) -> Option<&'a Type> {
-        let model = namespace.model_at_path(&self.owner.as_model_object().unwrap().str_path()).unwrap();
+        let model = namespace.model_at_path(&self.owner.as_model_object().unwrap().string_path()).unwrap();
         model.cache().shape.shapes.get(&(self.kind, self.without.clone()))
     }
 }

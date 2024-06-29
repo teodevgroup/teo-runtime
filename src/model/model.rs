@@ -266,9 +266,9 @@ impl Model {
     }
 
     pub fn output_type_for_builtin_handler(&self, handler: Action, namespace: &Namespace) -> Type {
-        let data = namespace.interface_at_path(&vec!["std", "Data"]).unwrap().as_type_reference();
-        let data_meta = namespace.interface_at_path(&vec!["std", "DataMeta"]).unwrap().as_type_reference();
-        let paging_info = namespace.interface_at_path(&vec!["std", "PagingInfo"]).unwrap().as_type_reference();
+        let data = namespace.interface_at_path(&vec!["std".to_owned(), "Data".to_owned()]).unwrap().as_type_reference();
+        let data_meta = namespace.interface_at_path(&vec!["std".to_owned(), "DataMeta".to_owned()]).unwrap().as_type_reference();
+        let paging_info = namespace.interface_at_path(&vec!["std".to_owned(), "PagingInfo".to_owned()]).unwrap().as_type_reference();
         match handler {
             FIND_UNIQUE_HANDLER => {
                 Type::InterfaceObject(data, vec![
@@ -356,6 +356,10 @@ impl Model {
 
     fn as_type_reference(&self) -> Reference {
         Reference::new(self.parser_path().clone(), self.path().clone())
+    }
+
+    pub fn builtin_handlers(&self) -> &Vec<Action> {
+        &self.inner.builtin_handlers
     }
 }
 

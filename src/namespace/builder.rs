@@ -667,7 +667,7 @@ impl Builder {
         models.get(name).cloned()
     }
 
-    pub fn model_at_path(&self, path: &Vec<&str>) -> Option<Model> {
+    pub fn model_at_path(&self, path: &Vec<String>) -> Option<Model> {
         let model_name = path.last().unwrap().deref();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
@@ -835,7 +835,7 @@ impl Builder {
     /// A tuple of through relation's model and through model's local relation.
     ///
     pub fn through_relation(&self, relation: &Relation) -> (Model, Relation) {
-        let through_model = self.model_at_path(&relation.through_path().unwrap()).unwrap();
+        let through_model = self.model_at_path(relation.through_path().unwrap()).unwrap();
         let through_local_relation = through_model.relation(relation.local().unwrap()).unwrap();
         (through_model.clone(), through_local_relation.clone())
     }
@@ -852,7 +852,7 @@ impl Builder {
     /// A tuple of through relation's model and through model's foreign relation.
     ///
     pub fn through_opposite_relation(&self, relation: &Relation) -> (Model, Relation) {
-        let through_model = self.model_at_path(&relation.through_path().unwrap()).unwrap();
+        let through_model = self.model_at_path(relation.through_path().unwrap()).unwrap();
         let through_foreign_relation = through_model.relation(relation.foreign().unwrap()).unwrap();
         (through_model.clone(), through_foreign_relation.clone())
     }
@@ -862,7 +862,7 @@ impl Builder {
         let model_opposite_relations_map = self.inner.model_opposite_relations_map.lock().unwrap();
         let result = model_opposite_relations_map.get(model.path()).unwrap();
         result.iter().map(|result| {
-            let model = self.model_at_path(&result.0.iter().map(AsRef::as_ref).collect()).unwrap();
+            let model = self.model_at_path(&result.0).unwrap();
             let relation = model.relation(result.1.as_str()).unwrap();
             (model.clone(), relation.clone())
         }).collect()

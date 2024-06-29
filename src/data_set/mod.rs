@@ -15,8 +15,8 @@ pub struct Group {
 }
 
 impl Group {
-    pub fn model_path(&self) -> Vec<&str> {
-        self.name.iter().map(|n| n.as_str()).collect()
+    pub fn model_path(&self) -> &Vec<String> {
+        &self.name
     }
 }
 

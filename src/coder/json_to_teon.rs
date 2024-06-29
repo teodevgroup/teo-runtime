@@ -30,17 +30,17 @@ pub fn fetch_synthesized_interface_enum<'a>(reference: &SynthesizedInterfaceEnum
 }
 
 pub fn fetch_synthesized_enum<'a>(reference: &SynthesizedEnumReference, main_namespace: &'a namespace::Builder) -> SynthesizedEnum {
-    let model = main_namespace.model_at_path(&reference.owner.as_model_object().unwrap().str_path()).unwrap();
+    let model = main_namespace.model_at_path(&reference.owner.as_model_object().unwrap().string_path()).unwrap();
     model.cache().shape.enums.get(&reference.kind).unwrap().clone()
 }
 
 pub fn fetch_synthesized_enum_from_namespace<'a>(reference: &SynthesizedEnumReference, main_namespace: &'a Namespace) -> &'a SynthesizedEnum {
-    let model = main_namespace.model_at_path(&reference.owner.as_model_object().unwrap().str_path()).unwrap();
+    let model = main_namespace.model_at_path(&reference.owner.as_model_object().unwrap().string_path()).unwrap();
     model.cache().shape.enums.get(&reference.kind).unwrap()
 }
 
 pub fn fetch_input<'a>(reference: &SynthesizedShapeReference, main_namespace: &'a Namespace) -> &'a Type {
-    let model = main_namespace.model_at_path(&reference.owner.as_model_object().unwrap().str_path()).unwrap();
+    let model = main_namespace.model_at_path(&reference.owner.as_model_object().unwrap().string_path()).unwrap();
     if reference.kind.requires_without() {
         model.cache().shape.get_without(reference.kind, reference.without.as_ref().unwrap()).unwrap()
     } else {
@@ -147,7 +147,7 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
             Err(Error::invalid_request_pathed(path.clone(), "unexpected value"))
         }
         Type::EnumVariant(reference) => if json.is_string() {
-            let e = main_namespace.enum_at_path(&reference.str_path()).unwrap();
+            let e = main_namespace.enum_at_path(reference.string_path()).unwrap();
             if e.member_names().contains_str(json.as_str().unwrap()) {
                 Ok(Value::String(json.as_str().unwrap().to_owned()))
             } else {
@@ -157,7 +157,7 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
             Err(Error::invalid_request_pathed(path.clone(), "expect string represents enum member"))
         }
         Type::InterfaceObject(reference, gens) => {
-            let i = main_namespace.interface_at_path(&reference.str_path()).unwrap();
+            let i = main_namespace.interface_at_path(&reference.string_path()).unwrap();
             let shape = collect_interface_shape(i, gens);
             json_to_teon_with_shape(json, path, &shape, main_namespace)
         }
@@ -180,7 +180,7 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
         Type::SynthesizedShape(synthesized_shape) => json_to_teon_with_shape(json, path, synthesized_shape, main_namespace),
         Type::DeclaredSynthesizedShape(synthesized_shape_reference, model_type) => {
             if let Some(model_reference) = model_type.as_model_object() {
-                let m = main_namespace.model_at_path(&model_reference.str_path()).unwrap();
+                let m = main_namespace.model_at_path(model_reference.string_path()).unwrap();
                 if let Some(shape) = m.cache().shape.get_declared(synthesized_shape_reference.string_path()) {
                     json_to_teon_with_shape(json, path, shape, main_namespace)
                 } else {

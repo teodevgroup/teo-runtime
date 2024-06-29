@@ -1314,7 +1314,7 @@ fn do_cast(value: &Value, target: &Type, namespace: &Namespace) -> Value {
         }
         Type::InterfaceObject(reference, gens) => {
             if let Some(dictionary) = value.as_dictionary() {
-                let interface = namespace.interface_at_path(&reference.str_path()).unwrap();
+                let interface = namespace.interface_at_path(reference.string_path()).unwrap();
                 let shape = interface.shape_from_generics(gens);
                 Value::Dictionary(do_cast_shape(dictionary, &shape, namespace))
             } else {

@@ -57,12 +57,12 @@ impl Handler {
         self.inner.format
     }
 
-    pub fn method(&self) -> &Method {
-        &self.inner.method
+    pub fn method(&self) -> Method {
+        self.inner.method
     }
 
-    pub fn url(&self) -> &Option<String> {
-        &self.inner.url
+    pub fn url(&self) -> Option<&String> {
+        self.inner.url.as_ref()
     }
 
     pub fn interface(&self) -> &Option<String> {
