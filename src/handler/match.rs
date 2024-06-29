@@ -33,6 +33,10 @@ impl HandlerMatch {
         &self.path
     }
 
+    pub fn name(&self) -> &str {
+        self.name.as_str()
+    }
+
     pub fn handler_name(&self) -> &str {
         self.name.as_str()
     }
