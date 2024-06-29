@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 use std::ops::Deref;
 use std::sync::{Arc, Mutex};
+use educe::Educe;
 use maplit::btreemap;
 use teo_parser::ast::handler::HandlerInputFormat;
 use teo_parser::r#type::Type;
@@ -31,11 +32,13 @@ use crate::r#struct::Struct;
 use crate::stdlib::load::load;
 use crate::utils::next_path;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Builder {
     inner: Arc<Inner>
 }
 
+#[derive(Educe)]
+#[educe(Debug)]
 struct Inner {
     pub path: Vec<String>,
     pub namespaces: Arc<Mutex<BTreeMap<String, Builder>>>,
@@ -70,6 +73,7 @@ struct Inner {
     pub connection: Arc<Mutex<Option<Arc<dyn Connection>>>>,
     pub model_opposite_relations_map: Arc<Mutex<BTreeMap<Vec<String>, Vec<(Vec<String>, String)>>>>,
     pub handler_map: Arc<Mutex<handler::Map>>,
+    #[educe(Debug(ignore))]
     pub middleware_stack: Arc<Mutex<&'static dyn Middleware>>,
 }
 
