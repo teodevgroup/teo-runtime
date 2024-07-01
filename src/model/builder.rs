@@ -16,6 +16,7 @@ use crate::model::field::typed::Typed;
 use crate::model::index::Item;
 use crate::traits::named::Named;
 
+#[derive(Clone)]
 pub struct Builder {
     inner: Arc<Inner>,
 }

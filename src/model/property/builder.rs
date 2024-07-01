@@ -17,6 +17,7 @@ use crate::pipeline::Pipeline;
 use crate::traits::named::Named;
 use crate::Value;
 
+#[derive(Clone)]
 pub struct Builder {
     inner: Arc<Inner>
 }

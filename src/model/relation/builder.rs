@@ -11,6 +11,7 @@ use crate::optionality::Optionality;
 use crate::traits::named::Named;
 use crate::Value;
 
+#[derive(Clone)]
 pub struct Builder {
     inner: Arc<Inner>
 }

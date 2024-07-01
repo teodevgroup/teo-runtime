@@ -20,6 +20,7 @@ use crate::readwrite::write::Write;
 use crate::traits::named::Named;
 use crate::Value;
 
+#[derive(Clone)]
 pub struct Builder {
     inner: Arc<Inner>
 }
