@@ -36,7 +36,7 @@ impl Ctx {
     }
 
     pub fn connection_for_namespace(&self, namespace: &Namespace) -> Option<Arc<dyn Connection>> {
-        if let Some(connection) = namespace.connection.lock().unwrap().as_ref().cloned() {
+        if let Some(connection) = namespace.connection() {
             Some(connection.clone())
         } else if let Some(reference) = namespace.connector_reference() {
             self.connection_for_namespace_path(&reference)
@@ -47,7 +47,7 @@ impl Ctx {
 
     pub(in crate::connection) fn connection_for_namespace_path(&self, path: &Vec<String>) -> Option<Arc<dyn Connection>> {
         let namespace = self.namespace().namespace_at_path(path).unwrap();
-        if let Some(connection) = namespace.connection.lock().unwrap().as_ref().cloned() {
+        if let Some(connection) = namespace.connection() {
             Some(connection.clone())
         } else if let Some(reference) = namespace.connector_reference() {
             self.connection_for_namespace_path(reference)
@@ -70,15 +70,15 @@ fn retrieve_connections(namespace: &Namespace) -> BTreeMap<Vec<String>, Arc<dyn 
     if let Some((k, c)) = retrieve_connection(namespace) {
         result.insert(k, c);
     }
-    for namespace in namespace.namespaces.values() {
+    for namespace in namespace.namespaces().values() {
         result.extend(retrieve_connections(namespace))
     }
     result
 }
 
 fn retrieve_connection(namespace: &Namespace) -> Option<(Vec<String>, Arc<dyn Connection>)> {
-    if let Some(connection) = namespace.connection.lock().unwrap().as_ref().cloned() {
-        Some((namespace.path.clone(), connection.clone()))
+    if let Some(connection) = namespace.connection() {
+        Some((namespace.path().clone(), connection.clone()))
     } else {
         None
     }
