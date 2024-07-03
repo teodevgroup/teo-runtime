@@ -31,43 +31,43 @@ pub struct Namespace {
 #[derive(Educe, Serialize)]
 #[educe(Debug)]
 pub(super) struct Inner {
-    pub path: Vec<String>,
-    pub namespaces: BTreeMap<String, Namespace>,
-    pub structs: BTreeMap<String, Struct>,
-    pub models: BTreeMap<String, Model>,
-    pub enums: BTreeMap<String, Enum>,
-    pub interfaces: BTreeMap<String, Interface>,
-    pub model_decorators: BTreeMap<String, model::Decorator>,
-    pub model_field_decorators: BTreeMap<String, model::field::Decorator>,
-    pub model_relation_decorators: BTreeMap<String, model::relation::Decorator>,
-    pub model_property_decorators: BTreeMap<String, model::property::Decorator>,
-    pub enum_decorators: BTreeMap<String, r#enum::Decorator>,
-    pub enum_member_decorators: BTreeMap<String, r#enum::member::Decorator>,
-    pub interface_decorators: BTreeMap<String, interface::Decorator>,
-    pub interface_field_decorators: BTreeMap<String, interface::field::Decorator>,
-    pub handler_decorators: BTreeMap<String, handler::Decorator>,
-    pub pipeline_items: BTreeMap<String, pipeline::Item>,
-    pub middlewares: BTreeMap<String, middleware::Definition>,
-    pub handlers: BTreeMap<String, Handler>,
-    pub handler_templates: BTreeMap<String, Handler>,
-    pub model_handler_groups: BTreeMap<String, handler::Group>,
-    pub handler_groups: BTreeMap<String, handler::Group>,
-    pub server: Option<Server>,
-    pub connector: Option<Connector>,
-    pub clients: BTreeMap<String, Client>,
-    pub entities: BTreeMap<String, Entity>,
-    pub debug: Option<Debug>,
-    pub admin: Option<Admin>,
-    pub middlewares_block: Option<middleware::Block>,
-    pub database: Option<Database>,
-    pub connector_reference: Option<Vec<String>>,
+    pub(super) path: Vec<String>,
+    pub(super) namespaces: BTreeMap<String, Namespace>,
+    pub(super) structs: BTreeMap<String, Struct>,
+    pub(super) models: BTreeMap<String, Model>,
+    pub(super) enums: BTreeMap<String, Enum>,
+    pub(super) interfaces: BTreeMap<String, Interface>,
+    pub(super) model_decorators: BTreeMap<String, model::Decorator>,
+    pub(super) model_field_decorators: BTreeMap<String, model::field::Decorator>,
+    pub(super) model_relation_decorators: BTreeMap<String, model::relation::Decorator>,
+    pub(super) model_property_decorators: BTreeMap<String, model::property::Decorator>,
+    pub(super) enum_decorators: BTreeMap<String, r#enum::Decorator>,
+    pub(super) enum_member_decorators: BTreeMap<String, r#enum::member::Decorator>,
+    pub(super) interface_decorators: BTreeMap<String, interface::Decorator>,
+    pub(super) interface_field_decorators: BTreeMap<String, interface::field::Decorator>,
+    pub(super) handler_decorators: BTreeMap<String, handler::Decorator>,
+    pub(super) pipeline_items: BTreeMap<String, pipeline::Item>,
+    pub(super) middlewares: BTreeMap<String, middleware::Definition>,
+    pub(super) handlers: BTreeMap<String, Handler>,
+    pub(super) handler_templates: BTreeMap<String, Handler>,
+    pub(super) model_handler_groups: BTreeMap<String, handler::Group>,
+    pub(super) handler_groups: BTreeMap<String, handler::Group>,
+    pub(super) server: Option<Server>,
+    pub(super) connector: Option<Connector>,
+    pub(super) clients: BTreeMap<String, Client>,
+    pub(super) entities: BTreeMap<String, Entity>,
+    pub(super) debug: Option<Debug>,
+    pub(super) admin: Option<Admin>,
+    pub(super) middlewares_block: Option<middleware::Block>,
+    pub(super) database: Option<Database>,
+    pub(super) connector_reference: Option<Vec<String>>,
     #[serde(skip)]
-    pub connection: Arc<Mutex<Option<Arc<dyn Connection>>>>,
+    pub(super) connection: Arc<Mutex<Option<Arc<dyn Connection>>>>,
     #[educe(Debug(ignore))] #[serde(skip)]
-    pub middleware_stack: &'static dyn Middleware,
+    pub(super) middleware_stack: &'static dyn Middleware,
     #[educe(Debug(ignore))] #[serde(skip)]
-    pub handler_map: handler::Map,
-    pub model_opposite_relations_map: BTreeMap<Vec<String>, Vec<(Vec<String>, String)>>
+    pub(super) handler_map: handler::Map,
+    pub(super) model_opposite_relations_map: BTreeMap<Vec<String>, Vec<(Vec<String>, String)>>
 }
 
 impl Serialize for Namespace {
@@ -180,6 +180,10 @@ impl Namespace {
 
     pub fn connection(&self) -> Option<Arc<dyn Connection>> {
         self.inner.connection.lock().unwrap().as_ref().cloned()
+    }
+
+    pub fn set_connection(&self, connection: Option<Arc<dyn Connection>>) {
+        *self.inner.connection.lock().unwrap() = connection;
     }
 
     pub fn admin(&self) -> Option<&Admin> {
