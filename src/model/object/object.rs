@@ -1285,7 +1285,7 @@ impl Object {
         } else {
             let r#where = value;
             let action = NESTED | DISCONNECT | SINGLE;
-            let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx(), path.clone()).await {
+            let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), r#where, true, action, self.request_ctx(), path.clone()).await {
                 Ok(object) => object,
                 Err(_) => return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "object not found")),
             }.into_not_found_error(path.clone())?;
