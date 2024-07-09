@@ -75,7 +75,7 @@ impl Database {
             Type::ObjectId => Ok(DatabaseType::MongoDBType(MongoDBType::ObjectId)),
             Type::Date => Ok(DatabaseType::MongoDBType(MongoDBType::Date)),
             Type::DateTime => Ok(DatabaseType::MongoDBType(MongoDBType::Date)),
-            Type::Array(inner) => todo!(),
+            Type::Array(inner) => Ok(DatabaseType::MongoDBType(MongoDBType::Array(Box::new(self.default_mongo_database_type(inner.as_ref())?.as_mongo().unwrap().clone())))),
             Type::EnumVariant(_) => Ok(DatabaseType::MongoDBType(MongoDBType::String)),
             Type::Optional(inner) => self.default_mongo_database_type(inner.as_ref()),
             _ => Err(Error::new(format!("unsupported mongo database type {}", r#type))),

@@ -11,4 +11,5 @@ pub enum MongoDBType {
     Timestamp,
     BinData,
     ObjectId,
+    Array(Box<MongoDBType>),
 }
