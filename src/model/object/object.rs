@@ -1558,7 +1558,7 @@ impl Object {
             NESTED_DISCONNECT_ACTION => Owned(self.intrinsic_where_unique_for_relation(relation)),
             NESTED_UPSERT_ACTION => {
                 let mut value = value.clone();
-                value.as_dictionary_mut().unwrap().extend(&self.intrinsic_where_unique_for_relation(relation));
+                value.as_dictionary_mut().unwrap().insert("where".to_owned(), self.intrinsic_where_unique_for_relation(relation).get("where").unwrap().clone());
                 Owned(value)
             }
             _ => Borrowed(value)
