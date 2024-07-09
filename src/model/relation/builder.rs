@@ -203,7 +203,11 @@ impl Builder {
         let update_rule = if !self.inner.update_specified.load(Ordering::Relaxed) {
             // set default update rule
             if r#type.is_optional() {
-                Update::Nullify
+                if !has_foreign_key {
+                    Update::Nullify
+                } else {
+                    Update::NoAction
+                }
             } else if r#type.is_array() {
                 Update::NoAction
             } else {
