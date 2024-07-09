@@ -758,14 +758,16 @@ impl Object {
                         Update::NoAction => {} // do nothing
                         Update::Deny => {}, // done before
                         Update::Nullify => {
-                            let finder = self.intrinsic_where_unique_for_opposite_relation_with_prev_value(opposite_relation);
-                            self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | SINGLE, self.request_ctx(), path.clone(), |object| async move {
-                                for key in opposite_relation.fields() {
-                                    object.set_value(key, Value::Null)?;
-                                }
-                                object.save_with_session_and_path( &path![]).await?;
-                                Ok(())
-                            }).await?;
+                            if opposite_relation.has_foreign_key() {
+                                let finder = self.intrinsic_where_unique_for_opposite_relation_with_prev_value(opposite_relation);
+                                self.transaction_ctx().batch(opposite_model, &finder, CODE_NAME | DISCONNECT | SINGLE, self.request_ctx(), path.clone(), |object| async move {
+                                    for key in opposite_relation.fields() {
+                                        object.set_value(key, Value::Null)?;
+                                    }
+                                    object.save_with_session_and_path( &path![]).await?;
+                                    Ok(())
+                                }).await?;
+                            }
                         },
                         Update::Update => {
                             let finder = self.intrinsic_where_unique_for_opposite_relation_with_prev_value(opposite_relation);
@@ -1285,7 +1287,7 @@ impl Object {
             let action = NESTED | DISCONNECT | SINGLE;
             let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx(), path.clone()).await {
                 Ok(object) => object,
-                Err(_) => return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "object is not found")),
+                Err(_) => return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "object not found")),
             }.into_not_found_error(path.clone())?;
             object.remove_linked_values_from_related_relation_on_related_object(relation, &object);
             object.save_with_session_and_path(path).await?;
@@ -1603,7 +1605,7 @@ impl Object {
             let action = Action::nested_from_name(key).unwrap();
             let other_model = self.namespace().opposite_relation(relation).0;
             if value.is_array() && action != NESTED_SET_ACTION {
-                for (index, value) in value.as_array().unwrap().iter().enumerate() {
+                for (_index, value) in value.as_array().unwrap().iter().enumerate() {
                     let normalized_value = self.normalize_relation_many_value(action, value);
                     // todo: transform action
                     //let ctx = PipelineCtx::initial_state_with_value(normalized_value.as_ref().clone(), self.transaction_ctx().transaction_for_model(self.model()).unwrap(), self.initiator().as_req()).with_path(&(error_ext.clone() + index)).with_action(action);
