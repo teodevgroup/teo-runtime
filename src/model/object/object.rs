@@ -1158,7 +1158,6 @@ impl Object {
                 linked = true;
             }
         }
-        println!("before that save");
         object.save_with_session_and_path(path).await?;
         if !linked {
             if relation.has_foreign_key() {
@@ -1231,7 +1230,6 @@ impl Object {
             Ok(object) => object,
             Err(_) => return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "Object is not found.")),
         }.into_not_found_error(path.clone())?;
-        println!("see object found: {}", object);
         self.link_and_save_relation_object(relation, &object, path).await
     }
 
