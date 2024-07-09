@@ -1120,13 +1120,13 @@ impl Object {
             finder.insert(l.to_owned(), object.get_value(f).unwrap());
         }
         let r#where = Value::Dictionary(finder);
-        let object = match self.transaction_ctx().find_unique_internal(join_model, &teon!({ "where": r#where }), true, action, self.request_ctx(), path.clone()).await {
-            Ok(object) => object,
-            Err(_) => return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "Join object is not found.")),
-        }.into_not_found_error(path.clone())?;
-        match object.delete_from_database(path).await {
-            Ok(_) => Ok(()),
-            Err(_) => Err(error_ext::unexpected_input_value_with_reason(path.clone(), "Can't delete join record.")),
+        if let Some(object) = self.transaction_ctx().find_unique_internal(join_model, &teon!({ "where": r#where }), true, action, self.request_ctx(), path.clone()).await? {
+            match object.delete_from_database(path).await {
+                Ok(_) => Ok(()),
+                Err(_) => Err(error_ext::unexpected_input_value_with_reason(path.clone(), "Can't delete join record.")),
+            }
+        } else {
+            Ok(())
         }
     }
 
@@ -1368,7 +1368,7 @@ impl Object {
                 }
                 Ok(results)
             } else {
-                return Err(error_ext::unexpected_input_value_with_reason(path + "where", "Object is not found."));
+                return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "object not found"));
             }
         } else {
             let mut r#where = self.intrinsic_where_unique_for_relation(relation);
@@ -1379,7 +1379,7 @@ impl Object {
         }
     }
 
-    async fn find_relation_object_by_value(&self, relation: &'static Relation, value: &Value, path: &KeyPath, action: Action) -> teo_result::Result<Object> {
+    async fn find_relation_object_by_value(&self, relation: &'static Relation, value: &Value, path: &KeyPath, action: Action) -> Result<Object> {
         if relation.has_join_table() {
             let mut finder = IndexMap::new();
             let join_relation = self.namespace().through_relation(relation).1;
@@ -1464,11 +1464,11 @@ impl Object {
 
     async fn nested_many_delete_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
         let object = self.find_relation_object_by_value(relation, value, path, NESTED | DELETE | SINGLE).await?;
-        object.delete_from_database(path).await?;
         if relation.has_join_table() {
             let opposite_relation = self.namespace().opposite_relation(relation).1.unwrap();
             self.delete_join_object(&object, relation, opposite_relation, path).await?;
         }
+        object.delete_from_database(path).await?;
         Ok(())
     }
 
