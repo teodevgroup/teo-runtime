@@ -1078,6 +1078,7 @@ impl Object {
                 // value mutation
                 let relation_mutation_map = self.inner.relation_mutation_map.lock().await;
                 if let Some(manipulation) = relation_mutation_map.get(relation.name()) {
+                    println!("see this manipulation {}", manipulation);
                     if many {
                         self.perform_relation_manipulation_many(relation, manipulation, &(path + relation.name()), is_new, is_modified).await?;
                     } else {
@@ -1548,12 +1549,16 @@ impl Object {
     fn normalize_relation_one_value<'a>(&'a self, relation: &'static Relation, action: Action, value: &'a Value) -> Cow<Value> {
         match action {
             NESTED_CREATE_ACTION => Owned(Value::Dictionary(indexmap! {"create".to_owned() => value.clone()})),
-            NESTED_UPDATE_ACTION => Owned(Value::Dictionary(indexmap! {"update".to_owned() => value.clone(), "where".to_owned() => self.intrinsic_where_unique_for_relation(relation)})),
-            NESTED_DELETE_ACTION => Owned(Value::Dictionary(indexmap! {"where".to_owned() => self.intrinsic_where_unique_for_relation(relation)})),
+            NESTED_UPDATE_ACTION => Owned({
+                let mut normalized = self.intrinsic_where_unique_for_relation(relation);
+                normalized.as_dictionary_mut().unwrap().insert("update".to_owned(), value.clone());
+                normalized
+            }),
+            NESTED_DELETE_ACTION => Owned(self.intrinsic_where_unique_for_relation(relation)),
             NESTED_DISCONNECT_ACTION => Owned(self.intrinsic_where_unique_for_relation(relation)),
             NESTED_UPSERT_ACTION => {
                 let mut value = value.clone();
-                value.as_dictionary_mut().unwrap().insert("where".to_owned(), self.intrinsic_where_unique_for_relation(relation));
+                value.as_dictionary_mut().unwrap().extend(&self.intrinsic_where_unique_for_relation(relation));
                 Owned(value)
             }
             _ => Borrowed(value)
