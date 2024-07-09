@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, Ordering};
 use teo_parser::r#type::Type;
 use crate::comment::Comment;
 use crate::model::{Field, Relation};
@@ -30,6 +30,8 @@ pub struct Inner {
     references: Arc<Mutex<Vec<String>>>,
     delete: Arc<Mutex<Delete>>,
     update: Arc<Mutex<Update>>,
+    delete_specified: AtomicBool,
+    update_specified: AtomicBool,
     data: Arc<Mutex<BTreeMap<String, Value>>>,
 }
 
@@ -50,6 +52,8 @@ impl Builder {
                 references: Arc::new(Mutex::new(vec![])),
                 delete: Arc::new(Mutex::new(Delete::Nullify)),
                 update: Arc::new(Mutex::new(Update::Nullify)),
+                delete_specified: AtomicBool::new(false),
+                update_specified: AtomicBool::new(false),
                 data: Arc::new(Mutex::new(BTreeMap::new())),
             })
         }
@@ -137,6 +141,7 @@ impl Builder {
 
     pub fn set_delete(&self, delete: Delete) {
         *self.inner.delete.lock().unwrap() = delete;
+        self.inner.delete_specified.store(true, Ordering::Relaxed);
     }
 
     pub fn update(&self) -> Update {
@@ -145,6 +150,7 @@ impl Builder {
 
     pub fn set_update(&self, update: Update) {
         *self.inner.update.lock().unwrap() = update;
+        self.inner.update_specified.store(true, Ordering::Relaxed);
     }
 
     pub fn has_foreign_key(&self, fields: Vec<&Field>) -> bool {
@@ -176,6 +182,36 @@ impl Builder {
     }
 
     pub(crate) fn build(self, fields: Vec<&Field>) -> Relation {
+        let has_foreign_key = self.has_foreign_key(fields);
+        let r#type = self.r#type();
+        let delete_rule = if !self.inner.delete_specified.load(Ordering::Relaxed) {
+            // set default delete rule
+            if r#type.is_optional() {
+                if !has_foreign_key {
+                    Delete::NoAction
+                } else {
+                    Delete::Nullify
+                }
+            } else if r#type.is_array() {
+                Delete::NoAction
+            } else {
+                Delete::Cascade
+            }
+        } else {
+            self.delete()
+        };
+        let update_rule = if !self.inner.update_specified.load(Ordering::Relaxed) {
+            // set default update rule
+            if r#type.is_optional() {
+                Update::Nullify
+            } else if r#type.is_array() {
+                Update::NoAction
+            } else {
+                Update::Update
+            }
+        } else {
+            self.update()
+        };
         let relation = Relation {
             inner: Arc::new(relation::Inner {
                 name: self.inner.name.clone(),
@@ -189,9 +225,9 @@ impl Builder {
                 is_vec: self.is_vec(),
                 fields: self.fields(),
                 references: self.references(),
-                delete: self.delete(),
-                update: self.update(),
-                has_foreign_key: self.has_foreign_key(fields),
+                delete: delete_rule,
+                update: update_rule,
+                has_foreign_key,
                 data: self.data(),
             })
         };

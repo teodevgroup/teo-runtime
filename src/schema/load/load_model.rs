@@ -105,22 +105,6 @@ fn load_model_relation(main_namespace: &namespace::Builder, field_declaration: &
     } else {
         relation_builder.set_optionality(Optionality::Required);
     }
-    // set default delete rule
-    if r#type.is_optional() {
-        relation_builder.set_delete(Delete::Nullify);
-    } else if r#type.is_array() {
-        relation_builder.set_delete(Delete::NoAction);
-    } else {
-        relation_builder.set_delete(Delete::Cascade);
-    }
-    // set default update rule
-    if r#type.is_optional() {
-        relation_builder.set_update(Update::Nullify);
-    } else if r#type.is_array() {
-        relation_builder.set_update(Update::NoAction);
-    } else {
-        relation_builder.set_update(Update::Update);
-    }
     r#type = r#type.unwrap_optional();
     relation_builder.set_is_vec(r#type.is_array());
     r#type = r#type.unwrap_array();
