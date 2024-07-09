@@ -35,7 +35,6 @@ use crate::readwrite::write::Write;
 use crate::utils::ContainsStr;
 use crate::error_ext;
 
-
 #[derive(Clone)]
 pub struct Object {
     pub inner: Arc<ObjectInner>
@@ -112,11 +111,11 @@ impl Object {
         Ok(())
     }
 
-    pub async fn set_teon_with_path(&self, json_value: &Value, path: &KeyPath) -> teo_result::Result<()> {
+    pub async fn set_teon_with_path(&self, json_value: &Value, path: &KeyPath) -> Result<()> {
         self.set_teon_with_path_and_user_mode(json_value, path, false).await
     }
 
-    pub async fn set_teon_with_path_and_user_mode(&self, value: &Value, path: &KeyPath, bypass_permission_check: bool) -> teo_result::Result<()> {
+    pub async fn set_teon_with_path_and_user_mode(&self, value: &Value, path: &KeyPath, bypass_permission_check: bool) -> Result<()> {
         let model = self.model();
         // permission
         if !self.is_new() {
@@ -249,7 +248,7 @@ impl Object {
         }
     }
 
-    async fn check_write_rule(&self, key: impl AsRef<str>, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
+    async fn check_write_rule(&self, key: impl AsRef<str>, value: &Value, path: &KeyPath) -> Result<()> {
         let field = self.model().field(key.as_ref()).unwrap();
         let is_new = self.is_new();
         let valid = match field.write() {
@@ -537,7 +536,7 @@ impl Object {
     }
 
     #[async_recursion]
-    pub async fn apply_on_save_pipeline_and_validate_required_fields(&self, path: &KeyPath, ignore_required_relation: bool) -> teo_result::Result<()> {
+    pub async fn apply_on_save_pipeline_and_validate_required_fields(&self, path: &KeyPath, ignore_required_relation: bool) -> Result<()> {
         // apply on save pipeline first
         let model_keys = &self.model().cache().save_keys;
         for key in model_keys {
@@ -656,7 +655,7 @@ impl Object {
     }
 
     #[async_recursion]
-    pub async fn delete_from_database(&self, path: &KeyPath) -> teo_result::Result<()> {
+    pub async fn delete_from_database(&self, path: &KeyPath) -> Result<()> {
         let model = self.model();
         let namespace = self.namespace();
         // check deny first
@@ -721,7 +720,7 @@ impl Object {
     }
 
     #[async_recursion]
-    async fn save_to_database(&self, path: &KeyPath) -> teo_result::Result<()> {
+    async fn save_to_database(&self, path: &KeyPath) -> Result<()> {
         if !self.is_new() && self.is_modified() {
             let modified_fields = self.inner.modified_fields.lock().unwrap().clone();
             let namespace = self.namespace();
@@ -818,7 +817,7 @@ impl Object {
         Ok(())
     }
 
-    fn before_save_callback_check(&self, path: &KeyPath) -> teo_result::Result<()> {
+    fn before_save_callback_check(&self, path: &KeyPath) -> Result<()> {
         let inside_before_callback = self.inner.inside_before_save_callback.load(Ordering::SeqCst);
         if inside_before_callback {
             return Err(error_ext::invalid_operation(path.clone(), "save called inside before callback"));
@@ -826,12 +825,12 @@ impl Object {
         Ok(())
     }
 
-    pub async fn save_with_session_and_path(&self, path: &KeyPath) -> teo_result::Result<()> {
+    pub async fn save_with_session_and_path(&self, path: &KeyPath) -> Result<()> {
         self.save_with_session_and_path_and_ignore(path, false).await
     }
 
     #[async_recursion]
-    pub async fn save_with_session_and_path_and_ignore(&self, path: &KeyPath, ignore_required_relation: bool) -> teo_result::Result<()> {
+    pub async fn save_with_session_and_path_and_ignore(&self, path: &KeyPath, ignore_required_relation: bool) -> Result<()> {
         // check if it's inside before callback
         self.before_save_callback_check(path)?;
         let is_new = self.is_new();
@@ -863,17 +862,17 @@ impl Object {
         Ok(())
     }
 
-    pub async fn save_for_seed_without_required_relation(&self) -> teo_result::Result<()> {
+    pub async fn save_for_seed_without_required_relation(&self) -> Result<()> {
         self.save_with_session_and_path_and_ignore(&path![], true).await
     }
 
-    async fn trigger_before_delete_callbacks<'a>(&self, path: impl AsRef<KeyPath>) -> teo_result::Result<()> {
+    async fn trigger_before_delete_callbacks<'a>(&self, path: impl AsRef<KeyPath>) -> Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
         ctx.run_pipeline_ignore_return_value(self.model().before_delete()).await?;
         Ok(())
     }
 
-    async fn trigger_after_delete_callbacks<'a>(&self, path: impl AsRef<KeyPath>) -> teo_result::Result<()> {
+    async fn trigger_after_delete_callbacks<'a>(&self, path: impl AsRef<KeyPath>) -> Result<()> {
         let ctx = self.pipeline_ctx_for_path_and_value(path.as_ref().clone(), Value::Null);
         ctx.run_pipeline_ignore_return_value(self.model().after_delete()).await?;
         Ok(())
@@ -903,19 +902,19 @@ impl Object {
         Ok(())
     }
 
-    pub async fn delete_internal<'a>(&self, path: impl AsRef<KeyPath>) -> teo_result::Result<()> {
+    pub async fn delete_internal<'a>(&self, path: impl AsRef<KeyPath>) -> Result<()> {
         self.check_model_write_permission(path.as_ref()).await?;
         self.trigger_before_delete_callbacks(path.as_ref()).await?;
         self.delete_from_database(path.as_ref()).await?;
         self.trigger_after_delete_callbacks(path.as_ref()).await
     }
 
-    pub async fn to_teon(&self) -> teo_result::Result<Value> {
+    pub async fn to_teon(&self) -> Result<Value> {
         self.to_teon_internal(&path![]).await
     }
 
     #[async_recursion]
-    pub async fn to_teon_internal<'a>(&self, path: &KeyPath) -> teo_result::Result<Value> {
+    pub async fn to_teon_internal<'a>(&self, path: &KeyPath) -> Result<Value> {
         // check read permission
         self.check_model_read_permission(path.as_ref()).await?;
         // output
@@ -1088,7 +1087,7 @@ impl Object {
         Ok(())
     }
 
-    async fn create_join_object<'a>(&'a self, object: &'a Object, relation: &'static Relation, opposite_relation: &'static Relation, path: &'a KeyPath) -> teo_result::Result<()> {
+    async fn create_join_object<'a>(&'a self, object: &'a Object, relation: &'static Relation, opposite_relation: &'static Relation, path: &'a KeyPath) -> Result<()> {
         let join_model = self.namespace().model_at_path(&relation.through_path().unwrap()).unwrap();
         let action = JOIN_CREATE | CREATE | SINGLE;
         let join_object = self.transaction_ctx().new_object(join_model, action, self.request_ctx())?;
@@ -1105,7 +1104,7 @@ impl Object {
         }
     }
 
-    async fn delete_join_object<'a>(&'a self, object: &'a Object, relation: &'static Relation, opposite_relation: &'static Relation, path: &'a KeyPath) -> teo_result::Result<()> {
+    async fn delete_join_object<'a>(&'a self, object: &'a Object, relation: &'static Relation, opposite_relation: &'static Relation, path: &'a KeyPath) -> Result<()> {
         let join_model = self.namespace().model_at_path(&relation.through_path().unwrap()).unwrap();
         let action = JOIN_DELETE | DELETE | SINGLE;
         let local = relation.local().unwrap();
@@ -1148,7 +1147,7 @@ impl Object {
         }
     }
 
-    async fn link_and_save_relation_object(&self, relation: &'static Relation, object: &Object, path: &KeyPath) -> teo_result::Result<()> {
+    async fn link_and_save_relation_object(&self, relation: &'static Relation, object: &Object, path: &KeyPath) -> Result<()> {
         let mut linked = false;
         let (_, opposite_relation) = self.namespace().opposite_relation(relation);
         if let Some(opposite_relation) = opposite_relation {
@@ -1168,7 +1167,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_create_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
+    async fn nested_create_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
         let action = NESTED | CREATE | SINGLE;
         let object = self.transaction_ctx().new_object(self.namespace().model_at_path(&relation.model_path()).unwrap(), action, self.request_ctx())?;
         object.set_teon_with_path(value.get("create").unwrap(), path).await?;
@@ -1191,7 +1190,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_set_many_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
+    async fn nested_set_many_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
         // disconnect previous
         let records = self.fetch_relation_objects(relation.name(), None).await?;
         for record in records.iter() {
@@ -1205,7 +1204,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_set_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
+    async fn nested_set_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
         if !(relation.has_foreign_key() && relation.is_required()) {
             // disconnect old
             let disconnect_value = self.intrinsic_where_unique_for_relation(relation);
@@ -1223,7 +1222,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_connect_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
+    async fn nested_connect_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
         let action = NESTED | CONNECT | SINGLE;
         let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": value }), true, action, self.request_ctx(), path.clone()).await {
             Ok(object) => object,
@@ -1232,7 +1231,7 @@ impl Object {
         self.link_and_save_relation_object(relation, &object, path).await
     }
 
-    async fn nested_connect_or_create_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
+    async fn nested_connect_or_create_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
         let r#where = value.get("where").unwrap();
         let create = value.get("create").unwrap();
         let action = CONNECT_OR_CREATE | CONNECT | NESTED | SINGLE;
@@ -1263,7 +1262,7 @@ impl Object {
         })
     }
 
-    async fn nested_disconnect_relation_object_object(&self, relation: &'static Relation, object: &Object, path: &KeyPath) -> teo_result::Result<()> {
+    async fn nested_disconnect_relation_object_object(&self, relation: &'static Relation, object: &Object, path: &KeyPath) -> Result<()> {
         if !relation.is_vec() && relation.is_required() {
             return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "Cannot disconnect required relation."));
         }
@@ -1278,7 +1277,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_disconnect_relation_object_no_check(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
+    async fn nested_disconnect_relation_object_no_check(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
         if relation.has_foreign_key() {
             self.remove_linked_values_from_related_relation(relation);
         } else {
@@ -1294,7 +1293,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_disconnect_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
+    async fn nested_disconnect_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
         if !relation.is_vec() && relation.is_required() {
             return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "Cannot disconnect required relation."));
         }
@@ -1302,7 +1301,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_upsert_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
+    async fn nested_upsert_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
         let mut r#where = self.intrinsic_where_unique_for_relation(relation);
         r#where.as_dictionary_mut().unwrap().extend(value.get("where").unwrap().as_dictionary().cloned().unwrap());
         let create = value.get("create").unwrap();
@@ -1323,7 +1322,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_many_disconnect_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
+    async fn nested_many_disconnect_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
         if relation.has_join_table() {
             let action = JOIN_DELETE | DELETE | SINGLE;
             let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": value }), true, action, self.request_ctx(), path.clone()).await {
@@ -1345,7 +1344,7 @@ impl Object {
         Ok(())
     }
 
-    async fn find_relation_objects_by_value(&self, relation: &'static Relation, value: &Value, path: &KeyPath, action: Action) -> teo_result::Result<Vec<Object>> {
+    async fn find_relation_objects_by_value(&self, relation: &'static Relation, value: &Value, path: &KeyPath, action: Action) -> Result<Vec<Object>> {
         if relation.has_join_table() {
             let mut finder = IndexMap::new();
             let join_relation = self.namespace().through_relation(relation).1;
@@ -1412,14 +1411,14 @@ impl Object {
         }
     }
 
-    async fn nested_many_update_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
+    async fn nested_many_update_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
         let object = self.find_relation_object_by_value(relation, value.get("where").unwrap(), path, NESTED | UPDATE | SINGLE).await?;
         object.set_teon_with_path(value.get("update").unwrap(), &(path + "update")).await?;
         object.save_with_session_and_path(path).await?;
         Ok(())
     }
 
-    async fn nested_many_update_many_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
+    async fn nested_many_update_many_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
         let objects = self.find_relation_objects_by_value(relation, value.get("where").unwrap(), path, NESTED | UPDATE | MANY).await?;
         let update = value.get("update").unwrap();
         for object in objects {
@@ -1429,7 +1428,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_update_relation_object<'a>(&'a self, relation: &'static Relation, value: &'a Value, path: &'a KeyPath) -> teo_result::Result<()> {
+    async fn nested_update_relation_object<'a>(&'a self, relation: &'static Relation, value: &'a Value, path: &'a KeyPath) -> Result<()> {
         let r#where = value.get("where").unwrap();
         let action = NESTED | UPDATE | SINGLE;
         let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request_ctx(), path.clone()).await {
@@ -1441,7 +1440,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_delete_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
+    async fn nested_delete_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
         if !relation.is_vec() && relation.is_required() {
             return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "Cannot delete required relation."));
         }
@@ -1462,7 +1461,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_many_delete_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
+    async fn nested_many_delete_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
         let object = self.find_relation_object_by_value(relation, value, path, NESTED | DELETE | SINGLE).await?;
         if relation.has_join_table() {
             let opposite_relation = self.namespace().opposite_relation(relation).1.unwrap();
@@ -1472,7 +1471,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_many_delete_many_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
+    async fn nested_many_delete_many_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
         let objects = self.find_relation_objects_by_value(relation, value, path, NESTED | DELETE | MANY).await?;
         for object in objects {
             object.delete_from_database(path).await?;
@@ -1484,7 +1483,7 @@ impl Object {
         Ok(())
     }
 
-    async fn disconnect_object_which_connects_to<'a>(&'a self, relation: &'static Relation, value: &'a Value, path: &KeyPath) -> teo_result::Result<()> {
+    async fn disconnect_object_which_connects_to<'a>(&'a self, relation: &'static Relation, value: &'a Value, path: &KeyPath) -> Result<()> {
         if let Ok(that) = self.transaction_ctx().find_unique::<Object>(self.model(), &teon!({
             "where": {
                 relation.name(): {
@@ -1581,7 +1580,7 @@ impl Object {
         }
     }
 
-    async fn perform_relation_manipulation_many_inner(&self, relation: &'static Relation, action: Action, value: &Value, path: &KeyPath) -> teo_result::Result<()> {
+    async fn perform_relation_manipulation_many_inner(&self, relation: &'static Relation, action: Action, value: &Value, path: &KeyPath) -> Result<()> {
         match action {
             NESTED_CREATE_ACTION => self.nested_create_relation_object(relation, value, &path).await,
             NESTED_CONNECT_ACTION => self.nested_connect_relation_object(relation, value, &path).await,
@@ -1597,7 +1596,7 @@ impl Object {
         }
     }
 
-    async fn perform_relation_manipulation_many(&self, relation: &'static Relation, value: &Value, path: &KeyPath, is_new: bool, is_modified: bool) -> teo_result::Result<()> {
+    async fn perform_relation_manipulation_many(&self, relation: &'static Relation, value: &Value, path: &KeyPath, is_new: bool, is_modified: bool) -> Result<()> {
         for (key, value) in value.as_dictionary().unwrap() {
             let key = key.as_str();
             let path = path + key;
@@ -1665,7 +1664,7 @@ impl Object {
         self.inner.object_disconnect_map.lock().await.insert(key.to_owned(), objects);
     }
 
-    pub async fn force_get_relation_objects(&self, key: &str, find_many_args: impl AsRef<Value>) -> teo_result::Result<Vec<Object>> {
+    pub async fn force_get_relation_objects(&self, key: &str, find_many_args: impl AsRef<Value>) -> Result<Vec<Object>> {
         self.fetch_relation_objects(key, Some(find_many_args.as_ref())).await
     }
 
@@ -1684,7 +1683,7 @@ impl Object {
         }
     }
 
-    pub async fn fetch_relation_object(&self, key: impl AsRef<str>, find_unique_arg: Option<&Value>) -> teo_result::Result<Option<Object>> {
+    pub async fn fetch_relation_object(&self, key: impl AsRef<str>, find_unique_arg: Option<&Value>) -> Result<Option<Object>> {
         // get relation
         let model = self.model();
         let relation = model.relation(key.as_ref());
@@ -1715,7 +1714,7 @@ impl Object {
         }
     }
 
-    pub async fn fetch_relation_objects(&self, key: impl AsRef<str>, find_many_arg: Option<&Value>) -> teo_result::Result<Vec<Object>> {
+    pub async fn fetch_relation_objects(&self, key: impl AsRef<str>, find_many_arg: Option<&Value>) -> Result<Vec<Object>> {
         // get relation
         let model = self.model();
         let relation = model.relation(key.as_ref());
@@ -1871,11 +1870,11 @@ unsafe impl Send for Object { }
 unsafe impl Sync for Object { }
 
 pub trait ErrorIfNotFound {
-    fn into_not_found_error(self, path: KeyPath) -> teo_result::Result<Object>;
+    fn into_not_found_error(self, path: KeyPath) -> Result<Object>;
 }
 
 impl ErrorIfNotFound for Option<Object> {
-    fn into_not_found_error(self, path: KeyPath) -> teo_result::Result<Object> {
+    fn into_not_found_error(self, path: KeyPath) -> Result<Object> {
         match self {
             Some(object) => Ok(object),
             None => Err(Error::not_found_pathed(path, "not found")),
@@ -1883,9 +1882,9 @@ impl ErrorIfNotFound for Option<Object> {
     }
 }
 
-impl ErrorIfNotFound for teo_result::Result<Option<Object>> {
+impl ErrorIfNotFound for Result<Option<Object>> {
 
-    fn into_not_found_error(self, path: KeyPath) -> teo_result::Result<Object> {
+    fn into_not_found_error(self, path: KeyPath) -> Result<Object> {
         match self {
             Err(err) => Err(err),
             Ok(option) => match option {
