@@ -1078,7 +1078,6 @@ impl Object {
                 // value mutation
                 let relation_mutation_map = self.inner.relation_mutation_map.lock().await;
                 if let Some(manipulation) = relation_mutation_map.get(relation.name()) {
-                    println!("see this manipulation {}", manipulation);
                     if many {
                         self.perform_relation_manipulation_many(relation, manipulation, &(path + relation.name()), is_new, is_modified).await?;
                     } else {
@@ -1159,6 +1158,7 @@ impl Object {
                 linked = true;
             }
         }
+        println!("before that save");
         object.save_with_session_and_path(path).await?;
         if !linked {
             if relation.has_foreign_key() {
@@ -1231,6 +1231,7 @@ impl Object {
             Ok(object) => object,
             Err(_) => return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "Object is not found.")),
         }.into_not_found_error(path.clone())?;
+        println!("see object found: {}", object);
         self.link_and_save_relation_object(relation, &object, path).await
     }
 

@@ -195,7 +195,11 @@ impl Builder {
             } else if r#type.is_array() {
                 Delete::NoAction
             } else {
-                Delete::Cascade
+                if !has_foreign_key {
+                    Delete::NoAction
+                } else {
+                    Delete::Cascade
+                }
             }
         } else {
             self.delete()
@@ -211,7 +215,11 @@ impl Builder {
             } else if r#type.is_array() {
                 Update::NoAction
             } else {
-                Update::Update
+                if !has_foreign_key {
+                    Update::NoAction
+                } else {
+                    Update::Update
+                }
             }
         } else {
             self.update()
