@@ -11,6 +11,10 @@ repository = "https://github.com/teocloud/teo-runtime"
 [dependencies]
 teo-result = { version = "0.3.0-alpha.0", path = "../teo-result" }
 teo-parser = { version = "0.3.0-alpha.0", path = "../teo-parser" }
+actix-web = "4.8.0"
+actix-http = "3.8.0"
+actix-multipart = "0.7.2"
+actix-files = "0.6.6"
 maplit = "1.0.2"
 indexmap = { version = "2.2.6", features = ["serde"] }
 serde = { version = "1.0.190", features = ["derive"] }
