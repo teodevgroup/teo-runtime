@@ -1,24 +1,27 @@
+use std::cell::Ref;
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
-use teo_result::Result;
-use crate::request::cookie::readonly::Cookie;
+use actix_http::header::HeaderMap;
+use actix_http::HttpMessage;
+use actix_web::cookie::Cookie;
+use actix_web::HttpRequest;
+use teo_result::{Error, Result};
 use crate::request::Ctx;
 use crate::request::ctx::extract::ExtractFromRequestCtx;
-use crate::request::header::readonly::HeaderMap;
 
 #[derive(Clone)]
 pub struct Request {
-    inner: Arc<dyn r#trait::Request>
+    inner: Arc<HttpRequest>
 }
 
 impl Request {
 
-    pub fn new(inner: Arc<dyn r#trait::Request>) -> Self {
-        Self { inner }
+    pub fn new(actix_http_request: HttpRequest) -> Self {
+        Self { inner: Arc::new(actix_http_request) }
     }
 
     pub fn method(&self) -> &str {
-        self.inner.method()
+        self.inner.method().as_str()
     }
 
     pub fn path(&self) -> &str {
@@ -37,8 +40,11 @@ impl Request {
         self.inner.headers()
     }
 
-    pub fn cookies(&self) -> Result<Vec<Cookie>> {
-        self.inner.cookies()
+    pub fn cookies(&self) -> Result<Ref<Vec<Cookie>>> {
+        match self.inner.cookies() {
+            Ok(cookies) => Ok(cookies),
+            Err(_) => Err(Error::invalid_request_message("invalid cookie format")),
+        }
     }
 }
 
@@ -50,22 +56,8 @@ impl Debug for Request {
         debug_struct.field("path", &self.inner.path());
         debug_struct.field("query_string", &self.inner.query_string());
         debug_struct.field("content_type", &self.inner.content_type());
+        debug_struct.field("headers", &self.inner.headers());
         debug_struct.finish()
-    }
-}
-
-pub mod r#trait {
-    use crate::request::cookie::readonly::Cookie;
-    use crate::request::header::readonly::HeaderMap;
-    use teo_result::Result;
-
-    pub trait Request {
-        fn method(&self) -> &str;
-        fn path(&self) -> &str;
-        fn query_string(&self) -> &str;
-        fn content_type(&self) -> &str;
-        fn headers(&self) -> &HeaderMap;
-        fn cookies(&self) -> Result<Vec<Cookie>>;
     }
 }
 

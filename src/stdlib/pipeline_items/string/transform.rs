@@ -65,7 +65,7 @@ pub(in crate::stdlib) fn load_pipeline_string_transform_items(namespace: &namesp
             "ellipsis(width)",
         ).await?;
         let width: i32 = width_object.try_into_err_prefix("ellipsis(width)")?;
-        if input.len() <= width.try_into().unwrap() {
+        if input.len() <= width as usize {
             Ok(ctx.value().clone())
         } else {
             Ok(Value::from(input.chars().take(width.try_into().unwrap()).collect::<String>() + ellipsis))
