@@ -47,11 +47,8 @@ impl Request {
         }
     }
 
-    pub fn cookie(&self, name: &str) -> Result<Option<Cookie<'static>>> {
-        match self.inner.cookie(name) {
-            Ok(cookie) => Ok(cookie),
-            Err(_) => Err(Error::invalid_request_message("invalid cookie format")),
-        }
+    pub fn cookie(&self, name: &str) -> Option<Cookie<'static>> {
+        self.inner.cookie(name)
     }
 }
 
