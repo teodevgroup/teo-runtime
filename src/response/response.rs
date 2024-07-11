@@ -1,6 +1,7 @@
 use std::fmt::{Debug, Formatter};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
+use actix_web::cookie::Cookie;
 use crate::value::Value;
 use crate::teon;
 use teo_result::Result;
@@ -86,12 +87,17 @@ impl Response {
     pub fn body(&self) -> Body {
         self.inner.lock().unwrap().body.clone()
     }
+
+    pub fn add_cookie(&self, cookie: Cookie<'static>) {
+        self.inner.lock().unwrap().cookies.lock().unwrap().push(cookie);
+    }
 }
 
 pub struct ResponseInner {
     code: u16,
     headers: HeaderMap,
     body: Body,
+    cookies: Arc<Mutex<Vec<Cookie<'static>>>>,
 }
 
 impl ResponseInner {
@@ -101,6 +107,7 @@ impl ResponseInner {
             code: 200,
             headers: HeaderMap::new(),
             body: Body::empty(),
+            cookies: Arc::new(Mutex::new(vec![])),
         }
     }
 }
