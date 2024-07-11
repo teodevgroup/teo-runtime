@@ -89,7 +89,11 @@ impl Response {
     }
 
     pub fn add_cookie(&self, cookie: Cookie<'static>) {
-        self.inner.lock().unwrap().cookies.lock().unwrap().push(cookie);
+        self.inner.lock().unwrap().cookies.push(cookie);
+    }
+
+    pub fn cookies(&self) -> Vec<Cookie<'static>> {
+        self.inner.lock().unwrap().cookies.clone()
     }
 }
 
@@ -97,7 +101,7 @@ pub struct ResponseInner {
     code: u16,
     headers: HeaderMap,
     body: Body,
-    cookies: Arc<Mutex<Vec<Cookie<'static>>>>,
+    cookies: Vec<Cookie<'static>>,
 }
 
 impl ResponseInner {
@@ -107,7 +111,7 @@ impl ResponseInner {
             code: 200,
             headers: HeaderMap::new(),
             body: Body::empty(),
-            cookies: Arc::new(Mutex::new(vec![])),
+            cookies: vec![],
         }
     }
 }
