@@ -40,7 +40,7 @@ impl Request {
         self.inner.headers()
     }
 
-    pub fn cookies(&self) -> Result<Ref<Vec<Cookie>>> {
+    pub fn cookies(&self) -> Result<Ref<Vec<Cookie<'static>>>> {
         match self.inner.cookies() {
             Ok(cookies) => Ok(cookies),
             Err(_) => Err(Error::invalid_request_message("invalid cookie format")),
