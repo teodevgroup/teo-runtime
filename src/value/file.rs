@@ -16,6 +16,25 @@ pub struct File {
     pub filename_ext: Option<String>,
 }
 
+impl File {
+
+    pub fn filepath(&self) -> &str {
+        self.filepath.as_str()
+    }
+
+    pub fn content_type(&self) -> Option<&str> {
+        self.content_type.as_deref()
+    }
+
+    pub fn filename(&self) -> &str {
+        self.filename.as_str()
+    }
+
+    pub fn filename_ext(&self) -> Option<&str> {
+        self.filename_ext.as_deref()
+    }
+}
+
 impl Display for File {
 
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

@@ -435,7 +435,7 @@ impl Named for Model {
 impl Documentable for Model {
 
     fn comment(&self) -> Option<&Comment> {
-        self.comment()
+        self.inner.comment.as_ref()
     }
 
     fn kind(&self) -> &'static str {
