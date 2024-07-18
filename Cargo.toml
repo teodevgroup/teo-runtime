@@ -41,5 +41,10 @@ jsonwebtoken = "9.2"
 log = "0.4.20"
 bson = { version = "2.9.0", features = ["chrono-0_4", "serde_with"] }
 tokio = { version = "1.0", features = ["full"] }
-itertools = "0.12.0"
-bcrypt = "0.15.0"
+itertools = "0.13.0"
+bcrypt = "0.15.1"
+dotenvy = "0.15.7"
+clap = { version = "4.4.11", features = ["derive"] }
+
+[build-dependencies]
+rustc_version = "0.4.0"
