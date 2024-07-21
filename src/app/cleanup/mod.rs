@@ -1,11 +1,11 @@
-use crate::app::App;
+use crate::app::data::AppData;
 
 pub trait Cleanup {
-    fn call(&self, app: &App) -> ();
+    fn call(&self, app_data: &AppData) -> ();
 }
 
-impl<F> Cleanup for F where F: Fn(&App) -> () {
-    fn call(&self, app: &App) -> () {
-        self(app)
+impl<F> Cleanup for F where F: Fn(&AppData) -> () {
+    fn call(&self, app_data: &AppData) -> () {
+        self(app_data)
     }
 }
