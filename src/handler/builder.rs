@@ -3,6 +3,7 @@ use std::sync::atomic::AtomicBool;
 use educe::Educe;
 use teo_parser::ast::handler::HandlerInputFormat;
 use teo_parser::r#type::Type;
+use crate::app::data::AppData;
 use crate::handler::{Handler, handler, Method};
 use crate::middleware::next::Next;
 
@@ -26,11 +27,12 @@ struct Inner {
     ignore_prefix: AtomicBool,
     #[educe(Debug(ignore))]
     call: &'static dyn Next,
+    app_data: AppData,
 }
 
 impl Builder {
 
-    pub fn new(path: Vec<String>, namespace_path: Vec<String>, input_type: Type, output_type: Type, nonapi: bool, format: HandlerInputFormat, call: &'static dyn Next) -> Self {
+    pub fn new(path: Vec<String>, namespace_path: Vec<String>, input_type: Type, output_type: Type, nonapi: bool, format: HandlerInputFormat, call: &'static dyn Next, app_data: AppData) -> Self {
         Self {
             inner: Arc::new(Inner {
                 path,
@@ -44,6 +46,7 @@ impl Builder {
                 interface: Arc::new(Mutex::new(None)),
                 ignore_prefix: AtomicBool::new(false),
                 call,
+                app_data
             })
         }
     }
@@ -110,6 +113,10 @@ impl Builder {
 
     pub fn call(&self) -> &'static dyn Next {
         self.inner.call
+    }
+
+    pub fn app_data(&self) -> &AppData {
+        &self.inner.app_data
     }
 
     pub(crate) fn build(self) -> Handler {

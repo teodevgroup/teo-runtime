@@ -20,6 +20,7 @@ pub fn load_handler_template(main_namespace: &namespace::Builder, schema: &Schem
             handler_template_declaration.nonapi,
             handler_template_declaration.input_format,
             handler.call(),
+            main_namespace.app_data().clone(),
         )
     } else {
         // just load a default empty one, for generating interfaces
@@ -33,6 +34,7 @@ pub fn load_handler_template(main_namespace: &namespace::Builder, schema: &Schem
             Box::leak(Box::new(|ctx: request::Ctx| async {
                 Err(Error::not_found())
             })),
+            main_namespace.app_data().clone(),
         )
     };
     for decorator in handler_template_declaration.decorators() {

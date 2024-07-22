@@ -3,6 +3,7 @@ use std::sync::Arc;
 use educe::Educe;
 use futures_util::future::BoxFuture;
 use serde::Serialize;
+use crate::app::data::AppData;
 use crate::arguments::Arguments;
 use crate::pipeline::Ctx;
 use crate::Value;
@@ -31,15 +32,18 @@ struct Inner {
     pub path: Vec<String>,
     #[educe(Debug(ignore))] #[serde(skip)]
     pub(crate) call: Arc<dyn Call>,
+    #[serde(skip)]
+    pub app_data: AppData,
 }
 
 impl Item {
 
-    pub fn new(path: Vec<String>, call: Arc<dyn Call>) -> Self {
+    pub fn new(path: Vec<String>, call: Arc<dyn Call>, app_data: AppData) -> Self {
         Self {
             inner: Arc::new(Inner {
                 path,
-                call
+                call,
+                app_data
             })
         }
     }
@@ -50,6 +54,10 @@ impl Item {
 
     pub fn call(&self) -> Arc<dyn Call> {
         self.inner.call.clone()
+    }
+
+    pub fn app_data(&self) -> &AppData {
+        &self.inner.app_data
     }
 }
 

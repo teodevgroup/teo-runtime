@@ -21,6 +21,7 @@ pub fn load_handler(main_namespace: &namespace::Builder, schema: &Schema, handle
             handler_declaration.nonapi,
             handler_declaration.input_format,
             handler.call(),
+            main_namespace.app_data().clone(),
         )
     } else {
         // just load a default empty one, for generating interfaces
@@ -34,6 +35,7 @@ pub fn load_handler(main_namespace: &namespace::Builder, schema: &Schema, handle
             Box::leak(Box::new(|ctx: request::Ctx| async {
                 Err(Error::not_found())
             })),
+            main_namespace.app_data().clone(),
         )
     };
     for decorator in handler_declaration.decorators() {

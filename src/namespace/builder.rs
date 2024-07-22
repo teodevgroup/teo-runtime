@@ -294,7 +294,7 @@ impl Builder {
 
     pub fn define_pipeline_item<T>(&self, name: &str, call: T) where T: pipeline::item::Call + 'static {
         let mut pipeline_items = self.inner.pipeline_items.lock().unwrap();
-        pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(call)));
+        pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(call), self.app_data().clone()));
     }
 
     pub fn define_transform_pipeline_item<A, O, F, R>(&self, name: &str, call: F) where
@@ -313,7 +313,7 @@ impl Builder {
                     Err(e) => Err(e.into()),
                 }
             }
-        })));
+        }), self.app_data().clone()));
     }
 
     pub fn define_validator_pipeline_item<T, F, O>(&self, name: &str, call: F) where
@@ -344,7 +344,7 @@ impl Builder {
                     Err(err) => Err(err),
                 }
             }
-        })));
+        }), self.app_data().clone()));
 
     }
 
@@ -363,7 +363,7 @@ impl Builder {
                     Err(err) => Err(err),
                 },
             }
-        })));
+        }), self.app_data().clone()));
     }
 
     pub fn define_compare_pipeline_item<T, O, F, E>(&self, name: &str, call: F) where
@@ -404,16 +404,16 @@ impl Builder {
                     Err(err) => Err(err),
                 }
             }
-        })));
+        }), self.app_data().clone()));
     }
 
     pub fn define_middleware<T>(&self, name: &str, call: T) where T: middleware::creator::Creator + 'static {
         let mut middlewares = self.inner.middlewares.lock().unwrap();
-        middlewares.insert(name.to_owned(), middleware::Definition::new(next_path(self.path(), name), Arc::new(call)));
+        middlewares.insert(name.to_owned(), middleware::Definition::new(next_path(self.path(), name), Arc::new(call), self.app_data().clone()));
     }
 
     pub fn define_model_handler_group<T>(&self, name: &str, builder: T) where T: Fn(&handler::group::Builder) {
-        let handler_group_builder = handler::group::Builder::new(next_path(self.path(), name));
+        let handler_group_builder = handler::group::Builder::new(next_path(self.path(), name), self.app_data().clone());
         builder(&handler_group_builder);
         let mut model_handler_groups = self.inner.model_handler_groups.lock().unwrap();
         model_handler_groups.insert(name.to_owned(), handler_group_builder);
@@ -436,6 +436,7 @@ impl Builder {
             Box::leak(Box::new(|ctx: request::Ctx| async {
                 wrapped_call.call(ctx).await
             })),
+            self.app_data().clone()
         );
         builder.set_method(Method::Post);
         builder.set_interface(None);
@@ -457,6 +458,7 @@ impl Builder {
             Box::leak(Box::new(|ctx: request::Ctx| async {
                 wrapped_call.call(ctx).await
             })),
+            self.app_data().clone()
         );
         builder.set_method(Method::Post);
         builder.set_interface(None);
@@ -467,7 +469,7 @@ impl Builder {
     }
 
     pub fn define_handler_group<T>(&self, name: &str, builder: T) where T: Fn(&handler::group::Builder) {
-        let handler_group_builder = handler::group::Builder::new(next_path(self.path(), name));
+        let handler_group_builder = handler::group::Builder::new(next_path(self.path(), name), self.app_data().clone());
         builder(&handler_group_builder);
         let mut handler_groups = self.inner.handler_groups.lock().unwrap();
         handler_groups.insert(name.to_owned(), handler_group_builder);

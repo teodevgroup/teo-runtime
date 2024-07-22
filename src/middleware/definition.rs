@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use educe::Educe;
 use serde::Serialize;
+use crate::app::data::AppData;
 use super::creator::Creator;
 
 #[derive(Debug, Clone)]
@@ -14,15 +15,18 @@ struct Inner {
     path: Vec<String>,
     #[educe(Debug(ignore))] #[serde(skip)]
     creator: Arc<dyn Creator>,
+    #[serde(skip)]
+    app_data: AppData,
 }
 
 impl Definition {
 
-    pub fn new(path: Vec<String>, creator: Arc<dyn Creator>) -> Self {
+    pub fn new(path: Vec<String>, creator: Arc<dyn Creator>, app_data: AppData) -> Self {
         Self {
             inner: Arc::new(Inner {
                 path,
                 creator,
+                app_data,
             }),
         }
     }

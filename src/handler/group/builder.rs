@@ -3,6 +3,7 @@ use std::sync::{Arc, Mutex};
 use maplit::btreemap;
 use teo_parser::ast::handler::HandlerInputFormat;
 use teo_parser::r#type::Type;
+use crate::app::data::AppData;
 use crate::handler::ctx_argument::HandlerCtxArgument;
 use crate::handler::{Group, Handler, handler};
 use crate::handler::group::group;
@@ -20,16 +21,18 @@ pub struct Builder {
 struct Inner {
     pub path: Vec<String>,
     pub(crate) handlers: Arc<Mutex<BTreeMap<String, Handler>>>,
+    pub app_data: AppData,
 
 }
 
 impl Builder {
 
-    pub fn new(path: Vec<String>) -> Self {
+    pub fn new(path: Vec<String>, app_data: AppData) -> Self {
         Self {
             inner: Arc::new(Inner {
                 path,
-                handlers: Arc::new(Mutex::new(btreemap! {}))
+                handlers: Arc::new(Mutex::new(btreemap! {})),
+                app_data,
             })
         }
     }
@@ -73,6 +76,10 @@ impl Builder {
         };
         let mut handlers = self.inner.handlers.lock().unwrap();
         handlers.insert(name.to_owned(), handler);
+    }
+
+    pub fn app_data(&self) -> &AppData {
+        &self.inner.app_data
     }
 
     pub fn build(self) -> Group {
