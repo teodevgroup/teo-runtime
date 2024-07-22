@@ -64,3 +64,6 @@ impl AppData {
         *self.inner.dynamic_classes_clean_up.lock().unwrap() = Some(clean_up);
     }
 }
+
+unsafe impl Send for AppData { }
+unsafe impl Sync for AppData { }

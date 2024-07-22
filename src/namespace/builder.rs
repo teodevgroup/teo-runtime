@@ -8,6 +8,7 @@ use teo_parser::r#type::Type;
 use teo_result::{Error, Result};
 use crate::interface::Interface;
 use crate::{handler, interface, middleware, model, pipeline, r#enum, request, Value};
+use crate::app::data::AppData;
 use crate::arguments::Arguments;
 use crate::config::admin::Admin;
 use crate::config::client::Client;
@@ -75,11 +76,12 @@ struct Inner {
     pub handler_map: Arc<Mutex<handler::Map>>,
     #[educe(Debug(ignore))]
     pub middleware_stack: Arc<Mutex<&'static dyn Middleware>>,
+    pub app_data: AppData,
 }
 
 impl Builder {
 
-    fn new(path: Vec<String>) -> Self {
+    fn new(path: Vec<String>, app_data: AppData) -> Self {
         Self {
             inner: Arc::new(Inner {
                 path,
@@ -115,13 +117,14 @@ impl Builder {
                 connection: Arc::new(Mutex::new(None)),
                 model_opposite_relations_map: Arc::new(Mutex::new(Default::default())),
                 handler_map: Arc::new(Mutex::new(handler::Map::new())),
-                middleware_stack: Arc::new(Mutex::new(empty_middleware()))
+                middleware_stack: Arc::new(Mutex::new(empty_middleware())),
+                app_data
             })
         }
     }
 
-    pub fn main() -> Self {
-        Self::new(vec![])
+    pub fn main(app_data: AppData) -> Self {
+        Self::new(vec![], app_data)
     }
 
     pub fn load_standard_library(&self) -> Result<()> {
@@ -225,7 +228,7 @@ impl Builder {
     pub fn namespace_or_create(&self, name: &str) -> Builder {
         let mut namespaces = self.inner.namespaces.lock().unwrap();
         if !namespaces.contains_key(name) {
-            namespaces.insert(name.to_owned(), Builder::new(next_path(self.path(), name)));
+            namespaces.insert(name.to_owned(), Builder::new(next_path(self.path(), name), self.app_data().clone()));
         }
         namespaces.get(name).unwrap().clone()
     }
@@ -886,6 +889,10 @@ impl Builder {
 
     pub fn set_middleware_stack(&self, stack: &'static dyn Middleware) {
         *self.inner.middleware_stack.lock().unwrap() = stack;
+    }
+
+    pub fn app_data(&self) -> &AppData {
+        &self.inner.app_data
     }
 
     pub fn build(&self) -> Namespace {
