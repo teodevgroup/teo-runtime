@@ -533,8 +533,8 @@ impl Namespace {
         return result
     }
 
-    pub fn app_data(&self) -> AppData {
-        self.inner.app_data.clone()
+    pub fn app_data(&self) -> &AppData {
+        &self.inner.app_data
     }
 }
 

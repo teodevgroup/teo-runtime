@@ -6,8 +6,8 @@ use crate::model::Model;
 
 #[derive(Clone)]
 pub struct Ctx {
-    pub transaction_ctx: transaction::Ctx,
-    pub model: &'static Model,
+    transaction_ctx: transaction::Ctx,
+    model: &'static Model,
 }
 
 impl Ctx {
@@ -50,5 +50,13 @@ impl Ctx {
 
     pub async fn create_object<T>(&self, input: &Value) -> teo_result::Result<T> where T: From<model::Object> {
         Ok(self.transaction_ctx.create_object(self.model, input, None).await?.into())
+    }
+
+    pub fn transaction_ctx(&self) -> &transaction::Ctx {
+        &self.transaction_ctx
+    }
+
+    pub fn model(&self) -> &'static Model {
+        self.model
     }
 }

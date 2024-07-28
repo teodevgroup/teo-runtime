@@ -328,6 +328,10 @@ impl Ctx {
         object.set_teon(initial.borrow()).await?;
         Ok(object)
     }
+
+    pub fn connection_ctx(&self) -> &connection::Ctx {
+        &self.inner.connection_ctx
+    }
 }
 
 impl From<&Ctx> for Ctx {
