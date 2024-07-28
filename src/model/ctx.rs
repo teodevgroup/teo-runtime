@@ -12,6 +12,13 @@ pub struct Ctx {
 
 impl Ctx {
 
+    pub fn new(transaction_ctx: transaction::Ctx, model: &'static Model) -> Self {
+        Self {
+            transaction_ctx,
+            model,
+        }
+    }
+
     pub async fn find_unique<T: From<model::Object>>(&self, finder: &Value) -> teo_result::Result<Option<T>> {
         self.transaction_ctx.find_unique(self.model, finder, None, path![]).await
     }
