@@ -68,6 +68,7 @@ pub(super) struct Inner {
     #[educe(Debug(ignore))] #[serde(skip)]
     pub(super) handler_map: handler::Map,
     pub(super) model_opposite_relations_map: BTreeMap<Vec<String>, Vec<(Vec<String>, String)>>,
+    #[serde(skip)]
     pub(super) app_data: AppData,
 }
 
