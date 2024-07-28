@@ -934,6 +934,7 @@ impl Builder {
                 middleware_stack: self.inner.middleware_stack.lock().unwrap().clone(),
                 handler_map: self.inner.handler_map.lock().unwrap().clone(),
                 model_opposite_relations_map: self.inner.model_opposite_relations_map.lock().unwrap().clone(),
+                app_data: self.app_data().clone(),
             })
         }
 

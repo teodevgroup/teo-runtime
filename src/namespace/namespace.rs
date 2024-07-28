@@ -18,6 +18,7 @@ use crate::middleware::middleware::Middleware;
 use crate::pipeline;
 use educe::Educe;
 use serde::Serialize;
+use crate::app::data::AppData;
 use crate::config::admin::Admin;
 use crate::handler::Handler;
 use crate::traits::named::Named;
@@ -25,7 +26,6 @@ use crate::traits::named::Named;
 #[derive(Debug, Clone)]
 pub struct Namespace {
     pub(super) inner: Arc<Inner>,
-
 }
 
 #[derive(Educe, Serialize)]
@@ -67,7 +67,8 @@ pub(super) struct Inner {
     pub(super) middleware_stack: &'static dyn Middleware,
     #[educe(Debug(ignore))] #[serde(skip)]
     pub(super) handler_map: handler::Map,
-    pub(super) model_opposite_relations_map: BTreeMap<Vec<String>, Vec<(Vec<String>, String)>>
+    pub(super) model_opposite_relations_map: BTreeMap<Vec<String>, Vec<(Vec<String>, String)>>,
+    pub(super) app_data: AppData,
 }
 
 impl Serialize for Namespace {
@@ -530,6 +531,10 @@ impl Namespace {
             result.extend(n._collect_enums(f));
         }
         return result
+    }
+
+    pub fn app_data(&self) -> &AppData {
+        &self.inner.app_data
     }
 }
 
