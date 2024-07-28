@@ -1,3 +1,4 @@
+use std::ptr::null_mut;
 use teo_parser::ast::schema::Schema;
 use teo_parser::diagnostics::diagnostics::Diagnostics;
 use teo_parser::traits::has_availability::HasAvailability;
@@ -24,6 +25,7 @@ pub fn load_model(main_namespace: &namespace::Builder, schema: &Schema, model_de
         model_declaration.string_path().clone(),
         model_declaration.path().clone(),
         load_comment(model_declaration.comment()),
+        main_namespace.app_data().clone(),
     );
     for decorator in model_declaration.decorators() {
         if let Some(decorator_declaration) = schema.find_top_by_path(decorator.resolved()).unwrap().as_decorator_declaration() {
@@ -75,7 +77,8 @@ fn load_model_field(main_namespace: &namespace::Builder, field_declaration: &teo
         field_declaration.identifier().name().to_owned(),
         load_comment(field_declaration.comment()),
         field_declaration.type_expr().resolved().clone(),
-        field_declaration.availability()
+        field_declaration.availability(),
+        main_namespace.app_data().clone(),
     );
     if field_declaration.type_expr().resolved().is_optional() {
         field_builder.set_optional();
@@ -99,6 +102,7 @@ fn load_model_relation(main_namespace: &namespace::Builder, field_declaration: &
         field_declaration.identifier().name().to_owned(),
         load_comment(field_declaration.comment()),
         r#type.clone(),
+        main_namespace.app_data().clone(),
     );
     if r#type.is_optional() {
         relation_builder.set_optionality(Optionality::Optional);
@@ -125,6 +129,7 @@ fn load_model_property(main_namespace: &namespace::Builder, field_declaration: &
         field_declaration.identifier().name().to_owned(),
         load_comment(field_declaration.comment()),
         field_declaration.type_expr().resolved().clone(),
+        main_namespace.app_data().clone(),
     );
     let r#type = field_declaration.type_expr().resolved();
     if r#type.is_optional() {

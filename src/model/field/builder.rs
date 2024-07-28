@@ -6,12 +6,13 @@ use teo_parser::ast::schema::Schema;
 use teo_parser::availability::Availability;
 use teo_parser::r#type::Type;
 use teo_result::Result;
+use crate::app::data::AppData;
 use crate::comment::Comment;
 use crate::database::database::Database;
 use crate::database::r#type::DatabaseType;
 use crate::model::Field;
 use crate::model::field::{field, Index, Migration};
-use crate::model::field::indexable::{Indexable, SetIndex};
+use crate::model::field::indexable::SetIndex;
 use crate::model::field::set_optional::SetOptional;
 use crate::optionality::Optionality;
 use crate::pipeline::Pipeline;
@@ -55,10 +56,11 @@ struct Inner {
     can_mutate: Arc<Mutex<Pipeline>>,
     can_read: Arc<Mutex<Pipeline>>,
     data: Arc<Mutex<BTreeMap<String, Value>>>,
+    app_data: AppData,
 }
 
 impl Builder {
-    pub fn new(name: String, comment: Option<Comment>, r#type: Type, availability: Availability) -> Self {
+    pub fn new(name: String, comment: Option<Comment>, r#type: Type, availability: Availability, app_data: AppData) -> Self {
         Self {
             inner: Arc::new(Inner {
                 name: name.clone(),
@@ -90,6 +92,7 @@ impl Builder {
                 can_mutate: Arc::new(Mutex::new(Pipeline::new())),
                 can_read: Arc::new(Mutex::new(Pipeline::new())),
                 data: Arc::new(Mutex::new(btreemap! {})),
+                app_data,
             })
         }
     }
@@ -371,6 +374,10 @@ impl Builder {
             })
         };
         Ok(field)
+    }
+
+    pub fn app_data(&self) -> &AppData {
+        &self.inner.app_data
     }
 }
 

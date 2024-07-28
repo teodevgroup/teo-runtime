@@ -27,7 +27,8 @@ pub fn load_enum(main_namespace: &namespace::Builder, schema: &Schema, enum_decl
         load_comment(enum_declaration.comment()),
         enum_declaration.option,
         enum_declaration.interface,
-        members
+        members,
+        main_namespace.app_data().clone(),
     );
     let r#enum = enum_builder.build();
     let dest_namespace = main_namespace.namespace_or_create_at_path(&enum_declaration.namespace_string_path());

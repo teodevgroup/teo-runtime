@@ -4,6 +4,7 @@ use std::sync::atomic::AtomicBool;
 use teo_parser::ast::schema::Schema;
 use teo_parser::r#type::Type;
 use teo_result::Result;
+use crate::app::data::AppData;
 use crate::comment::Comment;
 use crate::database::database::Database;
 use crate::database::r#type::DatabaseType;
@@ -37,11 +38,12 @@ pub struct Inner {
     cached: AtomicBool,
     index: Arc<Mutex<Option<Index>>>,
     data: Arc<Mutex<BTreeMap<String, Value>>>,
+    app_data: AppData,
 }
 
 impl Builder {
 
-    pub fn new(name: String, comment: Option<Comment>, r#type: Type) -> Self {
+    pub fn new(name: String, comment: Option<Comment>, r#type: Type, app_data: AppData) -> Self {
         Self {
             inner: Arc::new(Inner {
                 name: name.clone(),
@@ -58,6 +60,7 @@ impl Builder {
                 cached: AtomicBool::new(false),
                 index: Arc::new(Mutex::new(None)),
                 data: Arc::new(Mutex::new(BTreeMap::new())),
+                app_data
             })
         }
     }
@@ -199,6 +202,10 @@ impl Builder {
                 data: self.inner.data.lock().unwrap().clone(),
             })
         })
+    }
+
+    pub fn app_data(&self) -> &AppData {
+        &self.inner.app_data
     }
 }
 

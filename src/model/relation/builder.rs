@@ -2,6 +2,7 @@ use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
 use teo_parser::r#type::Type;
+use crate::app::data::AppData;
 use crate::comment::Comment;
 use crate::model::{Field, Relation};
 use crate::model::relation::delete::Delete;
@@ -33,10 +34,11 @@ pub struct Inner {
     delete_specified: AtomicBool,
     update_specified: AtomicBool,
     data: Arc<Mutex<BTreeMap<String, Value>>>,
+    app_data: AppData,
 }
 
 impl Builder {
-    pub fn new(name: String, comment: Option<Comment>, r#type: Type) -> Self {
+    pub fn new(name: String, comment: Option<Comment>, r#type: Type, app_data: AppData) -> Self {
         Self {
             inner: Arc::new(Inner {
                 name,
@@ -55,6 +57,7 @@ impl Builder {
                 delete_specified: AtomicBool::new(false),
                 update_specified: AtomicBool::new(false),
                 data: Arc::new(Mutex::new(BTreeMap::new())),
+                app_data,
             })
         }
     }
@@ -244,5 +247,9 @@ impl Builder {
             })
         };
         relation
+    }
+
+    pub fn app_data(&self) -> &AppData {
+        &self.inner.app_data
     }
 }

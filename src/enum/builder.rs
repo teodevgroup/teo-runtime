@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 use maplit::btreemap;
+use crate::app::data::AppData;
 use crate::comment::Comment;
 use crate::r#enum::{Enum, r#enum};
 use crate::r#enum::member::Member;
@@ -19,10 +20,11 @@ struct Inner {
     pub interface: bool,
     pub members: Vec<Member>,
     pub data: Arc<Mutex<BTreeMap<String, Value>>>,
+    pub app_data: AppData,
 }
 
 impl Builder {
-    pub fn new(path: Vec<String>, comment: Option<Comment>, option: bool, interface: bool, members: Vec<Member>) -> Self {
+    pub fn new(path: Vec<String>, comment: Option<Comment>, option: bool, interface: bool, members: Vec<Member>, app_data: AppData) -> Self {
         Self {
             inner: Arc::new(Inner {
                 path,
@@ -31,6 +33,7 @@ impl Builder {
                 interface,
                 members,
                 data: Arc::new(Mutex::new(btreemap! {})),
+                app_data,
             })
         }
     }
@@ -87,5 +90,9 @@ impl Builder {
                 member_names: self.members().iter().map(|m| m.name.clone()).collect(),
             })
         }
+    }
+
+    pub fn app_data(&self) -> &AppData {
+        &self.inner.app_data
     }
 }

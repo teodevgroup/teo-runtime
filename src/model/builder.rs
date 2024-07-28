@@ -12,6 +12,7 @@ use crate::model::field::indexable::Indexable;
 use crate::model::relation::delete::Delete;
 use crate::pipeline::Pipeline;
 use crate::{model, Value};
+use crate::app::data::AppData;
 use crate::model::field::typed::Typed;
 use crate::model::index::Item;
 use crate::traits::named::Named;
@@ -45,10 +46,11 @@ struct Inner {
     pub can_mutate: Arc<Mutex<Pipeline>>,
     pub migration: Arc<Mutex<Migration>>,
     pub data: Arc<Mutex<BTreeMap<String, Value>>>,
+    pub app_data: AppData,
 }
 
 impl Builder {
-    pub fn new(path: Vec<String>, parser_path: Vec<usize>, comment: Option<Comment>) -> Self {
+    pub fn new(path: Vec<String>, parser_path: Vec<usize>, comment: Option<Comment>, app_data: AppData) -> Self {
         let mut table_name_namespace_prefix = path.iter().take(path.len() - 1).join("_");
         if !table_name_namespace_prefix.is_empty() {
             table_name_namespace_prefix += "__";
@@ -80,6 +82,7 @@ impl Builder {
                 can_mutate: Arc::new(Mutex::new(Pipeline::new())),
                 migration: Arc::new(Mutex::new(Default::default())),
                 data: Arc::new(Mutex::new(Default::default())),
+                app_data,
             })
         }
     }
@@ -461,5 +464,9 @@ impl Builder {
         } else {
             None
         }
+    }
+
+    pub fn app_data(&self) -> &AppData {
+        &self.inner.app_data
     }
 }
