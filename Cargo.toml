@@ -15,6 +15,8 @@ actix-web = "4.8.0"
 actix-http = "3.8.0"
 actix-multipart = "0.7.2"
 actix-files = "0.6.6"
+hyper = "1.5.0"
+hyper-util = "0.1.9"
 maplit = "1.0.2"
 indexmap = { version = "2.2.6", features = ["serde"] }
 serde = { version = "1.0.190", features = ["derive"] }
@@ -43,3 +45,4 @@ bson = { version = "2.9.0", features = ["chrono-0_4", "serde_with"] }
 tokio = { version = "1.0", features = ["full"] }
 itertools = "0.13.0"
 bcrypt = "0.15.1"
+time = "0.3.36"
