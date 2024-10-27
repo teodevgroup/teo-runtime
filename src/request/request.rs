@@ -4,6 +4,7 @@ use hyper::{self, header::{HeaderMap, HeaderValue}, Uri, Version};
 use teo_result::{Error, Result};
 use crate::request::Ctx;
 use cookie::Cookie;
+use http_body_util::BodyExt;
 use crate::request::cookies::Cookies;
 use crate::request::ctx::extract::ExtractFromRequestCtx;
 
