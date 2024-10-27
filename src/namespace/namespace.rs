@@ -47,7 +47,8 @@ pub(super) struct Inner {
     pub(super) interface_field_decorators: BTreeMap<String, interface::field::Decorator>,
     pub(super) handler_decorators: BTreeMap<String, handler::Decorator>,
     pub(super) pipeline_items: BTreeMap<String, pipeline::Item>,
-    pub(super) middlewares: BTreeMap<String, middleware::Definition>,
+    pub(super) handler_middlewares: BTreeMap<String, middleware::Definition>,
+    pub(super) request_middlewares: BTreeMap<String, middleware::Definition>,
     pub(super) handlers: BTreeMap<String, Handler>,
     pub(super) handler_templates: BTreeMap<String, Handler>,
     pub(super) model_handler_groups: BTreeMap<String, handler::Group>,
@@ -58,13 +59,16 @@ pub(super) struct Inner {
     pub(super) entities: BTreeMap<String, Entity>,
     pub(super) debug: Option<Debug>,
     pub(super) admin: Option<Admin>,
-    pub(super) middlewares_block: Option<middleware::Block>,
+    pub(super) handler_middlewares_block: Option<middleware::Block>,
+    pub(super) request_middlewares_block: Option<middleware::Block>,
     pub(super) database: Option<Database>,
     pub(super) connector_reference: Option<Vec<String>>,
     #[serde(skip)]
     pub(super) connection: Arc<Mutex<Option<Arc<dyn Connection>>>>,
     #[educe(Debug(ignore))] #[serde(skip)]
-    pub(super) middleware_stack: &'static dyn Middleware,
+    pub(super) handler_middleware_stack: &'static dyn Middleware,
+    #[educe(Debug(ignore))] #[serde(skip)]
+    pub(super) request_middleware_stack: &'static dyn Middleware,
     #[educe(Debug(ignore))] #[serde(skip)]
     pub(super) handler_map: handler::Map,
     pub(super) model_opposite_relations_map: BTreeMap<Vec<String>, Vec<(Vec<String>, String)>>,
@@ -152,8 +156,12 @@ impl Namespace {
         &self.inner.pipeline_items
     }
 
-    pub fn middlewares(&self) -> &BTreeMap<String, middleware::Definition> {
-        &self.inner.middlewares
+    pub fn handler_middlewares(&self) -> &BTreeMap<String, middleware::Definition> {
+        &self.inner.handler_middlewares
+    }
+
+    pub fn request_middlewares(&self) -> &BTreeMap<String, middleware::Definition> {
+        &self.inner.request_middlewares
     }
 
     pub fn handlers(&self) -> &BTreeMap<String, Handler> {
@@ -196,8 +204,12 @@ impl Namespace {
         self.inner.debug.as_ref()
     }
 
-    pub fn middlewares_block(&self) -> Option<&middleware::Block> {
-        self.inner.middlewares_block.as_ref()
+    pub fn handler_middlewares_block(&self) -> Option<&middleware::Block> {
+        self.inner.handler_middlewares_block.as_ref()
+    }
+
+    pub fn request_middlewares_block(&self) -> Option<&middleware::Block> {
+        self.inner.request_middlewares_block.as_ref()
     }
 
     pub fn entities(&self) -> &BTreeMap<String, Entity> {
@@ -212,8 +224,12 @@ impl Namespace {
         self.inner.database.as_ref()
     }
 
-    pub fn middleware_stack(&self) -> &'static dyn Middleware {
-        self.inner.middleware_stack
+    pub fn handler_middleware_stack(&self) -> &'static dyn Middleware {
+        self.inner.handler_middleware_stack
+    }
+
+    pub fn request_middleware_stack(&self) -> &'static dyn Middleware {
+        self.inner.request_middleware_stack
     }
 
     pub fn handler_map(&self) -> &handler::Map {
@@ -375,11 +391,21 @@ impl Namespace {
         }
     }
 
-    pub fn middleware_at_path(&self, path: &Vec<String>) -> Option<&middleware::Definition> {
+    pub fn handler_middleware_at_path(&self, path: &Vec<String>) -> Option<&middleware::Definition> {
         let middleware_name = path.last().unwrap().deref();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
-            ns.inner.middlewares.get(middleware_name)
+            ns.inner.handler_middlewares.get(middleware_name)
+        } else {
+            None
+        }
+    }
+
+    pub fn request_middleware_at_path(&self, path: &Vec<String>) -> Option<&middleware::Definition> {
+        let middleware_name = path.last().unwrap().deref();
+        let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
+        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+            ns.inner.request_middlewares.get(middleware_name)
         } else {
             None
         }
@@ -531,7 +557,7 @@ impl Namespace {
         for n in self.inner.namespaces.values() {
             result.extend(n._collect_enums(f));
         }
-        return result
+        result
     }
 
     pub fn app_data(&self) -> &AppData {

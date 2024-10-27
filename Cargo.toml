@@ -9,8 +9,8 @@ documentation = "https://teocloud.io/docs"
 repository = "https://github.com/teocloud/teo-runtime"
 
 [dependencies]
-teo-result = { version = "0.3.0-alpha.0", path = "../teo-result" }
-teo-parser = { version = "0.3.0-alpha.0", path = "../teo-parser" }
+teo-result = { version = "0.3.0-alpha.1", path = "../teo-result" }
+teo-parser = { version = "0.3.0-alpha.1", path = "../teo-parser" }
 hyper = { version = "1.5.0", features = ["full"]}
 hyper-util = { version = "0.1.9", features = ["full"] }
 http-body-util = "0.1"

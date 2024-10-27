@@ -57,7 +57,8 @@ struct Inner {
     pub interface_field_decorators: Arc<Mutex<BTreeMap<String, interface::field::Decorator>>>,
     pub handler_decorators: Arc<Mutex<BTreeMap<String, handler::Decorator>>>,
     pub pipeline_items: Arc<Mutex<BTreeMap<String, pipeline::Item>>>,
-    pub middlewares: Arc<Mutex<BTreeMap<String, middleware::Definition>>>,
+    pub request_middlewares: Arc<Mutex<BTreeMap<String, middleware::Definition>>>,
+    pub handler_middlewares: Arc<Mutex<BTreeMap<String, middleware::Definition>>>,
     pub handlers: Arc<Mutex<BTreeMap<String, Handler>>>,
     pub handler_templates: Arc<Mutex<BTreeMap<String, Handler>>>,
     pub model_handler_groups: Arc<Mutex<BTreeMap<String, handler::group::Builder>>>,
@@ -68,14 +69,17 @@ struct Inner {
     pub entities: Arc<Mutex<BTreeMap<String, Entity>>>,
     pub debug: Arc<Mutex<Option<Debug>>>,
     pub admin: Arc<Mutex<Option<Admin>>>,
-    pub middlewares_block: Arc<Mutex<Option<middleware::Block>>>,
+    pub request_middlewares_block: Arc<Mutex<Option<middleware::Block>>>,
+    pub handler_middlewares_block: Arc<Mutex<Option<middleware::Block>>>,
     pub database: Arc<Mutex<Option<Database>>>,
     pub connector_reference: Arc<Mutex<Option<Vec<String>>>>,
     pub connection: Arc<Mutex<Option<Arc<dyn Connection>>>>,
     pub model_opposite_relations_map: Arc<Mutex<BTreeMap<Vec<String>, Vec<(Vec<String>, String)>>>>,
     pub handler_map: Arc<Mutex<handler::Map>>,
     #[educe(Debug(ignore))]
-    pub middleware_stack: Arc<Mutex<&'static dyn Middleware>>,
+    pub handler_middleware_stack: Arc<Mutex<&'static dyn Middleware>>,
+    #[educe(Debug(ignore))]
+    pub request_middleware_stack: Arc<Mutex<&'static dyn Middleware>>,
     pub app_data: AppData,
 }
 
@@ -100,7 +104,8 @@ impl Builder {
                 interface_field_decorators: Arc::new(Mutex::new(Default::default())),
                 handler_decorators: Arc::new(Mutex::new(Default::default())),
                 pipeline_items: Arc::new(Mutex::new(Default::default())),
-                middlewares: Arc::new(Mutex::new(Default::default())),
+                handler_middlewares: Arc::new(Mutex::new(Default::default())),
+                request_middlewares: Arc::new(Mutex::new(Default::default())),
                 handlers: Arc::new(Mutex::new(Default::default())),
                 handler_templates: Arc::new(Mutex::new(Default::default())),
                 model_handler_groups: Arc::new(Mutex::new(Default::default())),
@@ -111,13 +116,15 @@ impl Builder {
                 entities: Arc::new(Mutex::new(Default::default())),
                 debug: Arc::new(Mutex::new(None)),
                 admin: Arc::new(Mutex::new(None)),
-                middlewares_block: Arc::new(Mutex::new(None)),
+                request_middlewares_block: Arc::new(Mutex::new(None)),
+                handler_middlewares_block: Arc::new(Mutex::new(None)),
                 database: Arc::new(Mutex::new(None)),
                 connector_reference: Arc::new(Mutex::new(None)),
                 connection: Arc::new(Mutex::new(None)),
                 model_opposite_relations_map: Arc::new(Mutex::new(Default::default())),
                 handler_map: Arc::new(Mutex::new(handler::Map::new())),
-                middleware_stack: Arc::new(Mutex::new(empty_middleware())),
+                handler_middleware_stack: Arc::new(Mutex::new(empty_middleware())),
+                request_middleware_stack: Arc::new(Mutex::new(empty_middleware())),
                 app_data
             })
         }
@@ -193,8 +200,12 @@ impl Builder {
         self.inner.connector_reference.lock().unwrap().clone()
     }
 
-    pub fn middlewares_block(&self) -> Option<middleware::Block> {
-        self.inner.middlewares_block.lock().unwrap().clone()
+    pub fn request_middlewares_block(&self) -> Option<middleware::Block> {
+        self.inner.request_middlewares_block.lock().unwrap().clone()
+    }
+
+    pub fn handler_middlewares_block(&self) -> Option<middleware::Block> {
+        self.inner.handler_middlewares_block.lock().unwrap().clone()
     }
 
     pub fn insert_enum(&self, name: String, r#enum: Enum) {
@@ -407,8 +418,13 @@ impl Builder {
         }), self.app_data().clone()));
     }
 
-    pub fn define_middleware<T>(&self, name: &str, call: T) where T: middleware::creator::Creator + 'static {
-        let mut middlewares = self.inner.middlewares.lock().unwrap();
+    pub fn define_request_middleware<T>(&self, name: &str, call: T) where T: middleware::creator::Creator + 'static {
+        let mut middlewares = self.inner.request_middlewares.lock().unwrap();
+        middlewares.insert(name.to_owned(), middleware::Definition::new(next_path(self.path(), name), Arc::new(call), self.app_data().clone()));
+    }
+
+    pub fn define_handler_middleware<T>(&self, name: &str, call: T) where T: middleware::creator::Creator + 'static {
+        let mut middlewares = self.inner.handler_middlewares.lock().unwrap();
         middlewares.insert(name.to_owned(), middleware::Definition::new(next_path(self.path(), name), Arc::new(call), self.app_data().clone()));
     }
 
@@ -701,16 +717,31 @@ impl Builder {
         }
     }
 
-    pub fn middleware(&self, name: &str) -> Option<middleware::Definition> {
-        let middlewares = self.inner.middlewares.lock().unwrap();
+    pub fn handler_middleware(&self, name: &str) -> Option<middleware::Definition> {
+        let middlewares = self.inner.handler_middlewares.lock().unwrap();
         middlewares.get(name).cloned()
     }
 
-    pub fn middleware_at_path(&self, path: &Vec<&str>) -> Option<middleware::Definition> {
+    pub fn request_middleware(&self, name: &str) -> Option<middleware::Definition> {
+        let middlewares = self.inner.request_middlewares.lock().unwrap();
+        middlewares.get(name).cloned()
+    }
+
+    pub fn handler_middleware_at_path(&self, path: &Vec<&str>) -> Option<middleware::Definition> {
         let middleware_name = path.last().unwrap().deref();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
-            ns.middleware(middleware_name)
+            ns.handler_middleware(middleware_name)
+        } else {
+            None
+        }
+    }
+
+    pub fn request_middleware_at_path(&self, path: &Vec<&str>) -> Option<middleware::Definition> {
+        let middleware_name = path.last().unwrap().deref();
+        let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
+        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+            ns.request_middleware(middleware_name)
         } else {
             None
         }
@@ -881,16 +912,28 @@ impl Builder {
         *self.inner.model_opposite_relations_map.lock().unwrap() = map;
     }
 
-    pub fn set_middlewares_block(&self, block: Option<middleware::Block>) {
-        *self.inner.middlewares_block.lock().unwrap() = block;
+    pub fn set_handler_middlewares_block(&self, block: Option<middleware::Block>) {
+        *self.inner.handler_middlewares_block.lock().unwrap() = block;
     }
 
-    pub fn middleware_stack(&self) -> &'static dyn Middleware {
-        *self.inner.middleware_stack.lock().unwrap()
+    pub fn set_request_middlewares_block(&self, block: Option<middleware::Block>) {
+        *self.inner.request_middlewares_block.lock().unwrap() = block;
     }
 
-    pub fn set_middleware_stack(&self, stack: &'static dyn Middleware) {
-        *self.inner.middleware_stack.lock().unwrap() = stack;
+    pub fn handler_middleware_stack(&self) -> &'static dyn Middleware {
+        *self.inner.handler_middleware_stack.lock().unwrap()
+    }
+
+    pub fn set_handler_middleware_stack(&self, stack: &'static dyn Middleware) {
+        *self.inner.handler_middleware_stack.lock().unwrap() = stack;
+    }
+
+    pub fn request_middleware_stack(&self) -> &'static dyn Middleware {
+        *self.inner.request_middleware_stack.lock().unwrap()
+    }
+
+    pub fn set_request_middleware_stack(&self, stack: &'static dyn Middleware) {
+        *self.inner.request_middleware_stack.lock().unwrap() = stack;
     }
 
     pub fn app_data(&self) -> &AppData {
@@ -916,7 +959,8 @@ impl Builder {
                 interface_field_decorators: self.inner.interface_field_decorators.lock().unwrap().clone(),
                 handler_decorators: self.inner.handler_decorators.lock().unwrap().clone(),
                 pipeline_items: self.inner.pipeline_items.lock().unwrap().clone(),
-                middlewares: self.inner.middlewares.lock().unwrap().clone(),
+                handler_middlewares: self.inner.handler_middlewares.lock().unwrap().clone(),
+                request_middlewares: self.inner.request_middlewares.lock().unwrap().clone(),
                 handlers: self.inner.handlers.lock().unwrap().clone(),
                 handler_templates: self.inner.handler_templates.lock().unwrap().clone(),
                 model_handler_groups: self.inner.model_handler_groups.lock().unwrap().clone().into_iter().map(|(k, v)| (k.to_string(), v.build())).collect(),
@@ -927,11 +971,13 @@ impl Builder {
                 entities: self.inner.entities.lock().unwrap().clone(),
                 debug: self.inner.debug.lock().unwrap().clone(),
                 admin: self.inner.admin.lock().unwrap().clone(),
-                middlewares_block: self.inner.middlewares_block.lock().unwrap().clone(),
+                handler_middlewares_block: self.inner.handler_middlewares_block.lock().unwrap().clone(),
+                request_middlewares_block: self.inner.request_middlewares_block.lock().unwrap().clone(),
                 database: self.inner.database.lock().unwrap().clone(),
                 connector_reference: self.inner.connector_reference.lock().unwrap().clone(),
                 connection: self.inner.connection.clone(),
-                middleware_stack: self.inner.middleware_stack.lock().unwrap().clone(),
+                handler_middleware_stack: self.inner.handler_middleware_stack.lock().unwrap().clone(),
+                request_middleware_stack: self.inner.request_middleware_stack.lock().unwrap().clone(),
                 handler_map: self.inner.handler_map.lock().unwrap().clone(),
                 model_opposite_relations_map: self.inner.model_opposite_relations_map.lock().unwrap().clone(),
                 app_data: self.app_data().clone(),
