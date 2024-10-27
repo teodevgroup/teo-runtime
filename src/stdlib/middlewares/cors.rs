@@ -5,7 +5,7 @@ use crate::namespace;
 use crate::request::ctx::Ctx;
 
 pub(in crate::stdlib) fn load_cors_middleware(namespace: &namespace::Builder) {
-    namespace.define_middleware("cors", |arguments: Arguments| async move {
+    namespace.define_request_middleware("cors", |arguments: Arguments| async move {
         let origin_: String = arguments.get("origin")?;
         let methods_: Vec<String> = arguments.get("methods")?;
         let headers_: Vec<String> = arguments.get("headers")?;

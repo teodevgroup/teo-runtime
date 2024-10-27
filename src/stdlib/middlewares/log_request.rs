@@ -7,7 +7,7 @@ use crate::namespace;
 use crate::request::ctx::Ctx;
 
 pub(in crate::stdlib) fn load_log_request_middleware(namespace: &namespace::Builder) {
-    namespace.define_middleware("logRequest", |arguments: Arguments| async move {
+    namespace.define_request_middleware("logRequest", |arguments: Arguments| async move {
         Ok(Box::leak(Box::new(move |ctx: Ctx, next: &'static dyn Next| async move {
             let start = SystemTime::now();
             let res = next.call(ctx.clone()).await?;

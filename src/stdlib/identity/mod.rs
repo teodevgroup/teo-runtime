@@ -228,7 +228,7 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
         }
     });
 
-    identity_namespace.define_middleware("identityFromJwt", |arguments: Arguments| async move {
+    identity_namespace.define_handler_middleware("identityFromJwt", |arguments: Arguments| async move {
         let secret_string: String = arguments.get("secret")?;
         let secret = Box::leak(Box::new(secret_string)).as_str();
         Ok(middleware_wrap_fn(move |ctx: Ctx, next: &'static dyn Next| async move {

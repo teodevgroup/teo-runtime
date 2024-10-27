@@ -1,4 +1,5 @@
 use std::process::exit;
+use teo_parser::ast::middleware::MiddlewareType;
 use teo_parser::ast::reference_space::ReferenceSpace;
 use teo_parser::ast::schema::Schema;
 use teo_parser::ast::span::Span;
@@ -189,8 +190,17 @@ pub async fn load_schema(main_namespace_builder: &namespace::Builder, schema: &S
         // validate middleware declarations
         for middleware_declaration in schema.middleware_declarations() {
             let dest_namespace_builder = main_namespace_builder.namespace_or_create_at_path(&middleware_declaration.namespace_string_path());
-            if dest_namespace_builder.middleware(middleware_declaration.identifier().name()).is_none() {
-                diagnostics.insert(DiagnosticsError::new(middleware_declaration.identifier().span(), "middleware implementation is not found", schema.source(middleware_declaration.source_id()).unwrap().file_path.clone()))
+            match middleware_declaration.middleware_type() {
+                MiddlewareType::HandlerMiddleware => {
+                    if dest_namespace_builder.handler_middleware(middleware_declaration.identifier().name()).is_none() {
+                        diagnostics.insert(DiagnosticsError::new(middleware_declaration.identifier().span(), "handle middleware implementation not found", schema.source(middleware_declaration.source_id()).unwrap().file_path.clone()))
+                    }
+                },
+                MiddlewareType::RequestMiddleware => {
+                    if dest_namespace_builder.request_middleware(middleware_declaration.identifier().name()).is_none() {
+                        diagnostics.insert(DiagnosticsError::new(middleware_declaration.identifier().span(), "request middleware implementation not found", schema.source(middleware_declaration.source_id()).unwrap().file_path.clone()))
+                    }
+                }
             }
         }
 

@@ -4,6 +4,7 @@ use teo_parser::traits::resolved::Resolve;
 use teo_result::Result;
 use async_recursion::async_recursion;
 use teo_parser::ast::arith_expr::ArithExpr;
+use teo_parser::ast::middleware::MiddlewareType;
 use teo_parser::diagnostics::diagnostics::Diagnostics;
 use crate::arguments::Arguments;
 use crate::middleware::{Use};
@@ -20,7 +21,7 @@ pub(super) async fn load_use_middlewares(main_namespace: &namespace::Builder, sc
             if let Some(reference_info) = expression.resolved().reference_info() {
                 let path = reference_info.reference.str_path();
                 let mut arguments = Arguments::default();
-                if let Some(middleware) = main_namespace.middleware_at_path(&path) {
+                if let Some(middleware) = main_namespace.middleware_at_path_with_type(&path, use_middlewares_block.middleware_type()) {
                     let creator = middleware.creator();
                     if let Some(arith_expr) = expression.kind.as_arith_expr() {
                         match arith_expr {
@@ -42,30 +43,49 @@ pub(super) async fn load_use_middlewares(main_namespace: &namespace::Builder, sc
             }
         }
         let dest_namespace = main_namespace.namespace_or_create_at_path(&use_middlewares_block.namespace_string_path());
-        dest_namespace.set_middlewares_block(Some(middleware::Block::new(uses)));
+        match use_middlewares_block.middleware_type() {
+            MiddlewareType::HandlerMiddleware => {
+                dest_namespace.set_handler_middlewares_block(Some(middleware::Block::new(uses)));
+            },
+            MiddlewareType::RequestMiddleware => {
+                dest_namespace.set_request_middlewares_block(Some(middleware::Block::new(uses)));
+            }
+        }
     }
 
     // load middleware stack
-    load_middleware_stack(main_namespace, empty_middleware()).await?;
+    load_middleware_stack(main_namespace, empty_middleware(), empty_middleware()).await?;
     Ok(())
 }
 
 #[async_recursion]
-async fn load_middleware_stack(namespace: &namespace::Builder, parent_stack: &'static dyn Middleware) -> Result<()> {
-    if let Some(block) = namespace.middlewares_block() {
+async fn load_middleware_stack(namespace: &namespace::Builder, parent_handler_stack: &'static dyn Middleware, parent_request_stack: &'static dyn Middleware) -> Result<()> {
+    if let Some(block) = namespace.handler_middlewares_block() {
         let mut middlewares = vec![];
-        middlewares.push(parent_stack);
+        middlewares.push(parent_handler_stack);
         for r#use in block.uses() {
             let middleware = r#use.creator().call(r#use.arguments().clone()).await?;
             middlewares.push(middleware);
         }
         middlewares.reverse();
-        namespace.set_middleware_stack(combine_middleware(middlewares));
+        namespace.set_handler_middleware_stack(combine_middleware(middlewares));
     } else {
-        namespace.set_middleware_stack(parent_stack);
+        namespace.set_handler_middleware_stack(parent_handler_stack);
+    }
+    if let Some(block) = namespace.handler_middlewares_block() {
+        let mut middlewares = vec![];
+        middlewares.push(parent_request_stack);
+        for r#use in block.uses() {
+            let middleware = r#use.creator().call(r#use.arguments().clone()).await?;
+            middlewares.push(middleware);
+        }
+        middlewares.reverse();
+        namespace.set_request_middleware_stack(combine_middleware(middlewares));
+    } else {
+        namespace.set_request_middleware_stack(parent_request_stack);
     }
     for child_namespace in namespace.namespaces().values() {
-        load_middleware_stack(child_namespace, namespace.middleware_stack()).await?;
+        load_middleware_stack(child_namespace, namespace.handler_middleware_stack(), namespace.request_middleware_stack()).await?;
     }
     Ok(())
 }

@@ -4,6 +4,7 @@ use std::sync::{Arc, Mutex};
 use educe::Educe;
 use maplit::btreemap;
 use teo_parser::ast::handler::HandlerInputFormat;
+use teo_parser::ast::middleware::MiddlewareType;
 use teo_parser::r#type::Type;
 use teo_result::{Error, Result};
 use crate::interface::Interface;
@@ -725,6 +726,13 @@ impl Builder {
     pub fn request_middleware(&self, name: &str) -> Option<middleware::Definition> {
         let middlewares = self.inner.request_middlewares.lock().unwrap();
         middlewares.get(name).cloned()
+    }
+
+    pub fn middleware_at_path_with_type(&self, path: &Vec<&str>, middleware_type: MiddlewareType) -> Option<middleware::Definition> {
+        match middleware_type {
+            MiddlewareType::HandlerMiddleware => self.handler_middleware_at_path(path),
+            MiddlewareType::RequestMiddleware => self.request_middleware_at_path(path),
+        }
     }
 
     pub fn handler_middleware_at_path(&self, path: &Vec<&str>) -> Option<middleware::Definition> {
