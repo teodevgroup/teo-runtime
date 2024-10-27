@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 use cookie::Cookie;
 use crate::value::Value;
 use crate::teon;
-use teo_result::Result;
+use teo_result::{Result, Error};
 use crate::response::body::Body;
 use crate::response::header::readwrite::HeaderMap;
 
@@ -63,6 +63,17 @@ impl Response {
         let res = Self::empty();
         res.inner.lock().unwrap().body = Body::file(path);
         res
+    }
+
+    pub fn send_file(base: impl AsRef<str>, path: impl AsRef<str>) -> Result<Response> {
+        let base_str = base.as_ref();
+        let path_str = path.as_ref();
+        let combined_path = PathBuf::from(base_str).join(path_str);
+        if combined_path.is_file() {
+            Ok(Response::file(combined_path))
+        } else {
+            Err(Error::not_found())
+        }
     }
 
     pub fn redirect(path: impl Into<String>) -> Response {
