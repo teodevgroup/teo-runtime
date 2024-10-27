@@ -1,3 +1,4 @@
+use std::cell::{Ref, RefCell, RefMut};
 use std::fmt::{Debug, Formatter};
 use std::sync::{Arc, Mutex};
 use hyper::{self, header::{HeaderMap, HeaderValue}, Uri, Version};
@@ -5,18 +6,37 @@ use teo_result::{Error, Result};
 use crate::request::Ctx;
 use cookie::Cookie;
 use http_body_util::BodyExt;
+use crate::connection::transaction;
 use crate::handler::r#match::HandlerMatch;
 use crate::request::cookies::Cookies;
-use crate::request::ctx::extract::ExtractFromRequestCtx;
+use crate::request::extract::ExtractFromRequestCtx;
+use crate::request::local::RequestLocal;
+use crate::Value;
 
 #[derive(Clone)]
 pub struct Request {
     inner: Arc<hyper::Request<hyper::body::Incoming>>,
+    transaction_ctx: transaction::Ctx,
     cookies: Arc<Mutex<Option<Cookies>>>,
     handler_match: Arc<Mutex<Option<HandlerMatch>>>,
+    body_value: Arc<Mutex<Arc<Value>>>,
+    local_data: RefCell<RequestLocal>,
+    local_objects: RefCell<RequestLocal>,
 }
 
 impl Request {
+
+    pub fn new(inner: Arc<hyper::Request<hyper::body::Incoming>>, transaction_ctx: transaction::Ctx) -> Self {
+        Self {
+            inner,
+            transaction_ctx,
+            cookies: Arc::new(Mutex::new(None)),
+            handler_match: Arc::new(Mutex::new(None)),
+            body_value: Arc::new(Mutex::new(Arc::new(Value::Null))),
+            local_data: RefCell::new(RequestLocal::new()),
+            local_objects: RefCell::new(RequestLocal::new()),
+        }
+    }
 
     pub fn version(&self) -> Version {
         self.inner.version()
@@ -91,6 +111,27 @@ impl Request {
         self.handler_match.lock().unwrap().replace(handler_match);
     }
 
+    pub fn body_value(&self) -> Arc<Value> {
+        self.body_value.lock().unwrap().clone()
+    }
+
+    pub fn set_body_value(&self, value: Value) {
+        *self.body_value.lock().unwrap() = Arc::new(value);
+    }
+
+    pub fn transaction_ctx(&self) -> transaction::Ctx {
+        self.transaction_ctx.clone()
+    }
+
+    pub fn data(&self) -> Ref<RequestLocal> {
+        self.data.borrow()
+    }
+
+    pub fn data_mut(&self) -> RefMut<RequestLocal> {
+        self.data.borrow_mut()
+    }
+
+
     fn parse_cookies(&self) -> Result<Cookies> {
         let mut cookies: Vec<Cookie<'static>> = Vec::new();
         for cookie_header_value in self.inner.headers().get_all("cookie") {
@@ -107,16 +148,6 @@ impl Request {
         let cookies = Cookies::from(cookies);
         self.cookies.lock().unwrap().replace(cookies.clone());
         Ok(cookies)
-    }
-}
-
-impl From<hyper::Request<hyper::body::Incoming>> for Request {
-    fn from(hyper_request: hyper::Request<hyper::body::Incoming>) -> Self {
-        Self {
-            inner: Arc::new(hyper_request),
-            cookies: Arc::new(Mutex::new(None)),
-            handler_match: Arc::new(Mutex::new(None)),
-        }
     }
 }
 
