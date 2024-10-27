@@ -2,7 +2,8 @@ use std::fmt::{Debug, Formatter};
 use std::sync::{Arc, Mutex};
 use hyper::{self, header::{HeaderMap, HeaderValue}, Uri, Version};
 use teo_result::{Error, Result};
-use crate::request::{Cookie, Ctx};
+use crate::request::Ctx;
+use cookie::Cookie;
 use crate::request::cookies::Cookies;
 use crate::request::ctx::extract::ExtractFromRequestCtx;
 
@@ -80,7 +81,7 @@ impl Request {
     }
 
     fn parse_cookies(&self) -> Result<Cookies> {
-        let mut cookies = Vec::new();
+        let mut cookies: Vec<Cookie<'static>> = Vec::new();
         for cookie_header_value in self.inner.headers().get_all("cookie") {
             let cookie_full_str = cookie_header_value.to_str().map_err(|_| Error::internal_server_error_message("cannot read request header value: cookie"))?;
             for cookie_str in cookie_full_str.split(';').map(|s| s.trim()) {

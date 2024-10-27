@@ -16,7 +16,7 @@ pub fn load_server(main_namespace: &namespace::Builder, schema: &Schema, server:
     let bind_expect = config_decl.get_field("bind").unwrap().type_expr().resolved();
     let bind: (String, i32) = fetch_expression_or_null(server.get_item("bind"), schema, server, bind_expect, main_namespace, diagnostics)?.try_into()?;
     let server_conf = Server {
-        bind,
+        bind: (bind.0, bind.1 as u16),
         path_prefix,
     };
     let dest_namespace = main_namespace.namespace_or_create_at_path(&server.namespace_string_path());

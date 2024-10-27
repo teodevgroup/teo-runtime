@@ -1,7 +1,7 @@
 use std::fmt::{Debug, Formatter};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
-use actix_web::cookie::Cookie;
+use cookie::Cookie;
 use crate::value::Value;
 use crate::teon;
 use teo_result::Result;
