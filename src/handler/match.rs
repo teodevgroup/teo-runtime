@@ -1,7 +1,13 @@
+use std::sync::Arc;
 use indexmap::IndexMap;
 
 #[derive(Debug, Clone)]
 pub struct HandlerMatch {
+    inner: Arc<Inner>,
+}
+
+#[derive(Debug, Clone)]
+struct Inner {
     path: Vec<String>,
     name: String,
     captures: IndexMap<String, String>,
@@ -14,15 +20,17 @@ impl HandlerMatch {
         let mut path_without_last = path.clone();
         path_without_last.pop();
         Self {
-            path,
-            name,
-            captures,
-            path_without_last,
+            inner: Arc::new(Inner {
+                path,
+                name,
+                captures,
+                path_without_last,
+            })
         }
     }
 
     pub fn path_without_last(&self) -> &Vec<String> {
-        &self.path_without_last
+        &self.inner.path_without_last
     }
 
     pub fn group_name(&self) -> &str {
@@ -30,18 +38,18 @@ impl HandlerMatch {
     }
 
     pub fn path(&self) -> &Vec<String> {
-        &self.path
+        &self.inner.path
     }
 
     pub fn name(&self) -> &str {
-        self.name.as_str()
+        self.inner.name.as_str()
     }
 
     pub fn handler_name(&self) -> &str {
-        self.name.as_str()
+        self.inner.name.as_str()
     }
 
     pub fn captures(&self) -> &IndexMap<String, String> {
-        &self.captures
+        &self.inner.captures
     }
 }
