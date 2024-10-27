@@ -5,9 +5,8 @@ use crate::teon;
 use crate::action::action::*;
 use crate::response::Response;
 
-
 pub async fn find_many(ctx: &request::Ctx) -> teo_result::Result<Response> {
-    let model = ctx.namespace().model_at_path(&ctx.handler_match().path()).unwrap();
+    let model = ctx.namespace().model_at_path(&ctx.request().handler_match().unwrap().path()).unwrap();
     let action = FIND | MANY | ENTRY;
     let results = ctx.transaction_ctx().find_many_internal(
         model,

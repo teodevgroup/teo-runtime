@@ -11,7 +11,7 @@ pub(in crate::stdlib) fn load_log_request_middleware(namespace: &namespace::Buil
         Ok(Box::leak(Box::new(move |ctx: Ctx, next: &'static dyn Next| async move {
             let start = SystemTime::now();
             let res = next.call(ctx.clone()).await?;
-            let handler_found_info = Some(ctx.handler_match());
+            let handler_found_info = ctx.request().handler_match();
             let time_elapsed = SystemTime::now().duration_since(start).unwrap();
             let path = ctx.request().path();
             let method = ctx.request().method();

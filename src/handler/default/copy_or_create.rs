@@ -7,7 +7,7 @@ use crate::action::action::*;
 use crate::connection::transaction;
 
 pub async fn copy_or_create(req_ctx: &request::Ctx) -> teo_result::Result<Response> {
-    let model = req_ctx.namespace().model_at_path(&req_ctx.handler_match().path()).unwrap();
+    let model = req_ctx.namespace().model_at_path(&req_ctx.request().handler_match().unwrap().path()).unwrap();
     let action = COPY | SINGLE | ENTRY;
     let value: Value = req_ctx.transaction_ctx().run_transaction(|ctx: transaction::Ctx| async move {
         let include = req_ctx.body().get("include");

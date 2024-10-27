@@ -23,19 +23,17 @@ struct CtxInner {
     request: Request,
     body: Arc<Value>,
     transaction_ctx: transaction::Ctx,
-    handler_match: HandlerMatch,
     data: RefCell<Data>,
 }
 
 impl Ctx {
 
-    pub fn new(request: Request, body: Arc<Value>, transaction_ctx: transaction::Ctx, handler_match: HandlerMatch) -> Self {
+    pub fn new(request: Request, body: Arc<Value>, transaction_ctx: transaction::Ctx) -> Self {
         Self {
             inner: Arc::new(CtxInner {
                 request,
                 body,
                 transaction_ctx,
-                handler_match,
                 data: RefCell::new(Data::new())
             })
         }
@@ -59,10 +57,6 @@ impl Ctx {
 
     pub fn namespace(&self) -> &'static Namespace {
         self.inner.transaction_ctx.namespace()
-    }
-
-    pub fn handler_match(&self) -> &HandlerMatch {
-        &self.inner.handler_match
     }
 
     pub fn body(&self) -> &Value {

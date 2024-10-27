@@ -105,8 +105,8 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
     });
 
     identity_namespace.define_handler_template("signIn", |req_ctx: request::Ctx| async move {
-        let model = req_ctx.namespace().model_at_path(&req_ctx.handler_match().path()).unwrap();
-        let model_ctx = req_ctx.transaction_ctx().model_ctx_for_model_at_path(req_ctx.handler_match().path()).unwrap();
+        let model = req_ctx.namespace().model_at_path(&req_ctx.request().handler_match().unwrap().path()).unwrap();
+        let model_ctx = req_ctx.transaction_ctx().model_ctx_for_model_at_path(req_ctx.request().handler_match().unwrap().path()).unwrap();
         let input = req_ctx.body();
         let credentials = input.get("credentials").unwrap().as_dictionary().unwrap();
         let mut identity_key: Option<&String> = None;
@@ -194,8 +194,8 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
     });
 
     identity_namespace.define_handler_template("identity", |req_ctx: request::Ctx| async move {
-        let model = req_ctx.namespace().model_at_path(&req_ctx.handler_match().path()).unwrap();
-        let model_ctx = req_ctx.transaction_ctx().model_ctx_for_model_at_path(req_ctx.handler_match().path()).unwrap();
+        let model = req_ctx.namespace().model_at_path(&req_ctx.request().handler_match().unwrap().path()).unwrap();
+        let model_ctx = req_ctx.transaction_ctx().model_ctx_for_model_at_path(req_ctx.request().handler_match().unwrap().path()).unwrap();
         let Some(jwt_secret) = model.data().get("identity:jwtSecret") else {
             return Err(Error::internal_server_error_message("missing @identity.jwtSecret"));
         };

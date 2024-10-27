@@ -5,6 +5,7 @@ use teo_result::{Error, Result};
 use crate::request::Ctx;
 use cookie::Cookie;
 use http_body_util::BodyExt;
+use crate::handler::r#match::HandlerMatch;
 use crate::request::cookies::Cookies;
 use crate::request::ctx::extract::ExtractFromRequestCtx;
 
@@ -12,6 +13,7 @@ use crate::request::ctx::extract::ExtractFromRequestCtx;
 pub struct Request {
     inner: Arc<hyper::Request<hyper::body::Incoming>>,
     cookies: Arc<Mutex<Option<Cookies>>>,
+    handler_match: Arc<Mutex<Option<HandlerMatch>>>,
 }
 
 impl Request {
@@ -81,6 +83,14 @@ impl Request {
         }
     }
 
+    pub fn handler_match(&self) -> Option<HandlerMatch> {
+        self.handler_match.lock().unwrap().clone()
+    }
+
+    pub fn set_handler_match(&self, handler_match: HandlerMatch) {
+        self.handler_match.lock().unwrap().replace(handler_match);
+    }
+
     fn parse_cookies(&self) -> Result<Cookies> {
         let mut cookies: Vec<Cookie<'static>> = Vec::new();
         for cookie_header_value in self.inner.headers().get_all("cookie") {
@@ -105,6 +115,7 @@ impl From<hyper::Request<hyper::body::Incoming>> for Request {
         Self {
             inner: Arc::new(hyper_request),
             cookies: Arc::new(Mutex::new(None)),
+            handler_match: Arc::new(Mutex::new(None)),
         }
     }
 }

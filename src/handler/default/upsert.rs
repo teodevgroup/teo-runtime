@@ -8,7 +8,7 @@ use crate::handler::default::internal::create::create_internal;
 use crate::handler::default::internal::update::update_internal;
 
 pub async fn upsert(req_ctx: &request::Ctx) -> teo_result::Result<Response> {
-    let model = req_ctx.namespace().model_at_path(&req_ctx.handler_match().path()).unwrap();
+    let model = req_ctx.namespace().model_at_path(&req_ctx.request().handler_match().unwrap().path()).unwrap();
     let action = UPSERT | SINGLE | ENTRY;
     let value: Value = req_ctx.transaction_ctx().run_transaction(|ctx: transaction::Ctx| async move {
         let find_result = ctx.find_unique_internal(model, req_ctx.body(), true, action, Some(req_ctx.clone()), path![]).await?;

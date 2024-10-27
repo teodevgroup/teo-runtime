@@ -7,7 +7,7 @@ use crate::action::action::*;
 use crate::connection::transaction;
 
 pub async fn copy_many(req_ctx: &request::Ctx) -> teo_result::Result<Response> {
-    let model = req_ctx.namespace().model_at_path(&req_ctx.handler_match().path()).unwrap();
+    let model = req_ctx.namespace().model_at_path(&req_ctx.request().handler_match().unwrap().path()).unwrap();
     let action = COPY | MANY | ENTRY;
     let (retval, count) = req_ctx.transaction_ctx().run_transaction(|ctx: transaction::Ctx| async move {
         let objects = ctx.find_many_internal(model, req_ctx.body(), true, action, Some(req_ctx.clone()), path![]).await?;
