@@ -31,5 +31,6 @@ pub mod error_ext;
 pub mod admin;
 pub mod app;
 pub mod cookies;
+pub mod message;
 
 pub use value::Value;

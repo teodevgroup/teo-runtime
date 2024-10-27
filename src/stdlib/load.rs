@@ -24,6 +24,7 @@ use crate::stdlib::pipeline_items::datetime::load_pipeline_datetime_items;
 use crate::stdlib::pipeline_items::debug::load_debug_items;
 use crate::stdlib::structs::load_structs;
 use crate::stdlib::identity::load_identity_library;
+use crate::stdlib::middlewares::cors::load_cors_middleware;
 use crate::stdlib::pipeline_items::request::load_pipeline_request_items;
 
 pub fn load(namespace_builder: &namespace::Builder) {
@@ -58,6 +59,7 @@ pub fn load(namespace_builder: &namespace::Builder) {
     load_debug_items(&std_namespace_builder);
     load_bcrypt_items(&std_namespace_builder);
     // middlewares
+    load_cors_middleware(&std_namespace_builder);
     load_log_request_middleware(&std_namespace_builder);
     // libraries
     load_identity_library(&std_namespace_builder);

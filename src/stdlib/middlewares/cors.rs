@@ -1,0 +1,25 @@
+use crate::arguments::Arguments;
+use crate::middleware::middleware::Middleware;
+use crate::middleware::next::Next;
+use crate::namespace;
+use crate::request::ctx::Ctx;
+
+pub(in crate::stdlib) fn load_cors_middleware(namespace: &namespace::Builder) {
+    namespace.define_middleware("cors", |arguments: Arguments| async move {
+        let origin_: String = arguments.get("origin")?;
+        let methods_: Vec<String> = arguments.get("methods")?;
+        let headers_: Vec<String> = arguments.get("headers")?;
+        let max_age: i32 = arguments.get("maxAge")?;
+        let origin = Box::leak(Box::new(origin_)).as_str();
+        let methods = &*Box::leak(Box::new(methods_));
+        let headers = &*Box::leak(Box::new(headers_));
+        Ok(Box::leak(Box::new(move |ctx: Ctx, next: &'static dyn Next| async move {
+            let mut res = next.call(ctx).await?;
+            res.headers().set("Access-Control-Allow-Origin", origin);
+            res.headers().set("Access-Control-Allow-Methods", methods.join(", "));
+            res.headers().set("Access-Control-Allow-Headers", headers.join(", "));
+            res.headers().set("Access-Control-Max-Age", max_age.to_string());
+            return Ok(res);
+        })) as &dyn Middleware)
+    });
+}
