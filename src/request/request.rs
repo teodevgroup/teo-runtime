@@ -89,7 +89,7 @@ impl Request {
                 if !cookie_str.is_empty() {
                     cookies.push(match Cookie::parse_encoded(cookie_str) {
                         Ok(cookie) => cookie,
-                        Err(_) => return Err(Error::internal_server_error_message(format!("invalid cookie format: `{}`", cookie_str))),
+                        Err(_) => return Err(Error::invalid_request_message(format!("invalid cookie format: `{}`", cookie_str))),
                     }.into_owned());
                 }
             }
