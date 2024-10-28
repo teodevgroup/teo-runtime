@@ -4,9 +4,9 @@ version = "0.3.0-alpha.1"
 edition = "2021"
 description = "Runtime for Teo"
 license = "Apache-2.0"
-homepage = "https://teocloud.io"
-documentation = "https://teocloud.io/docs"
-repository = "https://github.com/teocloud/teo-runtime"
+homepage = "https://teodev.io"
+documentation = "https://docs.teodev.io"
+repository = "https://github.com/teodevgroup/teo-runtime"
 
 [dependencies]
 teo-result = { version = "0.3.0-alpha.1", path = "../teo-result" }
