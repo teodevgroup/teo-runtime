@@ -27,14 +27,14 @@ struct CtxInner {
     path: KeyPath,
     action: Action,
     transaction_ctx: transaction::Ctx,
-    request_ctx: Option<request::Ctx>,
+    request: Option<request::Request>,
 }
 
 impl Ctx {
 
-    pub fn new(value: Value, object: model::Object, path: KeyPath, action: Action, transaction_ctx: transaction::Ctx, request_ctx: Option<request::Ctx>) -> Self {
+    pub fn new(value: Value, object: model::Object, path: KeyPath, action: Action, transaction_ctx: transaction::Ctx, request: Option<request::Request>) -> Self {
         Self {
-            inner: Arc::new(CtxInner { value, object, path, action, transaction_ctx, request_ctx })
+            inner: Arc::new(CtxInner { value, object, path, action, transaction_ctx, request })
         }
     }
 
@@ -58,8 +58,8 @@ impl Ctx {
         self.inner.transaction_ctx.clone()
     }
 
-    pub fn request_ctx(&self) -> Option<request::Ctx> {
-        self.inner.request_ctx.clone()
+    pub fn request(&self) -> Option<request::Request> {
+        self.inner.request.clone()
     }
 
     pub async fn resolve_pipeline<T, E>(&self, object: Value) -> Result<T> where T: TryFrom<Value, Error=E>, Error: From<E> {
@@ -114,7 +114,7 @@ impl Ctx {
                 path: self.inner.path.clone(),
                 action: self.inner.action,
                 transaction_ctx: self.inner.transaction_ctx.clone(),
-                request_ctx: self.inner.request_ctx.clone(),
+                request: self.inner.request.clone(),
             })
         }
     }

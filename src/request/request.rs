@@ -3,13 +3,12 @@ use std::fmt::{Debug, Formatter};
 use std::sync::{Arc, Mutex};
 use hyper::{self, header::{HeaderMap, HeaderValue}, Uri, Version};
 use teo_result::{Error, Result};
-use crate::request::Ctx;
 use cookie::Cookie;
 use http_body_util::BodyExt;
 use crate::connection::transaction;
 use crate::handler::r#match::HandlerMatch;
 use crate::request::cookies::Cookies;
-use crate::request::extract::ExtractFromRequestCtx;
+use crate::request::extract::ExtractFromRequest;
 use crate::request::local::RequestLocal;
 use crate::Value;
 
@@ -20,8 +19,8 @@ pub struct Request {
     cookies: Arc<Mutex<Option<Cookies>>>,
     handler_match: Arc<Mutex<Option<HandlerMatch>>>,
     body_value: Arc<Mutex<Arc<Value>>>,
-    local_data: RefCell<RequestLocal>,
-    local_objects: RefCell<RequestLocal>,
+    local_data: Arc<RefCell<RequestLocal>>,
+    local_objects: Arc<RefCell<RequestLocal>>,
 }
 
 impl Request {
@@ -33,8 +32,8 @@ impl Request {
             cookies: Arc::new(Mutex::new(None)),
             handler_match: Arc::new(Mutex::new(None)),
             body_value: Arc::new(Mutex::new(Arc::new(Value::Null))),
-            local_data: RefCell::new(RequestLocal::new()),
-            local_objects: RefCell::new(RequestLocal::new()),
+            local_data: Arc::new(RefCell::new(RequestLocal::new())),
+            local_objects: Arc::new(RefCell::new(RequestLocal::new())),
         }
     }
 
@@ -123,14 +122,21 @@ impl Request {
         self.transaction_ctx.clone()
     }
 
-    pub fn data(&self) -> Ref<RequestLocal> {
-        self.data.borrow()
+    pub fn local_data(&self) -> Ref<RequestLocal> {
+        self.local_data.borrow()
     }
 
-    pub fn data_mut(&self) -> RefMut<RequestLocal> {
-        self.data.borrow_mut()
+    pub fn local_data_mut(&self) -> RefMut<RequestLocal> {
+        self.local_data.borrow_mut()
     }
 
+    pub fn local_objects(&self) -> Ref<RequestLocal> {
+        self.local_objects.borrow()
+    }
+
+    pub fn local_objects_mut(&self) -> RefMut<RequestLocal> {
+        self.local_objects.borrow_mut()
+    }
 
     fn parse_cookies(&self) -> Result<Cookies> {
         let mut cookies: Vec<Cookie<'static>> = Vec::new();
@@ -163,9 +169,9 @@ impl Debug for Request {
     }
 }
 
-impl ExtractFromRequestCtx for Request {
-    fn extract(ctx: &Ctx) -> Self {
-        ctx.request().clone()
+impl ExtractFromRequest for Request {
+    fn extract(request: &Request) -> Self {
+        request.clone()
     }
 }
 

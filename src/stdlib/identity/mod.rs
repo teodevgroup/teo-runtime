@@ -14,7 +14,7 @@ use crate::action::action::{CODE_AMOUNT, CODE_NAME, CODE_POSITION};
 use crate::arguments::Arguments;
 use crate::middleware::middleware::middleware_wrap_fn;
 use crate::middleware::next::Next;
-use crate::request::Ctx;
+use crate::request::Request;
 use crate::response::Response;
 use crate::traits::named::Named;
 
@@ -104,10 +104,10 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
         Ok(encode_token(claims, &jwt_secret).into())
     });
 
-    identity_namespace.define_handler_template("signIn", |req_ctx: request::Ctx| async move {
-        let model = req_ctx.namespace().model_at_path(&req_ctx.request().handler_match().unwrap().path()).unwrap();
-        let model_ctx = req_ctx.transaction_ctx().model_ctx_for_model_at_path(req_ctx.request().handler_match().unwrap().path()).unwrap();
-        let input = req_ctx.body();
+    identity_namespace.define_handler_template("signIn", |request: Request| async move {
+        let model = request.transaction_ctx().namespace().model_at_path(&request.handler_match().unwrap().path()).unwrap();
+        let model_ctx = request.transaction_ctx().model_ctx_for_model_at_path(request.handler_match().unwrap().path()).unwrap();
+        let input = request.body_value();
         let credentials = input.get("credentials").unwrap().as_dictionary().unwrap();
         let mut identity_key: Option<&String> = None;
         let mut identity_value: Option<&Value> = None;
@@ -164,10 +164,10 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
             "companions": companion_values,
             "ids": id_values,
         });
-        let pipeline_ctx = pipeline::Ctx::new(Value::from(pipeline_input), object.clone(), path!["credentials"], CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx.transaction_ctx(), Some(req_ctx.clone()));
+        let pipeline_ctx = pipeline::Ctx::new(Value::from(pipeline_input), object.clone(), path!["credentials"], CODE_NAME | CODE_AMOUNT | CODE_POSITION, request.transaction_ctx(), Some(request.clone()));
         let _ = pipeline_ctx.run_pipeline_ignore_return_value(auth_checker_pipeline).await.map_err(|mut e| { e.code = 401; e})?;
-        let credentials_pipeline_ctx = pipeline::Ctx::new(Value::from(Value::Dictionary(credentials.clone())), object.clone(), path!["credentials"], CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx.transaction_ctx(), Some(req_ctx.clone()));
-        let self_pipeline_ctx = pipeline::Ctx::new(Value::from(&object), object.clone(), path![], CODE_NAME | CODE_AMOUNT | CODE_POSITION, req_ctx.transaction_ctx(), Some(req_ctx.clone()));
+        let credentials_pipeline_ctx = pipeline::Ctx::new(Value::from(Value::Dictionary(credentials.clone())), object.clone(), path!["credentials"], CODE_NAME | CODE_AMOUNT | CODE_POSITION, request.transaction_ctx(), Some(request.clone()));
+        let self_pipeline_ctx = pipeline::Ctx::new(Value::from(&object), object.clone(), path![], CODE_NAME | CODE_AMOUNT | CODE_POSITION, request.transaction_ctx(), Some(request.clone()));
         if let Some(validator) = model.data().get("identity:validateAccount") {
             let validator = validator.as_pipeline().unwrap();
             match self_pipeline_ctx.run_pipeline_ignore_return_value(validator).await {
@@ -193,14 +193,14 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
         })))
     });
 
-    identity_namespace.define_handler_template("identity", |req_ctx: request::Ctx| async move {
-        let model = req_ctx.namespace().model_at_path(&req_ctx.request().handler_match().unwrap().path()).unwrap();
-        let model_ctx = req_ctx.transaction_ctx().model_ctx_for_model_at_path(req_ctx.request().handler_match().unwrap().path()).unwrap();
+    identity_namespace.define_handler_template("identity", |request: Request| async move {
+        let model = request.transaction_ctx().namespace().model_at_path(&request.handler_match().unwrap().path()).unwrap();
+        let model_ctx = request.transaction_ctx().model_ctx_for_model_at_path(request.handler_match().unwrap().path()).unwrap();
         let Some(jwt_secret) = model.data().get("identity:jwtSecret") else {
             return Err(Error::internal_server_error_message("missing @identity.jwtSecret"));
         };
         let jwt_secret: String = jwt_secret.try_into()?;
-        let Some(authorization) = req_ctx.request().headers().get("authorization").map(|h| h.to_str().unwrap()) else {
+        let Some(authorization) = request.headers().get("authorization").map(|h| h.to_str().unwrap()) else {
             return Err(Error::unauthorized_message("missing authorization header value"));
         };
         if authorization.len() < 7 {
@@ -216,8 +216,9 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
         let teon_value: Value = Value::from(claims.id);
         let object: Option<model::Object> = model_ctx.find_unique(&teon_value).await?;
         if let Some(object) = object {
-            let include = req_ctx.body().get("include");
-            let select = req_ctx.body().get("select");
+            let bind = request.body_value();
+            let include = bind.get("include");
+            let select = bind.get("select");
             let obj = object.refreshed(include, select).await?;
             let obj_teon = obj.to_teon().await?;
             return Ok(Response::data_meta(obj_teon, teon!({
@@ -231,8 +232,8 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
     identity_namespace.define_handler_middleware("identityFromJwt", |arguments: Arguments| async move {
         let secret_string: String = arguments.get("secret")?;
         let secret = Box::leak(Box::new(secret_string)).as_str();
-        Ok(middleware_wrap_fn(move |ctx: Ctx, next: &'static dyn Next| async move {
-            if let Some(authorization) = ctx.request().headers().get("authorization").map(|h| h.to_str().unwrap()) {
+        Ok(middleware_wrap_fn(move |request: Request, next: &'static dyn Next| async move {
+            if let Some(authorization) = request.headers().get("authorization").map(|h| h.to_str().unwrap()) {
                 if authorization.len() < 7 {
                     return Err(Error::unauthorized_message("invalid jwt token"));
                 }
@@ -240,7 +241,7 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
                 match decode_token(token, &secret) {
                     Ok(claims) => {
                         let json_identifier = &claims.id;
-                        let Some(model_ctx) = ctx.transaction_ctx().model_ctx_for_model_at_path(&claims.model) else {
+                        let Some(model_ctx) = request.transaction_ctx().model_ctx_for_model_at_path(&claims.model) else {
                             return Err(Error::unauthorized_message("invalid jwt token"));
                         };
                         let teon_identifier = Value::from(json_identifier);
@@ -248,7 +249,7 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
                         if let Some(object) = object {
                             if let Some(validator) = object.model().data().get("identity:validateAccount") {
                                 let validator = validator.as_pipeline().unwrap();
-                                let self_pipeline_ctx = pipeline::Ctx::new(Value::from(&object), object.clone(), path![], CODE_NAME | CODE_AMOUNT | CODE_POSITION, ctx.transaction_ctx(), Some(ctx.clone()));
+                                let self_pipeline_ctx = pipeline::Ctx::new(Value::from(&object), object.clone(), path![], CODE_NAME | CODE_AMOUNT | CODE_POSITION, request.transaction_ctx(), Some(request.clone()));
                                 match self_pipeline_ctx.run_pipeline_ignore_return_value(validator).await {
                                     Ok(_) => (),
                                     Err(mut error) => {
@@ -257,7 +258,7 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
                                     }
                                 }
                             }
-                            ctx.data_mut().insert("account", Value::from(object));
+                            request.local_data_mut().insert("account", Value::from(object));
                         } else {
                             return Err(Error::unauthorized_message("invalid jwt token"));
                         }
@@ -274,7 +275,7 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
                     }
                 }
             }
-            let res = next.call(ctx).await?;
+            let res = next.call(request).await?;
             return Ok(res);
         }))
     });

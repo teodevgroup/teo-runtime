@@ -8,7 +8,7 @@ use crate::handler::ctx_argument::HandlerCtxArgument;
 use crate::handler::{Group, Handler, handler};
 use crate::handler::group::group;
 use crate::handler::Method;
-use crate::request;
+use crate::request::Request;
 use crate::traits::named::Named;
 use crate::utils::next_path;
 
@@ -69,8 +69,8 @@ impl Builder {
                 method: Method::Post,
                 interface: None,
                 url: None,
-                call: Box::leak(Box::new(|ctx: request::Ctx| async {
-                    wrapped_call.call(ctx).await
+                call: Box::leak(Box::new(|request: Request| async {
+                    wrapped_call.call(request).await
                 })),
             })
         };

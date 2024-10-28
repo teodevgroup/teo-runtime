@@ -1,4 +1,3 @@
-pub mod ctx;
 pub mod local;
 pub mod request;
 pub mod cookies;

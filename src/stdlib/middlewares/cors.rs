@@ -2,7 +2,7 @@ use crate::arguments::Arguments;
 use crate::middleware::middleware::Middleware;
 use crate::middleware::next::Next;
 use crate::namespace;
-use crate::request::ctx::Ctx;
+use crate::request::Request;
 
 pub(in crate::stdlib) fn load_cors_middleware(namespace: &namespace::Builder) {
     namespace.define_request_middleware("cors", |arguments: Arguments| async move {
@@ -13,8 +13,8 @@ pub(in crate::stdlib) fn load_cors_middleware(namespace: &namespace::Builder) {
         let origin = Box::leak(Box::new(origin_)).as_str();
         let methods = &*Box::leak(Box::new(methods_));
         let headers = &*Box::leak(Box::new(headers_));
-        Ok(Box::leak(Box::new(move |ctx: Ctx, next: &'static dyn Next| async move {
-            let mut res = next.call(ctx).await?;
+        Ok(Box::leak(Box::new(move |request: Request, next: &'static dyn Next| async move {
+            let mut res = next.call(request).await?;
             res.headers().set("Access-Control-Allow-Origin", origin);
             res.headers().set("Access-Control-Allow-Methods", methods.join(", "));
             res.headers().set("Access-Control-Allow-Headers", headers.join(", "));

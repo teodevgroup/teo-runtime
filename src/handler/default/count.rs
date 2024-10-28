@@ -1,9 +1,9 @@
 use key_path::path;
-use crate::request;
+use crate::request::Request;
 use crate::response::Response;
 
-pub async fn count(req_ctx: &request::Ctx) -> teo_result::Result<Response> {
-    let model = req_ctx.namespace().model_at_path(&req_ctx.request().handler_match().unwrap().path()).unwrap();
-    let result = req_ctx.transaction_ctx().count(model, req_ctx.body(), path![]).await?;
+pub async fn count(request: &Request) -> teo_result::Result<Response> {
+    let model = request.transaction_ctx().namespace().model_at_path(&request.handler_match().unwrap().path()).unwrap();
+    let result = request.transaction_ctx().count(model, request.body_value().as_ref(), path![]).await?;
     Ok(Response::data(result))
 }

@@ -450,8 +450,8 @@ impl Builder {
             Type::Undetermined,
             false,
             HandlerInputFormat::Json,
-            Box::leak(Box::new(|ctx: request::Ctx| async {
-                wrapped_call.call(ctx).await
+            Box::leak(Box::new(|request: request::Request| async {
+                wrapped_call.call(request).await
             })),
             self.app_data().clone()
         );
@@ -472,8 +472,8 @@ impl Builder {
             Type::Undetermined,
             false,
             HandlerInputFormat::Json,
-            Box::leak(Box::new(|ctx: request::Ctx| async {
-                wrapped_call.call(ctx).await
+            Box::leak(Box::new(|request: request::Request| async {
+                wrapped_call.call(request).await
             })),
             self.app_data().clone()
         );
@@ -991,6 +991,5 @@ impl Builder {
                 app_data: self.app_data().clone(),
             })
         }
-
     }
 }

@@ -6,7 +6,8 @@ use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::traits::resolved::Resolve;
 use teo_result::Result;
 use teo_result::Error;
-use crate::{handler, namespace, request};
+use crate::{handler, namespace};
+use crate::request::Request;
 use crate::schema::fetch::fetch_decorator_arguments::fetch_decorator_arguments;
 
 
@@ -31,7 +32,7 @@ pub fn load_handler_template(main_namespace: &namespace::Builder, schema: &Schem
             handler_template_declaration.output_type().resolved().clone(),
             handler_template_declaration.nonapi,
             handler_template_declaration.input_format,
-            Box::leak(Box::new(|ctx: request::Ctx| async {
+            Box::leak(Box::new(|request: Request| async {
                 Err(Error::not_found())
             })),
             main_namespace.app_data().clone(),

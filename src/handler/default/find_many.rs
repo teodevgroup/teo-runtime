@@ -1,30 +1,31 @@
 use key_path::path;
-use crate::request;
+use crate::request::Request;
 use crate::value::Value;
 use crate::teon;
 use crate::action::action::*;
 use crate::response::Response;
 
-pub async fn find_many(ctx: &request::Ctx) -> teo_result::Result<Response> {
-    let model = ctx.namespace().model_at_path(&ctx.request().handler_match().unwrap().path()).unwrap();
+pub async fn find_many(request: &Request) -> teo_result::Result<Response> {
+    let model = request.transaction_ctx().namespace().model_at_path(&request.handler_match().unwrap().path()).unwrap();
     let action = FIND | MANY | ENTRY;
-    let results = ctx.transaction_ctx().find_many_internal(
+    let results = request.transaction_ctx().find_many_internal(
         model,
-        ctx.body(),
+        request.body_value().as_ref(),
         false,
         action,
-        Some(ctx.clone()),
+        Some(request.clone()),
         path![],
     ).await?;
-    let mut count_input = ctx.body().clone();
+    let mut count_input = request.body_value().as_ref().clone();
     let count_input_obj = count_input.as_dictionary_mut().unwrap();
     count_input_obj.remove("skip");
     count_input_obj.remove("take");
     count_input_obj.remove("pageSize");
     count_input_obj.remove("pageNumber");
-    let count = ctx.transaction_ctx().count_objects(model, &count_input, path![]).await.unwrap();
+    let count = request.transaction_ctx().count_objects(model, &count_input, path![]).await.unwrap();
     let mut meta = teon!({"count": count});
-    let page_size = ctx.body().get("pageSize");
+    let binding = request.body_value();
+    let page_size = binding.get("pageSize");
     if page_size.is_some() {
         let page_size = page_size.unwrap().to_int64().unwrap();
         let count = count as i64;

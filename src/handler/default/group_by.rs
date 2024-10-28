@@ -1,10 +1,10 @@
 use key_path::path;
 use crate::value::Value;
-use crate::request;
+use crate::request::Request;
 use crate::response::Response;
 
-pub async fn group_by(req_ctx: &request::Ctx) -> teo_result::Result<Response> {
-    let model = req_ctx.namespace().model_at_path(&req_ctx.request().handler_match().unwrap().path()).unwrap();
-    let result = req_ctx.transaction_ctx().group_by(model, req_ctx.body(), path![]).await?;
+pub async fn group_by(request: &Request) -> teo_result::Result<Response> {
+    let model = request.transaction_ctx().namespace().model_at_path(&request.handler_match().unwrap().path()).unwrap();
+    let result = request.transaction_ctx().group_by(model, request.body_value().as_ref(), path![]).await?;
     Ok(Response::data(Value::Array(result)))
 }

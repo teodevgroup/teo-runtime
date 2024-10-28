@@ -9,7 +9,8 @@ use teo_parser::traits::resolved::Resolve;
 use teo_result::Result;
 use crate::handler::Method;
 use teo_result::Error;
-use crate::{handler, namespace, request};
+use crate::{handler, namespace};
+use crate::request::Request;
 use crate::schema::fetch::fetch_decorator_arguments::fetch_decorator_arguments;
 
 
@@ -35,7 +36,7 @@ pub fn load_handler_inclusion(main_namespace: &namespace::Builder, schema: &Sche
             handler_inclusion.resolved().output_type.clone(),
             false,
             HandlerInputFormat::Json,
-            Box::leak(Box::new(|ctx: request::Ctx| async {
+            Box::leak(Box::new(|request: Request| async {
                 Err(Error::not_found())
             })),
             main_namespace.app_data().clone(),

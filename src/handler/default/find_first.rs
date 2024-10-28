@@ -1,18 +1,18 @@
 use key_path::path;
 use crate::value::Value;
-use crate::request;
+use crate::request::Request;
 use crate::response::Response;
 use crate::action::action::*;
 
-pub async fn find_first(ctx: &request::Ctx) -> teo_result::Result<Response> {
-    let model = ctx.namespace().model_at_path(&ctx.request().handler_match().unwrap().path()).unwrap();
+pub async fn find_first(request: &Request) -> teo_result::Result<Response> {
+    let model = request.transaction_ctx().namespace().model_at_path(&request.handler_match().unwrap().path()).unwrap();
     let action = FIND | SINGLE | ENTRY;
-    let result = ctx.transaction_ctx().find_first_internal(
+    let result = request.transaction_ctx().find_first_internal(
         model,
-        ctx.body(),
+        request.body_value().as_ref(),
         false,
         action,
-        Some(ctx.clone()),
+        Some(request.clone()),
         path![],
     ).await?;
     match result {

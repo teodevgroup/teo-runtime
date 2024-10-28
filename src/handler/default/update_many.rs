@@ -1,21 +1,22 @@
 use key_path::path;
 use crate::value::Value;
 use crate::teon;
-use crate::request;
 use crate::response::Response;
 use crate::action::action::*;
 use crate::connection::transaction;
 use crate::handler::default::internal::update::update_internal;
+use crate::request::Request;
 
-pub async fn update_many(req_ctx: &request::Ctx) -> teo_result::Result<Response> {
-    let model = req_ctx.namespace().model_at_path(&req_ctx.request().handler_match().unwrap().path()).unwrap();
+pub async fn update_many(request: &Request) -> teo_result::Result<Response> {
+    let model = request.transaction_ctx().namespace().model_at_path(&request.handler_match().unwrap().path()).unwrap();
     let action = UPDATE | MANY | ENTRY;
-    let (objects, count) = req_ctx.transaction_ctx().run_transaction(|ctx: transaction::Ctx| async move {
-        let input = req_ctx.body().as_dictionary().unwrap();
+    let (objects, count) = request.transaction_ctx().run_transaction(|ctx: transaction::Ctx| async move {
+        let binding = request.body_value();
+        let input = binding.as_dictionary().unwrap();
         let update = input.get("update");
         let include = input.get("include");
         let select = input.get("select");
-        let objects = ctx.find_many_internal(model, req_ctx.body(), true, action, Some(req_ctx.clone()), path![]).await?;
+        let objects = ctx.find_many_internal(model, request.body_value().as_ref(), true, action, Some(request.clone()), path![]).await?;
         let mut count = 0;
         let mut ret_data: Vec<Value> = vec![];
         for (index, object) in objects.iter().enumerate() {
