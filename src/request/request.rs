@@ -14,7 +14,7 @@ use crate::Value;
 
 #[derive(Clone)]
 pub struct Request {
-    inner: Arc<hyper::Request<hyper::body::Incoming>>,
+    inner: Arc<hyper::Request<()>>,
     transaction_ctx: transaction::Ctx,
     cookies: Arc<Mutex<Option<Cookies>>>,
     handler_match: Arc<Mutex<Option<HandlerMatch>>>,
@@ -25,9 +25,9 @@ pub struct Request {
 
 impl Request {
 
-    pub fn new(inner: Arc<hyper::Request<hyper::body::Incoming>>, transaction_ctx: transaction::Ctx) -> Self {
+    pub fn new(inner: hyper::Request<()>, transaction_ctx: transaction::Ctx) -> Self {
         Self {
-            inner,
+            inner: Arc::new(inner),
             transaction_ctx,
             cookies: Arc::new(Mutex::new(None)),
             handler_match: Arc::new(Mutex::new(None)),
