@@ -38,6 +38,10 @@ impl Response {
         }
     }
 
+    pub fn text(content: impl Into<String>) -> Result<Response> {
+        Ok(Self::string(content.into(), "text/plain"))
+    }
+
     pub fn html(content: impl Into<String>) -> Result<Response> {
         Ok(Self::string(content.into(), "text/html"))
     }
