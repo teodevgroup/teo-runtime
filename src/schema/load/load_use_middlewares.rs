@@ -72,7 +72,7 @@ async fn load_middleware_stack(namespace: &namespace::Builder, parent_handler_st
     } else {
         namespace.set_handler_middleware_stack(parent_handler_stack);
     }
-    if let Some(block) = namespace.handler_middlewares_block() {
+    if let Some(block) = namespace.request_middlewares_block() {
         let mut middlewares = vec![];
         middlewares.push(parent_request_stack);
         for r#use in block.uses() {
