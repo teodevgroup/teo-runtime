@@ -1,9 +1,9 @@
 use std::sync::Arc;
 use educe::Educe;
-use serde::Serialize;
+use serde::{Serialize, Serializer};
 use teo_parser::ast::handler::HandlerInputFormat;
 use teo_parser::r#type::Type;
-use crate::handler::Method;
+use hyper::Method;
 use crate::middleware::next::Next;
 use crate::traits::named::Named;
 
@@ -12,6 +12,13 @@ use crate::traits::named::Named;
 #[derive(Clone)]
 pub struct Handler {
     pub(super) inner: Arc<Inner>
+}
+
+pub fn method_serialize<S>(x: &Method, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    s.serialize_str(x.as_str())
 }
 
 #[derive(Educe, Serialize)]
@@ -23,6 +30,7 @@ pub(super) struct Inner {
     pub(super) output_type: Type,
     pub(super) nonapi: bool,
     pub(super) format: HandlerInputFormat,
+    #[serde(serialize_with = "method_serialize")]
     pub(super) method: Method,
     pub(super) url: Option<String>,
     pub(super) interface: Option<String>,
@@ -57,8 +65,8 @@ impl Handler {
         self.inner.format
     }
 
-    pub fn method(&self) -> Method {
-        self.inner.method
+    pub fn method(&self) -> &Method {
+        &self.inner.method
     }
 
     pub fn url(&self) -> Option<&String> {
@@ -86,7 +94,7 @@ impl Handler {
     }
 
     pub fn has_body_input(&self) -> bool {
-        !(self.inner.method == Method::Get || self.inner.method == Method::Delete)
+        !(self.inner.method == Method::GET || self.inner.method == Method::DELETE)
     }
 
     pub fn custom_url_args_path(&self) -> Option<Vec<String>> {

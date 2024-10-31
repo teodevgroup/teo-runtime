@@ -1,6 +1,6 @@
 use indexmap::{IndexMap, indexmap};
 use regex::Regex;
-use crate::handler::Method;
+use hyper::Method;
 use crate::handler::r#match::HandlerMatch;
 
 #[derive(Debug, Clone)]
@@ -44,7 +44,7 @@ impl Map {
         self.records.insert((method, url), (result, action_name.to_owned()));
     }
 
-    pub fn r#match(&self, method: Method, url: &str) -> Option<HandlerMatch> {
+    pub fn r#match(&self, method: &Method, url: &str) -> Option<HandlerMatch> {
         for record in &self.records {
             if let Some(result) = self.try_match(method, url, record) {
                 return Some(result);
@@ -53,8 +53,8 @@ impl Map {
         None
     }
 
-    fn try_match(&self, method: Method, url: &str, record: (&(Method, String), &(Vec<String>, String))) -> Option<HandlerMatch> {
-        if method != Method::Options && record.0.0 != method {
+    fn try_match(&self, method: &Method, url: &str, record: (&(Method, String), &(Vec<String>, String))) -> Option<HandlerMatch> {
+        if method != Method::OPTIONS && record.0.0 != method {
             return None;
         }
         let define = &record.0.1;
@@ -100,7 +100,7 @@ impl Map {
     }
 
     pub fn default_match(&self, method: Method, url: &str) -> Option<HandlerMatch> {
-        if method != Method::Options && method != Method::Post {
+        if method != Method::OPTIONS && method != Method::POST {
             return None;
         }
         let mut url = url;

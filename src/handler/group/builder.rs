@@ -7,7 +7,7 @@ use crate::app::data::AppData;
 use crate::handler::ctx_argument::HandlerCtxArgument;
 use crate::handler::{Group, Handler, handler};
 use crate::handler::group::group;
-use crate::handler::Method;
+use hyper::Method;
 use crate::request::Request;
 use crate::traits::named::Named;
 use crate::utils::next_path;
@@ -66,7 +66,7 @@ impl Builder {
                 format: HandlerInputFormat::Json,
                 path: next_path(self.path(), name),
                 ignore_prefix: false,
-                method: Method::Post,
+                method: Method::POST,
                 interface: None,
                 url: None,
                 call: Box::leak(Box::new(|request: Request| async {

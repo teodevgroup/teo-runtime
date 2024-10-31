@@ -5,7 +5,7 @@ use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::traits::named_identifiable::NamedIdentifiable;
 use teo_parser::traits::resolved::Resolve;
 use teo_result::Result;
-use crate::handler::Method;
+use hyper::Method;
 use teo_result::Error;
 use crate::{handler, namespace, request};
 use crate::request::Request;
@@ -46,7 +46,7 @@ pub fn load_handler(main_namespace: &namespace::Builder, schema: &Schema, handle
             decorator_implementation.call().call(args, &handler_builder)?;
         }
     }
-    if (handler_builder.method() != Method::Post) || handler_builder.url().is_some() {
+    if (handler_builder.method() != Method::POST) || handler_builder.url().is_some() {
         let parent_string_path = handler_declaration.parent_string_path();
         main_namespace.handler_map().lock().unwrap().add_record(
             &handler_declaration.namespace_str_path(),

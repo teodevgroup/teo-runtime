@@ -4,7 +4,8 @@ use educe::Educe;
 use teo_parser::ast::handler::HandlerInputFormat;
 use teo_parser::r#type::Type;
 use crate::app::data::AppData;
-use crate::handler::{Handler, handler, Method};
+use crate::handler::{Handler, handler};
+use hyper::Method;
 use crate::middleware::next::Next;
 
 #[derive(Debug, Clone)]
@@ -41,7 +42,7 @@ impl Builder {
                 output_type,
                 nonapi,
                 format: Arc::new(Mutex::new(format)),
-                method: Arc::new(Mutex::new(Method::Post)),
+                method: Arc::new(Mutex::new(Method::POST)),
                 url: Arc::new(Mutex::new(None)),
                 interface: Arc::new(Mutex::new(None)),
                 ignore_prefix: AtomicBool::new(false),

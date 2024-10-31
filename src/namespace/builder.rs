@@ -21,7 +21,7 @@ use crate::connection::connection::Connection;
 use crate::database::database::Database;
 use crate::handler::ctx_argument::HandlerCtxArgument;
 use crate::handler::Handler;
-use crate::handler::Method;
+use hyper::Method;
 use crate::middleware::middleware::{empty_middleware, Middleware};
 use crate::model::{Model, Relation};
 use crate::namespace::Namespace;
@@ -455,7 +455,7 @@ impl Builder {
             })),
             self.app_data().clone()
         );
-        builder.set_method(Method::Post);
+        builder.set_method(Method::POST);
         builder.set_interface(None);
         builder.set_url(None);
         let handler = builder.build();
@@ -477,7 +477,7 @@ impl Builder {
             })),
             self.app_data().clone()
         );
-        builder.set_method(Method::Post);
+        builder.set_method(Method::POST);
         builder.set_interface(None);
         builder.set_url(None);
         let handler = builder.build();
