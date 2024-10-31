@@ -54,15 +54,6 @@ impl Response {
         Self::teon(teon!({"data": data, "meta": meta}))
     }
 
-    pub fn error(error: impl Into<teo_result::Error>) -> Response {
-        let path_error = error.into();
-        let code = path_error.code;
-        let value: Value = path_error.into();
-        let res = Self::teon(value);
-        res.set_code(code);
-        res
-    }
-
     pub fn file(path: PathBuf) -> Response {
         let res = Self::empty();
         res.inner.lock().unwrap().body = Body::file(path);

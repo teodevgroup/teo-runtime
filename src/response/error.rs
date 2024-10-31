@@ -1,12 +1,23 @@
+use teo_result::Error;
 use crate::response::Response;
+use crate::{teon, Value};
 
-pub trait IntoResponseWithPathedError {
-    fn into_response_with_pathed_error(self) -> teo_result::Result<Response>;
-}
-
-impl IntoResponseWithPathedError for teo_result::Result<Response> {
-
-    fn into_response_with_pathed_error(self) -> teo_result::Result<Response> {
-        self
+impl From<Error> for Response {
+    fn from(value: Error) -> Self {
+        let code = value.code;
+        let t = value.inferred_title();
+        let msg = value.message();
+        let errors = value.errors.as_ref().map(|e| Value::Dictionary(e.iter().map(|(k ,v)| (k.clone(), Value::String(v.clone()))).collect()));
+        let mut teon_value = teon!({
+            "type": t.as_ref(),
+            "message": msg,
+        });
+        if let Some(errors) = errors {
+            teon_value["errors"] = errors;
+        }
+        let response = Response::teon(teon_value);
+        response.headers().set("content-type", "application/json");
+        response.set_code(code);
+        response
     }
 }
