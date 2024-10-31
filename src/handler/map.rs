@@ -118,19 +118,4 @@ impl Map {
         let action = result.pop().unwrap().to_string();
         Some(HandlerMatch::new(result, action, indexmap!{}))
     }
-
-    pub fn remove_path_prefix<'a>(&self, path: &'a str, prefix: Option<&'a str>) -> &'a str {
-        if let Some(prefix) = prefix {
-            let mut prefix = prefix;
-            prefix = prefix.trim_end_matches("/");
-            let result = path.strip_prefix(prefix).unwrap();
-            if result == "" {
-                "/"
-            } else {
-                result
-            }
-        } else {
-            path
-        }
-    }
 }
