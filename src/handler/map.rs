@@ -44,7 +44,7 @@ impl Map {
         self.records.insert((method, url), (result, action_name.to_owned()));
     }
 
-    pub fn r#match(&self, method: &Method, url: &str) -> Option<HandlerMatch> {
+    pub fn match_user_defined(&self, method: &Method, url: &str) -> Option<HandlerMatch> {
         for record in &self.records {
             if let Some(result) = self.try_match(method, url, record) {
                 return Some(result);
@@ -99,7 +99,7 @@ impl Map {
         replaced.as_ref().to_string()
     }
 
-    pub fn default_match(&self, method: Method, url: &str) -> Option<HandlerMatch> {
+    pub fn match_default(&self, method: Method, url: &str) -> Option<HandlerMatch> {
         if method != Method::OPTIONS && method != Method::POST {
             return None;
         }

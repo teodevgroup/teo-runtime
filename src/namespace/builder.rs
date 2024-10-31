@@ -510,7 +510,7 @@ impl Builder {
     }
 
     pub fn model_decorator_at_path(&self, path: &Vec<&str>) -> Option<model::Decorator> {
-        let decorator_name = path.last().unwrap().deref();
+        let decorator_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.model_decorator(decorator_name)
@@ -525,7 +525,7 @@ impl Builder {
     }
 
     pub fn model_field_decorator_at_path(&self, path: &Vec<&str>) -> Option<model::field::Decorator> {
-        let decorator_name = path.last().unwrap().deref();
+        let decorator_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.model_field_decorator(decorator_name)
@@ -540,7 +540,7 @@ impl Builder {
     }
 
     pub fn model_relation_decorator_at_path(&self, path: &Vec<&str>) -> Option<model::relation::Decorator> {
-        let decorator_name = path.last().unwrap().deref();
+        let decorator_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.model_relation_decorator(decorator_name)
@@ -555,7 +555,7 @@ impl Builder {
     }
 
     pub fn model_property_decorator_at_path(&self, path: &Vec<&str>) -> Option<model::property::Decorator> {
-        let decorator_name = path.last().unwrap().deref();
+        let decorator_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.model_property_decorator(decorator_name)
@@ -570,7 +570,7 @@ impl Builder {
     }
 
     pub fn enum_decorator_at_path(&self, path: &Vec<&str>) -> Option<r#enum::Decorator> {
-        let decorator_name = path.last().unwrap().deref();
+        let decorator_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.enum_decorator(decorator_name)
@@ -585,7 +585,7 @@ impl Builder {
     }
 
     pub fn enum_member_decorator_at_path(&self, path: &Vec<&str>) -> Option<r#enum::member::Decorator> {
-        let decorator_name = path.last().unwrap().deref();
+        let decorator_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.enum_member_decorator(decorator_name)
@@ -600,7 +600,7 @@ impl Builder {
     }
 
     pub fn interface_decorator_at_path(&self, path: &Vec<&str>) -> Option<interface::Decorator> {
-        let decorator_name = path.last().unwrap().deref();
+        let decorator_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.interface_decorator(decorator_name)
@@ -615,7 +615,7 @@ impl Builder {
     }
 
     pub fn interface_field_decorator_at_path(&self, path: &Vec<&str>) -> Option<interface::field::Decorator> {
-        let decorator_name = path.last().unwrap().deref();
+        let decorator_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.interface_field_decorator(decorator_name)
@@ -630,7 +630,7 @@ impl Builder {
     }
 
     pub fn handler_decorator_at_path(&self, path: &Vec<&str>) -> Option<handler::Decorator> {
-        let decorator_name = path.last().unwrap().deref();
+        let decorator_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.handler_decorator(decorator_name)
@@ -645,7 +645,7 @@ impl Builder {
     }
 
     pub fn pipeline_item_at_path(&self, path: &Vec<&str>) -> Option<pipeline::Item> {
-        let pipeline_item_name = path.last().unwrap().deref();
+        let pipeline_item_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.pipeline_item(pipeline_item_name)
@@ -675,7 +675,7 @@ impl Builder {
     }
 
     pub fn enum_at_path(&self, path: &Vec<&str>) -> Option<Enum> {
-        let enum_name = path.last().unwrap().deref();
+        let enum_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.r#enum(enum_name)
@@ -694,7 +694,7 @@ impl Builder {
     }
 
     pub fn model_at_path(&self, path: &Vec<String>) -> Option<Model> {
-        let model_name = path.last().unwrap().deref();
+        let model_name = path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.model(model_name)
@@ -709,7 +709,7 @@ impl Builder {
     }
 
     pub fn interface_at_path(&self, path: &Vec<&str>) -> Option<Interface> {
-        let interface_name = path.last().unwrap().deref();
+        let interface_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.interface(interface_name)
@@ -736,7 +736,7 @@ impl Builder {
     }
 
     pub fn handler_middleware_at_path(&self, path: &Vec<&str>) -> Option<middleware::Definition> {
-        let middleware_name = path.last().unwrap().deref();
+        let middleware_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.handler_middleware(middleware_name)
@@ -746,7 +746,7 @@ impl Builder {
     }
 
     pub fn request_middleware_at_path(&self, path: &Vec<&str>) -> Option<middleware::Definition> {
-        let middleware_name = path.last().unwrap().deref();
+        let middleware_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         if let Some(ns) = self.namespace_at_path(&namespace_path) {
             ns.request_middleware(middleware_name)
@@ -761,7 +761,7 @@ impl Builder {
     }
 
     pub fn handler_template_at_path(&self, path: &Vec<String>) -> Option<Handler> {
-        let handler_name = path.last().unwrap().deref();
+        let handler_name = path.last().unwrap();
         if path.len() == 1 {
             self.handler_template(handler_name)
         } else {
@@ -791,7 +791,7 @@ impl Builder {
     }
 
     pub fn handler_at_path(&self, path: &Vec<&str>) -> Option<Handler> {
-        let handler_name = path.last().unwrap().deref();
+        let handler_name = *path.last().unwrap();
         if path.len() == 1 {
             self.handler(handler_name)
         } else {
@@ -801,7 +801,7 @@ impl Builder {
                 dest_namespace.handler(handler_name)
             } else {
                 // try find in group
-                let handler_name = path.last().unwrap().deref();
+                let handler_name = *path.last().unwrap();
                 let group_name = path.get(path.len() - 2).unwrap().deref();
                 let namespace_path: Vec<String> = path.into_iter().rev().skip(2).rev().map(|i| i.to_string()).collect();
                 if let Some(dest_namespace) = self.namespace_at_path(&namespace_path) {
@@ -820,14 +820,14 @@ impl Builder {
     }
 
     pub fn replace_handler_template_at_path(&self, path: &Vec<&str>, handler: Handler) {
-        let handler_name = path.last().unwrap().deref();
+        let handler_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         let dest_namespace = self.namespace_or_create_at_path(&namespace_path);
         dest_namespace.insert_handler(handler_name, handler);
     }
 
     pub fn replace_handler_at_path(&self, path: &Vec<&str>, handler: Handler, inside_group: bool) {
-        let handler_name = path.last().unwrap().deref();
+        let handler_name = *path.last().unwrap();
         let group_name = if inside_group {
             Some(path.get(path.len() - 2).unwrap().deref())
         } else {
