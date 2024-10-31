@@ -236,13 +236,3 @@ pub fn json_to_teon(json: &serde_json::Value, path: &KeyPath, input: &Type, main
 fn collect_interface_shape(interface: &Interface, gens: &Vec<Type>) -> SynthesizedShape {
     interface.shape_from_generics(gens)
 }
-
-fn calculate_generics_map(
-    generics_names: &Vec<String>,
-    types: &Vec<Type>,
-) -> BTreeMap<String, Type> {
-    if generics_names.len() == types.len() {
-        return generics_names.iter().enumerate().map(|(index, identifier)| (identifier.to_owned(), types.get(index).unwrap().clone())).collect();
-    }
-    btreemap!{}
-}

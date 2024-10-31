@@ -1,7 +1,7 @@
 use std::cell::{Ref, RefCell, RefMut};
 use std::fmt::{Debug, Formatter};
 use std::sync::{Arc, Mutex};
-use hyper::{self, header::{HeaderMap, HeaderValue}, Uri, Version};
+use hyper::{self, header::{HeaderMap, HeaderValue}, Method, Uri, Version};
 use teo_result::{Error, Result};
 use cookie::Cookie;
 use http_body_util::BodyExt;
@@ -46,8 +46,8 @@ impl Request {
         self.inner.version()
     }
 
-    pub fn method(&self) -> &str {
-        self.inner.method().as_str()
+    pub fn method(&self) -> &Method {
+        self.inner.method()
     }
 
     pub fn uri(&self) -> &Uri {

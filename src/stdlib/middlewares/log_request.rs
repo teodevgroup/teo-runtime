@@ -16,9 +16,9 @@ pub(in crate::stdlib) fn load_log_request_middleware(namespace: &namespace::Buil
             let path = request.path();
             let method = request.method();
             if let Some(handler_found_info) = handler_found_info {
-                request_message(time_elapsed, method, path, handler_found_info.path(), handler_found_info.name(), res.code());
+                request_message(time_elapsed, method.as_str(), path, handler_found_info.path(), handler_found_info.name(), res.code());
             } else {
-                unhandled_request_message(time_elapsed, method, path, res.code());
+                unhandled_request_message(time_elapsed, method.as_str(), path, res.code());
             }
             return Ok(res);
         })) as &dyn Middleware)

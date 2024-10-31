@@ -829,7 +829,7 @@ impl Builder {
     pub fn replace_handler_at_path(&self, path: &Vec<&str>, handler: Handler, inside_group: bool) {
         let handler_name = *path.last().unwrap();
         let group_name = if inside_group {
-            Some(path.get(path.len() - 2).unwrap().deref())
+            Some(*path.get(path.len() - 2).unwrap())
         } else {
             None
         };

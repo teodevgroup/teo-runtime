@@ -44,6 +44,16 @@ impl Map {
         self.records.insert((method, url), (result, action_name.to_owned()));
     }
 
+    pub fn match_all(&self, method: &Method, url: &str) -> Option<HandlerMatch> {
+        if let Some(result) = self.match_user_defined(method, url) {
+            return Some(result);
+        }
+        if let Some(result) = self.match_default(method.clone(), url) {
+            return Some(result);
+        }
+        None
+    }
+
     pub fn match_user_defined(&self, method: &Method, url: &str) -> Option<HandlerMatch> {
         for record in &self.records {
             if let Some(result) = self.try_match(method, url, record) {
