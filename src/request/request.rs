@@ -5,6 +5,7 @@ use hyper::{self, header::{HeaderMap, HeaderValue}, Uri, Version};
 use teo_result::{Error, Result};
 use cookie::Cookie;
 use http_body_util::BodyExt;
+use hyper::body::Incoming;
 use crate::connection::transaction;
 use crate::handler::r#match::HandlerMatch;
 use crate::request::cookies::Cookies;
@@ -21,13 +22,17 @@ pub struct Request {
     body_value: Arc<Mutex<Arc<Value>>>,
     local_data: Arc<RefCell<RequestLocal>>,
     local_objects: Arc<RefCell<RequestLocal>>,
+    incoming: Arc<RefCell<Option<Incoming>>>,
 }
 
 impl Request {
 
-    pub fn new(inner: hyper::Request<()>, transaction_ctx: transaction::Ctx) -> Self {
+    pub fn new(hyper_request: hyper::Request<Incoming>, transaction_ctx: transaction::Ctx) -> Self {
+        let (parts, incoming) = hyper_request.into_parts();
+        let hyper_request = hyper::Request::from_parts(parts, ());
         Self {
-            inner: Arc::new(inner),
+            inner: Arc::new(hyper_request),
+            incoming: Arc::new(RefCell::new(Some(incoming))),
             transaction_ctx,
             cookies: Arc::new(Mutex::new(None)),
             handler_match: Arc::new(Mutex::new(None)),
@@ -136,6 +141,10 @@ impl Request {
 
     pub fn local_objects_mut(&self) -> RefMut<RequestLocal> {
         self.local_objects.borrow_mut()
+    }
+
+    pub fn take_incoming(&self) -> Option<Incoming> {
+        self.incoming.replace(None)
     }
 
     fn parse_cookies(&self) -> Result<Cookies> {
