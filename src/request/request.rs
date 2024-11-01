@@ -148,6 +148,10 @@ impl Request {
         self.incoming.replace(None)
     }
 
+    pub fn clone_hyper_request(&self) -> hyper::Request<()> {
+        self.inner.as_ref().clone()
+    }
+
     fn parse_cookies(&self) -> Result<Cookies> {
         let mut cookies: Vec<Cookie<'static>> = Vec::new();
         for cookie_header_value in self.inner.headers().get_all("cookie") {
