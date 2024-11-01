@@ -24,6 +24,7 @@ pub struct Request {
     local_data: Arc<RefCell<RequestLocal>>,
     local_objects: Arc<RefCell<RequestLocal>>,
     incoming: Arc<RefCell<Option<Incoming>>>,
+    incoming_string: Arc<RefCell<Option<String>>>,
 }
 
 impl Request {
@@ -34,6 +35,23 @@ impl Request {
         Self {
             inner: Arc::new(hyper_request),
             incoming: Arc::new(RefCell::new(Some(incoming))),
+            incoming_string: Arc::new(RefCell::new(None)),
+            transaction_ctx,
+            cookies: Arc::new(Mutex::new(None)),
+            handler_match: Arc::new(Mutex::new(None)),
+            body_value: Arc::new(Mutex::new(Arc::new(Value::Null))),
+            local_data: Arc::new(RefCell::new(RequestLocal::new())),
+            local_objects: Arc::new(RefCell::new(RequestLocal::new())),
+        }
+    }
+
+    pub fn new_for_test(hyper_request: hyper::Request<String>, transaction_ctx: transaction::Ctx) -> Self {
+        let (parts, incoming) = hyper_request.into_parts();
+        let hyper_request = hyper::Request::from_parts(parts, ());
+        Self {
+            inner: Arc::new(hyper_request),
+            incoming: Arc::new(RefCell::new(None)),
+            incoming_string: Arc::new(RefCell::new(Some(incoming))),
             transaction_ctx,
             cookies: Arc::new(Mutex::new(None)),
             handler_match: Arc::new(Mutex::new(None)),
@@ -146,6 +164,10 @@ impl Request {
 
     pub fn take_incoming(&self) -> Option<Incoming> {
         self.incoming.replace(None)
+    }
+
+    pub fn take_incoming_string_for_test(&self) -> Option<String> {
+        self.incoming_string.replace(None)
     }
 
     pub fn clone_hyper_request(&self) -> hyper::Request<()> {
