@@ -6,6 +6,7 @@ use teo_result::{Error, Result};
 use cookie::Cookie;
 use http_body_util::BodyExt;
 use hyper::body::Incoming;
+use hyper::header::CONTENT_TYPE;
 use crate::connection::transaction;
 use crate::handler::r#match::HandlerMatch;
 use crate::request::cookies::Cookies;
@@ -71,7 +72,7 @@ impl Request {
     }
 
     pub fn content_type(&self) -> Result<Option<&str>> {
-        if let Some(value) = self.inner.headers().get("content-type") {
+        if let Some(value) = self.inner.headers().get(CONTENT_TYPE.as_str()) {
             match value.to_str() {
                 Ok(value) => Ok(Some(value)),
                 Err(_) => Err(Error::internal_server_error_message("cannot read request header value: content-type")),

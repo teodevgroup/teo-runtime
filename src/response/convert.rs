@@ -3,8 +3,10 @@ use std::pin::Pin;
 use bytes::Bytes;
 use http_body_util::{Either, Full};
 use hyper::body::Body;
+use hyper::header::CONTENT_TYPE;
 use hyper_static::ErrorBoxed;
 use hyper_static::serve::{static_file, ErrorKind};
+use mime::APPLICATION_JSON;
 use teo_result::{Error, Result};
 use crate::request::Request;
 use crate::response::body::BodyInner;
@@ -28,7 +30,7 @@ pub async fn hyper_response_from(request: Request, response: Response) -> Result
             Ok(builder.body(Either::Left(body_bytes.into())).unwrap())
         },
         BodyInner::Teon(value) => {
-            builder = builder.header("Content-Type", "application/json");
+            builder = builder.header(CONTENT_TYPE, APPLICATION_JSON.essence_str());
             let json_value = serde_json::Value::try_from(value).unwrap();
             let string_value = serde_json::to_string(&json_value).unwrap();
             Ok(builder.body(Either::Left(string_value.into())).unwrap())

@@ -2,6 +2,7 @@ use std::fmt::{Debug, Formatter};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use cookie::Cookie;
+use hyper::header::CONTENT_TYPE;
 use crate::value::Value;
 use crate::teon;
 use teo_result::{Result, Error};
@@ -24,7 +25,7 @@ impl Response {
     pub fn string(content: impl Into<String>, content_type: &str) -> Response {
         let mut inner = ResponseInner::new();
         inner.body = Body::string(content.into());
-        inner.headers.set("content-type", content_type);
+        inner.headers.set(CONTENT_TYPE.as_str(), content_type);
         Self {
             inner: Arc::new(Mutex::new(inner)),
         }

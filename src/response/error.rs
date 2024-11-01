@@ -1,3 +1,5 @@
+use hyper::header::CONTENT_TYPE;
+use mime::APPLICATION_JSON;
 use teo_result::Error;
 use crate::response::Response;
 use crate::{teon, Value};
@@ -16,7 +18,7 @@ impl From<Error> for Response {
             teon_value["errors"] = errors;
         }
         let response = Response::teon(teon_value);
-        response.headers().set("content-type", "application/json");
+        response.headers().set(CONTENT_TYPE.as_str(), APPLICATION_JSON.essence_str());
         response.set_code(code);
         response
     }
