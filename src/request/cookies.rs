@@ -19,6 +19,10 @@ impl Cookies {
     pub fn has(&self, name: &str) -> bool {
         self.inner.iter().any(|cookie| cookie.name() == name)
     }
+
+    pub fn iter(&self) -> impl Iterator<Item = &Cookie<'static>> {
+        self.inner.iter()
+    }
 }
 
 impl From<Vec<Cookie<'static>>> for Cookies {
