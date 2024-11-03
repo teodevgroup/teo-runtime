@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 use hyper::{self, header::{HeaderMap, HeaderValue}, Method, Uri, Version};
 use teo_result::{Error, Result};
 use cookie::Cookie;
+use deferred_box::DeferredBox;
 use http_body_util::BodyExt;
 use hyper::body::Incoming;
 use hyper::header::CONTENT_TYPE;
@@ -24,7 +25,7 @@ pub struct Request {
 struct Inner {
     hyper_request: hyper::Request<()>,
     transaction_ctx: transaction::Ctx,
-    cookies: Arc<Mutex<Option<Cookies>>>,
+    cookies: DeferredBox<Cookies>,
     handler_match: Arc<Mutex<Option<HandlerMatch>>>,
     body_value: Arc<Mutex<* const Value>>,
     body_values: UnsafeCell<Vec<Box<Value>>>,
@@ -45,7 +46,7 @@ impl Request {
                 incoming: RefCell::new(Some(incoming)),
                 incoming_string: RefCell::new(None),
                 transaction_ctx,
-                cookies: Arc::new(Mutex::new(None)),
+                cookies: DeferredBox::new(),
                 handler_match: Arc::new(Mutex::new(None)),
                 body_value: Arc::new(Mutex::new(null())),
                 body_values: UnsafeCell::new(Vec::new()),
@@ -64,7 +65,7 @@ impl Request {
                 incoming: RefCell::new(None),
                 incoming_string: RefCell::new(Some(incoming)),
                 transaction_ctx,
-                cookies: Arc::new(Mutex::new(None)),
+                cookies: DeferredBox::new(),
                 handler_match: Arc::new(Mutex::new(None)),
                 body_value: Arc::new(Mutex::new(null())),
                 body_values: UnsafeCell::new(Vec::new()),
@@ -129,7 +130,7 @@ impl Request {
         self.inner.hyper_request.headers().contains_key(header_key)
     }
 
-    pub fn header(&self, header_key: &str) -> Result<Option<&str>> {
+    pub fn header_value(&self, header_key: &str) -> Result<Option<&str>> {
         match self.inner.hyper_request.headers().get(header_key) {
             Some(value) => match value.to_str() {
                 Ok(value) => Ok(Some(value)),
@@ -139,11 +140,11 @@ impl Request {
         }
     }
 
-    pub fn cookies(&self) -> Result<Cookies> {
-        if self.inner.cookies.lock().unwrap().is_none() {
+    pub fn cookies(&self) -> Result<&Cookies> {
+        if self.inner.cookies.get().is_none() {
             self.parse_cookies()
         } else {
-            Ok(self.inner.cookies.lock().unwrap().as_ref().unwrap().clone())
+            Ok(self.inner.cookies.get().unwrap())
         }
     }
 
@@ -205,7 +206,7 @@ impl Request {
         self.inner.hyper_request.clone()
     }
 
-    fn parse_cookies(&self) -> Result<Cookies> {
+    fn parse_cookies(&self) -> Result<&Cookies> {
         let mut cookies: Vec<Cookie<'static>> = Vec::new();
         for cookie_header_value in self.inner.hyper_request.headers().get_all("cookie") {
             let cookie_full_str = cookie_header_value.to_str().map_err(|_| Error::internal_server_error_message("cannot read request header value: cookie"))?;
@@ -219,8 +220,8 @@ impl Request {
             }
         }
         let cookies = Cookies::from(cookies);
-        self.inner.cookies.lock().unwrap().replace(cookies.clone());
-        Ok(cookies)
+        self.inner.cookies.set(cookies).unwrap();
+        Ok(self.inner.cookies.get().unwrap())
     }
 }
 
