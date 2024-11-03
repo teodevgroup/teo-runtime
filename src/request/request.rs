@@ -7,6 +7,7 @@ use cookie::Cookie;
 use http_body_util::BodyExt;
 use hyper::body::Incoming;
 use hyper::header::CONTENT_TYPE;
+use hyper::http::uri::Scheme;
 use crate::connection::transaction;
 use crate::handler::r#match::HandlerMatch;
 use crate::request::cookies::Cookies;
@@ -16,15 +17,19 @@ use crate::Value;
 
 #[derive(Clone)]
 pub struct Request {
-    inner: Arc<hyper::Request<()>>,
+    inner: Arc<Inner>,
+}
+
+struct Inner {
+    hyper_request: hyper::Request<()>,
     transaction_ctx: transaction::Ctx,
     cookies: Arc<Mutex<Option<Cookies>>>,
     handler_match: Arc<Mutex<Option<HandlerMatch>>>,
     body_value: Arc<Mutex<Arc<Value>>>,
-    local_data: Arc<RefCell<RequestLocal>>,
-    local_objects: Arc<RefCell<RequestLocal>>,
-    incoming: Arc<RefCell<Option<Incoming>>>,
-    incoming_string: Arc<RefCell<Option<String>>>,
+    local_data: RefCell<RequestLocal>,
+    local_objects: RefCell<RequestLocal>,
+    incoming: RefCell<Option<Incoming>>,
+    incoming_string: RefCell<Option<String>>,
 }
 
 impl Request {
@@ -33,15 +38,17 @@ impl Request {
         let (parts, incoming) = hyper_request.into_parts();
         let hyper_request = hyper::Request::from_parts(parts, ());
         Self {
-            inner: Arc::new(hyper_request),
-            incoming: Arc::new(RefCell::new(Some(incoming))),
-            incoming_string: Arc::new(RefCell::new(None)),
-            transaction_ctx,
-            cookies: Arc::new(Mutex::new(None)),
-            handler_match: Arc::new(Mutex::new(None)),
-            body_value: Arc::new(Mutex::new(Arc::new(Value::Null))),
-            local_data: Arc::new(RefCell::new(RequestLocal::new())),
-            local_objects: Arc::new(RefCell::new(RequestLocal::new())),
+            inner: Arc::new(Inner {
+                hyper_request,
+                incoming: RefCell::new(Some(incoming)),
+                incoming_string: RefCell::new(None),
+                transaction_ctx,
+                cookies: Arc::new(Mutex::new(None)),
+                handler_match: Arc::new(Mutex::new(None)),
+                body_value: Arc::new(Mutex::new(Arc::new(Value::Null))),
+                local_data: RefCell::new(RequestLocal::new()),
+                local_objects: RefCell::new(RequestLocal::new()),
+            })
         }
     }
 
@@ -49,48 +56,58 @@ impl Request {
         let (parts, incoming) = hyper_request.into_parts();
         let hyper_request = hyper::Request::from_parts(parts, ());
         Self {
-            inner: Arc::new(hyper_request),
-            incoming: Arc::new(RefCell::new(None)),
-            incoming_string: Arc::new(RefCell::new(Some(incoming))),
-            transaction_ctx,
-            cookies: Arc::new(Mutex::new(None)),
-            handler_match: Arc::new(Mutex::new(None)),
-            body_value: Arc::new(Mutex::new(Arc::new(Value::Null))),
-            local_data: Arc::new(RefCell::new(RequestLocal::new())),
-            local_objects: Arc::new(RefCell::new(RequestLocal::new())),
+            inner: Arc::new(Inner {
+                hyper_request,
+                incoming: RefCell::new(None),
+                incoming_string: RefCell::new(Some(incoming)),
+                transaction_ctx,
+                cookies: Arc::new(Mutex::new(None)),
+                handler_match: Arc::new(Mutex::new(None)),
+                body_value: Arc::new(Mutex::new(Arc::new(Value::Null))),
+                local_data: RefCell::new(RequestLocal::new()),
+                local_objects: RefCell::new(RequestLocal::new()),
+            })
         }
     }
 
     pub fn version(&self) -> Version {
-        self.inner.version()
+        self.inner.hyper_request.version()
     }
 
     pub fn method(&self) -> &Method {
-        self.inner.method()
+        self.inner.hyper_request.method()
     }
 
     pub fn uri(&self) -> &Uri {
-        self.inner.uri()
+        self.inner.hyper_request.uri()
     }
 
     pub fn uri_string(&self) -> String {
-        self.inner.uri().to_string()
+        self.inner.hyper_request.uri().to_string()
     }
 
-    pub fn path(&self) -> &str {
-        self.inner.uri().path()
+    pub fn scheme(&self) -> Option<&Scheme> {
+        self.inner.hyper_request.uri().scheme()
     }
 
-    pub fn query(&self) -> Option<&str> {
-        self.inner.uri().query()
+    pub fn scheme_str(&self) -> Option<&str> {
+        self.inner.hyper_request.uri().scheme_str()
     }
 
     pub fn host(&self) -> Option<&str> {
-        self.inner.uri().host()
+        self.inner.hyper_request.uri().host()
+    }
+
+    pub fn path(&self) -> &str {
+        self.inner.hyper_request.uri().path()
+    }
+
+    pub fn query(&self) -> Option<&str> {
+        self.inner.hyper_request.uri().query()
     }
 
     pub fn content_type(&self) -> Result<Option<&str>> {
-        if let Some(value) = self.inner.headers().get(CONTENT_TYPE.as_str()) {
+        if let Some(value) = self.inner.hyper_request.headers().get(CONTENT_TYPE.as_str()) {
             match value.to_str() {
                 Ok(value) => Ok(Some(value)),
                 Err(_) => Err(Error::internal_server_error_message("cannot read request header value: content-type")),
@@ -101,15 +118,15 @@ impl Request {
     }
 
     pub fn headers(&self) -> &HeaderMap<HeaderValue> {
-        self.inner.headers()
+        self.inner.hyper_request.headers()
     }
 
     pub fn contains_header(&self, header_key: &str) -> bool {
-        self.inner.headers().contains_key(header_key)
+        self.inner.hyper_request.headers().contains_key(header_key)
     }
 
     pub fn header(&self, header_key: &str) -> Result<Option<&str>> {
-        match self.inner.headers().get(header_key) {
+        match self.inner.hyper_request.headers().get(header_key) {
             Some(value) => match value.to_str() {
                 Ok(value) => Ok(Some(value)),
                 Err(_) => Err(Error::internal_server_error_message(format!("cannot read request header value: {}", header_key))),
@@ -119,64 +136,64 @@ impl Request {
     }
 
     pub fn cookies(&self) -> Result<Cookies> {
-        if self.cookies.lock().unwrap().is_none() {
+        if self.inner.cookies.lock().unwrap().is_none() {
             self.parse_cookies()
         } else {
-            Ok(self.cookies.lock().unwrap().as_ref().unwrap().clone())
+            Ok(self.inner.cookies.lock().unwrap().as_ref().unwrap().clone())
         }
     }
 
     pub fn handler_match(&self) -> Option<HandlerMatch> {
-        self.handler_match.lock().unwrap().clone()
+        self.inner.handler_match.lock().unwrap().clone()
     }
 
     pub fn set_handler_match(&self, handler_match: HandlerMatch) {
-        self.handler_match.lock().unwrap().replace(handler_match);
+        self.inner.handler_match.lock().unwrap().replace(handler_match);
     }
 
     pub fn body_value(&self) -> Arc<Value> {
-        self.body_value.lock().unwrap().clone()
+        self.inner.body_value.lock().unwrap().clone()
     }
 
     pub fn set_body_value(&self, value: Value) {
-        *self.body_value.lock().unwrap() = Arc::new(value);
+        *self.inner.body_value.lock().unwrap() = Arc::new(value);
     }
 
     pub fn transaction_ctx(&self) -> transaction::Ctx {
-        self.transaction_ctx.clone()
+        self.inner.transaction_ctx.clone()
     }
 
     pub fn local_data(&self) -> Ref<RequestLocal> {
-        self.local_data.borrow()
+        self.inner.local_data.borrow()
     }
 
     pub fn local_data_mut(&self) -> RefMut<RequestLocal> {
-        self.local_data.borrow_mut()
+        self.inner.local_data.borrow_mut()
     }
 
     pub fn local_objects(&self) -> Ref<RequestLocal> {
-        self.local_objects.borrow()
+        self.inner.local_objects.borrow()
     }
 
     pub fn local_objects_mut(&self) -> RefMut<RequestLocal> {
-        self.local_objects.borrow_mut()
+        self.inner.local_objects.borrow_mut()
     }
 
     pub fn take_incoming(&self) -> Option<Incoming> {
-        self.incoming.replace(None)
+        self.inner.incoming.replace(None)
     }
 
     pub fn take_incoming_string_for_test(&self) -> Option<String> {
-        self.incoming_string.replace(None)
+        self.inner.incoming_string.replace(None)
     }
 
     pub fn clone_hyper_request(&self) -> hyper::Request<()> {
-        self.inner.as_ref().clone()
+        self.inner.hyper_request.clone()
     }
 
     fn parse_cookies(&self) -> Result<Cookies> {
         let mut cookies: Vec<Cookie<'static>> = Vec::new();
-        for cookie_header_value in self.inner.headers().get_all("cookie") {
+        for cookie_header_value in self.inner.hyper_request.headers().get_all("cookie") {
             let cookie_full_str = cookie_header_value.to_str().map_err(|_| Error::internal_server_error_message("cannot read request header value: cookie"))?;
             for cookie_str in cookie_full_str.split(';').map(|s| s.trim()) {
                 if !cookie_str.is_empty() {
@@ -188,7 +205,7 @@ impl Request {
             }
         }
         let cookies = Cookies::from(cookies);
-        self.cookies.lock().unwrap().replace(cookies.clone());
+        self.inner.cookies.lock().unwrap().replace(cookies.clone());
         Ok(cookies)
     }
 }
@@ -197,10 +214,10 @@ impl Debug for Request {
 
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut debug_struct = f.debug_struct("Request");
-        debug_struct.field("version", &self.inner.version());
-        debug_struct.field("method", &self.inner.method());
-        debug_struct.field("uri", &self.inner.uri());
-        debug_struct.field("headers", &self.inner.headers());
+        debug_struct.field("version", &self.inner.hyper_request.version());
+        debug_struct.field("method", &self.inner.hyper_request.method());
+        debug_struct.field("uri", &self.inner.hyper_request.uri());
+        debug_struct.field("headers", &self.inner.hyper_request.headers());
         debug_struct.finish()
     }
 }
