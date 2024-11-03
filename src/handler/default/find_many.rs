@@ -10,13 +10,13 @@ pub async fn find_many(request: &Request) -> teo_result::Result<Response> {
     let action = FIND | MANY | ENTRY;
     let results = request.transaction_ctx().find_many_internal(
         model,
-        request.body_value().as_ref(),
+        request.body_value()?,
         false,
         action,
         Some(request.clone()),
         path![],
     ).await?;
-    let mut count_input = request.body_value().as_ref().clone();
+    let mut count_input = request.body_value()?.clone();
     let count_input_obj = count_input.as_dictionary_mut().unwrap();
     count_input_obj.remove("skip");
     count_input_obj.remove("take");
@@ -24,8 +24,7 @@ pub async fn find_many(request: &Request) -> teo_result::Result<Response> {
     count_input_obj.remove("pageNumber");
     let count = request.transaction_ctx().count_objects(model, &count_input, path![]).await.unwrap();
     let mut meta = teon!({"count": count});
-    let binding = request.body_value();
-    let page_size = binding.get("pageSize");
+    let page_size = request.body_value()?.get("pageSize");
     if page_size.is_some() {
         let page_size = page_size.unwrap().to_int64().unwrap();
         let count = count as i64;

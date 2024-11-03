@@ -9,7 +9,7 @@ pub async fn find_unique(request: &Request) -> teo_result::Result<Response> {
     let action = FIND | SINGLE | ENTRY;
     let result = request.transaction_ctx().find_unique_internal(
         model,
-        request.body_value().as_ref(),
+        request.body_value()?,
         false,
         action,
         Some(request.clone()),

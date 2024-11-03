@@ -107,7 +107,7 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
     identity_namespace.define_handler_template("signIn", |request: Request| async move {
         let model = request.transaction_ctx().namespace().model_at_path(&request.handler_match().unwrap().path()).unwrap();
         let model_ctx = request.transaction_ctx().model_ctx_for_model_at_path(request.handler_match().unwrap().path()).unwrap();
-        let input = request.body_value();
+        let input = request.body_value()?;
         let credentials = input.get("credentials").unwrap().as_dictionary().unwrap();
         let mut identity_key: Option<&String> = None;
         let mut identity_value: Option<&Value> = None;
@@ -216,9 +216,8 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
         let teon_value: Value = Value::from(claims.id);
         let object: Option<model::Object> = model_ctx.find_unique(&teon_value).await?;
         if let Some(object) = object {
-            let bind = request.body_value();
-            let include = bind.get("include");
-            let select = bind.get("select");
+            let include = request.body_value()?.get("include");
+            let select = request.body_value()?.get("select");
             let obj = object.refreshed(include, select).await?;
             let obj_teon = obj.to_teon().await?;
             return Ok(Response::data_meta(obj_teon, teon!({

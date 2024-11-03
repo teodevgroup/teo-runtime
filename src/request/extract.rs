@@ -7,6 +7,6 @@ pub trait ExtractFromRequest {
 
 impl ExtractFromRequest for Value {
     fn extract(request: &Request) -> Self {
-        request.body_value().as_ref().clone()
+        request.body_value().map(|v| v.clone()).unwrap_or(Value::Null)
     }
 }

@@ -1,5 +1,6 @@
-use std::cell::{Ref, RefCell, RefMut};
+use std::cell::{Ref, RefCell, RefMut, UnsafeCell};
 use std::fmt::{Debug, Formatter};
+use std::ptr::null;
 use std::sync::{Arc, Mutex};
 use hyper::{self, header::{HeaderMap, HeaderValue}, Method, Uri, Version};
 use teo_result::{Error, Result};
@@ -25,7 +26,8 @@ struct Inner {
     transaction_ctx: transaction::Ctx,
     cookies: Arc<Mutex<Option<Cookies>>>,
     handler_match: Arc<Mutex<Option<HandlerMatch>>>,
-    body_value: Arc<Mutex<Arc<Value>>>,
+    body_value: Arc<Mutex<* const Value>>,
+    body_values: UnsafeCell<Vec<Box<Value>>>,
     local_data: RefCell<RequestLocal>,
     local_objects: RefCell<RequestLocal>,
     incoming: RefCell<Option<Incoming>>,
@@ -45,7 +47,8 @@ impl Request {
                 transaction_ctx,
                 cookies: Arc::new(Mutex::new(None)),
                 handler_match: Arc::new(Mutex::new(None)),
-                body_value: Arc::new(Mutex::new(Arc::new(Value::Null))),
+                body_value: Arc::new(Mutex::new(null())),
+                body_values: UnsafeCell::new(Vec::new()),
                 local_data: RefCell::new(RequestLocal::new()),
                 local_objects: RefCell::new(RequestLocal::new()),
             })
@@ -63,7 +66,8 @@ impl Request {
                 transaction_ctx,
                 cookies: Arc::new(Mutex::new(None)),
                 handler_match: Arc::new(Mutex::new(None)),
-                body_value: Arc::new(Mutex::new(Arc::new(Value::Null))),
+                body_value: Arc::new(Mutex::new(null())),
+                body_values: UnsafeCell::new(Vec::new()),
                 local_data: RefCell::new(RequestLocal::new()),
                 local_objects: RefCell::new(RequestLocal::new()),
             })
@@ -151,12 +155,22 @@ impl Request {
         self.inner.handler_match.lock().unwrap().replace(handler_match);
     }
 
-    pub fn body_value(&self) -> Arc<Value> {
-        self.inner.body_value.lock().unwrap().clone()
+    pub fn body_value(&self) -> Result<&Value> {
+        let pointer = *match self.inner.body_value.lock() {
+            Ok(pointer) => pointer,
+            Err(err) => return Err(Error::internal_server_error_message(format!("cannot lock request body value: {}", err))),
+        };
+        if pointer.is_null() {
+            return Err(Error::internal_server_error_message("request body value is accessed while it is unavailable"));
+        }
+        Ok(unsafe { &*pointer })
     }
 
     pub fn set_body_value(&self, value: Value) {
-        *self.inner.body_value.lock().unwrap() = Arc::new(value);
+        let body_values = unsafe { &mut *self.inner.body_values.get() };
+        body_values.push(Box::new(value));
+        let pointer = body_values.last().unwrap().as_ref();
+        *self.inner.body_value.lock().unwrap() = pointer;
     }
 
     pub fn transaction_ctx(&self) -> transaction::Ctx {

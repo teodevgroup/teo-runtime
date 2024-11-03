@@ -9,8 +9,7 @@ pub async fn create(request: &Request) -> teo_result::Result<Response> {
     let model = request.transaction_ctx().namespace().model_at_path(&request.handler_match().unwrap().path()).unwrap();
     let action = CREATE | SINGLE | ENTRY;
     let value = request.transaction_ctx().run_transaction(|ctx: transaction::Ctx| async move {
-        let binding = request.body_value();
-        let input = binding.as_dictionary().unwrap();
+        let input = request.body_value()?.as_dictionary().unwrap();
         let create = input.get("create");
         let include = input.get("include");
         let select = input.get("select");

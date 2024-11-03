@@ -9,7 +9,7 @@ pub async fn find_first(request: &Request) -> teo_result::Result<Response> {
     let action = FIND | SINGLE | ENTRY;
     let result = request.transaction_ctx().find_first_internal(
         model,
-        request.body_value().as_ref(),
+        request.body_value()?,
         false,
         action,
         Some(request.clone()),
