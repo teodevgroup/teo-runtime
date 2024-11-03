@@ -1,11 +1,11 @@
-use std::cell::{Ref, RefCell, RefMut, UnsafeCell};
+use std::cell::{Ref, RefCell, RefMut};
 use std::fmt::{Debug, Formatter};
-use std::ptr::null;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use hyper::{self, header::{HeaderMap, HeaderValue}, Method, Uri, Version};
 use teo_result::{Error, Result};
 use cookie::Cookie;
 use deferred_box::DeferredBox;
+use history_box::HistoryBox;
 use http_body_util::BodyExt;
 use hyper::body::Incoming;
 use hyper::header::CONTENT_TYPE;
@@ -26,9 +26,8 @@ struct Inner {
     hyper_request: hyper::Request<()>,
     transaction_ctx: transaction::Ctx,
     cookies: DeferredBox<Cookies>,
-    handler_match: Arc<Mutex<Option<HandlerMatch>>>,
-    body_value: Arc<Mutex<* const Value>>,
-    body_values: UnsafeCell<Vec<Box<Value>>>,
+    handler_match: HistoryBox<HandlerMatch>,
+    body_value: HistoryBox<Value>,
     local_data: RefCell<RequestLocal>,
     local_objects: RefCell<RequestLocal>,
     incoming: RefCell<Option<Incoming>>,
@@ -47,9 +46,8 @@ impl Request {
                 incoming_string: RefCell::new(None),
                 transaction_ctx,
                 cookies: DeferredBox::new(),
-                handler_match: Arc::new(Mutex::new(None)),
-                body_value: Arc::new(Mutex::new(null())),
-                body_values: UnsafeCell::new(Vec::new()),
+                handler_match: HistoryBox::new(),
+                body_value: HistoryBox::new(),
                 local_data: RefCell::new(RequestLocal::new()),
                 local_objects: RefCell::new(RequestLocal::new()),
             })
@@ -66,9 +64,8 @@ impl Request {
                 incoming_string: RefCell::new(Some(incoming)),
                 transaction_ctx,
                 cookies: DeferredBox::new(),
-                handler_match: Arc::new(Mutex::new(None)),
-                body_value: Arc::new(Mutex::new(null())),
-                body_values: UnsafeCell::new(Vec::new()),
+                handler_match: HistoryBox::new(),
+                body_value: HistoryBox::new(),
                 local_data: RefCell::new(RequestLocal::new()),
                 local_objects: RefCell::new(RequestLocal::new()),
             })
@@ -148,30 +145,26 @@ impl Request {
         }
     }
 
-    pub fn handler_match(&self) -> Option<HandlerMatch> {
-        self.inner.handler_match.lock().unwrap().clone()
+    pub fn handler_match(&self) -> Result<&HandlerMatch> {
+        match self.inner.handler_match.get() {
+            Some(handler_match) => Ok(handler_match),
+            None => Err(Error::internal_server_error_message("handler match is accessed while it is unavailable")),
+        }
     }
 
     pub fn set_handler_match(&self, handler_match: HandlerMatch) {
-        self.inner.handler_match.lock().unwrap().replace(handler_match);
+        self.inner.handler_match.set(handler_match);
     }
 
     pub fn body_value(&self) -> Result<&Value> {
-        let pointer = *match self.inner.body_value.lock() {
-            Ok(pointer) => pointer,
-            Err(err) => return Err(Error::internal_server_error_message(format!("cannot lock request body value: {}", err))),
-        };
-        if pointer.is_null() {
-            return Err(Error::internal_server_error_message("request body value is accessed while it is unavailable"));
+        match self.inner.body_value.get() {
+            Some(value) => Ok(value),
+            None => Err(Error::internal_server_error_message("request body value is accessed while it is unavailable")),
         }
-        Ok(unsafe { &*pointer })
     }
 
     pub fn set_body_value(&self, value: Value) {
-        let body_values = unsafe { &mut *self.inner.body_values.get() };
-        body_values.push(Box::new(value));
-        let pointer = body_values.last().unwrap().as_ref();
-        *self.inner.body_value.lock().unwrap() = pointer;
+        self.inner.body_value.set(value)
     }
 
     pub fn transaction_ctx(&self) -> transaction::Ctx {

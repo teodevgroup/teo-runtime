@@ -24,7 +24,7 @@ pub(in crate::stdlib) fn load_log_request_middleware(namespace: &namespace::Buil
             let time_elapsed = SystemTime::now().duration_since(start).unwrap();
             let path = request.path();
             let method = request.method();
-            if let Some(handler_found_info) = handler_found_info {
+            if let Ok(handler_found_info) = handler_found_info {
                 request_message(time_elapsed, method.as_str(), path, handler_found_info.path(), handler_found_info.name(), get_code(&res_or_err));
             } else {
                 unhandled_request_message(time_elapsed, method.as_str(), path, get_code(&res_or_err));
