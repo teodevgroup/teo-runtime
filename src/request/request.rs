@@ -6,10 +6,12 @@ use teo_result::{Error, Result};
 use cookie::Cookie;
 use deferred_box::DeferredBox;
 use history_box::HistoryBox;
-use http_body_util::BodyExt;
+use http_body_util::{BodyExt, Full};
 use hyper::body::Incoming;
 use hyper::header::CONTENT_TYPE;
 use hyper::http::uri::Scheme;
+use indexmap::IndexMap;
+use bytes::Bytes;
 use crate::connection::transaction;
 use crate::handler::r#match::HandlerMatch;
 use crate::request::cookies::Cookies;
@@ -31,7 +33,7 @@ struct Inner {
     local_data: RefCell<RequestLocal>,
     local_objects: RefCell<RequestLocal>,
     incoming: RefCell<Option<Incoming>>,
-    incoming_string: RefCell<Option<String>>,
+    incoming_bytes: RefCell<Option<Full<Bytes>>>,
 }
 
 impl Request {
@@ -43,7 +45,7 @@ impl Request {
             inner: Arc::new(Inner {
                 hyper_request,
                 incoming: RefCell::new(Some(incoming)),
-                incoming_string: RefCell::new(None),
+                incoming_bytes: RefCell::new(None),
                 transaction_ctx,
                 cookies: DeferredBox::new(),
                 handler_match: HistoryBox::new(),
@@ -54,14 +56,14 @@ impl Request {
         }
     }
 
-    pub fn new_for_test(hyper_request: hyper::Request<String>, transaction_ctx: transaction::Ctx) -> Self {
+    pub fn new_for_test(hyper_request: hyper::Request<Full<Bytes>>, transaction_ctx: transaction::Ctx) -> Self {
         let (parts, incoming) = hyper_request.into_parts();
         let hyper_request = hyper::Request::from_parts(parts, ());
         Self {
             inner: Arc::new(Inner {
                 hyper_request,
                 incoming: RefCell::new(None),
-                incoming_string: RefCell::new(Some(incoming)),
+                incoming_bytes: RefCell::new(Some(incoming)),
                 transaction_ctx,
                 cookies: DeferredBox::new(),
                 handler_match: HistoryBox::new(),
@@ -156,6 +158,10 @@ impl Request {
         self.inner.handler_match.set(handler_match);
     }
 
+    pub fn captures(&self) -> Result<&IndexMap<String, String>> {
+        Ok(self.handler_match()?.captures())
+    }
+
     pub fn body_value(&self) -> Result<&Value> {
         match self.inner.body_value.get() {
             Some(value) => Ok(value),
@@ -191,8 +197,8 @@ impl Request {
         self.inner.incoming.replace(None)
     }
 
-    pub fn take_incoming_string_for_test(&self) -> Option<String> {
-        self.inner.incoming_string.replace(None)
+    pub fn take_incoming_bytes_for_test(&self) -> Option<Full<Bytes>> {
+        self.inner.incoming_bytes.replace(None)
     }
 
     pub fn clone_hyper_request(&self) -> hyper::Request<()> {
