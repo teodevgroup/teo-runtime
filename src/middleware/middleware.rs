@@ -104,13 +104,3 @@ impl<A0, A1, A2, A3, F, Fut> MiddlewareArgument<(A0, A1, A2, A3)> for F where
         Box::pin(self(a0, a1, a2, a3, next))
     }
 }
-
-pub fn middleware_wrap_fn<T, F>(call: F) -> &'static dyn Middleware where
-    T: Send + Sync + 'static,
-    F: MiddlewareArgument<T> + 'static
-{
-    let wrap_call = Box::leak(Box::new(call));
-    Box::leak(Box::new(|request: Request, next: &'static dyn Next| async {
-        wrap_call.call(request, next).await
-    }))
-}
