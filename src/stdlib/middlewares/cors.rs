@@ -1,5 +1,5 @@
 use crate::arguments::Arguments;
-use crate::middleware::middleware::Middleware;
+use crate::middleware::MiddlewareImpl;
 use crate::middleware::next::Next;
 use crate::namespace;
 use crate::request::Request;
@@ -14,7 +14,7 @@ pub(in crate::stdlib) fn load_cors_middleware(namespace: &namespace::Builder) {
         let origin = Box::leak(Box::new(origin_)).as_str();
         let methods = &*Box::leak(Box::new(methods_));
         let headers = &*Box::leak(Box::new(headers_));
-        Ok(Box::leak(Box::new(move |request: Request, next: &'static dyn Next| async move {
+        Ok(MiddlewareImpl::new(move |request: Request, next: &'static dyn Next| async move {
             let res_or_err = next.call(request).await;
             let res = if res_or_err.is_ok() {
                 res_or_err.unwrap()
@@ -26,6 +26,6 @@ pub(in crate::stdlib) fn load_cors_middleware(namespace: &namespace::Builder) {
             res.headers().set("Access-Control-Allow-Headers", headers.join(", "));
             res.headers().set("Access-Control-Max-Age", max_age.to_string());
             return Ok(res);
-        })) as &dyn Middleware)
+        }))
     });
 }

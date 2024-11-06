@@ -12,7 +12,7 @@ use crate::teon;
 use crate::{model, model::{Field}};
 use crate::action::action::{CODE_AMOUNT, CODE_NAME, CODE_POSITION};
 use crate::arguments::Arguments;
-use crate::middleware::middleware::middleware_wrap_fn;
+use crate::middleware::MiddlewareImpl;
 use crate::middleware::next::Next;
 use crate::request::Request;
 use crate::response::Response;
@@ -231,7 +231,7 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
     identity_namespace.define_handler_middleware("identityFromJwt", |arguments: Arguments| async move {
         let secret_string: String = arguments.get("secret")?;
         let secret = Box::leak(Box::new(secret_string)).as_str();
-        Ok(middleware_wrap_fn(move |request: Request, next: &'static dyn Next| async move {
+        Ok(MiddlewareImpl::new(move |request: Request, next: &'static dyn Next| async move {
             if let Some(authorization) = request.headers().get("authorization").map(|h| h.to_str().unwrap()) {
                 if authorization.len() < 7 {
                     return Err(Error::unauthorized_message("invalid jwt token"));

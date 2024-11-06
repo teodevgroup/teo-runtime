@@ -65,7 +65,7 @@ async fn load_middleware_stack(namespace: &namespace::Builder, parent_handler_st
         middlewares.push(parent_handler_stack);
         for r#use in block.uses() {
             let middleware = r#use.creator().call(r#use.arguments().clone()).await?;
-            middlewares.push(middleware);
+            middlewares.push(middleware.middleware);
         }
         middlewares.reverse();
         namespace.set_handler_middleware_stack(combine_middleware(middlewares));
@@ -77,7 +77,7 @@ async fn load_middleware_stack(namespace: &namespace::Builder, parent_handler_st
         middlewares.push(parent_request_stack);
         for r#use in block.uses() {
             let middleware = r#use.creator().call(r#use.arguments().clone()).await?;
-            middlewares.push(middleware);
+            middlewares.push(middleware.middleware);
         }
         middlewares.reverse();
         namespace.set_request_middleware_stack(combine_middleware(middlewares));
