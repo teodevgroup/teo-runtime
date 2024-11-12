@@ -441,8 +441,8 @@ impl Builder {
         handlers.insert(name.to_owned(), handler);
     }
 
-    pub fn define_handler<T, F>(&self, name: &str, call: F) where T: 'static, F: 'static + HandlerCtxArgument<T> {
-        let wrapped_call = Box::leak(Box::new(call));
+    pub fn define_handler<T, F>(&self, name: &str, call: F) where T: 'static, for<'a> F: 'static + HandlerCtxArgument<'a, T> {
+        let wrapped_call: &'static F = &*Box::leak(Box::new(call));
         let builder = handler::Builder::new(
             next_path(self.path(), name),
             self.inner.path.clone(),
@@ -450,8 +450,8 @@ impl Builder {
             Type::Undetermined,
             false,
             HandlerInputFormat::Json,
-            Box::leak(Box::new(|request: request::Request| async {
-                wrapped_call.call(request).await
+            Box::leak(Box::new(move |request: request::Request| async move {
+                wrapped_call.call(&request).await
             })),
             self.app_data().clone()
         );
@@ -463,8 +463,8 @@ impl Builder {
         handlers.insert(name.to_owned(), handler);
     }
 
-    pub fn define_handler_template<T, F>(&self, name: &str, call: F) where T: 'static, F: 'static + HandlerCtxArgument<T> {
-        let wrapped_call = Box::leak(Box::new(call));
+    pub fn define_handler_template<T, F>(&self, name: &str, call: F) where T: 'static, for<'a> F: 'static + HandlerCtxArgument<'a, T> {
+        let wrapped_call: &'static F = &*Box::leak(Box::new(call));
         let builder = handler::Builder::new(
             next_path(self.path(), name),
             self.inner.path.clone(),
@@ -472,8 +472,8 @@ impl Builder {
             Type::Undetermined,
             false,
             HandlerInputFormat::Json,
-            Box::leak(Box::new(|request: request::Request| async {
-                wrapped_call.call(request).await
+            Box::leak(Box::new(move |request: request::Request| async move {
+                wrapped_call.call(&request).await
             })),
             self.app_data().clone()
         );
