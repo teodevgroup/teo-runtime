@@ -403,7 +403,7 @@ impl Object {
         }
     }
 
-    pub async fn get_property<T>(&self, key: &str) -> Result<T> where T: TryFrom<Value, Error = Error> {
+    pub async fn get_property<T, E>(&self, key: &str) -> Result<T> where T: TryFrom<Value, Error = E>, Error: From<E> {
         Ok(self.get_property_value(key).await?.try_into()?)
     }
 
@@ -423,15 +423,8 @@ impl Object {
         Ok(value)
     }
 
-    pub fn get<T>(&self, key: impl AsRef<str>) -> Result<T> where T: TryFrom<Value, Error = Error> {
-        match self.get_value(key) {
-            Ok(optional_value) => {
-                Ok(optional_value.try_into()?)
-            }
-            Err(err) => {
-                Err(err)
-            }
-        }
+    pub fn get<T, E>(&self, key: impl AsRef<str>) -> Result<T> where T: TryFrom<Value, Error = E>, Error: From<E> {
+        Ok(self.get_value(key)?.try_into()?)
     }
 
     pub fn get_previous_value(&self, key: impl AsRef<str>) -> Result<Value> {
