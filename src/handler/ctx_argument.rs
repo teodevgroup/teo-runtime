@@ -17,7 +17,7 @@ impl<F, Fut> HandlerCtxArgument<()> for F where
 }
 
 impl<A0, F, Fut> HandlerCtxArgument<(A0,)> for F where
-    A0: ExtractFromRequest + Send + Sync,
+    A0: for<'a> ExtractFromRequest<'a> + Send + Sync,
     F: Fn(A0) -> Fut + Sync + Send + Clone,
     Fut: Future<Output = teo_result::Result<Response>> + Send + 'static {
     fn call(&self, request: Request) -> BoxFuture<'static, teo_result::Result<Response>> {
@@ -27,8 +27,8 @@ impl<A0, F, Fut> HandlerCtxArgument<(A0,)> for F where
 }
 
 impl<A0, A1, F, Fut> HandlerCtxArgument<(A0, A1)> for F where
-    A0: ExtractFromRequest + Send + Sync,
-    A1: ExtractFromRequest + Send + Sync,
+    A0: for<'a> ExtractFromRequest<'a> + Send + Sync,
+    A1: for<'a> ExtractFromRequest<'a> + Send + Sync,
     F: Fn(A0, A1) -> Fut + Sync + Send + Clone,
     Fut: Future<Output = teo_result::Result<Response>> + Send + 'static {
     fn call(&self, request: Request) -> BoxFuture<'static, teo_result::Result<Response>> {
@@ -39,9 +39,9 @@ impl<A0, A1, F, Fut> HandlerCtxArgument<(A0, A1)> for F where
 }
 
 impl<A0, A1, A2, F, Fut> HandlerCtxArgument<(A0, A1, A2)> for F where
-    A0: ExtractFromRequest + Send + Sync,
-    A1: ExtractFromRequest + Send + Sync,
-    A2: ExtractFromRequest + Send + Sync,
+    A0: for<'a> ExtractFromRequest<'a> + Send + Sync,
+    A1: for<'a> ExtractFromRequest<'a> + Send + Sync,
+    A2: for<'a> ExtractFromRequest<'a> + Send + Sync,
     F: Fn(A0, A1, A2) -> Fut + Sync + Send + Clone,
     Fut: Future<Output = teo_result::Result<Response>> + Send + 'static {
     fn call(&self, request: Request) -> BoxFuture<'static, teo_result::Result<Response>> {
@@ -53,10 +53,10 @@ impl<A0, A1, A2, F, Fut> HandlerCtxArgument<(A0, A1, A2)> for F where
 }
 
 impl<A0, A1, A2, A3, F, Fut> HandlerCtxArgument<(A0, A1, A2, A3)> for F where
-    A0: ExtractFromRequest + Send + Sync,
-    A1: ExtractFromRequest + Send + Sync,
-    A2: ExtractFromRequest + Send + Sync,
-    A3: ExtractFromRequest + Send + Sync,
+    A0: for<'a> ExtractFromRequest<'a> + Send + Sync,
+    A1: for<'a> ExtractFromRequest<'a> + Send + Sync,
+    A2: for<'a> ExtractFromRequest<'a> + Send + Sync,
+    A3: for<'a> ExtractFromRequest<'a> + Send + Sync,
     F: Fn(A0, A1, A2, A3) -> Fut + Sync + Send + Clone,
     Fut: Future<Output = teo_result::Result<Response>> + Send + 'static {
     fn call(&self, request: Request) -> BoxFuture<'static, teo_result::Result<Response>> {
@@ -69,11 +69,11 @@ impl<A0, A1, A2, A3, F, Fut> HandlerCtxArgument<(A0, A1, A2, A3)> for F where
 }
 
 impl<A0, A1, A2, A3, A4, F, Fut> HandlerCtxArgument<(A0, A1, A2, A3, A4)> for F where
-    A0: ExtractFromRequest + Send + Sync,
-    A1: ExtractFromRequest + Send + Sync,
-    A2: ExtractFromRequest + Send + Sync,
-    A3: ExtractFromRequest + Send + Sync,
-    A4: ExtractFromRequest + Send + Sync,
+    A0: for<'a> ExtractFromRequest<'a> + Send + Sync,
+    A1: for<'a> ExtractFromRequest<'a> + Send + Sync,
+    A2: for<'a> ExtractFromRequest<'a> + Send + Sync,
+    A3: for<'a> ExtractFromRequest<'a> + Send + Sync,
+    A4: for<'a> ExtractFromRequest<'a> + Send + Sync,
     F: Fn(A0, A1, A2, A3, A4) -> Fut + Sync + Send + Clone,
     Fut: Future<Output = teo_result::Result<Response>> + Send + 'static {
     fn call(&self, request: Request) -> BoxFuture<'static, teo_result::Result<Response>> {

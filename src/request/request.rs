@@ -236,9 +236,15 @@ impl Debug for Request {
     }
 }
 
-impl ExtractFromRequest for Request {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for Request {
+    fn extract(request: &'a Request) -> Self {
         request.clone()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a Request {
+    fn extract(request: &'a Request) -> Self {
+        request
     }
 }
 

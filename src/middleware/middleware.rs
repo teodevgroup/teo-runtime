@@ -54,7 +54,7 @@ pub trait MiddlewareArgument<A>: Send + Sync + 'static {
 }
 
 impl<A0, F, Fut> MiddlewareArgument<(A0,)> for F where
-    A0: ExtractFromRequest + Send + Sync,
+    A0: for<'a> ExtractFromRequest<'a> + Send + Sync,
     F: Fn(A0, &'static dyn Next) -> Fut + Sync + Send + Clone + 'static,
     Fut: Future<Output = teo_result::Result<Response>> + Send + 'static {
     fn call(&self, request: Request, next: &'static dyn Next) -> BoxFuture<'static, teo_result::Result<Response>> {
@@ -64,8 +64,8 @@ impl<A0, F, Fut> MiddlewareArgument<(A0,)> for F where
 }
 
 impl<A0, A1, F, Fut> MiddlewareArgument<(A0, A1)> for F where
-    A0: ExtractFromRequest + Send + Sync,
-    A1: ExtractFromRequest + Send + Sync,
+    A0: for<'a> ExtractFromRequest<'a> + Send + Sync,
+    A1: for<'a> ExtractFromRequest<'a> + Send + Sync,
     F: Fn(A0, A1, &'static dyn Next) -> Fut + Sync + Send + Clone + 'static,
     Fut: Future<Output = teo_result::Result<Response>> + Send + 'static {
     fn call(&self, request: Request, next: &'static dyn Next) -> BoxFuture<'static, teo_result::Result<Response>> {
@@ -76,9 +76,9 @@ impl<A0, A1, F, Fut> MiddlewareArgument<(A0, A1)> for F where
 }
 
 impl<A0, A1, A2, F, Fut> MiddlewareArgument<(A0, A1, A2)> for F where
-    A0: ExtractFromRequest + Send + Sync,
-    A1: ExtractFromRequest + Send + Sync,
-    A2: ExtractFromRequest + Send + Sync,
+    A0: for<'a> ExtractFromRequest<'a> + Send + Sync,
+    A1: for<'a> ExtractFromRequest<'a> + Send + Sync,
+    A2: for<'a> ExtractFromRequest<'a> + Send + Sync,
     F: Fn(A0, A1, A2, &'static dyn Next) -> Fut + Sync + Send + Clone + 'static,
     Fut: Future<Output = teo_result::Result<Response>> + Send + 'static {
     fn call(&self, request: Request, next: &'static dyn Next) -> BoxFuture<'static, teo_result::Result<Response>> {
@@ -90,10 +90,10 @@ impl<A0, A1, A2, F, Fut> MiddlewareArgument<(A0, A1, A2)> for F where
 }
 
 impl<A0, A1, A2, A3, F, Fut> MiddlewareArgument<(A0, A1, A2, A3)> for F where
-    A0: ExtractFromRequest + Send + Sync,
-    A1: ExtractFromRequest + Send + Sync,
-    A2: ExtractFromRequest + Send + Sync,
-    A3: ExtractFromRequest + Send + Sync,
+    A0: for<'a> ExtractFromRequest<'a> + Send + Sync,
+    A1: for<'a> ExtractFromRequest<'a> + Send + Sync,
+    A2: for<'a> ExtractFromRequest<'a> + Send + Sync,
+    A3: for<'a> ExtractFromRequest<'a> + Send + Sync,
     F: Fn(A0, A1, A2, A3, &'static dyn Next) -> Fut + Sync + Send + Clone + 'static,
     Fut: Future<Output = teo_result::Result<Response>> + Send + 'static {
     fn call(&self, request: Request, next: &'static dyn Next) -> BoxFuture<'static, teo_result::Result<Response>> {
