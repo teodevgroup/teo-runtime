@@ -12,7 +12,7 @@ pub struct LocalObjects {
 
 #[derive(Default)]
 struct Inner {
-    map: HistoryBox<BTreeMap<String, HistoryBox<Box<dyn Any + Send + Sync>>>>,
+    map: HistoryBox<BTreeMap<String, HistoryBox<Box<dyn Any>>>>,
 }
 
 impl LocalObjects {
@@ -26,15 +26,15 @@ impl LocalObjects {
         }
     }
 
-    fn map_mut(&self) -> &mut BTreeMap<String, HistoryBox<Box<dyn Any + Send + Sync>>> {
+    fn map_mut(&self) -> &mut BTreeMap<String, HistoryBox<Box<dyn Any>>> {
         unsafe { self.inner.map.get_mut().unwrap() }
     }
 
-    fn map_immut(&self) -> &BTreeMap<String, HistoryBox<Box<dyn Any + Send + Sync>>> {
+    fn map_immut(&self) -> &BTreeMap<String, HistoryBox<Box<dyn Any>>> {
         unsafe { self.inner.map.get().unwrap() }
     }
 
-    pub fn insert<T: 'static + Send + Sync>(&self, key: impl Into<String>, val: T) {
+    pub fn insert<T: 'static>(&self, key: impl Into<String>, val: T) {
         let key = key.into();
         let contains = self.map_immut().contains_key(&key);
         if contains {
@@ -44,19 +44,19 @@ impl LocalObjects {
         }
     }
 
-    pub fn get<T: 'static + Send>(&self, key: &str) -> Option<&T> {
+    pub fn get<T: 'static>(&self, key: &str) -> Option<&T> {
         self.map_immut().get(key).and_then(|boxed| boxed.get().unwrap().downcast_ref())
     }
 
-    pub fn get_mut<T: 'static + Send>(&self, key: &str) -> Option<&mut T> {
+    pub fn get_mut<T: 'static>(&self, key: &str) -> Option<&mut T> {
         self.map_immut().get(key).and_then(|boxed| unsafe { boxed.get_mut() }.unwrap().downcast_mut())
     }
 
-    pub fn contains<T: 'static + Send>(&self, key: &str) -> bool {
+    pub fn contains<T: 'static>(&self, key: &str) -> bool {
         self.map_immut().contains_key(key)
     }
 
-    pub fn remove<T: 'static + Send>(&mut self, key: &str) {
+    pub fn remove<T: 'static>(&mut self, key: &str) {
         self.map_mut().remove(key);
     }
 

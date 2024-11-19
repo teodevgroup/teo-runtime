@@ -63,11 +63,11 @@ impl LocalValues {
         }
     }
 
-    pub fn contains<T: 'static + Send>(&self, key: &str) -> bool {
+    pub fn contains(&self, key: &str) -> bool {
         self.map_immut().contains_key(key)
     }
 
-    pub fn remove<T: 'static + Send>(&mut self, key: &str) {
+    pub fn remove(&self, key: &str) {
         self.map_mut().remove(key);
     }
 
