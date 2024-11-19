@@ -182,16 +182,8 @@ impl Request {
         self.inner.local_values.borrow()
     }
 
-    pub fn local_values_mut(&self) -> RefMut<LocalValues> {
-        self.inner.local_values.borrow_mut()
-    }
-
     pub fn local_objects(&self) -> Ref<LocalObjects> {
         self.inner.local_objects.borrow()
-    }
-
-    pub fn local_objects_mut(&self) -> RefMut<LocalObjects> {
-        self.inner.local_objects.borrow_mut()
     }
 
     pub fn take_incoming(&self) -> Option<Incoming> {
