@@ -5,7 +5,7 @@ use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 use history_box::HistoryBox;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct LocalObjects {
     inner: Arc<Inner>,
 }
