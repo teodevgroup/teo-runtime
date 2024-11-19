@@ -1,4 +1,5 @@
-pub mod local;
+pub mod local_objects;
+pub mod local_values;
 pub mod request;
 pub mod cookies;
 pub mod extract;

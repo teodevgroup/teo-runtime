@@ -8,11 +8,11 @@ pub(in crate::stdlib) fn load_pipeline_request_items(namespace: &namespace::Buil
         let Some(request) = ctx.request() else {
             return Ok(Value::from(Value::Null));
         };
-        let binding = request.local_data();
-        let object: Option<&Value> = binding.get("account");
+        let binding = request.local_values();
+        let object: Option<Value> = binding.get("account")?;
         let Some(object) = object else {
             return Ok(Value::from(Value::Null));
         };
-        Ok(object.clone())
+        Ok(object)
     });
 }

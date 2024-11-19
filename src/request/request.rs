@@ -16,7 +16,8 @@ use crate::connection::transaction;
 use crate::handler::r#match::HandlerMatch;
 use crate::request::cookies::Cookies;
 use crate::request::extract::ExtractFromRequest;
-use crate::request::local::RequestLocal;
+use crate::request::local_objects::LocalObjects;
+use crate::request::local_values::LocalValues;
 use crate::Value;
 
 #[derive(Clone)]
@@ -30,8 +31,8 @@ struct Inner {
     cookies: DeferredBox<Cookies>,
     handler_match: HistoryBox<HandlerMatch>,
     body_value: HistoryBox<Value>,
-    local_data: RefCell<RequestLocal>,
-    local_objects: RefCell<RequestLocal>,
+    local_values: RefCell<LocalValues>,
+    local_objects: RefCell<LocalObjects>,
     incoming: RefCell<Option<Incoming>>,
     incoming_bytes: RefCell<Option<Full<Bytes>>>,
 }
@@ -50,8 +51,8 @@ impl Request {
                 cookies: DeferredBox::new(),
                 handler_match: HistoryBox::new(),
                 body_value: HistoryBox::new(),
-                local_data: RefCell::new(RequestLocal::new()),
-                local_objects: RefCell::new(RequestLocal::new()),
+                local_values: RefCell::new(LocalValues::new()),
+                local_objects: RefCell::new(LocalObjects::new()),
             })
         }
     }
@@ -68,8 +69,8 @@ impl Request {
                 cookies: DeferredBox::new(),
                 handler_match: HistoryBox::new(),
                 body_value: HistoryBox::new(),
-                local_data: RefCell::new(RequestLocal::new()),
-                local_objects: RefCell::new(RequestLocal::new()),
+                local_values: RefCell::new(LocalValues::new()),
+                local_objects: RefCell::new(LocalObjects::new()),
             })
         }
     }
@@ -177,19 +178,19 @@ impl Request {
         self.inner.transaction_ctx.clone()
     }
 
-    pub fn local_data(&self) -> Ref<RequestLocal> {
-        self.inner.local_data.borrow()
+    pub fn local_values(&self) -> Ref<LocalValues> {
+        self.inner.local_values.borrow()
     }
 
-    pub fn local_data_mut(&self) -> RefMut<RequestLocal> {
-        self.inner.local_data.borrow_mut()
+    pub fn local_values_mut(&self) -> RefMut<LocalValues> {
+        self.inner.local_values.borrow_mut()
     }
 
-    pub fn local_objects(&self) -> Ref<RequestLocal> {
+    pub fn local_objects(&self) -> Ref<LocalObjects> {
         self.inner.local_objects.borrow()
     }
 
-    pub fn local_objects_mut(&self) -> RefMut<RequestLocal> {
+    pub fn local_objects_mut(&self) -> RefMut<LocalObjects> {
         self.inner.local_objects.borrow_mut()
     }
 

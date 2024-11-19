@@ -4,14 +4,14 @@ use std::fmt;
 use std::fmt::{Debug, Formatter};
 
 #[derive(Default)]
-pub struct RequestLocal {
+pub struct LocalObjects {
     map: BTreeMap<String, Box<dyn Any + Send + Sync>>,
 }
 
-impl RequestLocal {
+impl LocalObjects {
 
     #[inline]
-    pub fn new() -> RequestLocal {
+    pub fn new() -> LocalObjects {
         Self {
             map: BTreeMap::default(),
         }
@@ -42,10 +42,10 @@ impl RequestLocal {
     }
 }
 
-impl Debug for RequestLocal {
+impl Debug for LocalObjects {
 
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let mut debug_struct = f.debug_struct("LocalData");
+        let mut debug_struct = f.debug_struct("LocalObjects");
         for (k, v) in &self.map {
             debug_struct.field(&k, &v);
         }

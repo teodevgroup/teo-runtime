@@ -257,7 +257,7 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
                                     }
                                 }
                             }
-                            request.local_data_mut().insert("account", Value::from(object));
+                            request.local_values_mut().insert("account", Value::from(object));
                         } else {
                             return Err(Error::unauthorized_message("invalid jwt token"));
                         }
