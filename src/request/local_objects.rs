@@ -31,7 +31,7 @@ impl LocalObjects {
     }
 
     fn map_immut(&self) -> &BTreeMap<String, HistoryBox<Box<dyn Any>>> {
-        unsafe { self.inner.map.get().unwrap() }
+        self.inner.map.get().unwrap()
     }
 
     pub fn insert<T: 'static>(&self, key: impl Into<String>, val: T) {
@@ -52,11 +52,11 @@ impl LocalObjects {
         self.map_immut().get(key).and_then(|boxed| unsafe { boxed.get_mut() }.unwrap().downcast_mut())
     }
 
-    pub fn contains<T: 'static>(&self, key: &str) -> bool {
+    pub fn contains(&self, key: &str) -> bool {
         self.map_immut().contains_key(key)
     }
 
-    pub fn remove<T: 'static>(&self, key: &str) {
+    pub fn remove(&self, key: &str) {
         self.map_mut().remove(key);
     }
 
