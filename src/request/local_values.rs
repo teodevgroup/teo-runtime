@@ -22,13 +22,12 @@ impl LocalValues {
         self.map.insert(key.into(), val.into());
     }
 
-    pub fn get<'a, T>(&'a self, key: &str) -> Result<Option<T>> where T: 'a + TryFrom<Value>, Error: From<T::Error> {
+    pub fn get<'a, T>(&'a self, key: &str) -> Result<T> where T: 'a + TryFrom<&'a Value>, Error: From<T::Error> {
         match self.map.get(key) {
-            None => Ok(None),
+            None => Err(Error::new(format!("missing key: {}", key))),
             Some(v) => {
-                let v = v.clone();
                 let v = T::try_from(v)?;
-                Ok(Some(v))
+                Ok(v)
             }
         }
     }

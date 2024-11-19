@@ -1,3 +1,4 @@
+use teo_result::Result;
 use crate::value::Value;
 use crate::arguments::Arguments;
 use crate::namespace;
@@ -9,8 +10,8 @@ pub(in crate::stdlib) fn load_pipeline_request_items(namespace: &namespace::Buil
             return Ok(Value::from(Value::Null));
         };
         let binding = request.local_values();
-        let object: Option<Value> = binding.get("account")?;
-        let Some(object) = object else {
+        let object: Result<Value> = binding.get("account");
+        let Ok(object) = object else {
             return Ok(Value::from(Value::Null));
         };
         Ok(object)
