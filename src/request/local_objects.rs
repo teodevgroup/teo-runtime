@@ -56,11 +56,11 @@ impl LocalObjects {
         self.map_immut().contains_key(key)
     }
 
-    pub fn remove<T: 'static>(&mut self, key: &str) {
+    pub fn remove<T: 'static>(&self, key: &str) {
         self.map_mut().remove(key);
     }
 
-    pub fn clear(&mut self) {
+    pub fn clear(&self) {
         self.map_mut().clear()
     }
 }
