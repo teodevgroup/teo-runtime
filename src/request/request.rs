@@ -31,8 +31,8 @@ struct Inner {
     cookies: DeferredBox<Cookies>,
     handler_match: HistoryBox<HandlerMatch>,
     body_value: HistoryBox<Value>,
-    local_values: RefCell<LocalValues>,
-    local_objects: RefCell<LocalObjects>,
+    local_values: LocalValues,
+    local_objects: LocalObjects,
     incoming: RefCell<Option<Incoming>>,
     incoming_bytes: RefCell<Option<Full<Bytes>>>,
 }
@@ -51,8 +51,8 @@ impl Request {
                 cookies: DeferredBox::new(),
                 handler_match: HistoryBox::new(),
                 body_value: HistoryBox::new(),
-                local_values: RefCell::new(LocalValues::new()),
-                local_objects: RefCell::new(LocalObjects::new()),
+                local_values: LocalValues::new(),
+                local_objects: LocalObjects::new(),
             })
         }
     }
@@ -69,8 +69,8 @@ impl Request {
                 cookies: DeferredBox::new(),
                 handler_match: HistoryBox::new(),
                 body_value: HistoryBox::new(),
-                local_values: RefCell::new(LocalValues::new()),
-                local_objects: RefCell::new(LocalObjects::new()),
+                local_values: LocalValues::new(),
+                local_objects: LocalObjects::new(),
             })
         }
     }
@@ -178,12 +178,12 @@ impl Request {
         self.inner.transaction_ctx.clone()
     }
 
-    pub fn local_values(&self) -> Ref<LocalValues> {
-        self.inner.local_values.borrow()
+    pub fn local_values(&self) -> &LocalValues {
+        &self.inner.local_values
     }
 
-    pub fn local_objects(&self) -> Ref<LocalObjects> {
-        self.inner.local_objects.borrow()
+    pub fn local_objects(&self) -> &LocalObjects {
+        &self.inner.local_objects
     }
 
     pub fn take_incoming(&self) -> Option<Incoming> {
