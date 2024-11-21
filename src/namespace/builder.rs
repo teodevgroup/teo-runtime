@@ -441,6 +441,11 @@ impl Builder {
         handlers.insert(name.to_owned(), handler);
     }
 
+    pub fn insert_handler_template(&self, name: &str, handler_template: Handler) {
+        let mut handler_templates = self.inner.handler_templates.lock().unwrap();
+        handler_templates.insert(name.to_owned(), handler_template);
+    }
+
     pub fn define_handler<T, F>(&self, name: &str, call: F) where T: 'static, for<'a> F: 'static + HandlerCtxArgument<'a, T> {
         let wrapped_call: &'static F = &*Box::leak(Box::new(call));
         let builder = handler::Builder::new(
@@ -823,7 +828,7 @@ impl Builder {
         let handler_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
         let dest_namespace = self.namespace_or_create_at_path(&namespace_path);
-        dest_namespace.insert_handler(handler_name, handler);
+        dest_namespace.insert_handler_template(handler_name, handler);
     }
 
     pub fn replace_handler_at_path(&self, path: &Vec<&str>, handler: Handler, inside_group: bool) {
