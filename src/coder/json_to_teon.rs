@@ -78,6 +78,22 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
             } else {
                 unreachable!()
             }
+        } else if let Some(object) = json.as_object() {
+            if object.keys().len() > 1 {
+                Err(Error::invalid_request_pathed(path.clone(), "wrong decimal object format"))?
+            }
+            if let Some(decimal) = object.get("$decimal") {
+                if decimal.is_string() {
+                    Ok(Value::Decimal(match BigDecimal::from_str(decimal.as_str().unwrap()) {
+                        Ok(s) => s,
+                        Err(_) => Err(Error::invalid_request_pathed(path.clone(), "string is not valid decimal"))?,
+                    }))
+                } else {
+                    Err(Error::invalid_request_pathed(path.clone(), "wrong decimal object format"))?
+                }
+            } else {
+                Err(Error::invalid_request_pathed(path.clone(), "wrong decimal object format"))?
+            }
         } else {
             Err(Error::invalid_request_pathed(path.clone(), "expect string or number which represents decimal"))
         }
@@ -95,6 +111,22 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
                 Ok(s) => s,
                 Err(_) => Err(Error::invalid_request_pathed(path.clone(), "string is not valid date"))?,
             }))
+        } else if let Some(object) = json.as_object() {
+            if object.keys().len() > 1 {
+                Err(Error::invalid_request_pathed(path.clone(), "wrong date object format"))?
+            }
+            if let Some(date) = object.get("$date") {
+                if date.is_string() {
+                    Ok(Value::Date(match NaiveDate::parse_from_str(date.as_str().unwrap(), "%Y-%m-%d") {
+                        Ok(s) => s,
+                        Err(_) => Err(Error::invalid_request_pathed(path.clone(), "string is not valid date"))?,
+                    }))
+                } else {
+                    Err(Error::invalid_request_pathed(path.clone(), "wrong date object format"))?
+                }
+            } else {
+                Err(Error::invalid_request_pathed(path.clone(), "wrong date object format"))?
+            }
         } else {
             Err(Error::invalid_request_pathed(path.clone(), "expect string represents date"))
         }
@@ -103,8 +135,24 @@ pub fn json_to_teon_with_type(json: &serde_json::Value, path: &KeyPath, t: &Type
                 Ok(d) => d.with_timezone(&Utc),
                 Err(_) => Err(Error::invalid_request_pathed(path.clone(), "string is not valid datetime"))?,
             }))
+        } else if let Some(object) = json.as_object() {
+            if object.keys().len() > 1 {
+                Err(Error::invalid_request_pathed(path.clone(), "wrong datetime object format"))?
+            }
+            if let Some(datetime) = object.get("$datetime") {
+                if datetime.is_string() {
+                    Ok(Value::DateTime(match DateTime::parse_from_rfc3339(datetime.as_str().unwrap()) {
+                        Ok(d) => d.with_timezone(&Utc),
+                        Err(_) => Err(Error::invalid_request_pathed(path.clone(), "string is not valid datetime"))?,
+                    }))
+                } else {
+                    Err(Error::invalid_request_pathed(path.clone(), "wrong datetime object format"))?
+                }
+            } else {
+                Err(Error::invalid_request_pathed(path.clone(), "wrong datetime object format"))?
+            }
         } else {
-            Err(Error::invalid_request_pathed(path.clone(), "expect string represents datetime"))
+            Err(Error::invalid_request_pathed(path.clone(), "expect string or object represents datetime"))
         }
         Type::File => {
             Ok(Value::File(match File::try_from(json) {
