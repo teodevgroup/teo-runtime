@@ -790,9 +790,29 @@ impl Builder {
         handler_groups.get(name).cloned()
     }
 
+    pub fn handler_group_or_create(&self, name: &str) -> handler::group::Builder {
+        if let Some(handler_group) = self.handler_group(name) {
+            handler_group
+        } else {
+            let mut handler_groups = self.inner.handler_groups.lock().unwrap();
+            handler_groups.insert(name.to_owned(), handler::group::Builder::new(next_path(self.path(), name), self.app_data().clone()));
+            handler_groups.get(name).unwrap().clone()
+        }
+    }
+
     pub fn model_handler_group(&self, name: &str) -> Option<handler::group::Builder> {
         let model_handler_groups = self.inner.model_handler_groups.lock().unwrap();
         model_handler_groups.get(name).cloned()
+    }
+
+    pub fn model_handler_group_or_create(&self, name: &str) -> handler::group::Builder {
+        if let Some(model_handler_group) = self.model_handler_group(name) {
+            model_handler_group
+        } else {
+            let mut model_handler_groups = self.inner.model_handler_groups.lock().unwrap();
+            model_handler_groups.insert(name.to_owned(), handler::group::Builder::new(next_path(self.path(), name), self.app_data().clone()));
+            model_handler_groups.get(name).unwrap().clone()
+        }
     }
 
     pub fn handler_at_path(&self, path: &Vec<&str>) -> Option<Handler> {
