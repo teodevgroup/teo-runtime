@@ -37,7 +37,7 @@ pub async fn load_schema(main_namespace_builder: &namespace::Builder, schema: &S
 
     // setup namespaces, this is used for recursively setting database information
     for namespace in schema.namespaces() {
-        let _ = main_namespace_builder.namespace_or_create_at_path(&namespace.string_path());
+        let _ = main_namespace_builder.descendant_namespace_or_create_at_path(&namespace.string_path());
     }
 
     // load server
@@ -95,7 +95,7 @@ pub async fn load_schema(main_namespace_builder: &namespace::Builder, schema: &S
 
         // validate decorator declarations
         for decorator_declaration in schema.decorator_declarations() {
-            let dest_namespace_builder = main_namespace_builder.namespace_or_create_at_path(&decorator_declaration.namespace_string_path());
+            let dest_namespace_builder = main_namespace_builder.descendant_namespace_or_create_at_path(&decorator_declaration.namespace_string_path());
             match decorator_declaration.decorator_class {
                 ReferenceSpace::EnumDecorator => if dest_namespace_builder.enum_decorator(decorator_declaration.identifier().name()).is_none() {
                     diagnostics.insert(DiagnosticsError::new(decorator_declaration.identifier().span(), "enum decorator implementation is not found", schema.source(decorator_declaration.source_id()).unwrap().file_path.clone()))
@@ -130,7 +130,7 @@ pub async fn load_schema(main_namespace_builder: &namespace::Builder, schema: &S
 
         // validate pipeline item declarations
         for pipeline_item_declaration in schema.pipeline_item_declarations() {
-            let dest_namespace_builder = main_namespace_builder.namespace_or_create_at_path(&pipeline_item_declaration.namespace_string_path());
+            let dest_namespace_builder = main_namespace_builder.descendant_namespace_or_create_at_path(&pipeline_item_declaration.namespace_string_path());
             if dest_namespace_builder.pipeline_item(pipeline_item_declaration.identifier().name()).is_none() {
                 diagnostics.insert(DiagnosticsError::new(pipeline_item_declaration.identifier().span(), "pipeline item implementation is not found", schema.source(pipeline_item_declaration.source_id()).unwrap().file_path.clone()))
             }
@@ -138,7 +138,7 @@ pub async fn load_schema(main_namespace_builder: &namespace::Builder, schema: &S
 
         // validate struct declarations
         for struct_declaration in schema.struct_declarations() {
-            let dest_namespace_builder = main_namespace_builder.namespace_or_create_at_path(&struct_declaration.namespace_string_path());
+            let dest_namespace_builder = main_namespace_builder.descendant_namespace_or_create_at_path(&struct_declaration.namespace_string_path());
             if let Some(struct_implementation) = dest_namespace_builder.r#struct(struct_declaration.identifier().name()) {
                 for function_declaration in struct_declaration.function_declarations() {
                     if function_declaration.r#static {
@@ -158,7 +158,7 @@ pub async fn load_schema(main_namespace_builder: &namespace::Builder, schema: &S
 
         // validate handlers
         for handler_declaration in schema.handler_declarations() {
-            let dest_namespace_builder = main_namespace_builder.namespace_or_create_at_path(&handler_declaration.namespace_string_path());
+            let dest_namespace_builder = main_namespace_builder.descendant_namespace_or_create_at_path(&handler_declaration.namespace_string_path());
             if dest_namespace_builder.handler(handler_declaration.identifier().name()).is_none() {
                 diagnostics.insert(DiagnosticsError::new(handler_declaration.identifier().span(), "handler implementation is not found", schema.source(handler_declaration.source_id()).unwrap().file_path.clone()));
             }
@@ -166,7 +166,7 @@ pub async fn load_schema(main_namespace_builder: &namespace::Builder, schema: &S
 
         // validate handler templates
         for handler_template_declaration in schema.handler_template_declarations() {
-            let dest_namespace_builder = main_namespace_builder.namespace_or_create_at_path(&handler_template_declaration.namespace_string_path());
+            let dest_namespace_builder = main_namespace_builder.descendant_namespace_or_create_at_path(&handler_template_declaration.namespace_string_path());
             if dest_namespace_builder.handler_template(handler_template_declaration.identifier().name()).is_none() {
                 diagnostics.insert(DiagnosticsError::new(handler_template_declaration.identifier().span(), "handler template implementation is not found", schema.source(handler_template_declaration.source_id()).unwrap().file_path.clone()));
             }
@@ -174,7 +174,7 @@ pub async fn load_schema(main_namespace_builder: &namespace::Builder, schema: &S
 
         // validate handler groups
         for handler_group_declaration in schema.handler_group_declarations() {
-            let dest_namespace_builder = main_namespace_builder.namespace_or_create_at_path(&handler_group_declaration.namespace_string_path());
+            let dest_namespace_builder = main_namespace_builder.descendant_namespace_or_create_at_path(&handler_group_declaration.namespace_string_path());
             if dest_namespace_builder.handler_group(handler_group_declaration.identifier().name()).is_none() {
                 diagnostics.insert(DiagnosticsError::new(handler_group_declaration.identifier().span(), "handler group implementation is not found", schema.source(handler_group_declaration.source_id()).unwrap().file_path.clone()));
             }
@@ -189,7 +189,7 @@ pub async fn load_schema(main_namespace_builder: &namespace::Builder, schema: &S
 
         // validate middleware declarations
         for middleware_declaration in schema.middleware_declarations() {
-            let dest_namespace_builder = main_namespace_builder.namespace_or_create_at_path(&middleware_declaration.namespace_string_path());
+            let dest_namespace_builder = main_namespace_builder.descendant_namespace_or_create_at_path(&middleware_declaration.namespace_string_path());
             match middleware_declaration.middleware_type() {
                 MiddlewareType::HandlerMiddleware => {
                     if dest_namespace_builder.handler_middleware(middleware_declaration.identifier().name()).is_none() {
@@ -239,7 +239,7 @@ pub async fn load_schema(main_namespace_builder: &namespace::Builder, schema: &S
 
     // load models
     for model_declaration in schema.models() {
-        let database = main_namespace_builder.namespace_or_create_at_path(&model_declaration.namespace_string_path()).database();
+        let database = main_namespace_builder.descendant_namespace_or_create_at_path(&model_declaration.namespace_string_path()).database();
         if database.is_some() && model_declaration.is_available() {
             load_model(main_namespace_builder, schema, model_declaration, &mut diagnostics)?;
         }

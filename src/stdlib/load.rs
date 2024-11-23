@@ -31,7 +31,7 @@ pub fn load(namespace_builder: &namespace::Builder) {
     if !namespace_builder.path().is_empty() {
         panic!("Please load standard library in the main namespace.")
     }
-    let std_namespace_builder = namespace_builder.namespace_or_create("std");
+    let std_namespace_builder = namespace_builder.child_namespace_or_create("std");
     // structs
     load_structs(&std_namespace_builder);
     // decorators

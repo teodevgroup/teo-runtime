@@ -7,7 +7,7 @@ use crate::value::Value;
 
 pub(in crate::stdlib) fn load_bcrypt_items(namespace: &namespace::Builder) {
 
-    let bcrypt_namespace = namespace.namespace_or_create("bcrypt");
+    let bcrypt_namespace = namespace.child_namespace_or_create("bcrypt");
 
     bcrypt_namespace.define_pipeline_item("salt", |_: Arguments, ctx: Ctx| async move {
         let value: &str = ctx.value().try_ref_into_err_message("salt: value is not string")?;

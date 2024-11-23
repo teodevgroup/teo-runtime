@@ -35,7 +35,7 @@ pub fn load_model(main_namespace: &namespace::Builder, schema: &Schema, model_de
             }
         }
     }
-    let database = main_namespace.namespace_or_create_at_path(&model_declaration.namespace_string_path()).database();
+    let database = main_namespace.descendant_namespace_or_create_at_path(&model_declaration.namespace_string_path()).database();
     for field_declaration in model_declaration.fields() {
         if field_declaration.resolved().class.is_model_primitive_field() {
             if field_declaration.is_available() {
@@ -61,7 +61,7 @@ pub fn load_model(main_namespace: &namespace::Builder, schema: &Schema, model_de
         }
     }
     let model = model_builder.build(model_declaration.resolved().clone())?;
-    let dest_namespace = main_namespace.namespace_or_create_at_path(&model_declaration.namespace_string_path());
+    let dest_namespace = main_namespace.descendant_namespace_or_create_at_path(&model_declaration.namespace_string_path());
     dest_namespace.insert_model(model_declaration.identifier().name().to_owned(), model);
     for handler_declaration in model_declaration.handlers() {
         load_handler(main_namespace, schema, handler_declaration, diagnostics)?;

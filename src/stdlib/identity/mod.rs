@@ -43,7 +43,7 @@ pub fn decode_token(token: &str, secret: &str) -> Result<JwtClaims, jsonwebtoken
 
 pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
 
-    let identity_namespace = std_namespace.namespace_or_create("identity");
+    let identity_namespace = std_namespace.child_namespace_or_create("identity");
 
     identity_namespace.define_model_decorator("tokenIssuer", |arguments, model| {
         let pipeline: Pipeline = arguments.get("pipeline")?;

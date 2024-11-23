@@ -228,7 +228,7 @@ impl Builder {
         self.inner.namespaces.lock().unwrap().clone()
     }
 
-    pub fn namespace(&self, name: &str) -> Option<Builder> {
+    pub fn child_namespace(&self, name: &str) -> Option<Builder> {
         let namespaces = self.inner.namespaces.lock().unwrap();
         if let Some(namespace) = namespaces.get(name) {
             Some(namespace.clone())
@@ -237,7 +237,7 @@ impl Builder {
         }
     }
 
-    pub fn namespace_or_create(&self, name: &str) -> Builder {
+    pub fn child_namespace_or_create(&self, name: &str) -> Builder {
         let mut namespaces = self.inner.namespaces.lock().unwrap();
         if !namespaces.contains_key(name) {
             namespaces.insert(name.to_owned(), Builder::new(next_path(self.path(), name), self.app_data().clone()));
@@ -245,21 +245,21 @@ impl Builder {
         namespaces.get(name).unwrap().clone()
     }
 
-    pub fn namespace_at_path(&self, path: &Vec<String>) -> Option<Builder> {
+    pub fn descendant_namespace_at_path(&self, path: &Vec<String>) -> Option<Builder> {
         let mut current = Some(self.clone());
         for item in path {
             if current.is_none() {
                 return None;
             }
-            current = current.unwrap().namespace(item);
+            current = current.unwrap().child_namespace(item);
         }
         current
     }
 
-    pub fn namespace_or_create_at_path(&self, path: &Vec<String>) -> Builder {
+    pub fn descendant_namespace_or_create_at_path(&self, path: &Vec<String>) -> Builder {
         let mut current = self.clone();
         for item in path {
-            current = current.namespace_or_create(item)
+            current = current.child_namespace_or_create(item)
         }
         current
     }
@@ -517,7 +517,7 @@ impl Builder {
     pub fn model_decorator_at_path(&self, path: &Vec<&str>) -> Option<model::Decorator> {
         let decorator_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
-        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+        if let Some(ns) = self.descendant_namespace_at_path(&namespace_path) {
             ns.model_decorator(decorator_name)
         } else {
             None
@@ -532,7 +532,7 @@ impl Builder {
     pub fn model_field_decorator_at_path(&self, path: &Vec<&str>) -> Option<model::field::Decorator> {
         let decorator_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
-        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+        if let Some(ns) = self.descendant_namespace_at_path(&namespace_path) {
             ns.model_field_decorator(decorator_name)
         } else {
             None
@@ -547,7 +547,7 @@ impl Builder {
     pub fn model_relation_decorator_at_path(&self, path: &Vec<&str>) -> Option<model::relation::Decorator> {
         let decorator_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
-        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+        if let Some(ns) = self.descendant_namespace_at_path(&namespace_path) {
             ns.model_relation_decorator(decorator_name)
         } else {
             None
@@ -562,7 +562,7 @@ impl Builder {
     pub fn model_property_decorator_at_path(&self, path: &Vec<&str>) -> Option<model::property::Decorator> {
         let decorator_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
-        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+        if let Some(ns) = self.descendant_namespace_at_path(&namespace_path) {
             ns.model_property_decorator(decorator_name)
         } else {
             None
@@ -577,7 +577,7 @@ impl Builder {
     pub fn enum_decorator_at_path(&self, path: &Vec<&str>) -> Option<r#enum::Decorator> {
         let decorator_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
-        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+        if let Some(ns) = self.descendant_namespace_at_path(&namespace_path) {
             ns.enum_decorator(decorator_name)
         } else {
             None
@@ -592,7 +592,7 @@ impl Builder {
     pub fn enum_member_decorator_at_path(&self, path: &Vec<&str>) -> Option<r#enum::member::Decorator> {
         let decorator_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
-        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+        if let Some(ns) = self.descendant_namespace_at_path(&namespace_path) {
             ns.enum_member_decorator(decorator_name)
         } else {
             None
@@ -607,7 +607,7 @@ impl Builder {
     pub fn interface_decorator_at_path(&self, path: &Vec<&str>) -> Option<interface::Decorator> {
         let decorator_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
-        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+        if let Some(ns) = self.descendant_namespace_at_path(&namespace_path) {
             ns.interface_decorator(decorator_name)
         } else {
             None
@@ -622,7 +622,7 @@ impl Builder {
     pub fn interface_field_decorator_at_path(&self, path: &Vec<&str>) -> Option<interface::field::Decorator> {
         let decorator_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
-        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+        if let Some(ns) = self.descendant_namespace_at_path(&namespace_path) {
             ns.interface_field_decorator(decorator_name)
         } else {
             None
@@ -637,7 +637,7 @@ impl Builder {
     pub fn handler_decorator_at_path(&self, path: &Vec<&str>) -> Option<handler::Decorator> {
         let decorator_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
-        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+        if let Some(ns) = self.descendant_namespace_at_path(&namespace_path) {
             ns.handler_decorator(decorator_name)
         } else {
             None
@@ -652,7 +652,7 @@ impl Builder {
     pub fn pipeline_item_at_path(&self, path: &Vec<&str>) -> Option<pipeline::Item> {
         let pipeline_item_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
-        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+        if let Some(ns) = self.descendant_namespace_at_path(&namespace_path) {
             ns.pipeline_item(pipeline_item_name)
         } else {
             None
@@ -667,7 +667,7 @@ impl Builder {
     pub fn struct_at_path(&self, path: &Vec<&str>) -> Option<Struct> {
         let struct_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
-        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+        if let Some(ns) = self.descendant_namespace_at_path(&namespace_path) {
             ns.r#struct(struct_name)
         } else {
             None
@@ -682,7 +682,7 @@ impl Builder {
     pub fn enum_at_path(&self, path: &Vec<&str>) -> Option<Enum> {
         let enum_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
-        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+        if let Some(ns) = self.descendant_namespace_at_path(&namespace_path) {
             ns.r#enum(enum_name)
         } else {
             None
@@ -701,7 +701,7 @@ impl Builder {
     pub fn model_at_path(&self, path: &Vec<String>) -> Option<Model> {
         let model_name = path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
-        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+        if let Some(ns) = self.descendant_namespace_at_path(&namespace_path) {
             ns.model(model_name)
         } else {
             None
@@ -716,7 +716,7 @@ impl Builder {
     pub fn interface_at_path(&self, path: &Vec<&str>) -> Option<Interface> {
         let interface_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
-        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+        if let Some(ns) = self.descendant_namespace_at_path(&namespace_path) {
             ns.interface(interface_name)
         } else {
             None
@@ -743,7 +743,7 @@ impl Builder {
     pub fn handler_middleware_at_path(&self, path: &Vec<&str>) -> Option<middleware::Definition> {
         let middleware_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
-        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+        if let Some(ns) = self.descendant_namespace_at_path(&namespace_path) {
             ns.handler_middleware(middleware_name)
         } else {
             None
@@ -753,7 +753,7 @@ impl Builder {
     pub fn request_middleware_at_path(&self, path: &Vec<&str>) -> Option<middleware::Definition> {
         let middleware_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
-        if let Some(ns) = self.namespace_at_path(&namespace_path) {
+        if let Some(ns) = self.descendant_namespace_at_path(&namespace_path) {
             ns.request_middleware(middleware_name)
         } else {
             None
@@ -772,7 +772,7 @@ impl Builder {
         } else {
             // try find a namespace first
             let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
-            if let Some(dest_namespace) = self.namespace_at_path(&namespace_path) {
+            if let Some(dest_namespace) = self.descendant_namespace_at_path(&namespace_path) {
                 dest_namespace.handler_template(handler_name)
             } else {
                 None
@@ -822,14 +822,14 @@ impl Builder {
         } else {
             // try find a namespace first
             let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
-            if let Some(dest_namespace) = self.namespace_at_path(&namespace_path) {
+            if let Some(dest_namespace) = self.descendant_namespace_at_path(&namespace_path) {
                 dest_namespace.handler(handler_name)
             } else {
                 // try find in group
                 let handler_name = *path.last().unwrap();
                 let group_name = path.get(path.len() - 2).unwrap().deref();
                 let namespace_path: Vec<String> = path.into_iter().rev().skip(2).rev().map(|i| i.to_string()).collect();
-                if let Some(dest_namespace) = self.namespace_at_path(&namespace_path) {
+                if let Some(dest_namespace) = self.descendant_namespace_at_path(&namespace_path) {
                     if let Some(group) = dest_namespace.handler_group(group_name) {
                         group.handler(handler_name)
                     } else if let Some(group) = dest_namespace.model_handler_group(group_name) {
@@ -847,7 +847,7 @@ impl Builder {
     pub fn replace_handler_template_at_path(&self, path: &Vec<&str>, handler: Handler) {
         let handler_name = *path.last().unwrap();
         let namespace_path: Vec<String> = path.into_iter().rev().skip(1).rev().map(|i| i.to_string()).collect();
-        let dest_namespace = self.namespace_or_create_at_path(&namespace_path);
+        let dest_namespace = self.descendant_namespace_or_create_at_path(&namespace_path);
         dest_namespace.insert_handler_template(handler_name, handler);
     }
 
@@ -859,7 +859,7 @@ impl Builder {
             None
         };
         let namespace_path: Vec<String> = path.into_iter().rev().skip(if inside_group { 2 } else { 1 }).rev().map(|i| i.to_string()).collect();
-        let dest_namespace = self.namespace_or_create_at_path(&namespace_path);
+        let dest_namespace = self.descendant_namespace_or_create_at_path(&namespace_path);
         if let Some(group_name) = group_name {
             if let Some(group) = dest_namespace.handler_group(group_name) {
                 group.insert_handler(handler_name, handler);

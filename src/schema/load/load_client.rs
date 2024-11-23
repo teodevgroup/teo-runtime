@@ -33,7 +33,7 @@ pub fn load_client(main_namespace: &namespace::Builder, schema: &Schema, client:
         object_name,
         git_commit,
     };
-    let dest_namespace = main_namespace.namespace_or_create_at_path(&client.namespace_string_path());
+    let dest_namespace = main_namespace.descendant_namespace_or_create_at_path(&client.namespace_string_path());
     dest_namespace.insert_client(client.name().to_owned(), client_config);
     Ok(())
 }

@@ -27,7 +27,7 @@ pub(super) async fn load_use_middlewares(main_namespace: &namespace::Builder, sc
                         match arith_expr {
                             ArithExpr::Expression(expression) => {
                                 if expression.kind.is_unit() {
-                                    let dest_namespace = main_namespace.namespace_or_create_at_path(&use_middlewares_block.namespace_string_path());
+                                    let dest_namespace = main_namespace.descendant_namespace_or_create_at_path(&use_middlewares_block.namespace_string_path());
                                     let last_expression = expression.kind.as_unit().unwrap().expression_at(expression.kind.as_unit().unwrap().expressions().count() - 1).unwrap();
                                     if let Some(argument_list) = last_expression.kind.as_argument_list() {
                                         let new_arguments = fetch_argument_list(argument_list, schema, use_middlewares_block, &dest_namespace, diagnostics)?;
@@ -42,7 +42,7 @@ pub(super) async fn load_use_middlewares(main_namespace: &namespace::Builder, sc
                 }
             }
         }
-        let dest_namespace = main_namespace.namespace_or_create_at_path(&use_middlewares_block.namespace_string_path());
+        let dest_namespace = main_namespace.descendant_namespace_or_create_at_path(&use_middlewares_block.namespace_string_path());
         match use_middlewares_block.middleware_type() {
             MiddlewareType::HandlerMiddleware => {
                 dest_namespace.set_handler_middlewares_block(Some(middleware::Block::new(uses)));

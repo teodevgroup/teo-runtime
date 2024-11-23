@@ -20,7 +20,7 @@ pub fn load_entity(main_namespace: &namespace::Builder, schema: &Schema, entity:
         provider,
         dest,
     };
-    let dest_namespace = main_namespace.namespace_or_create_at_path(&entity.namespace_string_path());
+    let dest_namespace = main_namespace.descendant_namespace_or_create_at_path(&entity.namespace_string_path());
     dest_namespace.insert_entity(entity.name().to_owned(), entity_config);
     Ok(())
 }

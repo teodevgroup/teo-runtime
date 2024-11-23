@@ -31,7 +31,7 @@ pub fn load_enum(main_namespace: &namespace::Builder, schema: &Schema, enum_decl
         main_namespace.app_data().clone(),
     );
     let r#enum = enum_builder.build();
-    let dest_namespace = main_namespace.namespace_or_create_at_path(&enum_declaration.namespace_string_path());
+    let dest_namespace = main_namespace.descendant_namespace_or_create_at_path(&enum_declaration.namespace_string_path());
     dest_namespace.insert_enum(enum_declaration.identifier().name().to_owned(), r#enum);
     Ok(())
 }
