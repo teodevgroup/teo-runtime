@@ -4,7 +4,7 @@ use serde::Serialize;
 use teo_parser::r#type::Type;
 use crate::arguments::Arguments;
 use crate::pipeline::Ctx;
-use crate::pipeline::item::item::Call;
+use crate::pipeline::item::templates::call::Call;
 use crate::Value;
 
 #[derive(Educe, Serialize, Clone)]
@@ -19,7 +19,7 @@ pub struct BoundedItem {
 
 impl BoundedItem {
 
-    pub(crate) async fn call(&self, args: Arguments, ctx: Ctx) -> teo_result::Result<Value> {
-        self.call.call(args, ctx).await
+    pub(crate) async fn call(&self, ctx: Ctx) -> teo_result::Result<Value> {
+        self.call.call(ctx).await
     }
 }

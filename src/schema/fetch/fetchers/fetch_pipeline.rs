@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::ast::schema::Schema;
 use teo_parser::ast::node::Node;
@@ -29,7 +30,7 @@ fn fetch_pipeline_unit<I>(pipeline_resolved: &PipelineResolved, unit: &Unit, sch
             if let Some(this_top) = if current_space.is_some() {
                 current_space.unwrap().find_top_by_name(identifier.name(), &top_filter_for_pipeline(), info_provider.availability())
             } else {
-                Some(fetch_identifier_to_node(identifier, schema, info_provider, expect, &top_filter_for_pipeline()).unwrap())
+                Some(fetch_identifier_to_node(identifier, schema, info_provider, expect, &top_filter_for_pipeline())?)
             } {
                 match this_top {
                     Node::Namespace(namespace) => {
@@ -41,8 +42,8 @@ fn fetch_pipeline_unit<I>(pipeline_resolved: &PipelineResolved, unit: &Unit, sch
                         if let Some(pipeline_item) = namespace.pipeline_item_at_path(&pipeline_item_declaration.str_path()) {
                             pipeline.items.push(BoundedItem {
                                 path: pipeline_item.path().clone(),
-                                arguments,
-                                call: pipeline_item.call().clone(),
+                                arguments: arguments.clone(),
+                                call: Arc::new(pipeline_item.creator().call(arguments)),
                                 cast_output_type: pipeline_resolved.items_resolved.get(item_index).map(|r| r.output_type.clone()),
                             });
                         }
