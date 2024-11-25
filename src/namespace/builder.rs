@@ -25,6 +25,7 @@ use hyper::Method;
 use crate::middleware::middleware::{empty_middleware, Middleware};
 use crate::model::{Model, Relation};
 use crate::namespace::Namespace;
+use crate::pipeline::item::item_impl::ItemImpl;
 use crate::pipeline::item::templates::callback::{Callback, CallbackResult};
 use crate::pipeline::item::templates::compare::Compare;
 use crate::pipeline::item::templates::transformer::{TransformerResult, Transformer};
@@ -310,7 +311,7 @@ impl Builder {
     }
 
     pub fn define_transform_pipeline_item<C, A, O, F, R>(&self, name: &str, creator: C) where
-        C: Fn(Arguments) -> F,
+        C: Fn(Arguments) -> F + 'static,
         A: Send + Sync + 'static,
         O: Into<Value> + Send + Sync + 'static,
         R: Into<TransformerResult<O>> + Send + Sync + 'static,
@@ -319,7 +320,7 @@ impl Builder {
         let mut pipeline_items = self.inner.pipeline_items.lock().unwrap();
         pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(|args: Arguments| {
             let transformer = Box::leak(Box::new(wrap_creator(args)));
-            |ctx: pipeline::Ctx| async {
+            Ok(ItemImpl::new(|ctx: pipeline::Ctx| async {
                 let transform_result: TransformerResult<O> = transformer.call(ctx).await.into();
                 match transform_result {
                     TransformerResult::Object(t) => Ok(t.into()),
@@ -328,12 +329,12 @@ impl Builder {
                         Err(e) => Err(e.into()),
                     }
                 }
-            }
+            }))
         }), self.app_data().clone()));
     }
 
     pub fn define_validator_pipeline_item<C, T, F, O>(&self, name: &str, creator: C) where
-        C: Fn(Arguments) -> F,
+        C: Fn(Arguments) -> F + 'static,
         T: Send + Sync + 'static,
         F: Validator<T, O> + 'static,
         O: Into<ValidatorResult> + Send + Sync + 'static {
@@ -341,7 +342,7 @@ impl Builder {
         let mut pipeline_items = self.inner.pipeline_items.lock().unwrap();
         pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(|args: Arguments| {
             let validator = Box::leak(Box::new(wrap_creator(args)));
-            |ctx: pipeline::Ctx| async {
+            Ok(ItemImpl::new(|ctx: pipeline::Ctx| async {
                 let ctx_value = ctx.value().clone();
                 let validate_result: ValidatorResult = validator.call(ctx).await.into();
                 match validate_result {
@@ -363,13 +364,13 @@ impl Builder {
                         Err(err) => Err(err),
                     }
                 }
-            }
+            }))
         }), self.app_data().clone()));
 
     }
 
     pub fn define_callback_pipeline_item<C, T, F, O>(&self, name: &str, creator: C) where
-        C: Fn(Arguments) -> F,
+        C: Fn(Arguments) -> F + 'static,
         T: Send + Sync + 'static,
         F: Callback<T, O> + 'static,
         O: Into<CallbackResult> + Send + Sync + 'static {
@@ -377,7 +378,7 @@ impl Builder {
         let mut pipeline_items = self.inner.pipeline_items.lock().unwrap();
         pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(|args: Arguments| {
             let callback = Box::leak(Box::new(wrap_creator(args)));
-            |ctx: pipeline::Ctx| async {
+            Ok(ItemImpl::new(|ctx: pipeline::Ctx| async {
                 let ctx_value = ctx.value().clone();
                 let callback_result: CallbackResult = callback.call(ctx).await.into();
                 match callback_result {
@@ -386,12 +387,12 @@ impl Builder {
                         Err(err) => Err(err),
                     },
                 }
-            }
+            }))
         }), self.app_data().clone()));
     }
 
     pub fn define_compare_pipeline_item<C, T, O, F, E>(&self, name: &str, creator: C) where
-        C: Fn(Arguments) -> F,
+        C: Fn(Arguments) -> F + 'static,
         T: Send + Sync + 'static,
         O: Into<ValidatorResult> + Send + Sync + 'static,
         E: Into<Error> + std::error::Error,
@@ -400,7 +401,7 @@ impl Builder {
         let mut pipeline_items = self.inner.pipeline_items.lock().unwrap();
         pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(|args: Arguments| {
             let compare = Box::leak(Box::new(wrap_creator(args)));
-            |ctx: pipeline::Ctx| async {
+            Ok(ItemImpl::new(|ctx: pipeline::Ctx| async {
                 if ctx.object().is_new() {
                     return Ok(ctx.value().clone());
                 }
@@ -431,7 +432,7 @@ impl Builder {
                         Err(err) => Err(err),
                     }
                 }
-            }
+            }))
         }), self.app_data().clone()));
     }
 
@@ -1034,3 +1035,6 @@ impl Builder {
         }
     }
 }
+
+unsafe impl Send for Builder { }
+unsafe impl Sync for Builder { }

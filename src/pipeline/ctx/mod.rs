@@ -81,7 +81,7 @@ impl Ctx {
     async fn run_pipeline_inner<T, E>(&self, pipeline: &Pipeline) -> Result<T> where T: TryFrom<Value, Error=E>, Error: From<E> {
         let mut ctx = self.clone();
         for item in &pipeline.items {
-            ctx = ctx.alter_value(item.call(item.arguments.clone(), ctx.clone()).await?.cast(item.cast_output_type.as_ref(), self.transaction_ctx().namespace()));
+            ctx = ctx.alter_value(item.call(ctx.clone()).await?.cast(item.cast_output_type.as_ref(), self.transaction_ctx().namespace()));
         }
         Ok(ctx.value().clone().try_into()?)
     }

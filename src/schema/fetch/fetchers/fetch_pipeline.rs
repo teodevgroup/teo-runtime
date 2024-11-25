@@ -43,7 +43,7 @@ fn fetch_pipeline_unit<I>(pipeline_resolved: &PipelineResolved, unit: &Unit, sch
                             pipeline.items.push(BoundedItem {
                                 path: pipeline_item.path().clone(),
                                 arguments: arguments.clone(),
-                                call: Arc::new(pipeline_item.creator().call(arguments)),
+                                call: pipeline_item.creator().call(arguments)?.item_call,
                                 cast_output_type: pipeline_resolved.items_resolved.get(item_index).map(|r| r.output_type.clone()),
                             });
                         }
