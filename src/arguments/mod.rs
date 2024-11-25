@@ -62,16 +62,16 @@ impl Arguments {
         self.inner.map.contains_key(key.as_ref())
     }
 
-    pub fn get<'a, T: 'a, E>(&'a self, key: impl AsRef<str>) -> Result<T> where E: std::error::Error, T: TryFrom<&'a Value, Error = E> {
-        let object = self.get_object_ref(key)?;
+    pub fn get<'a, T: 'a, E>(&'a self, key: impl AsRef<str>) -> Result<T> where E: core::error::Error, Error: From<E>, T: TryFrom<&'a Value, Error = E> {
+        let object = self.get_value_ref(key)?;
         match object.try_into() {
             Ok(v) => Ok(v),
             Err(e) => Err(Error::new(format!("{e}")))
         }
     }
 
-    pub fn get_optional<'a, T: 'a, E>(&'a self, key: impl AsRef<str>) -> Result<Option<T>> where E: std::error::Error, T: TryFrom<&'a Value, Error = E> {
-        if let Ok(object) = self.get_object_ref(key) {
+    pub fn get_optional<'a, T: 'a, E>(&'a self, key: impl AsRef<str>) -> Result<Option<T>> where E: core::error::Error, Error: From<E>, T: TryFrom<&'a Value, Error = E> {
+        if let Ok(object) = self.get_value_ref(key) {
             if object.is_null() {
                 Ok(None)
             } else {
@@ -85,7 +85,7 @@ impl Arguments {
         }
     }
 
-    pub fn get_object_ref(&self, key: impl AsRef<str>) -> Result<&Value> {
+    pub fn get_value_ref(&self, key: impl AsRef<str>) -> Result<&Value> {
         if let Some(object) = self.inner.map.get(key.as_ref()) {
             Ok(object)
         } else {
@@ -93,8 +93,8 @@ impl Arguments {
         }
     }
 
-    pub fn get_object(&self, key: impl AsRef<str>) -> Result<Value> {
-        self.get_object_ref(key).map(|o| o.clone())
+    pub fn get_value(&self, key: impl AsRef<str>) -> Result<Value> {
+        self.get_value_ref(key).map(|o| o.clone())
     }
 
     pub fn iter(&self) -> std::collections::btree_map::Iter<String, Value> {

@@ -50,7 +50,7 @@ pub(in crate::stdlib) fn load_pipeline_string_transform_items(namespace: &namesp
     namespace.define_pipeline_item("split", |args: Arguments, ctx: Ctx| async move {
         let input: &str = ctx.value().try_ref_into_err_prefix("split")?;
         let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
-            args.get_object("separator").error_message_prefixed("split(separator)")?,
+            args.get_value("separator").error_message_prefixed("split(separator)")?,
             "split(separator)",
         ).await?;
         let separator: &str = arg_object.try_ref_into_err_prefix("split(separator)")?;
@@ -61,7 +61,7 @@ pub(in crate::stdlib) fn load_pipeline_string_transform_items(namespace: &namesp
         let input: &str = ctx.value().try_ref_into_err_prefix("ellipsis")?;
         let ellipsis: &str = args.get("ellipsis").error_message_prefixed("ellipsis(ellipsis)")?;
         let width_object: Value = ctx.resolve_pipeline_with_err_prefix(
-            args.get_object("width").error_message_prefixed("ellipsis(width)")?,
+            args.get_value("width").error_message_prefixed("ellipsis(width)")?,
             "ellipsis(width)",
         ).await?;
         let width: i32 = width_object.try_into_err_prefix("ellipsis(width)")?;
@@ -75,7 +75,7 @@ pub(in crate::stdlib) fn load_pipeline_string_transform_items(namespace: &namesp
     namespace.define_pipeline_item("padStart", |args: Arguments, ctx: Ctx| async move {
         let input: &str = ctx.value().try_ref_into_err_prefix("padStart")?;
         let width_object: Value = ctx.resolve_pipeline_with_err_prefix(
-            args.get_object("width").error_message_prefixed("padStart(width)")?,
+            args.get_value("width").error_message_prefixed("padStart(width)")?,
             "padStart(width)",
         ).await?;
         let width: usize = width_object.try_ref_into_err_prefix("padStart(width)")?;
@@ -90,7 +90,7 @@ pub(in crate::stdlib) fn load_pipeline_string_transform_items(namespace: &namesp
     namespace.define_pipeline_item("padEnd", |args: Arguments, ctx: Ctx| async move {
         let input: &str = ctx.value().try_ref_into_err_prefix("padEnd")?;
         let width_object: Value = ctx.resolve_pipeline_with_err_prefix(
-            args.get_object("width").error_message_prefixed("padEnd(width)")?,
+            args.get_value("width").error_message_prefixed("padEnd(width)")?,
             "padEnd(width)",
         ).await?;
         let width: usize = width_object.try_ref_into_err_prefix("padEnd(width")?;

@@ -14,7 +14,7 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
     namespace.define_pipeline_item("add", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("add")?;
         let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
-            args.get_object("value").error_message_prefixed("add(value)")?,
+            args.get_value("value").error_message_prefixed("add(value)")?,
             "add(value)",
         ).await?;
         let arg: &Value = arg_object.try_ref_into_err_prefix("add(value)")?;
@@ -24,7 +24,7 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
     namespace.define_pipeline_item("sub", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("sub")?;
         let arg: &Value = &ctx.resolve_pipeline_with_err_prefix(
-            args.get_object("value").error_message_prefixed("sub(value)")?,
+            args.get_value("value").error_message_prefixed("sub(value)")?,
             "sub(value)",
         ).await?;
         Ok(Value::from((input - arg).error_message_prefixed("sub")?))
@@ -33,7 +33,7 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
     namespace.define_pipeline_item("mul", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("mul")?;
         let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
-            args.get_object("value").error_message_prefixed("mul(value)")?,
+            args.get_value("value").error_message_prefixed("mul(value)")?,
             "mul(value)",
         ).await?;
         let arg: &Value = arg_object.try_ref_into_err_prefix("mul(value)")?;
@@ -43,7 +43,7 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
     namespace.define_pipeline_item("div", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("div")?;
         let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
-            args.get_object("value").error_message_prefixed("div(value)")?,
+            args.get_value("value").error_message_prefixed("div(value)")?,
             "div(value)",
         ).await?;
         let arg: &Value = arg_object.try_ref_into_err_prefix("div(value)")?;
@@ -53,7 +53,7 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
     namespace.define_pipeline_item("mod", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("mod")?;
         let arg: &Value = &ctx.resolve_pipeline_with_err_prefix(
-            args.get_object("value").error_message_prefixed("mod(value)")?,
+            args.get_value("value").error_message_prefixed("mod(value)")?,
             "mod(value)",
         ).await?;
         Ok(Value::from((input % arg).error_message_prefixed("mod")?))
@@ -62,7 +62,7 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
     namespace.define_pipeline_item("max", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("max")?;
         let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
-            args.get_object("value").error_message_prefixed("max(value)")?,
+            args.get_value("value").error_message_prefixed("max(value)")?,
             "max(value)",
         ).await?;
         let arg: &Value = arg_object.try_ref_into_err_prefix("max(value)")?;
@@ -76,7 +76,7 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
     namespace.define_pipeline_item("min", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("min")?;
         let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
-            args.get_object("value").error_message_prefixed("min(value)")?,
+            args.get_value("value").error_message_prefixed("min(value)")?,
             "min(value)",
         ).await?;
         let arg: &Value = arg_object.try_ref_into_err_prefix("min(value)")?;
@@ -164,7 +164,7 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
     namespace.define_pipeline_item("pow", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("pow")?;
         let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
-            args.get_object("value").error_message_prefixed("pow(value)")?,
+            args.get_value("value").error_message_prefixed("pow(value)")?,
             "pow(value)",
         ).await?;
         let arg: &Value = arg_object.try_ref_into_err_prefix("pow(value)")?;
@@ -189,7 +189,7 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
     namespace.define_pipeline_item("root", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("root")?;
         let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
-            args.get_object("value").error_message_prefixed("root(value)")?,
+            args.get_value("value").error_message_prefixed("root(value)")?,
             "root(value)",
         ).await?;
         let arg: i32 = arg_object.try_into_err_prefix("root(value)")?;

@@ -85,7 +85,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &names
     namespace.define_pipeline_item("isSuffixOf", |args: Arguments, ctx: Ctx| async move {
         let input: &str = ctx.value().try_ref_into_err_prefix("isSuffixOf")?;
         let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
-            args.get_object("value").error_message_prefixed("isSuffixOf")?,
+            args.get_value("value").error_message_prefixed("isSuffixOf")?,
             "isSuffixOf",
         ).await?;
         let arg: &str = arg_object.try_ref_into_err_prefix("isSuffixOf")?;
@@ -98,7 +98,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &names
     namespace.define_pipeline_item("hasSuffix", |args: Arguments, ctx: Ctx| async move {
         let input: &str = ctx.value().try_ref_into_err_prefix("hasSuffix")?;
         let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
-            args.get_object("value").error_message_prefixed("hasSuffix")?,
+            args.get_value("value").error_message_prefixed("hasSuffix")?,
             "hasSuffix",
         ).await?;
         let arg: &str = arg_object.try_ref_into_err_prefix("hasSuffix")?;
@@ -111,7 +111,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &names
     namespace.define_pipeline_item("isPrefixOf", |args: Arguments, ctx: Ctx| async move {
         let input: &str = ctx.value().try_ref_into_err_prefix("isPrefixOf")?;
         let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
-            args.get_object("value").error_message_prefixed("isPrefixOf")?,
+            args.get_value("value").error_message_prefixed("isPrefixOf")?,
             "isPrefixOf",
         ).await?;
         let arg: &str = arg_object.try_ref_into_err_prefix("isPrefixOf")?;
@@ -124,7 +124,7 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &names
     namespace.define_pipeline_item("hasPrefix", |args: Arguments, ctx: Ctx| async move {
         let input: &str = ctx.value().try_ref_into_err_prefix("hasPrefix")?;
         let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
-            args.get_object("value").error_message_prefixed("hasPrefix")?,
+            args.get_value("value").error_message_prefixed("hasPrefix")?,
             "hasPrefix",
         ).await?;
         let arg: &str = arg_object.try_ref_into_err_prefix("hasPrefix")?;

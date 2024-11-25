@@ -11,7 +11,7 @@ pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &namespace::Build
     namespace.define_pipeline_item("append", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("append")?;
         let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
-            args.get_object("value").error_message_prefixed("append(value)")?,
+            args.get_value("value").error_message_prefixed("append(value)")?,
             "append(value)",
         ).await?;
         let arg: Value = arg_object.try_into_err_prefix("append(value)")?;
@@ -34,7 +34,7 @@ pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &namespace::Build
     namespace.define_pipeline_item("prepend", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("prepend")?;
         let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
-            args.get_object("value").error_message_prefixed("prepend(value)")?,
+            args.get_value("value").error_message_prefixed("prepend(value)")?,
             "prepend(value)" ,
         ).await?;
         let arg: Value = arg_object.try_into_err_prefix("prepend(value)")?;
@@ -111,7 +111,7 @@ pub(in crate::stdlib) fn load_pipeline_vector_items(namespace: &namespace::Build
     namespace.define_pipeline_item("truncate", |args: Arguments, ctx: Ctx| async move {
         let input: &Value = ctx.value().try_ref_into_err_prefix("truncate")?;
         let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
-            args.get_object("maxLen").error_message_prefixed("truncate(maxLen)")?,
+            args.get_value("maxLen").error_message_prefixed("truncate(maxLen)")?,
             "truncate(maxLen)",
         ).await?;
         let arg: usize = arg_object.try_ref_into_err_prefix("truncate(maxLen)")?;

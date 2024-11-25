@@ -107,7 +107,7 @@ pub(in crate::stdlib) fn load_pipeline_logical_items(namespace: &namespace::Buil
     });
 
     namespace.define_pipeline_item("match", |args: Arguments, ctx: Ctx| async move {
-        let value: Value = ctx.resolve_pipeline(args.get_object("value")?).await?;
+        let value: Value = ctx.resolve_pipeline(args.get_value("value")?).await?;
         let new_ctx = ctx.alter_value(value);
         let arms: Vec<&Pipeline> = args.get("arms")?;
         for arm in arms {

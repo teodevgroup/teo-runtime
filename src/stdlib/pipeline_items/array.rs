@@ -10,7 +10,7 @@ pub(in crate::stdlib) fn load_pipeline_array_items(namespace: &namespace::Builde
     namespace.define_pipeline_item("join", |args: Arguments, ctx: Ctx| async move {
         let input: Vec<&str> = ctx.value().try_ref_into_err_prefix("join")?;
         let separator_object: Value = ctx.resolve_pipeline_with_err_prefix(
-            args.get_object("separator").error_message_prefixed("join(separator)")?,
+            args.get_value("separator").error_message_prefixed("join(separator)")?,
             "join(separator)",
         ).await?;
         let separator: &str = separator_object.try_ref_into_err_prefix("join(separator)")?;
