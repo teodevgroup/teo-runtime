@@ -10,6 +10,21 @@ pub struct Range {
     pub end: Box<Value>,
 }
 
+impl Range {
+
+    pub fn closed(&self) -> bool {
+        self.closed
+    }
+
+    pub fn start(&self) -> &Value {
+        self.start.as_ref()
+    }
+
+    pub fn end(&self) -> &Value {
+        self.end.as_ref()
+    }
+}
+
 impl Display for Range {
 
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

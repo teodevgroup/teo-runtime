@@ -14,6 +14,18 @@ impl<'a> TryFrom<&'a Value> for &'a Type {
     }
 }
 
+impl<'a> TryFrom<&'a Value> for Type {
+
+    type Error = Error;
+
+    fn try_from(value: &'a Value) -> Result<Self, Self::Error> {
+        match value.as_type() {
+            Some(o) => Ok(o.clone()),
+            None => Err(Error::new(format!("object is not type: {:?}", value)))
+        }
+    }
+}
+
 impl TryFrom<Value> for Type {
 
     type Error = Error;
