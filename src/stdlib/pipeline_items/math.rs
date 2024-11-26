@@ -8,17 +8,23 @@ use teo_result::Error;
 use crate::pipeline::Ctx;
 use teo_result::ResultExt;
 use crate::namespace;
+use crate::pipeline::item::item_impl::ItemImpl;
 
 pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder) {
 
-    namespace.define_pipeline_item("add", |args: Arguments, ctx: Ctx| async move {
-        let input: &Value = ctx.value().try_ref_into_err_prefix("add")?;
-        let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
-            args.get_value("value").error_message_prefixed("add(value)")?,
-            "add(value)",
-        ).await?;
-        let arg: &Value = arg_object.try_ref_into_err_prefix("add(value)")?;
-        Ok(Value::from((input + arg).error_message_prefixed("add")?))
+    namespace.define_pipeline_item("add", |args: Arguments| {
+        let argument: Value = args.get("value").error_message_prefixed("add(value)")?;
+        Ok(ItemImpl::new(move |ctx: Ctx| {
+            let argument = argument.clone();
+            async move {
+                let input: &Value = ctx.value().try_ref_into_err_prefix("add")?;
+                let unwrapped_argument: Value = ctx.resolve_pipeline_with_err_prefix(
+                    argument.clone(),
+                    "add(value)",
+                ).await?;
+                Ok(Value::from((input + &unwrapped_argument).error_message_prefixed("add")?))
+            }
+        }))
     });
 
     namespace.define_pipeline_item("sub", |args: Arguments, ctx: Ctx| async move {

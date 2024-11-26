@@ -14,6 +14,7 @@ use crate::action::action::{CODE_AMOUNT, CODE_NAME, CODE_POSITION};
 use crate::arguments::Arguments;
 use crate::middleware::MiddlewareImpl;
 use crate::middleware::next::Next;
+use crate::pipeline::item::item_impl::ItemImpl;
 use crate::request::Request;
 use crate::response::Response;
 use crate::traits::named::Named;
@@ -79,29 +80,33 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
         Ok(())
     });
 
-    identity_namespace.define_pipeline_item("jwt", |arguments: Arguments, pipeline_ctx: pipeline::Ctx| async move {
-        let object = pipeline_ctx.object();
-        let Some(jwt_secret) = object.model().data().get("identity:jwtSecret") else {
-            return Err(Error::internal_server_error_message("missing @identity.jwtSecret"));
-        };
-        let jwt_secret: String = jwt_secret.try_into()?;
+    identity_namespace.define_pipeline_item("jwt", |arguments: Arguments| {
         let expired: Option<Value> = arguments.get_optional("expired")?;
-
-        let json_identifier: JsonValue = object.identifier().try_into()?;
-        let claims = JwtClaims {
-            id: json_identifier,
-            model: object.model().path().clone(),
-            exp: if let Some(expired) = expired {
-                let expired_at = if let Some(pipeline) = expired.as_pipeline() {
-                    let result: Value = pipeline_ctx.run_pipeline(pipeline).await?;
-                    result.as_int64().unwrap()
-                } else {
-                    expired.as_int64().unwrap()
+        Ok(ItemImpl::new(move |pipeline_ctx: pipeline::Ctx| {
+            let expired = expired.clone();
+            async move {
+                let object = pipeline_ctx.object();
+                let Some(jwt_secret) = object.model().data().get("identity:jwtSecret") else {
+                    return Err(Error::internal_server_error_message("missing @identity.jwtSecret"));
                 };
-                (Utc::now().timestamp() + expired_at) as usize
-            } else { usize::MAX },
-        };
-        Ok(encode_token(claims, &jwt_secret).into())
+                let jwt_secret: String = jwt_secret.try_into()?;
+                let json_identifier: JsonValue = object.identifier().try_into()?;
+                let claims = JwtClaims {
+                    id: json_identifier,
+                    model: object.model().path().clone(),
+                    exp: if let Some(expired) = expired {
+                        let expired_at = if let Some(pipeline) = expired.as_pipeline() {
+                            let result: Value = pipeline_ctx.run_pipeline(pipeline).await?;
+                            result.as_int64().unwrap()
+                        } else {
+                            expired.as_int64().unwrap()
+                        };
+                        (Utc::now().timestamp() + expired_at) as usize
+                    } else { usize::MAX },
+                };
+                Ok(encode_token(claims, &jwt_secret).into())
+            }
+        }))
     });
 
     identity_namespace.define_handler_template("signIn", |request: Request| async move {
