@@ -25,7 +25,7 @@ impl<T, U> From<std::result::Result<T, U>> for TransformerResult<T> where T: Int
     }
 }
 
-pub trait Transformer<A, O: Into<Value>, R: Into<TransformerResult<O>>>: Send + Sync + 'static {
+pub trait Transformer<A, O: Into<Value>, R: Into<TransformerResult<O>>>: Send + Sync + Clone + 'static {
     fn call(&self, ctx: Ctx) -> BoxFuture<'static, R>;
 }
 
@@ -44,7 +44,7 @@ impl<A0, O, F, R, Fut> Transformer<(A0,), O, R> for F where
 impl<A0, A1, O, F, R, Fut> Transformer<(A0, A1), O, R> for F where
     A0: TryFrom<Value, Error=Error> + Send + Sync,
     A1: ExtractFromPipelineCtx + Send + Sync,
-    F: Fn(A0, A1) -> Fut + Sync + Send + 'static,
+    F: Fn(A0, A1) -> Fut + Sync + Send + Clone + 'static,
     O: Into<Value> + Sync + Send,
     R: Into<TransformerResult<O>> + Send + Sync,
     Fut: Future<Output = R> + Send + 'static {
@@ -59,7 +59,7 @@ impl<A0, A1, A2, O, F, R, Fut> Transformer<(A0, A1, A2), O, R> for F where
     A0: TryFrom<Value, Error=Error> + Send + Sync,
     A1: ExtractFromPipelineCtx + Send + Sync,
     A2: ExtractFromPipelineCtx + Send + Sync,
-    F: Fn(A0, A1, A2) -> Fut + Sync + Send + 'static,
+    F: Fn(A0, A1, A2) -> Fut + Sync + Send + Clone + 'static,
     O: Into<Value> + Sync + Send,
     R: Into<TransformerResult<O>> + Send + Sync,
     Fut: Future<Output = R> + Send + 'static {
@@ -76,7 +76,7 @@ impl<A0, A1, A2, A3, O, F, R, Fut> Transformer<(A0, A1, A2, A3), O, R> for F whe
     A1: ExtractFromPipelineCtx + Send + Sync,
     A2: ExtractFromPipelineCtx + Send + Sync,
     A3: ExtractFromPipelineCtx + Send + Sync,
-    F: Fn(A0, A1, A2, A3) -> Fut + Sync + Send + 'static,
+    F: Fn(A0, A1, A2, A3) -> Fut + Sync + Send + Clone + 'static,
     O: Into<Value> + Sync + Send,
     R: Into<TransformerResult<O>> + Send + Sync,
     Fut: Future<Output = R> + Send + 'static {

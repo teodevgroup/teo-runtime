@@ -311,22 +311,25 @@ impl Builder {
     }
 
     pub fn define_transform_pipeline_item<C, A, O, F, R>(&self, name: &str, creator: C) where
-        C: Fn(Arguments) -> F + 'static,
+        C: Fn(Arguments) -> F + Clone + 'static,
         A: Send + Sync + 'static,
         O: Into<Value> + Send + Sync + 'static,
         R: Into<TransformerResult<O>> + Send + Sync + 'static,
         F: Transformer<A, O, R> + 'static {
-        let wrap_creator = Box::leak(Box::new(creator));
         let mut pipeline_items = self.inner.pipeline_items.lock().unwrap();
-        pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(|args: Arguments| {
-            let transformer = Box::leak(Box::new(wrap_creator(args)));
-            Ok(ItemImpl::new(|ctx: pipeline::Ctx| async {
-                let transform_result: TransformerResult<O> = transformer.call(ctx).await.into();
-                match transform_result {
-                    TransformerResult::Object(t) => Ok(t.into()),
-                    TransformerResult::Result(r) => match r {
-                        Ok(t) => Ok(t.into()),
-                        Err(e) => Err(e.into()),
+        pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(move |args: Arguments| {
+            let creator = creator.clone();
+            let transformer = creator(args);
+            Ok(ItemImpl::new(move |ctx: pipeline::Ctx| {
+                let transformer = transformer.clone();
+                async move {
+                    let transform_result: TransformerResult<O> = transformer.call(ctx).await.into();
+                    match transform_result {
+                        TransformerResult::Object(t) => Ok(t.into()),
+                        TransformerResult::Result(r) => match r {
+                            Ok(t) => Ok(t.into()),
+                            Err(e) => Err(e.into()),
+                        }
                     }
                 }
             }))
@@ -334,102 +337,110 @@ impl Builder {
     }
 
     pub fn define_validator_pipeline_item<C, T, F, O>(&self, name: &str, creator: C) where
-        C: Fn(Arguments) -> F + 'static,
+        C: Fn(Arguments) -> F + Clone + 'static,
         T: Send + Sync + 'static,
         F: Validator<T, O> + 'static,
         O: Into<ValidatorResult> + Send + Sync + 'static {
-        let wrap_creator = Box::leak(Box::new(creator));
         let mut pipeline_items = self.inner.pipeline_items.lock().unwrap();
-        pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(|args: Arguments| {
-            let validator = Box::leak(Box::new(wrap_creator(args)));
-            Ok(ItemImpl::new(|ctx: pipeline::Ctx| async {
-                let ctx_value = ctx.value().clone();
-                let validate_result: ValidatorResult = validator.call(ctx).await.into();
-                match validate_result {
-                    ValidatorResult::Validity(validity) => if validity.is_valid() {
-                        Ok(ctx_value)
-                    } else if let Some(reason) = validity.invalid_reason() {
-                        Err(Error::new(reason))
-                    } else {
-                        Err(Error::new("value is invalid"))
-                    },
-                    ValidatorResult::Result(result) => match result {
-                        Ok(validity) => if validity.is_valid() {
+        pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(move |args: Arguments| {
+            let creator = creator.clone();
+            let validator = creator(args);
+            Ok(ItemImpl::new(move |ctx: pipeline::Ctx| {
+                let validator = validator.clone();
+                async move {
+                    let ctx_value = ctx.value().clone();
+                    let validate_result: ValidatorResult = validator.call(ctx).await.into();
+                    match validate_result {
+                        ValidatorResult::Validity(validity) => if validity.is_valid() {
                             Ok(ctx_value)
                         } else if let Some(reason) = validity.invalid_reason() {
                             Err(Error::new(reason))
                         } else {
                             Err(Error::new("value is invalid"))
                         },
-                        Err(err) => Err(err),
+                        ValidatorResult::Result(result) => match result {
+                            Ok(validity) => if validity.is_valid() {
+                                Ok(ctx_value)
+                            } else if let Some(reason) = validity.invalid_reason() {
+                                Err(Error::new(reason))
+                            } else {
+                                Err(Error::new("value is invalid"))
+                            },
+                            Err(err) => Err(err),
+                        }
                     }
                 }
             }))
         }), self.app_data().clone()));
-
     }
 
     pub fn define_callback_pipeline_item<C, T, F, O>(&self, name: &str, creator: C) where
-        C: Fn(Arguments) -> F + 'static,
+        C: Fn(Arguments) -> F + Clone + 'static,
         T: Send + Sync + 'static,
         F: Callback<T, O> + 'static,
         O: Into<CallbackResult> + Send + Sync + 'static {
-        let wrap_creator = Box::leak(Box::new(creator));
         let mut pipeline_items = self.inner.pipeline_items.lock().unwrap();
-        pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(|args: Arguments| {
-            let callback = Box::leak(Box::new(wrap_creator(args)));
-            Ok(ItemImpl::new(|ctx: pipeline::Ctx| async {
-                let ctx_value = ctx.value().clone();
-                let callback_result: CallbackResult = callback.call(ctx).await.into();
-                match callback_result {
-                    CallbackResult::Result(t) => match t {
-                        Ok(_) => Ok(ctx_value),
-                        Err(err) => Err(err),
-                    },
+        pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(move |args: Arguments| {
+            let creator = creator.clone();
+            let callback = creator(args);
+            Ok(ItemImpl::new(move |ctx: pipeline::Ctx| {
+                let callback = callback.clone();
+                async move {
+                    let ctx_value = ctx.value().clone();
+                    let callback_result: CallbackResult = callback.call(ctx).await.into();
+                    match callback_result {
+                        CallbackResult::Result(t) => match t {
+                            Ok(_) => Ok(ctx_value),
+                            Err(err) => Err(err),
+                        },
+                    }
                 }
             }))
         }), self.app_data().clone()));
     }
 
     pub fn define_compare_pipeline_item<C, T, O, F, E>(&self, name: &str, creator: C) where
-        C: Fn(Arguments) -> F + 'static,
+        C: Fn(Arguments) -> F + Clone + 'static,
         T: Send + Sync + 'static,
         O: Into<ValidatorResult> + Send + Sync + 'static,
         E: Into<Error> + std::error::Error,
         F: Compare<T, O, E> + 'static {
-        let wrap_creator = Box::leak(Box::new(creator));
         let mut pipeline_items = self.inner.pipeline_items.lock().unwrap();
-        pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(|args: Arguments| {
-            let compare = Box::leak(Box::new(wrap_creator(args)));
-            Ok(ItemImpl::new(|ctx: pipeline::Ctx| async {
-                if ctx.object().is_new() {
-                    return Ok(ctx.value().clone());
-                }
-                let key = ctx.path()[ctx.path().len() - 1].as_key().unwrap();
-                let previous_value = ctx.object().get_previous_value(key)?;
-                let current_value = ctx.value().clone().clone();
-                if previous_value == current_value {
-                    return Ok(ctx.value().clone());
-                }
-                let ctx_value = ctx.value().clone();
-                let validate_result: ValidatorResult = compare.call(previous_value, current_value, ctx).await.into();
-                match validate_result {
-                    ValidatorResult::Validity(validity) => if validity.is_valid() {
-                        Ok(ctx_value)
-                    } else if let Some(reason) = validity.invalid_reason() {
-                        Err(Error::new(reason))
-                    } else {
-                        Err(Error::new("value is invalid"))
-                    },
-                    ValidatorResult::Result(result) => match result {
-                        Ok(validity) => if validity.is_valid() {
+        pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(move |args: Arguments| {
+            let creator = creator.clone();
+            let compare = creator(args);
+            Ok(ItemImpl::new(move |ctx: pipeline::Ctx| {
+                let compare = compare.clone();
+                async move {
+                    if ctx.object().is_new() {
+                        return Ok(ctx.value().clone());
+                    }
+                    let key = ctx.path()[ctx.path().len() - 1].as_key().unwrap();
+                    let previous_value = ctx.object().get_previous_value(key)?;
+                    let current_value = ctx.value().clone().clone();
+                    if previous_value == current_value {
+                        return Ok(ctx.value().clone());
+                    }
+                    let ctx_value = ctx.value().clone();
+                    let validate_result: ValidatorResult = compare.call(previous_value, current_value, ctx).await.into();
+                    match validate_result {
+                        ValidatorResult::Validity(validity) => if validity.is_valid() {
                             Ok(ctx_value)
                         } else if let Some(reason) = validity.invalid_reason() {
                             Err(Error::new(reason))
                         } else {
                             Err(Error::new("value is invalid"))
                         },
-                        Err(err) => Err(err),
+                        ValidatorResult::Result(result) => match result {
+                            Ok(validity) => if validity.is_valid() {
+                                Ok(ctx_value)
+                            } else if let Some(reason) = validity.invalid_reason() {
+                                Err(Error::new(reason))
+                            } else {
+                                Err(Error::new("value is invalid"))
+                            },
+                            Err(err) => Err(err),
+                        }
                     }
                 }
             }))

@@ -93,7 +93,7 @@ impl<T, U> From<std::result::Result<T, U>> for ValidatorResult where T: Into<Val
     }
 }
 
-pub trait Validator<A, O: Into<ValidatorResult>>: Send + Sync + 'static {
+pub trait Validator<A, O: Into<ValidatorResult>>: Send + Sync + Clone + 'static {
     fn call(&self, ctx: Ctx) -> BoxFuture<'static, O>;
 }
 
@@ -115,7 +115,7 @@ impl<A0, A1, O, F, Fut, E> Validator<(A0, A1), O> for F where
     Error: From<E>,
     E: std::error::Error,
     A1: ExtractFromPipelineCtx + Send + Sync,
-    F: Fn(A0, A1) -> Fut + Sync + Send + 'static,
+    F: Fn(A0, A1) -> Fut + Sync + Send + Clone + 'static,
     O: Into<ValidatorResult> + Send + Sync,
     Fut: Future<Output = O> + Send + 'static {
     fn call(&self, ctx: Ctx) -> BoxFuture<'static, O> {
@@ -131,7 +131,7 @@ impl<A0, A1, A2, O, F, Fut, E> Validator<(A0, A1, A2), O> for F where
     E: std::error::Error,
     A1: ExtractFromPipelineCtx + Send + Sync,
     A2: ExtractFromPipelineCtx + Send + Sync,
-    F: Fn(A0, A1, A2) -> Fut + Sync + Send + 'static,
+    F: Fn(A0, A1, A2) -> Fut + Sync + Send + Clone + 'static,
     O: Into<ValidatorResult> + Send + Sync,
     Fut: Future<Output = O> + Send + 'static {
     fn call(&self, ctx: Ctx) -> BoxFuture<'static, O> {
@@ -149,7 +149,7 @@ impl<A0, A1, A2, A3, O, F, Fut, E> Validator<(A0, A1, A2, A3), O> for F where
     A1: ExtractFromPipelineCtx + Send + Sync,
     A2: ExtractFromPipelineCtx + Send + Sync,
     A3: ExtractFromPipelineCtx + Send + Sync,
-    F: Fn(A0, A1, A2, A3) -> Fut + Sync + Send + 'static,
+    F: Fn(A0, A1, A2, A3) -> Fut + Sync + Send + Clone + 'static,
     O: Into<ValidatorResult> + Send + Sync,
     Fut: Future<Output = O> + Send + 'static {
     fn call(&self, ctx: Ctx) -> BoxFuture<'static, O> {
