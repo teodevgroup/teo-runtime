@@ -14,7 +14,7 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
 
     namespace.define_pipeline_item("add", |args: Arguments| {
         let argument: Value = args.get("value").error_message_prefixed("add(value)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let argument = argument.clone();
             async move {
                 let input: &Value = ctx.value().try_ref_into_err_prefix("add")?;
@@ -24,12 +24,12 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
                 ).await?;
                 Ok(Value::from((input + &unwrapped_argument).error_message_prefixed("add")?))
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("sub", |args: Arguments| {
         let argument: Value = args.get("value").error_message_prefixed("sub(value)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let argument = argument.clone();
             async move {
                 let input: &Value = ctx.value().try_ref_into_err_prefix("sub")?;
@@ -39,12 +39,12 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
                 ).await?;
                 Ok(Value::from((input - arg).error_message_prefixed("sub")?))
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("mul", |args: Arguments| {
         let argument: Value = args.get("value").error_message_prefixed("mul(value)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let argument = argument.clone();
             async move {
                 let input: &Value = ctx.value().try_ref_into_err_prefix("mul")?;
@@ -54,12 +54,12 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
                 ).await?;
                 Ok(Value::from((input * arg).error_message_prefixed("mul")?))
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("div", |args: Arguments| {
         let argument: Value = args.get("value").error_message_prefixed("div(value)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let argument = argument.clone();
             async move {
                 let input: &Value = ctx.value().try_ref_into_err_prefix("div")?;
@@ -69,12 +69,12 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
                 ).await?;
                 Ok(Value::from((input / arg).error_message_prefixed("div")?))
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("mod", |args: Arguments| {
         let argument: Value = args.get("value").error_message_prefixed("mod(value)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let argument = argument.clone();
             async move {
                 let input: &Value = ctx.value().try_ref_into_err_prefix("mod")?;
@@ -84,12 +84,12 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
                 ).await?;
                 Ok(Value::from((input % arg).error_message_prefixed("mod")?))
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("max", |args: Arguments| {
         let argument = args.get_value("value").error_message_prefixed("max(value)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let argument = argument.clone();
             async move {
                 let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
@@ -102,12 +102,12 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
                     ctx.value().clone()
                 })
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("min", |args: Arguments| {
         let argument = args.get_value("value").error_message_prefixed("min(value)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let argument = argument.clone();
             async move {
                 let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
@@ -120,22 +120,22 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
                     ctx.value().clone()
                 })
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("floor", |_args: Arguments| {
-        Ok(ItemImpl::new(|ctx: Ctx| async move {
+        Ok(|ctx: Ctx| async move {
             Ok(match ctx.value() {
                 Value::Float32(f) => Value::from(f.floor()),
                 Value::Float(f) => Value::from(f.floor()),
                 Value::Decimal(d) => Value::from(d.with_scale(0)),
                 _ => Err(Error::new("floor: invalid input"))?
             })
-        }))
+        })
     });
 
     namespace.define_pipeline_item("ceil", |_args: Arguments| {
-        Ok(ItemImpl::new(|ctx: Ctx| async move {
+        Ok(|ctx: Ctx| async move {
             Ok(match ctx.value() {
                 Value::Float32(f) => Value::from(f.ceil()),
                 Value::Float(f) => Value::from(f.ceil()),
@@ -146,22 +146,22 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
                 }),
                 _ => Err(Error::new("ceil: invalid input"))?
             })
-        }))
+        })
     });
 
     namespace.define_pipeline_item("round", |args: Arguments| {
-        Ok(ItemImpl::new(|ctx: Ctx| async move {
+        Ok(|ctx: Ctx| async move {
             Ok(match ctx.value() {
                 Value::Float32(f) => Value::from(f.round()),
                 Value::Float(f) => Value::from(f.round()),
                 Value::Decimal(d) => Value::from(d.round(0)),
                 _ => Err(Error::new("round: invalid input"))?
             })
-        }))
+        })
     });
 
     namespace.define_pipeline_item("abs", |args: Arguments| {
-        Ok(ItemImpl::new(|ctx: Ctx| async move {
+        Ok(|ctx: Ctx| async move {
             Ok(match ctx.value() {
                 Value::Int(i) => Value::from(i.abs()) ,
                 Value::Int64(i) => Value::from(i.abs()) ,
@@ -170,11 +170,11 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
                 Value::Decimal(d) => Value::from(d.abs()),
                 _ => Err(Error::new("abs: invalid input"))?
             })
-        }))
+        })
     });
 
     namespace.define_pipeline_item("sqrt", |args: Arguments| {
-        Ok(ItemImpl::new(|ctx: Ctx| async move {
+        Ok(|ctx: Ctx| async move {
             Ok(match ctx.value() {
                 Value::Int(i)   => Value::from(i.sqrt()),
                 Value::Int64(i) => Value::from(i.sqrt()),
@@ -187,11 +187,11 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
                 }),
                 _ => Err(Error::new("sqrt: invalid input"))?
             })
-        }))
+        })
     });
 
     namespace.define_pipeline_item("cbrt", |args: Arguments| {
-        Ok(ItemImpl::new(|ctx: Ctx| async move {
+        Ok(|ctx: Ctx| async move {
             Ok(match ctx.value() {
                 Value::Int(i)   => Value::from((*i as f64).cbrt() as i32),
                 Value::Int64(i) => Value::from((*i as f64).cbrt() as i64),
@@ -200,12 +200,12 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
                 Value::Decimal(d) => Value::from(d.cbrt()),
                 _ => Err(Error::new("cbrt: invalid input"))?
             })
-        }))
+        })
     });
 
     namespace.define_pipeline_item("pow", |args: Arguments| {
         let argument = args.get_value("value").error_message_prefixed("pow(value)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let argument = argument.clone();
             async move {
                 let arg: Value = ctx.resolve_pipeline_with_err_prefix(
@@ -230,12 +230,12 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
                 })
 
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("root", |args: Arguments| {
         let argument = args.get_value("value").error_message_prefixed("root(value)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let argument = argument.clone();
             async move {
                 let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
@@ -249,6 +249,6 @@ pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder
                     _ => Err(Error::new("root: invalid input"))?
                 })
             }
-        }))
+        })
     });
 }

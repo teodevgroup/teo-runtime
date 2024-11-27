@@ -82,7 +82,7 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
 
     identity_namespace.define_pipeline_item("jwt", |arguments: Arguments| {
         let expired: Option<Value> = arguments.get_optional("expired")?;
-        Ok(ItemImpl::new(move |pipeline_ctx: pipeline::Ctx| {
+        Ok(move |pipeline_ctx: pipeline::Ctx| {
             let expired = expired.clone();
             async move {
                 let object = pipeline_ctx.object();
@@ -106,7 +106,7 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
                 };
                 Ok(encode_token(claims, &jwt_secret).into())
             }
-        }))
+        })
     });
 
     identity_namespace.define_handler_template("signIn", |request: Request| async move {

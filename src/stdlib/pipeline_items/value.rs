@@ -10,7 +10,7 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &namespace::Builde
 
     namespace.define_pipeline_item("is", |args: Arguments| {
         let argument = args.get_value("value").error_message_prefixed("is(value)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let argument = argument.clone();
             async move {
                 let rhs: Value = ctx.resolve_pipeline_with_err_prefix(
@@ -35,12 +35,12 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &namespace::Builde
                     Err(Error::new("input is not value"))?
                 }
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("eq", |args: Arguments| {
         let rhs = args.get_value("rhs").error_message_prefixed("eq(rhs)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let rhs = rhs.clone();
             async move {
                 let rhs_object: Value = ctx.resolve_pipeline_with_err_prefix(
@@ -53,12 +53,12 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &namespace::Builde
                     Err(Error::new("input is not equal to rhs"))?
                 }
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("gt", |args: Arguments| {
         let rhs = args.get_value("rhs").error_message_prefixed("gt(rhs)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let rhs = rhs.clone();
             async move {
                 let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
@@ -71,12 +71,12 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &namespace::Builde
                     Err(Error::new("input is not greater than rhs"))?
                 }
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("gte", |args: Arguments| {
         let rhs = args.get_value("rhs").error_message_prefixed("gte(rhs)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let rhs = rhs.clone();
             async move {
                 let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
@@ -89,12 +89,12 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &namespace::Builde
                     Err(Error::new("input is not greater than or equal to rhs"))?
                 }
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("lt", |args: Arguments| {
         let rhs = args.get_value("rhs").error_message_prefixed("lt(rhs)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let rhs = rhs.clone();
             async move {
                 let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
@@ -107,12 +107,12 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &namespace::Builde
                     Err(Error::new("input is not less than rhs"))?
                 }
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("lte", |args: Arguments| {
         let rhs = args.get_value("rhs").error_message_prefixed("lte(rhs)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let rhs = rhs.clone();
             async move {
                 let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
@@ -125,12 +125,12 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &namespace::Builde
                     Err(Error::new("input is not less than or equal to rhs"))?
                 }
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("neq", |args: Arguments| {
         let rhs = args.get_value("rhs").error_message_prefixed("neq(rhs)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let rhs = rhs.clone();
             async move {
                 let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
@@ -143,52 +143,52 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &namespace::Builde
                     Err(Error::new("input is equal to rhs"))?
                 }
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("isNull", |args: Arguments| {
-        Ok(ItemImpl::new(|ctx: Ctx| async move {
+        Ok(|ctx: Ctx| async move {
             if !ctx.value().is_null() {
                 Err(Error::new_with_code("input is not null", 400))?
             }
             Ok(ctx.value().clone())
-        }))
+        })
     });
 
     namespace.define_pipeline_item("presents", |args: Arguments| {
-        Ok(ItemImpl::new(|ctx: Ctx| async move {
+        Ok(|ctx: Ctx| async move {
             if ctx.value().is_null() {
                 Err(Error::new_with_code("input is not present", 400))?
             }
             Ok(ctx.value().clone())
-        }))
+        })
     });
 
     namespace.define_pipeline_item("isTrue", |args: Arguments| {
-        Ok(ItemImpl::new(|ctx: Ctx| async move {
+        Ok(|ctx: Ctx| async move {
             let input: bool = ctx.value().try_ref_into_err_prefix("isTrue")?;
             if input {
                 Ok(ctx.value().clone())
             } else {
                 Err(Error::new_with_code("input is not true", 400))?
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("isFalse", |args: Arguments| {
-        Ok(ItemImpl::new(|ctx: Ctx| async move {
+        Ok(|ctx: Ctx| async move {
             let input: bool = ctx.value().try_ref_into_err_prefix("isFalse")?;
             if !input {
                 Ok(ctx.value().clone())
             } else {
                 Err(Error::new("input is not false"))?
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("oneOf", |args: Arguments| {
         let candidates = args.get_value("candidates").error_message_prefixed("oneOf(candidates)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let candidates = candidates.clone();
             async move {
                 let input: &Value = ctx.value().try_ref_into_err_prefix("oneOf")?;
@@ -203,6 +203,6 @@ pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &namespace::Builde
                     Err(Error::new("oneOf: input is not one of candidates"))
                 }
             }
-        }))
+        })
     });
 }

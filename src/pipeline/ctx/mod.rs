@@ -17,9 +17,6 @@ pub struct Ctx {
     inner: Arc<CtxInner>,
 }
 
-unsafe impl Send for Ctx { }
-unsafe impl Sync for Ctx { }
-
 #[derive(Debug)]
 struct CtxInner {
     value: Value,
@@ -126,3 +123,6 @@ impl<'a> Debug for Ctx {
         Debug::fmt(self.inner.as_ref(), f)
     }
 }
+
+unsafe impl Send for Ctx { }
+unsafe impl Sync for Ctx { }

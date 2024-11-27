@@ -10,7 +10,7 @@ pub(in crate::stdlib) fn load_pipeline_array_items(namespace: &namespace::Builde
 
     namespace.define_pipeline_item("join", |args: Arguments| {
         let separator = args.get_value("separator").error_message_prefixed("join(separator)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let separator = separator.clone();
             async move {
                 let input: Vec<&str> = ctx.value().try_ref_into_err_prefix("join")?;
@@ -21,27 +21,27 @@ pub(in crate::stdlib) fn load_pipeline_array_items(namespace: &namespace::Builde
                 let separator: &str = separator_object.try_ref_into_err_prefix("join(separator)")?;
                 Ok(Value::from(input.join(separator)))
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("map", |args: Arguments| {
         let pipeline: Pipeline = args.get("pipeline").error_message_prefixed("map(pipeline)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let pipeline = pipeline.clone();
             async move {
                 let input: &Vec<Value> = ctx.value().try_ref_into_err_prefix("map")?;
                 let mut result: Vec<Value> = vec![];
                 for (index, item) in input.iter().enumerate() {
-                    result.push(ctx.alter_value(Value::from(item)).run_pipeline_with_err_prefix(&pipeline, format!("map({index}))")).await?);
+                    result.push(ctx.alter_value(Value::from(item)).run_pipeline_with_err_prefix(&pipeline, format!("map({index})")).await?);
                 }
                 Ok(Value::from(result))
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("filter", |args: Arguments| {
         let pipeline: Pipeline = args.get("pipeline").error_message_prefixed("filter(pipeline)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let pipeline = pipeline.clone();
             async move {
                 let input: &Vec<Value> = ctx.value().try_ref_into_err_prefix("filter")?;
@@ -53,6 +53,6 @@ pub(in crate::stdlib) fn load_pipeline_array_items(namespace: &namespace::Builde
                 }
                 Ok(Value::from(result))
             }
-        }))
+        })
     });
 }

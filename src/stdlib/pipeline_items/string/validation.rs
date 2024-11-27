@@ -5,7 +5,6 @@ use once_cell::sync::Lazy;
 use teo_result::Error;
 use teo_result::ResultExt;
 use crate::namespace;
-use crate::pipeline::item::item_impl::ItemImpl;
 use crate::value::Value;
 
 pub(super) static EMAIL_REGEX: Lazy<Regex> = Lazy::new(|| {
@@ -28,27 +27,27 @@ pub(super) static SECURE_PASSWORD_REGEXES: Lazy<Vec<Regex>> = Lazy::new(|| {
 pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &namespace::Builder) {
 
     namespace.define_pipeline_item("isEmail", |args: Arguments| {
-        Ok(ItemImpl::new(|ctx: Ctx| async move {
+        Ok(|ctx: Ctx| async move {
             let input: &str = ctx.value().try_ref_into_err_prefix("isEmail")?;
             if !EMAIL_REGEX.is_match(input) {
                 Err(Error::new_with_code("input is not email", 400))?
             }
             Ok(ctx.value().clone())
-        }))
+        })
     });
 
     namespace.define_pipeline_item("isHexColor", |args: Arguments| {
-        Ok(ItemImpl::new(|ctx: Ctx| async move {
+        Ok(|ctx: Ctx| async move {
             let input: &str = ctx.value().try_ref_into_err_prefix("isHexColor")?;
             if !HEX_COLOR_REGEX.is_match(input) {
                 Err(Error::new_with_code("input is not hex color", 400))?
             }
             Ok(ctx.value().clone())
-        }))
+        })
     });
 
     namespace.define_pipeline_item("isSecurePassword", |args: Arguments| {
-        Ok(ItemImpl::new(|ctx: Ctx| async move {
+        Ok(|ctx: Ctx| async move {
             let input: &str = ctx.value().try_ref_into_err_prefix("isSecurePassword")?;
             for regex in SECURE_PASSWORD_REGEXES.iter() {
                 if !regex.is_match(input) {
@@ -56,11 +55,11 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &names
                 }
             }
             Ok(ctx.value().clone())
-        }))
+        })
     });
 
     namespace.define_pipeline_item("isNumeric", |args: Arguments| {
-        Ok(ItemImpl::new(|ctx: Ctx| async move {
+        Ok(|ctx: Ctx| async move {
             let input: &str = ctx.value().try_ref_into_err_prefix("isNumeric")?;
             for c in input.chars(){
                 if !c.is_numeric(){
@@ -68,11 +67,11 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &names
                 }
             }
             Ok(ctx.value().clone())
-        }))
+        })
     });
 
     namespace.define_pipeline_item("isAlphanumeric", |args: Arguments| {
-        Ok(ItemImpl::new(|ctx: Ctx| async move {
+        Ok(|ctx: Ctx| async move {
             let input: &str = ctx.value().try_ref_into_err_prefix("isAlphanumeric")?;
             for c in input.chars(){
                 if !c.is_alphanumeric(){
@@ -80,11 +79,11 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &names
                 }
             }
             Ok(ctx.value().clone())
-        }))
+        })
     });
 
     namespace.define_pipeline_item("isAlphabetic", |args: Arguments| {
-        Ok(ItemImpl::new(|ctx: Ctx| async move {
+        Ok(|ctx: Ctx| async move {
             let input: &str = ctx.value().try_ref_into_err_prefix("isAlphabetic")?;
             for c in input.chars(){
                 if !c.is_alphabetic(){
@@ -92,12 +91,12 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &names
                 }
             }
             Ok(ctx.value().clone())
-        }))
+        })
     });
 
     namespace.define_pipeline_item("isSuffixOf", |args: Arguments| {
         let argument = args.get_value("value").error_message_prefixed("isSuffixOf")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let argument = argument.clone();
             async move {
                 let input: &str = ctx.value().try_ref_into_err_prefix("isSuffixOf")?;
@@ -111,12 +110,12 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &names
                 }
                 Ok(ctx.value().clone())
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("hasSuffix", |args: Arguments| {
         let argument = args.get_value("value").error_message_prefixed("hasSuffix")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let argument = argument.clone();
             async move {
                 let input: &str = ctx.value().try_ref_into_err_prefix("hasSuffix")?;
@@ -130,12 +129,12 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &names
                 }
                 Ok(ctx.value().clone())
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("isPrefixOf", |args: Arguments| {
         let argument = args.get_value("value").error_message_prefixed("isPrefixOf")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let argument = argument.clone();
             async move {
                 let input: &str = ctx.value().try_ref_into_err_prefix("isPrefixOf")?;
@@ -149,12 +148,12 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &names
                 }
                 Ok(ctx.value().clone())
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("hasPrefix", |args: Arguments| {
         let argument = args.get_value("value").error_message_prefixed("hasPrefix")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let argument = argument.clone();
             async move {
                 let input: &str = ctx.value().try_ref_into_err_prefix("hasPrefix")?;
@@ -168,12 +167,12 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &names
                 }
                 Ok(ctx.value().clone())
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("regexMatch", |args: Arguments| {
         let regex: Regex = args.get("regex").error_message_prefixed("regexMatch")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let regex = regex.clone();
             async move {
                 let input: &str = ctx.value().try_ref_into_err_prefix("regexMatch")?;
@@ -182,6 +181,6 @@ pub(in crate::stdlib) fn load_pipeline_string_validation_items(namespace: &names
                 }
                 Ok(ctx.value().clone())
             }
-        }))
+        })
     });
 }

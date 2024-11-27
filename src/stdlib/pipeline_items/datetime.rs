@@ -9,14 +9,14 @@ use crate::value::Value;
 pub(in crate::stdlib) fn load_pipeline_datetime_items(namespace: &namespace::Builder) {
 
     namespace.define_pipeline_item("now", |_args: Arguments| {
-        Ok(ItemImpl::new(|_ctx: Ctx| async {
+        Ok(|_ctx: Ctx| async {
             Ok(Value::from(Utc::now()))
-        }))
+        })
     });
 
     namespace.define_pipeline_item("today", |args: Arguments| {
         let tz = args.get_value("tz").error_message_prefixed("today(tz)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let tz = tz.clone();
             async move {
                 let arg_object: Value = ctx.resolve_pipeline_with_err_prefix(
@@ -28,12 +28,12 @@ pub(in crate::stdlib) fn load_pipeline_datetime_items(namespace: &namespace::Bui
                 let calculated = now + Duration::hours(arg as i64);
                 Ok(Value::from(calculated.date_naive()))
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("toDate", |args: Arguments| {
         let tz = args.get_value("tz").error_message_prefixed("toDate(tz)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let tz = tz.clone();
             async move {
                 let datetime: &DateTime<Utc> = ctx.value().try_ref_into_err_prefix("toDate")?;
@@ -45,6 +45,6 @@ pub(in crate::stdlib) fn load_pipeline_datetime_items(namespace: &namespace::Bui
                 let calculated = *datetime + Duration::hours(arg as i64);
                 Ok(Value::from(calculated.date_naive()))
             }
-        }))
+        })
     });
 }

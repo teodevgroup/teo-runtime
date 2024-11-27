@@ -12,7 +12,7 @@ use crate::pipeline::item::item_impl::ItemImpl;
 pub(in crate::stdlib) fn load_pipeline_number_items(namespace: &namespace::Builder) {
 
     namespace.define_pipeline_item("isEven", |args: Arguments| {
-        Ok(ItemImpl::new(|ctx: Ctx| async move {
+        Ok(|ctx: Ctx| async move {
             match ctx.value() {
                 Value::Int(i) => if !i.is_even() {
                     Err(Error::new("input is not even"))?
@@ -23,11 +23,11 @@ pub(in crate::stdlib) fn load_pipeline_number_items(namespace: &namespace::Build
                 _ => Err(Error::new("isEven: invalid input"))?
             }
             Ok(ctx.value().clone())
-        }))
+        })
     });
 
     namespace.define_pipeline_item("isOdd", |args: Arguments| {
-        Ok(ItemImpl::new(|ctx: Ctx| async move {
+        Ok(|ctx: Ctx| async move {
             match ctx.value() {
                 Value::Int(i) => if !i.is_odd() {
                     Err(Error::new("input is not odd"))?
@@ -38,12 +38,12 @@ pub(in crate::stdlib) fn load_pipeline_number_items(namespace: &namespace::Build
                 _ => Err(Error::new("isOdd: invalid input"))?
             }
             Ok(ctx.value().clone())
-        }))
+        })
     });
 
     namespace.define_pipeline_item("randomFloat", |args: Arguments| {
         let range: Range = args.get("range").error_message_prefixed("randomFloat")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let range = range.clone();
             async move {
                 let (start, end, closed) = {
@@ -66,7 +66,7 @@ pub(in crate::stdlib) fn load_pipeline_number_items(namespace: &namespace::Build
                     rng.gen_range(start..end)
                 }))
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("randomInt", |args: Arguments| {
@@ -75,7 +75,7 @@ pub(in crate::stdlib) fn load_pipeline_number_items(namespace: &namespace::Build
         if length.is_none() && range.is_none() {
             Err(Error::new("randomInt: invalid argument"))?
         }
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let length = length.clone();
             let range = range.clone();
             async move {
@@ -111,6 +111,6 @@ pub(in crate::stdlib) fn load_pipeline_number_items(namespace: &namespace::Build
                     rng.gen_range(start..end)
                 }))
             }
-        }))
+        })
     });
 }

@@ -11,15 +11,15 @@ pub(in crate::stdlib) fn load_bcrypt_items(namespace: &namespace::Builder) {
     let bcrypt_namespace = namespace.child_namespace_or_create("bcrypt");
 
     bcrypt_namespace.define_pipeline_item("salt", |_: Arguments| {
-        Ok(ItemImpl::new(|ctx: Ctx| async move {
+        Ok(|ctx: Ctx| async move {
             let value: &str = ctx.value().try_ref_into_err_message("salt: value is not string")?;
             Ok(Value::from(hash(value, DEFAULT_COST).unwrap()))
-        }))
+        })
     });
 
     bcrypt_namespace.define_pipeline_item("verify", |args: Arguments| {
         let pipeline: Pipeline = args.get("pipeline").error_message_prefixed("verify")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let pipeline = pipeline.clone();
             async move {
                 let value: &str = ctx.value().try_ref_into_err_message("verify: value is not string")?;
@@ -30,6 +30,6 @@ pub(in crate::stdlib) fn load_bcrypt_items(namespace: &namespace::Builder) {
                     Err(Error::new_with_code("verify: value doesn't match", 401))
                 }
             }
-        }))
+        })
     });
 }

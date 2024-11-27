@@ -10,14 +10,14 @@ use crate::pipeline::item::item_impl::ItemImpl;
 pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &namespace::Builder) {
 
     namespace.define_pipeline_item("self", |args: Arguments| {
-        Ok(ItemImpl::new(|ctx: Ctx| async move {
+        Ok(|ctx: Ctx| async move {
             Ok(Value::from(ctx.object()))
-        }))
+        })
     });
 
     namespace.define_pipeline_item("get", |args: Arguments| {
         let key: String = args.get("key").error_message_prefixed("get(key)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let key = key.clone();
             async move {
                 let model_object: Result<&model::Object> = ctx.value().try_ref_into_err_prefix("get");
@@ -31,13 +31,13 @@ pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &namespace:
                     Err(Error::new("get: input is not model object or dictionary"))
                 }
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("set", |args: Arguments| {
         let key: String = args.get("key").error_message_prefixed("set(key)")?;
         let value: Value = args.get("value").error_message_prefixed("set(value)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let key = key.clone();
             let value = value.clone();
             async move {
@@ -54,13 +54,13 @@ pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &namespace:
                     Err(Error::new("set: input is not model object or dictionary"))
                 }
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("assign", |args: Arguments| {
         let key: String = args.get("key").error_message_prefixed("assign(key)")?;
         let value: Value = args.get("value").error_message_prefixed("assign(value)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let key = key.clone();
             let value = value.clone();
             async move {
@@ -68,18 +68,18 @@ pub(in crate::stdlib) fn load_pipeline_model_object_items(namespace: &namespace:
                 model_object.set_value(&key, value)?;
                 Ok(ctx.value().clone())
             }
-        }))
+        })
     });
 
     namespace.define_pipeline_item("previous", |args: Arguments| {
         let key: String = args.get("key").error_message_prefixed("previous(key)")?;
-        Ok(ItemImpl::new(move |ctx: Ctx| {
+        Ok(move |ctx: Ctx| {
             let key = key.clone();
             async move {
                 let model_object = ctx.object();
                 let result = model_object.get_previous_value(key)?;
                 Ok(Value::from(result))
             }
-        }))
+        })
     });
 }

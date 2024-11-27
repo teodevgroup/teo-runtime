@@ -25,6 +25,7 @@ use hyper::Method;
 use crate::middleware::middleware::{empty_middleware, Middleware};
 use crate::model::{Model, Relation};
 use crate::namespace::Namespace;
+use crate::pipeline::item::Call;
 use crate::pipeline::item::item_impl::ItemImpl;
 use crate::pipeline::item::templates::callback::{Callback, CallbackResult};
 use crate::pipeline::item::templates::compare::Compare;
@@ -305,13 +306,18 @@ impl Builder {
         handler_decorators.insert(name.to_owned(), handler::Decorator::new(next_path(self.path(), name), call));
     }
 
-    pub fn define_pipeline_item<T>(&self, name: &str, creator: T) where T: pipeline::item::Creator + 'static {
+    pub fn define_pipeline_item<C, F>(&self, name: &str, creator: C) where
+        C: Fn(Arguments) -> Result<F> + Clone + 'static,
+        F: Call + 'static {
         let mut pipeline_items = self.inner.pipeline_items.lock().unwrap();
-        pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(creator), self.app_data().clone()));
+        pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(move |args| {
+            let f = creator(args)?;
+            Ok(ItemImpl::new(f))
+        }), self.app_data().clone()));
     }
 
     pub fn define_transform_pipeline_item<C, A, O, F, R>(&self, name: &str, creator: C) where
-        C: Fn(Arguments) -> F + Clone + 'static,
+        C: Fn(Arguments) -> Result<F> + Clone + 'static,
         A: Send + Sync + 'static,
         O: Into<Value> + Send + Sync + 'static,
         R: Into<TransformerResult<O>> + Send + Sync + 'static,
@@ -319,7 +325,7 @@ impl Builder {
         let mut pipeline_items = self.inner.pipeline_items.lock().unwrap();
         pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(move |args: Arguments| {
             let creator = creator.clone();
-            let transformer = creator(args);
+            let transformer = creator(args)?;
             Ok(ItemImpl::new(move |ctx: pipeline::Ctx| {
                 let transformer = transformer.clone();
                 async move {
@@ -337,14 +343,14 @@ impl Builder {
     }
 
     pub fn define_validator_pipeline_item<C, T, F, O>(&self, name: &str, creator: C) where
-        C: Fn(Arguments) -> F + Clone + 'static,
+        C: Fn(Arguments) -> Result<F> + Clone + 'static,
         T: Send + Sync + 'static,
         F: Validator<T, O> + 'static,
         O: Into<ValidatorResult> + Send + Sync + 'static {
         let mut pipeline_items = self.inner.pipeline_items.lock().unwrap();
         pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(move |args: Arguments| {
             let creator = creator.clone();
-            let validator = creator(args);
+            let validator = creator(args)?;
             Ok(ItemImpl::new(move |ctx: pipeline::Ctx| {
                 let validator = validator.clone();
                 async move {
@@ -375,14 +381,14 @@ impl Builder {
     }
 
     pub fn define_callback_pipeline_item<C, T, F, O>(&self, name: &str, creator: C) where
-        C: Fn(Arguments) -> F + Clone + 'static,
+        C: Fn(Arguments) -> Result<F> + Clone + 'static,
         T: Send + Sync + 'static,
         F: Callback<T, O> + 'static,
         O: Into<CallbackResult> + Send + Sync + 'static {
         let mut pipeline_items = self.inner.pipeline_items.lock().unwrap();
         pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(move |args: Arguments| {
             let creator = creator.clone();
-            let callback = creator(args);
+            let callback = creator(args)?;
             Ok(ItemImpl::new(move |ctx: pipeline::Ctx| {
                 let callback = callback.clone();
                 async move {
@@ -400,7 +406,7 @@ impl Builder {
     }
 
     pub fn define_compare_pipeline_item<C, T, O, F, E>(&self, name: &str, creator: C) where
-        C: Fn(Arguments) -> F + Clone + 'static,
+        C: Fn(Arguments) -> Result<F> + Clone + 'static,
         T: Send + Sync + 'static,
         O: Into<ValidatorResult> + Send + Sync + 'static,
         E: Into<Error> + std::error::Error,
@@ -408,7 +414,7 @@ impl Builder {
         let mut pipeline_items = self.inner.pipeline_items.lock().unwrap();
         pipeline_items.insert(name.to_owned(), pipeline::Item::new(next_path(self.path(), name), Arc::new(move |args: Arguments| {
             let creator = creator.clone();
-            let compare = creator(args);
+            let compare = creator(args)?;
             Ok(ItemImpl::new(move |ctx: pipeline::Ctx| {
                 let compare = compare.clone();
                 async move {
