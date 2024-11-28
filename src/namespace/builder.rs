@@ -457,11 +457,12 @@ impl Builder {
         middlewares.insert(name.to_owned(), middleware::Definition::new(next_path(self.path(), name), Arc::new(call), self.app_data().clone()));
     }
 
-    pub fn define_model_handler_group<T>(&self, name: &str, builder: T) where T: Fn(&handler::group::Builder) {
+    pub fn define_model_handler_group<T>(&self, name: &str, builder: T) -> Result<()> where T: Fn(&handler::group::Builder) -> Result<()> {
         let handler_group_builder = handler::group::Builder::new(next_path(self.path(), name), self.app_data().clone());
-        builder(&handler_group_builder);
+        builder(&handler_group_builder)?;
         let mut model_handler_groups = self.inner.model_handler_groups.lock().unwrap();
         model_handler_groups.insert(name.to_owned(), handler_group_builder);
+        Ok(())
     }
 
     pub fn insert_handler(&self, name: &str, handler: Handler) {
@@ -518,11 +519,12 @@ impl Builder {
         handler_templates.insert(name.to_owned(), handler);
     }
 
-    pub fn define_handler_group<T>(&self, name: &str, builder: T) where T: Fn(&handler::group::Builder) {
+    pub fn define_handler_group<T>(&self, name: &str, builder: T) -> Result<()> where T: Fn(&handler::group::Builder) -> Result<()> {
         let handler_group_builder = handler::group::Builder::new(next_path(self.path(), name), self.app_data().clone());
-        builder(&handler_group_builder);
+        builder(&handler_group_builder)?;
         let mut handler_groups = self.inner.handler_groups.lock().unwrap();
         handler_groups.insert(name.to_owned(), handler_group_builder);
+        Ok(())
     }
 
     pub fn define_struct<T>(&self, name: &str, builder: T) where T: Fn(&'static Vec<String>, &mut Struct) {
@@ -879,7 +881,7 @@ impl Builder {
         dest_namespace.insert_handler_template(handler_name, handler);
     }
 
-    pub fn replace_handler_at_path(&self, path: &Vec<&str>, handler: Handler, inside_group: bool) {
+    pub fn replace_handler_at_path(&self, path: &Vec<&str>, handler: Handler, inside_group: bool) -> Result<()> {
         let handler_name = *path.last().unwrap();
         let group_name = if inside_group {
             Some(*path.get(path.len() - 2).unwrap())
@@ -894,7 +896,7 @@ impl Builder {
             } else if let Some(group) = dest_namespace.model_handler_group(group_name) {
                 group.insert_handler(handler_name, handler);
             } else {
-                dest_namespace.define_model_handler_group(group_name, |f| { });
+                dest_namespace.define_model_handler_group(group_name, |f| { Ok(()) })?;
                 if let Some(group) = dest_namespace.model_handler_group(group_name) {
                     group.insert_handler(handler_name, handler);
                 }
@@ -902,6 +904,7 @@ impl Builder {
         } else {
             dest_namespace.insert_handler(handler_name, handler);
         }
+        Ok(())
     }
 
     pub fn handler_map(&self) -> Arc<Mutex<handler::Map>> {
