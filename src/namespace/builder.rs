@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::future::Future;
 use std::sync::{Arc, Mutex};
 use educe::Educe;
 use maplit::btreemap;
@@ -22,6 +23,7 @@ use crate::handler::ctx_argument::HandlerCtxArgument;
 use crate::handler::Handler;
 use hyper::Method;
 use crate::middleware::middleware::{empty_middleware, Middleware};
+use crate::middleware::MiddlewareImpl;
 use crate::model::{Model, Relation};
 use crate::namespace::Namespace;
 use crate::pipeline::item::Call;
@@ -447,14 +449,40 @@ impl Builder {
         }), self.app_data().clone()));
     }
 
-    pub fn define_request_middleware<T>(&self, name: &str, call: T) where T: middleware::creator::Creator + 'static {
+    pub fn define_handler_middleware_impl<T>(&self, name: &str, call: T) where T: middleware::creator::Creator + 'static {
+        let mut middlewares = self.inner.handler_middlewares.lock().unwrap();
+        middlewares.insert(name.to_owned(), middleware::Definition::new(next_path(self.path(), name), Arc::new(call), self.app_data().clone()));
+    }
+
+    pub fn define_request_middleware_impl<T>(&self, name: &str, call: T) where T: middleware::creator::Creator + 'static {
         let mut middlewares = self.inner.request_middlewares.lock().unwrap();
         middlewares.insert(name.to_owned(), middleware::Definition::new(next_path(self.path(), name), Arc::new(call), self.app_data().clone()));
     }
 
-    pub fn define_handler_middleware<T>(&self, name: &str, call: T) where T: middleware::creator::Creator + 'static {
+    pub fn define_handler_middleware<C, CFut, F>(&self, name: &str, creator: C) where
+        C: Fn(Arguments) -> CFut + Send + Sync + Clone + 'static,
+        CFut: Future<Output = Result<F>> + Send + 'static,
+        F: Middleware + 'static {
         let mut middlewares = self.inner.handler_middlewares.lock().unwrap();
-        middlewares.insert(name.to_owned(), middleware::Definition::new(next_path(self.path(), name), Arc::new(call), self.app_data().clone()));
+        middlewares.insert(name.to_owned(), middleware::Definition::new(next_path(self.path(), name), Arc::new(move |args| {
+            let creator = creator.clone();
+            async move {
+                Ok(MiddlewareImpl::new(creator(args).await?))
+            }
+        }), self.app_data().clone()));
+    }
+
+    pub fn define_request_middleware<C, CFut, F>(&self, name: &str, creator: C) where
+        C: Fn(Arguments) -> CFut + Send + Sync + Clone + 'static,
+        CFut: Future<Output = Result<F>> + Send + 'static,
+        F: Middleware + 'static {
+        let mut middlewares = self.inner.request_middlewares.lock().unwrap();
+        middlewares.insert(name.to_owned(), middleware::Definition::new(next_path(self.path(), name), Arc::new(move |args| {
+            let creator = creator.clone();
+            async move {
+                Ok(MiddlewareImpl::new(creator(args).await?))
+            }
+        }), self.app_data().clone()));
     }
 
     pub fn define_model_handler_group<T>(&self, name: &str, builder: T) -> Result<()> where T: Fn(&handler::group::Builder) -> Result<()> {

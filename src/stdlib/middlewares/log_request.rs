@@ -2,7 +2,6 @@ use std::time::SystemTime;
 use teo_result::Result;
 use crate::arguments::Arguments;
 use crate::message::{request_message, unhandled_request_message};
-use crate::middleware::MiddlewareImpl;
 use crate::middleware::next::Next;
 use crate::namespace;
 use crate::request::Request;
@@ -17,7 +16,7 @@ fn get_code(res_or_err: &Result<Response>) -> u16 {
 
 pub(in crate::stdlib) fn load_log_request_middleware(namespace: &namespace::Builder) {
     namespace.define_request_middleware("logRequest", |arguments: Arguments| async move {
-        Ok(MiddlewareImpl::new(move |request: Request, next: &'static dyn Next| async move {
+        Ok(|request: Request, next: &'static dyn Next| async move {
             let start = SystemTime::now();
             let res_or_err = next.call(request.clone()).await;
             let handler_found_info = request.handler_match();
@@ -30,6 +29,6 @@ pub(in crate::stdlib) fn load_log_request_middleware(namespace: &namespace::Buil
                 unhandled_request_message(time_elapsed, method.as_str(), path, get_code(&res_or_err));
             }
             return res_or_err;
-        }))
+        })
     });
 }
