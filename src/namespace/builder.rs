@@ -504,8 +504,8 @@ impl Builder {
         handler_templates.insert(name.to_owned(), handler_template);
     }
 
-    pub fn define_handler<T, F>(&self, name: &str, call: F) where T: 'static, for<'a> F: 'static + HandlerCtxArgument<T> {
-        let wrapped_call: &'static F = &*Box::leak(Box::new(call));
+    pub fn define_handler<T, F>(&self, name: &str, body: F) where T: 'static, for<'a> F: 'static + HandlerCtxArgument<T> {
+        let body = Arc::new(body);
         let builder = handler::Builder::new(
             next_path(self.path(), name),
             self.inner.path.clone(),
@@ -513,8 +513,11 @@ impl Builder {
             Type::Undetermined,
             false,
             HandlerInputFormat::Json,
-            Next::new(move |request: request::Request| async move {
-                wrapped_call.call(request).await
+            Next::new(move |request: request::Request| {
+                let body = body.clone();
+                async move {
+                    body.call(request).await
+                }
             }),
             self.app_data().clone()
         );
@@ -526,8 +529,8 @@ impl Builder {
         handlers.insert(name.to_owned(), handler);
     }
 
-    pub fn define_handler_template<T, F>(&self, name: &str, call: F) where T: 'static, for<'a> F: 'static + HandlerCtxArgument<T> {
-        let wrapped_call: &'static F = &*Box::leak(Box::new(call));
+    pub fn define_handler_template<T, F>(&self, name: &str, body: F) where T: 'static, for<'a> F: 'static + HandlerCtxArgument<T> {
+        let body = Arc::new(body);
         let builder = handler::Builder::new(
             next_path(self.path(), name),
             self.inner.path.clone(),
@@ -535,8 +538,11 @@ impl Builder {
             Type::Undetermined,
             false,
             HandlerInputFormat::Json,
-            Next::new(move |request: request::Request| async move {
-                wrapped_call.call(request).await
+            Next::new(move |request: request::Request| {
+                let body = body.clone();
+                async move {
+                    body.call(request).await
+                }
             }),
             self.app_data().clone()
         );
@@ -556,8 +562,8 @@ impl Builder {
         Ok(())
     }
 
-    pub fn define_struct<T>(&self, name: &str, builder: T) where T: Fn(&'static Vec<String>, &mut Struct) {
-        let path = Box::leak(Box::new(next_path(self.path(), name))) as &'static Vec<String>;
+    pub fn define_struct<T>(&self, name: &str, builder: T) where T: Fn(Vec<String>, &mut Struct) {
+        let path = next_path(self.path(), name);
         let mut r#struct = Struct {
             path: path.clone(),
             functions: btreemap! {},
