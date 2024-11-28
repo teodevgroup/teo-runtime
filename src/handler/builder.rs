@@ -6,7 +6,7 @@ use teo_parser::r#type::Type;
 use crate::app::data::AppData;
 use crate::handler::{Handler, handler};
 use hyper::Method;
-use crate::middleware::next::Next;
+use crate::middleware::next_imp::NextImp;
 
 #[derive(Debug, Clone)]
 pub struct Builder {
@@ -27,13 +27,13 @@ struct Inner {
     interface: Arc<Mutex<Option<String>>>,
     ignore_prefix: AtomicBool,
     #[educe(Debug(ignore))]
-    call: &'static dyn Next,
+    call: &'static dyn NextImp,
     app_data: AppData,
 }
 
 impl Builder {
 
-    pub fn new(path: Vec<String>, namespace_path: Vec<String>, input_type: Type, output_type: Type, nonapi: bool, format: HandlerInputFormat, call: &'static dyn Next, app_data: AppData) -> Self {
+    pub fn new(path: Vec<String>, namespace_path: Vec<String>, input_type: Type, output_type: Type, nonapi: bool, format: HandlerInputFormat, call: &'static dyn NextImp, app_data: AppData) -> Self {
         Self {
             inner: Arc::new(Inner {
                 path,
@@ -112,7 +112,7 @@ impl Builder {
         self.inner.ignore_prefix.store(ignore_prefix, std::sync::atomic::Ordering::Relaxed);
     }
 
-    pub fn call(&self) -> &'static dyn Next {
+    pub fn call(&self) -> &'static dyn NextImp {
         self.inner.call
     }
 

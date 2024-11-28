@@ -13,6 +13,7 @@ use crate::{model, model::{Field}};
 use crate::action::action::{CODE_AMOUNT, CODE_NAME, CODE_POSITION};
 use crate::arguments::Arguments;
 use crate::middleware::next::Next;
+use crate::middleware::next_imp::NextImp;
 use crate::request::Request;
 use crate::response::Response;
 use crate::traits::named::Named;
@@ -233,7 +234,7 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
 
     identity_namespace.define_handler_middleware("identityFromJwt", |arguments: Arguments| async move {
         let secret: String = arguments.get("secret")?;
-        Ok(move |request: Request, next: &'static dyn Next| {
+        Ok(move |request: Request, next: Next| {
             let secret = secret.clone();
             async move {
                 if let Some(authorization) = request.headers().get("authorization").map(|h| h.to_str().unwrap()) {

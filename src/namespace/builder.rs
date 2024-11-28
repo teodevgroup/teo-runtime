@@ -22,8 +22,8 @@ use crate::database::database::Database;
 use crate::handler::ctx_argument::HandlerCtxArgument;
 use crate::handler::Handler;
 use hyper::Method;
-use crate::middleware::middleware::{empty_middleware, Middleware};
-use crate::middleware::MiddlewareImpl;
+use crate::middleware::middleware_imp::{empty_middleware, MiddlewareImp};
+use crate::middleware::Middleware;
 use crate::model::{Model, Relation};
 use crate::namespace::Namespace;
 use crate::pipeline::item::Call;
@@ -81,9 +81,9 @@ struct Inner {
     pub model_opposite_relations_map: Arc<Mutex<BTreeMap<Vec<String>, Vec<(Vec<String>, String)>>>>,
     pub handler_map: Arc<Mutex<handler::Map>>,
     #[educe(Debug(ignore))]
-    pub handler_middleware_stack: Arc<Mutex<&'static dyn Middleware>>,
+    pub handler_middleware_stack: Arc<Mutex<Middleware>>,
     #[educe(Debug(ignore))]
-    pub request_middleware_stack: Arc<Mutex<&'static dyn Middleware>>,
+    pub request_middleware_stack: Arc<Mutex<Middleware>>,
     pub app_data: AppData,
 }
 
@@ -462,12 +462,12 @@ impl Builder {
     pub fn define_handler_middleware<C, CFut, F>(&self, name: &str, creator: C) where
         C: Fn(Arguments) -> CFut + Send + Sync + Clone + 'static,
         CFut: Future<Output = Result<F>> + Send + 'static,
-        F: Middleware + 'static {
+        F: MiddlewareImp + 'static {
         let mut middlewares = self.inner.handler_middlewares.lock().unwrap();
         middlewares.insert(name.to_owned(), middleware::Definition::new(next_path(self.path(), name), Arc::new(move |args| {
             let creator = creator.clone();
             async move {
-                Ok(MiddlewareImpl::new(creator(args).await?))
+                Ok(Middleware::new(creator(args).await?))
             }
         }), self.app_data().clone()));
     }
@@ -475,12 +475,12 @@ impl Builder {
     pub fn define_request_middleware<C, CFut, F>(&self, name: &str, creator: C) where
         C: Fn(Arguments) -> CFut + Send + Sync + Clone + 'static,
         CFut: Future<Output = Result<F>> + Send + 'static,
-        F: Middleware + 'static {
+        F: MiddlewareImp + 'static {
         let mut middlewares = self.inner.request_middlewares.lock().unwrap();
         middlewares.insert(name.to_owned(), middleware::Definition::new(next_path(self.path(), name), Arc::new(move |args| {
             let creator = creator.clone();
             async move {
-                Ok(MiddlewareImpl::new(creator(args).await?))
+                Ok(Middleware::new(creator(args).await?))
             }
         }), self.app_data().clone()));
     }
@@ -1012,19 +1012,19 @@ impl Builder {
         *self.inner.request_middlewares_block.lock().unwrap() = block;
     }
 
-    pub fn handler_middleware_stack(&self) -> &'static dyn Middleware {
-        *self.inner.handler_middleware_stack.lock().unwrap()
+    pub fn handler_middleware_stack(&self) -> Middleware {
+        self.inner.handler_middleware_stack.lock().unwrap().clone()
     }
 
-    pub fn set_handler_middleware_stack(&self, stack: &'static dyn Middleware) {
+    pub fn set_handler_middleware_stack(&self, stack: Middleware) {
         *self.inner.handler_middleware_stack.lock().unwrap() = stack;
     }
 
-    pub fn request_middleware_stack(&self) -> &'static dyn Middleware {
-        *self.inner.request_middleware_stack.lock().unwrap()
+    pub fn request_middleware_stack(&self) -> Middleware {
+        self.inner.request_middleware_stack.lock().unwrap().clone()
     }
 
-    pub fn set_request_middleware_stack(&self, stack: &'static dyn Middleware) {
+    pub fn set_request_middleware_stack(&self, stack: Middleware) {
         *self.inner.request_middleware_stack.lock().unwrap() = stack;
     }
 

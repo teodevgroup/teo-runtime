@@ -1,5 +1,6 @@
 use crate::arguments::Arguments;
 use crate::middleware::next::Next;
+use crate::middleware::next_imp::NextImp;
 use crate::namespace;
 use crate::request::Request;
 use crate::response::Response;
@@ -10,7 +11,7 @@ pub(in crate::stdlib) fn load_cors_middleware(namespace: &namespace::Builder) {
         let methods: Vec<String> = arguments.get("methods")?;
         let headers: Vec<String> = arguments.get("headers")?;
         let max_age: i32 = arguments.get("maxAge")?;
-        Ok(move |request: Request, next: &'static dyn Next| {
+        Ok(move |request: Request, next: Next| {
             let origin = origin.clone();
             let methods = methods.clone();
             let headers = headers.clone();

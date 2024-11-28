@@ -14,13 +14,13 @@ use crate::model::relation::Relation;
 use crate::r#enum::Enum;
 use crate::r#struct::Struct;
 use crate::database::database::Database;
-use crate::middleware::middleware::Middleware;
 use crate::pipeline;
 use educe::Educe;
 use serde::Serialize;
 use crate::app::data::AppData;
 use crate::config::admin::Admin;
 use crate::handler::Handler;
+use crate::middleware::Middleware;
 use crate::traits::named::Named;
 
 #[derive(Debug, Clone)]
@@ -66,9 +66,9 @@ pub(super) struct Inner {
     #[serde(skip)]
     pub(super) connection: Arc<Mutex<Option<Arc<dyn Connection>>>>,
     #[educe(Debug(ignore))] #[serde(skip)]
-    pub(super) handler_middleware_stack: &'static dyn Middleware,
+    pub(super) handler_middleware_stack: Middleware,
     #[educe(Debug(ignore))] #[serde(skip)]
-    pub(super) request_middleware_stack: &'static dyn Middleware,
+    pub(super) request_middleware_stack: Middleware,
     #[educe(Debug(ignore))] #[serde(skip)]
     pub(super) handler_map: handler::Map,
     pub(super) model_opposite_relations_map: BTreeMap<Vec<String>, Vec<(Vec<String>, String)>>,
@@ -224,12 +224,12 @@ impl Namespace {
         self.inner.database.as_ref()
     }
 
-    pub fn handler_middleware_stack(&self) -> &'static dyn Middleware {
-        self.inner.handler_middleware_stack
+    pub fn handler_middleware_stack(&self) -> Middleware {
+        self.inner.handler_middleware_stack.clone()
     }
 
-    pub fn request_middleware_stack(&self) -> &'static dyn Middleware {
-        self.inner.request_middleware_stack
+    pub fn request_middleware_stack(&self) -> Middleware {
+        self.inner.request_middleware_stack.clone()
     }
 
     pub fn handler_map(&self) -> &handler::Map {
@@ -543,7 +543,7 @@ impl Namespace {
         for n in self.inner.namespaces.values() {
             result.extend(n._collect_models(f));
         }
-        return result
+        result
     }
 
     pub fn collect_enums<F>(&self, f: F) -> Vec<&Enum> where F: Fn(&Enum) -> bool {

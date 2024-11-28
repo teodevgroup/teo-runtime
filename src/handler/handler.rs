@@ -4,7 +4,7 @@ use serde::{Serialize, Serializer};
 use teo_parser::ast::handler::HandlerInputFormat;
 use teo_parser::r#type::Type;
 use hyper::Method;
-use crate::middleware::next::Next;
+use crate::middleware::next_imp::NextImp;
 use crate::traits::named::Named;
 
 #[derive(Educe)]
@@ -36,7 +36,7 @@ pub(super) struct Inner {
     pub(super) interface: Option<String>,
     pub(super) ignore_prefix: bool,
     #[serde(skip)] #[educe(Debug(ignore))]
-    pub(super) call: &'static dyn Next,
+    pub(super) call: &'static dyn NextImp,
 }
 
 impl Handler {
@@ -81,7 +81,7 @@ impl Handler {
         self.inner.ignore_prefix
     }
 
-    pub fn call(&self) -> &'static dyn Next {
+    pub fn call(&self) -> &'static dyn NextImp {
         self.inner.call
     }
 

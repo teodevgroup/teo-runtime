@@ -7,8 +7,8 @@ use teo_parser::ast::arith_expr::ArithExpr;
 use teo_parser::ast::middleware::MiddlewareType;
 use teo_parser::diagnostics::diagnostics::Diagnostics;
 use crate::arguments::Arguments;
-use crate::middleware::{Use};
-use crate::middleware::middleware::{combine_middleware, empty_middleware, Middleware};
+use crate::middleware::{Middleware, Use};
+use crate::middleware::middleware_imp::{combine_middleware, empty_middleware, MiddlewareImp};
 use crate::{middleware, namespace};
 use crate::schema::fetch::fetch_argument_list::{fetch_argument_list};
 
@@ -59,13 +59,13 @@ pub(super) async fn load_use_middlewares(main_namespace: &namespace::Builder, sc
 }
 
 #[async_recursion]
-async fn load_middleware_stack(namespace: &namespace::Builder, parent_handler_stack: &'static dyn Middleware, parent_request_stack: &'static dyn Middleware) -> Result<()> {
+async fn load_middleware_stack(namespace: &namespace::Builder, parent_handler_stack: Middleware, parent_request_stack: Middleware) -> Result<()> {
     if let Some(block) = namespace.handler_middlewares_block() {
         let mut middlewares = vec![];
         middlewares.push(parent_handler_stack);
         for r#use in block.uses() {
             let middleware = r#use.creator().call(r#use.arguments().clone()).await?;
-            middlewares.push(middleware.middleware);
+            middlewares.push(middleware);
         }
         middlewares.reverse();
         namespace.set_handler_middleware_stack(combine_middleware(middlewares));
@@ -77,7 +77,7 @@ async fn load_middleware_stack(namespace: &namespace::Builder, parent_handler_st
         middlewares.push(parent_request_stack);
         for r#use in block.uses() {
             let middleware = r#use.creator().call(r#use.arguments().clone()).await?;
-            middlewares.push(middleware.middleware);
+            middlewares.push(middleware);
         }
         middlewares.reverse();
         namespace.set_request_middleware_stack(combine_middleware(middlewares));
