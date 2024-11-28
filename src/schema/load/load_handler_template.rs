@@ -45,6 +45,6 @@ pub fn load_handler_template(main_namespace: &namespace::Builder, schema: &Schem
             decorator_implementation.call().call(args, &handler_builder)?;
         }
     }
-    main_namespace.replace_handler_template_at_path(&handler_template_declaration.str_path(), handler_builder.build())?;
+    main_namespace.replace_handler_template_at_path(&handler_template_declaration.str_path(), handler_builder.build());
     Ok(())
 }

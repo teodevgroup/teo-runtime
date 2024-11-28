@@ -61,6 +61,6 @@ pub fn load_handler(main_namespace: &namespace::Builder, schema: &Schema, handle
             handler_builder.ignore_prefix(),
         );
     }
-    main_namespace.replace_handler_at_path(&handler_declaration.str_path(), handler_builder.build(), handler_declaration.inside_group);
+    main_namespace.replace_handler_at_path(&handler_declaration.str_path(), handler_builder.build(), handler_declaration.inside_group)?;
     Ok(())
 }

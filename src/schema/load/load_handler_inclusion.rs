@@ -79,6 +79,6 @@ pub fn load_handler_inclusion(main_namespace: &namespace::Builder, schema: &Sche
             handler_builder.ignore_prefix(),
         );
     }
-    main_namespace.replace_handler_at_path(&handler_inclusion.str_path(), handler_builder.build(), true);
+    main_namespace.replace_handler_at_path(&handler_inclusion.str_path(), handler_builder.build(), true)?;
     Ok(())
 }
