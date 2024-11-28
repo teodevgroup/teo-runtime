@@ -3,7 +3,6 @@ use crate::pipeline::{Ctx, Pipeline};
 use bcrypt::{DEFAULT_COST, hash, verify};
 use teo_result::{Error, ResultExt};
 use crate::namespace;
-use crate::pipeline::item::item_impl::ItemImpl;
 use crate::value::Value;
 
 pub(in crate::stdlib) fn load_bcrypt_items(namespace: &namespace::Builder) {

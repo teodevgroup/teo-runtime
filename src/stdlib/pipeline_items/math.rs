@@ -8,7 +8,6 @@ use teo_result::Error;
 use crate::pipeline::Ctx;
 use teo_result::ResultExt;
 use crate::namespace;
-use crate::pipeline::item::item_impl::ItemImpl;
 
 pub(in crate::stdlib) fn load_pipeline_math_items(namespace: &namespace::Builder) {
 

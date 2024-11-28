@@ -7,7 +7,6 @@ use crate::pipeline::Ctx;
 use teo_result::{Result, ResultExt};
 use rand::{thread_rng, Rng};
 use crate::namespace;
-use crate::pipeline::item::item_impl::ItemImpl;
 
 pub(in crate::stdlib) fn load_pipeline_number_items(namespace: &namespace::Builder) {
 
@@ -76,7 +75,6 @@ pub(in crate::stdlib) fn load_pipeline_number_items(namespace: &namespace::Build
             Err(Error::new("randomInt: invalid argument"))?
         }
         Ok(move |ctx: Ctx| {
-            let length = length.clone();
             let range = range.clone();
             async move {
                 let (start, end, closed) = {

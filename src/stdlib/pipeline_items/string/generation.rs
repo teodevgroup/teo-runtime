@@ -6,7 +6,6 @@ use random_string::generate;
 use cuid::{cuid, slug};
 use uuid::Uuid;
 use crate::namespace;
-use crate::pipeline::item::item_impl::ItemImpl;
 use crate::value::Value;
 
 pub(in crate::stdlib) fn load_pipeline_string_generation_items(namespace: &namespace::Builder) {

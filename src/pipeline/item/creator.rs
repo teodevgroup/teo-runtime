@@ -1,6 +1,5 @@
 use crate::arguments::Arguments;
 use teo_result::Result;
-use crate::pipeline::item::item_impl::ItemImpl;
 use super::templates::call::Call;
 
 pub trait Creator {

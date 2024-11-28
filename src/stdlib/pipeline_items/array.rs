@@ -2,7 +2,6 @@ use crate::arguments::Arguments;
 use crate::pipeline::Ctx;
 use teo_result::ResultExt;
 use crate::namespace;
-use crate::pipeline::item::item_impl::ItemImpl;
 use crate::value::Value;
 use crate::pipeline::pipeline::Pipeline;
 

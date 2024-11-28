@@ -26,7 +26,6 @@ use crate::middleware::middleware::{empty_middleware, Middleware};
 use crate::model::{Model, Relation};
 use crate::namespace::Namespace;
 use crate::pipeline::item::Call;
-use crate::pipeline::item::item_impl::ItemImpl;
 use crate::pipeline::item::templates::callback::{Callback, CallbackResult};
 use crate::pipeline::item::templates::compare::Compare;
 use crate::pipeline::item::templates::transformer::{TransformerResult, Transformer};

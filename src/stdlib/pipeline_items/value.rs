@@ -3,7 +3,6 @@ use crate::pipeline::Ctx;
 use teo_result::ResultExt;
 use teo_result::Error;
 use crate::namespace;
-use crate::pipeline::item::item_impl::ItemImpl;
 use crate::value::Value;
 
 pub(in crate::stdlib) fn load_pipeline_value_items(namespace: &namespace::Builder) {
