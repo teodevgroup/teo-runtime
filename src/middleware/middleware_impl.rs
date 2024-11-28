@@ -8,7 +8,7 @@ impl MiddlewareImpl {
 
     pub fn new<F>(f: F) -> Self where F: Middleware + 'static {
         Self {
-            middleware: Box::leak(Box::new(f)),
+            middleware: unsafe { &*Box::into_raw(Box::new(f)) },
         }
     }
 }

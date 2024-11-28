@@ -5,14 +5,13 @@ use key_path::path;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use crate::pipeline::Pipeline;
-use crate::{namespace, pipeline, request};
+use crate::{namespace, pipeline};
 use teo_result::Error;
 use crate::value::Value;
 use crate::teon;
 use crate::{model, model::{Field}};
 use crate::action::action::{CODE_AMOUNT, CODE_NAME, CODE_POSITION};
 use crate::arguments::Arguments;
-use crate::middleware::MiddlewareImpl;
 use crate::middleware::next::Next;
 use crate::request::Request;
 use crate::response::Response;
@@ -31,7 +30,7 @@ pub fn encode_token(claims: JwtClaims, secret: &str) -> String {
 }
 
 pub fn decode_token(token: &str, secret: &str) -> Result<JwtClaims, jsonwebtoken::errors::Error> {
-    return match decode::<JwtClaims>(token, &DecodingKey::from_secret(secret.as_ref()), &Validation::default()) {
+    match decode::<JwtClaims>(token, &DecodingKey::from_secret(secret.as_ref()), &Validation::default()) {
         Ok(token) => {
             Ok(token.claims)
         }
@@ -127,7 +126,7 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
         let checker_fields: Vec<&Field> = model.fields().values().filter(|f| f.data().get("identity:checker").is_some()).collect();
         let companion_fields: Vec<&Field> = model.fields().values().filter(|f| f.data().get("identity:companion").is_some()).collect();
         for (k, v) in credentials {
-            if let Some(f) = id_fields.iter().find(|f| f.name() == k.as_str()) {
+            if id_fields.iter().find(|f| f.name() == k.as_str()).is_some() {
                 id_values.insert(k.to_string(), v.clone());
                 if identity_key.is_none() {
                     identity_key = Some(k);
@@ -224,62 +223,64 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
             let select = request.body_value()?.get("select");
             let obj = object.refreshed(include, select).await?;
             let obj_teon = obj.to_teon().await?;
-            return Ok(Response::data_meta(obj_teon, teon!({
+            Ok(Response::data_meta(obj_teon, teon!({
                 "token": token
-            })));
+            })))
         } else {
-            return Err(Error::unauthorized_message("identity not found"));
+            Err(Error::unauthorized_message("identity not found"))
         }
     });
 
     identity_namespace.define_handler_middleware("identityFromJwt", |arguments: Arguments| async move {
-        let secret_string: String = arguments.get("secret")?;
-        let secret = Box::leak(Box::new(secret_string)).as_str();
-        Ok(move |request: Request, next: &'static dyn Next| async move {
-            if let Some(authorization) = request.headers().get("authorization").map(|h| h.to_str().unwrap()) {
-                if authorization.len() < 7 {
-                    return Err(Error::unauthorized_message("invalid jwt token"));
-                }
-                let token = &authorization[7..];
-                match decode_token(token, &secret) {
-                    Ok(claims) => {
-                        let json_identifier = &claims.id;
-                        let Some(model_ctx) = request.transaction_ctx().model_ctx_for_model_at_path(&claims.model) else {
-                            return Err(Error::unauthorized_message("invalid jwt token"));
-                        };
-                        let teon_identifier = Value::from(json_identifier);
-                        let object: Option<model::Object> = model_ctx.find_unique(&teon_identifier).await?;
-                        if let Some(object) = object {
-                            if let Some(validator) = object.model().data().get("identity:validateAccount") {
-                                let validator = validator.as_pipeline().unwrap();
-                                let self_pipeline_ctx = pipeline::Ctx::new(Value::from(&object), object.clone(), path![], CODE_NAME | CODE_AMOUNT | CODE_POSITION, request.transaction_ctx(), Some(request.clone()));
-                                match self_pipeline_ctx.run_pipeline_ignore_return_value(validator).await {
-                                    Ok(_) => (),
-                                    Err(mut error) => {
-                                        error.code = 401;
-                                        return Err(error);
+        let secret: String = arguments.get("secret")?;
+        Ok(move |request: Request, next: &'static dyn Next| {
+            let secret = secret.clone();
+            async move {
+                if let Some(authorization) = request.headers().get("authorization").map(|h| h.to_str().unwrap()) {
+                    if authorization.len() < 7 {
+                        return Err(Error::unauthorized_message("invalid jwt token"));
+                    }
+                    let token = &authorization[7..];
+                    match decode_token(token, &secret) {
+                        Ok(claims) => {
+                            let json_identifier = &claims.id;
+                            let Some(model_ctx) = request.transaction_ctx().model_ctx_for_model_at_path(&claims.model) else {
+                                return Err(Error::unauthorized_message("invalid jwt token"));
+                            };
+                            let teon_identifier = Value::from(json_identifier);
+                            let object: Option<model::Object> = model_ctx.find_unique(&teon_identifier).await?;
+                            if let Some(object) = object {
+                                if let Some(validator) = object.model().data().get("identity:validateAccount") {
+                                    let validator = validator.as_pipeline().unwrap();
+                                    let self_pipeline_ctx = pipeline::Ctx::new(Value::from(&object), object.clone(), path![], CODE_NAME | CODE_AMOUNT | CODE_POSITION, request.transaction_ctx(), Some(request.clone()));
+                                    match self_pipeline_ctx.run_pipeline_ignore_return_value(validator).await {
+                                        Ok(_) => (),
+                                        Err(mut error) => {
+                                            error.code = 401;
+                                            return Err(error);
+                                        }
                                     }
                                 }
+                                request.local_values().insert("account", Value::from(object));
+                            } else {
+                                return Err(Error::unauthorized_message("invalid jwt token"));
                             }
-                            request.local_values().insert("account", Value::from(object));
-                        } else {
-                            return Err(Error::unauthorized_message("invalid jwt token"));
+                        }
+                        Err(error) => {
+                            return match error.kind() {
+                                jsonwebtoken::errors::ErrorKind::ExpiredSignature => {
+                                    Err(Error::unauthorized_message("token expired"))
+                                }
+                                _ => {
+                                    Err(Error::unauthorized_message("invalid jwt token"))
+                                }
+                            };
                         }
                     }
-                    Err(error) => {
-                        return match error.kind() {
-                            jsonwebtoken::errors::ErrorKind::ExpiredSignature => {
-                                Err(Error::unauthorized_message("token expired"))
-                            }
-                            _ => {
-                                Err(Error::unauthorized_message("invalid jwt token"))
-                            }
-                        };
-                    }
                 }
+                let res = next.call(request).await?;
+                Ok(res)
             }
-            let res = next.call(request).await?;
-            return Ok(res);
         })
     });
 }
