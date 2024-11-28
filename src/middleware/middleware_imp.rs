@@ -1,5 +1,4 @@
 use std::future::Future;
-use std::sync::Arc;
 use futures_util::future::BoxFuture;
 use crate::middleware::Middleware;
 use crate::middleware::next::{Next, NextImp};
@@ -60,14 +59,14 @@ fn join_middleware(outer: Middleware, inner: Middleware) -> Middleware {
 }
 
 pub trait MiddlewareArgument<A>: Send + Sync + 'static {
-    fn call(&self, request: Request, next: Arc<dyn NextImp>) -> BoxFuture<'static, teo_result::Result<Response>>;
+    fn call(&self, request: Request, next: Next) -> BoxFuture<'static, teo_result::Result<Response>>;
 }
 
 impl<A0, F, Fut> MiddlewareArgument<(A0,)> for F where
     A0: ExtractFromRequest + Send + Sync,
-    F: Fn(A0, Arc<dyn NextImp>) -> Fut + Sync + Send + Clone + 'static,
+    F: Fn(A0, Next) -> Fut + Sync + Send + Clone + 'static,
     Fut: Future<Output = teo_result::Result<Response>> + Send + 'static {
-    fn call(&self, request: Request, next: Arc<dyn NextImp>) -> BoxFuture<'static, teo_result::Result<Response>> {
+    fn call(&self, request: Request, next: Next) -> BoxFuture<'static, teo_result::Result<Response>> {
         let value: A0 = ExtractFromRequest::extract(&request);
         Box::pin(self(value, next))
     }
@@ -76,9 +75,9 @@ impl<A0, F, Fut> MiddlewareArgument<(A0,)> for F where
 impl<A0, A1, F, Fut> MiddlewareArgument<(A0, A1)> for F where
     A0: ExtractFromRequest + Send + Sync,
     A1: ExtractFromRequest + Send + Sync,
-    F: Fn(A0, A1, Arc<dyn NextImp>) -> Fut + Sync + Send + Clone + 'static,
+    F: Fn(A0, A1, Next) -> Fut + Sync + Send + Clone + 'static,
     Fut: Future<Output = teo_result::Result<Response>> + Send + 'static {
-    fn call(&self, request: Request, next: Arc<dyn NextImp>) -> BoxFuture<'static, teo_result::Result<Response>> {
+    fn call(&self, request: Request, next: Next) -> BoxFuture<'static, teo_result::Result<Response>> {
         let a0: A0 = ExtractFromRequest::extract(&request);
         let a1: A1 = ExtractFromRequest::extract(&request);
         Box::pin(self(a0, a1, next))
@@ -89,9 +88,9 @@ impl<A0, A1, A2, F, Fut> MiddlewareArgument<(A0, A1, A2)> for F where
     A0: ExtractFromRequest + Send + Sync,
     A1: ExtractFromRequest + Send + Sync,
     A2: ExtractFromRequest + Send + Sync,
-    F: Fn(A0, A1, A2, Arc<dyn NextImp>) -> Fut + Sync + Send + Clone + 'static,
+    F: Fn(A0, A1, A2, Next) -> Fut + Sync + Send + Clone + 'static,
     Fut: Future<Output = teo_result::Result<Response>> + Send + 'static {
-    fn call(&self, request: Request, next: Arc<dyn NextImp>) -> BoxFuture<'static, teo_result::Result<Response>> {
+    fn call(&self, request: Request, next: Next) -> BoxFuture<'static, teo_result::Result<Response>> {
         let a0: A0 = ExtractFromRequest::extract(&request);
         let a1: A1 = ExtractFromRequest::extract(&request);
         let a2: A2 = ExtractFromRequest::extract(&request);
@@ -104,9 +103,9 @@ impl<A0, A1, A2, A3, F, Fut> MiddlewareArgument<(A0, A1, A2, A3)> for F where
     A1: ExtractFromRequest + Send + Sync,
     A2: ExtractFromRequest + Send + Sync,
     A3: ExtractFromRequest + Send + Sync,
-    F: Fn(A0, A1, A2, A3, Arc<dyn NextImp>) -> Fut + Sync + Send + Clone + 'static,
+    F: Fn(A0, A1, A2, A3, Next) -> Fut + Sync + Send + Clone + 'static,
     Fut: Future<Output = teo_result::Result<Response>> + Send + 'static {
-    fn call(&self, request: Request, next: Arc<dyn NextImp>) -> BoxFuture<'static, teo_result::Result<Response>> {
+    fn call(&self, request: Request, next: Next) -> BoxFuture<'static, teo_result::Result<Response>> {
         let a0: A0 = ExtractFromRequest::extract(&request);
         let a1: A1 = ExtractFromRequest::extract(&request);
         let a2: A2 = ExtractFromRequest::extract(&request);
