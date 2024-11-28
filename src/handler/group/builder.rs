@@ -52,8 +52,8 @@ impl Builder {
         handlers.insert(name.to_owned(), handler);
     }
 
-    pub fn define_handler<T, F>(&self, name: &str, call: F) where T: 'static, for<'a> F: 'static + HandlerCtxArgument<'a, T> {
-        let wrapped_call: &'static F = &*Box::leak(Box::new(call));
+    pub fn define_handler<T, F>(&self, name: &str, body: F) where T: 'static, for<'a> F: 'static + HandlerCtxArgument<T> {
+        let body = Arc::new(body);
         let handler = Handler {
             inner: Arc::new(handler::Inner {
                 namespace_path: {
@@ -70,8 +70,11 @@ impl Builder {
                 method: Method::POST,
                 interface: None,
                 url: None,
-                call: Next::new(move |request: Request| async move {
-                    wrapped_call.call(&request).await
+                call: Next::new(move |request: Request| {
+                    let body = body.clone();
+                    async move {
+                        body.call(request).await
+                    }
                 }),
             })
         };

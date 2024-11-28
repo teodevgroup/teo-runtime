@@ -504,7 +504,7 @@ impl Builder {
         handler_templates.insert(name.to_owned(), handler_template);
     }
 
-    pub fn define_handler<T, F>(&self, name: &str, call: F) where T: 'static, for<'a> F: 'static + HandlerCtxArgument<'a, T> {
+    pub fn define_handler<T, F>(&self, name: &str, call: F) where T: 'static, for<'a> F: 'static + HandlerCtxArgument<T> {
         let wrapped_call: &'static F = &*Box::leak(Box::new(call));
         let builder = handler::Builder::new(
             next_path(self.path(), name),
@@ -514,7 +514,7 @@ impl Builder {
             false,
             HandlerInputFormat::Json,
             Next::new(move |request: request::Request| async move {
-                wrapped_call.call(&request).await
+                wrapped_call.call(request).await
             }),
             self.app_data().clone()
         );
@@ -526,7 +526,7 @@ impl Builder {
         handlers.insert(name.to_owned(), handler);
     }
 
-    pub fn define_handler_template<T, F>(&self, name: &str, call: F) where T: 'static, for<'a> F: 'static + HandlerCtxArgument<'a, T> {
+    pub fn define_handler_template<T, F>(&self, name: &str, call: F) where T: 'static, for<'a> F: 'static + HandlerCtxArgument<T> {
         let wrapped_call: &'static F = &*Box::leak(Box::new(call));
         let builder = handler::Builder::new(
             next_path(self.path(), name),
@@ -536,7 +536,7 @@ impl Builder {
             false,
             HandlerInputFormat::Json,
             Next::new(move |request: request::Request| async move {
-                wrapped_call.call(&request).await
+                wrapped_call.call(request).await
             }),
             self.app_data().clone()
         );
