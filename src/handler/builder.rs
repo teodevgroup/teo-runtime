@@ -6,7 +6,7 @@ use teo_parser::r#type::Type;
 use crate::app::data::AppData;
 use crate::handler::{Handler, handler};
 use hyper::Method;
-use crate::middleware::next_imp::NextImp;
+use crate::middleware::next::Next;
 
 #[derive(Debug, Clone)]
 pub struct Builder {
@@ -27,13 +27,13 @@ struct Inner {
     interface: Arc<Mutex<Option<String>>>,
     ignore_prefix: AtomicBool,
     #[educe(Debug(ignore))]
-    call: &'static dyn NextImp,
+    call: Next,
     app_data: AppData,
 }
 
 impl Builder {
 
-    pub fn new(path: Vec<String>, namespace_path: Vec<String>, input_type: Type, output_type: Type, nonapi: bool, format: HandlerInputFormat, call: &'static dyn NextImp, app_data: AppData) -> Self {
+    pub fn new(path: Vec<String>, namespace_path: Vec<String>, input_type: Type, output_type: Type, nonapi: bool, format: HandlerInputFormat, call: Next, app_data: AppData) -> Self {
         Self {
             inner: Arc::new(Inner {
                 path,
@@ -112,8 +112,8 @@ impl Builder {
         self.inner.ignore_prefix.store(ignore_prefix, std::sync::atomic::Ordering::Relaxed);
     }
 
-    pub fn call(&self) -> &'static dyn NextImp {
-        self.inner.call
+    pub fn call(&self) -> Next {
+        self.inner.call.clone()
     }
 
     pub fn app_data(&self) -> &AppData {
@@ -133,7 +133,7 @@ impl Builder {
                 url: self.inner.url.lock().unwrap().clone(),
                 interface: self.inner.interface.lock().unwrap().clone(),
                 ignore_prefix: self.inner.ignore_prefix.load(std::sync::atomic::Ordering::Relaxed),
-                call: self.inner.call,
+                call: self.inner.call.clone(),
             })
         }
     }

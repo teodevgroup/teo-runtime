@@ -8,6 +8,7 @@ use crate::handler::ctx_argument::HandlerCtxArgument;
 use crate::handler::{Group, Handler, handler};
 use crate::handler::group::group;
 use hyper::Method;
+use crate::middleware::next::Next;
 use crate::request::Request;
 use crate::traits::named::Named;
 use crate::utils::next_path;
@@ -69,9 +70,9 @@ impl Builder {
                 method: Method::POST,
                 interface: None,
                 url: None,
-                call: Box::leak(Box::new(move |request: Request| async move {
+                call: Next::new(move |request: Request| async move {
                     wrapped_call.call(&request).await
-                })),
+                }),
             })
         };
         let mut handlers = self.inner.handlers.lock().unwrap();

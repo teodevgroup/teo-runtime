@@ -7,7 +7,8 @@ use teo_parser::traits::resolved::Resolve;
 use teo_result::Result;
 use hyper::Method;
 use teo_result::Error;
-use crate::{handler, namespace, request};
+use crate::{handler, namespace};
+use crate::middleware::next::Next;
 use crate::request::Request;
 use crate::schema::fetch::fetch_decorator_arguments::fetch_decorator_arguments;
 
@@ -33,9 +34,9 @@ pub fn load_handler(main_namespace: &namespace::Builder, schema: &Schema, handle
             handler_declaration.output_type().resolved().clone(),
             handler_declaration.nonapi,
             handler_declaration.input_format,
-            Box::leak(Box::new(|request: Request| async {
+            Next::new(|request: Request| async {
                 Err(Error::not_found())
-            })),
+            }),
             main_namespace.app_data().clone(),
         )
     };

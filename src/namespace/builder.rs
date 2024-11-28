@@ -24,6 +24,7 @@ use crate::handler::Handler;
 use hyper::Method;
 use crate::middleware::middleware_imp::{empty_middleware, MiddlewareImp};
 use crate::middleware::Middleware;
+use crate::middleware::next::Next;
 use crate::model::{Model, Relation};
 use crate::namespace::Namespace;
 use crate::pipeline::item::Call;
@@ -512,9 +513,9 @@ impl Builder {
             Type::Undetermined,
             false,
             HandlerInputFormat::Json,
-            Box::leak(Box::new(move |request: request::Request| async move {
+            Next::new(move |request: request::Request| async move {
                 wrapped_call.call(&request).await
-            })),
+            }),
             self.app_data().clone()
         );
         builder.set_method(Method::POST);
@@ -534,9 +535,9 @@ impl Builder {
             Type::Undetermined,
             false,
             HandlerInputFormat::Json,
-            Box::leak(Box::new(move |request: request::Request| async move {
+            Next::new(move |request: request::Request| async move {
                 wrapped_call.call(&request).await
-            })),
+            }),
             self.app_data().clone()
         );
         builder.set_method(Method::POST);

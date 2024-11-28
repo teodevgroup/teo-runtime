@@ -4,7 +4,7 @@ use serde::{Serialize, Serializer};
 use teo_parser::ast::handler::HandlerInputFormat;
 use teo_parser::r#type::Type;
 use hyper::Method;
-use crate::middleware::next_imp::NextImp;
+use crate::middleware::next::Next;
 use crate::traits::named::Named;
 
 #[derive(Educe)]
@@ -36,7 +36,7 @@ pub(super) struct Inner {
     pub(super) interface: Option<String>,
     pub(super) ignore_prefix: bool,
     #[serde(skip)] #[educe(Debug(ignore))]
-    pub(super) call: &'static dyn NextImp,
+    pub(super) call: Next,
 }
 
 impl Handler {
@@ -81,8 +81,8 @@ impl Handler {
         self.inner.ignore_prefix
     }
 
-    pub fn call(&self) -> &'static dyn NextImp {
-        self.inner.call
+    pub fn call(&self) -> Next {
+        self.inner.call.clone()
     }
 
     pub fn has_custom_url_args(&self) -> bool {
@@ -116,7 +116,7 @@ impl Named for Handler {
 }
 
 impl Serialize for Handler {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> where S: serde::Serializer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
         self.inner.serialize(serializer)
     }
 }
