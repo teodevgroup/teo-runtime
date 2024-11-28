@@ -10,7 +10,7 @@ pub trait HandlerCtxArgument<'a, A: 'a>: Send + Sync {
 }
 
 impl<'a, F, Fut> HandlerCtxArgument<'a, ()> for F where
-    F: Fn() -> Fut + Sync + Send + Clone,
+    F: Fn() -> Fut + Sync + Send,
     Fut: Future<Output = Result<Response>> + Send + 'a {
     fn call(&self, _request: &'a Request) -> BoxFuture<'a, Result<Response>> {
         Box::pin(self())
@@ -19,7 +19,7 @@ impl<'a, F, Fut> HandlerCtxArgument<'a, ()> for F where
 
 impl<'a, A0, F, Fut> HandlerCtxArgument<'a, (A0,)> for F where
     A0: ExtractFromRequest<'a> + Send + Sync + 'a,
-    F: Fn(A0) -> Fut + Sync + Send + Clone,
+    F: Fn(A0) -> Fut + Sync + Send,
     Fut: Future<Output = Result<Response>> + Send + 'a {
     fn call(&self, request: &'a Request) -> BoxFuture<'a, Result<Response>> {
         let value: A0 = ExtractFromRequest::extract(&request);
@@ -30,7 +30,7 @@ impl<'a, A0, F, Fut> HandlerCtxArgument<'a, (A0,)> for F where
 impl<'a, A0, A1, F, Fut> HandlerCtxArgument<'a, (A0, A1)> for F where
     A0: ExtractFromRequest<'a> + Send + Sync + 'a,
     A1: ExtractFromRequest<'a> + Send + Sync + 'a,
-    F: Fn(A0, A1) -> Fut + Sync + Send + Clone,
+    F: Fn(A0, A1) -> Fut + Sync + Send,
     Fut: Future<Output = Result<Response>> + Send + 'a {
     fn call(&self, request: &'a Request) -> BoxFuture<'a, Result<Response>> {
         let value0: A0 = ExtractFromRequest::extract(&request);
@@ -43,7 +43,7 @@ impl<'a, A0, A1, A2, F, Fut> HandlerCtxArgument<'a, (A0, A1, A2)> for F where
     A0: ExtractFromRequest<'a> + Send + Sync + 'a,
     A1: ExtractFromRequest<'a> + Send + Sync + 'a,
     A2: ExtractFromRequest<'a> + Send + Sync + 'a,
-    F: Fn(A0, A1, A2) -> Fut + Sync + Send + Clone,
+    F: Fn(A0, A1, A2) -> Fut + Sync + Send,
     Fut: Future<Output = Result<Response>> + Send + 'a {
     fn call(&self, request: &'a Request) -> BoxFuture<'a, Result<Response>> {
         let value0: A0 = ExtractFromRequest::extract(&request);
@@ -58,7 +58,7 @@ impl<'a, A0, A1, A2, A3, F, Fut> HandlerCtxArgument<'a, (A0, A1, A2, A3)> for F 
     A1: ExtractFromRequest<'a> + Send + Sync + 'a,
     A2: ExtractFromRequest<'a> + Send + Sync + 'a,
     A3: ExtractFromRequest<'a> + Send + Sync + 'a,
-    F: Fn(A0, A1, A2, A3) -> Fut + Sync + Send + Clone,
+    F: Fn(A0, A1, A2, A3) -> Fut + Sync + Send,
     Fut: Future<Output = Result<Response>> + Send + 'a {
     fn call(&self, request: &'a Request) -> BoxFuture<'a, Result<Response>> {
         let value0: A0 = ExtractFromRequest::extract(&request);
@@ -75,7 +75,7 @@ impl<'a, A0, A1, A2, A3, A4, F, Fut> HandlerCtxArgument<'a, (A0, A1, A2, A3, A4)
     A2: ExtractFromRequest<'a> + Send + Sync + 'a,
     A3: ExtractFromRequest<'a> + Send + Sync + 'a,
     A4: ExtractFromRequest<'a> + Send + Sync + 'a,
-    F: Fn(A0, A1, A2, A3, A4) -> Fut + Sync + Send + Clone,
+    F: Fn(A0, A1, A2, A3, A4) -> Fut + Sync + Send,
     Fut: Future<Output = Result<Response>> + Send + 'a {
     fn call(&self, request: &'a Request) -> BoxFuture<'a, Result<Response>> {
         let value0: A0 = ExtractFromRequest::extract(&request);
