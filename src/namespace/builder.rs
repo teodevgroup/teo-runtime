@@ -857,7 +857,7 @@ impl Builder {
             } else {
                 // try finding in group
                 let handler_name = *path.last().unwrap();
-                let group_name = path.get(path.len() - 2).unwrap().deref();
+                let group_name = *path.get(path.len() - 2).unwrap();
                 let namespace_path: Vec<String> = path.into_iter().rev().skip(2).rev().map(|i| i.to_string()).collect();
                 if let Some(dest_namespace) = self.descendant_namespace_at_path(&namespace_path) {
                     if let Some(group) = dest_namespace.handler_group(group_name) {
