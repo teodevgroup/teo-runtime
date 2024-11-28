@@ -1,6 +1,5 @@
 use crate::arguments::Arguments;
-use crate::middleware::next::Next;
-use crate::middleware::next_imp::NextImp;
+use crate::middleware::next::{Next, NextImp};
 use crate::namespace;
 use crate::request::Request;
 use crate::response::Response;

@@ -1,10 +1,8 @@
-use std::sync::Arc;
 use std::time::SystemTime;
 use teo_result::Result;
 use crate::arguments::Arguments;
 use crate::message::{request_message, unhandled_request_message};
-use crate::middleware::next::Next;
-use crate::middleware::next_imp::NextImp;
+use crate::middleware::next::{Next, NextImp};
 use crate::namespace;
 use crate::request::Request;
 use crate::response::Response;

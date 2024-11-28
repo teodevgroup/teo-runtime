@@ -10,5 +10,5 @@ pub mod block;
 pub use definition::Definition;
 pub use r#use::Use;
 pub use block::Block;
-pub use next_imp::NextImp;
+pub use next::{Next, NextImp};
 pub use middleware::Middleware;
