@@ -5,11 +5,11 @@ use crate::teon;
 use crate::action::action::*;
 use crate::response::Response;
 
-pub async fn find_many(request: &Request) -> teo_result::Result<Response> {
-    let model = request.transaction_ctx().namespace().model_at_path(&request.handler_match().unwrap().path()).unwrap();
+pub async fn find_many(request: Request) -> teo_result::Result<Response> {
+    let model = request.transaction_ctx().namespace().model_at_path(&request.handler_match().unwrap().path()).unwrap().clone();
     let action = FIND | MANY | ENTRY;
     let results = request.transaction_ctx().find_many_internal(
-        model,
+        &model,
         request.body_value()?,
         false,
         action,
@@ -22,7 +22,7 @@ pub async fn find_many(request: &Request) -> teo_result::Result<Response> {
     count_input_obj.remove("take");
     count_input_obj.remove("pageSize");
     count_input_obj.remove("pageNumber");
-    let count = request.transaction_ctx().count_objects(model, &count_input, path![]).await.unwrap();
+    let count = request.transaction_ctx().count_objects(&model, &count_input, path![]).await.unwrap();
     let mut meta = teon!({"count": count});
     let page_size = request.body_value()?.get("pageSize");
     if page_size.is_some() {

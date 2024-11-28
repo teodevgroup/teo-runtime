@@ -108,7 +108,7 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
     });
 
     identity_namespace.define_handler_template("signIn", |request: Request| async move {
-        let model = request.transaction_ctx().namespace().model_at_path(&request.handler_match().unwrap().path()).unwrap();
+        let model = request.transaction_ctx().namespace().model_at_path(&request.handler_match().unwrap().path()).unwrap().clone();
         let model_ctx = request.transaction_ctx().model_ctx_for_model_at_path(request.handler_match().unwrap().path()).unwrap();
         let input = request.body_value()?;
         let credentials = input.get("credentials").unwrap().as_dictionary().unwrap();
@@ -197,7 +197,7 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
     });
 
     identity_namespace.define_handler_template("identity", |request: Request| async move {
-        let model = request.transaction_ctx().namespace().model_at_path(&request.handler_match().unwrap().path()).unwrap();
+        let model = request.transaction_ctx().namespace().model_at_path(&request.handler_match().unwrap().path()).unwrap().clone();
         let model_ctx = request.transaction_ctx().model_ctx_for_model_at_path(request.handler_match().unwrap().path()).unwrap();
         let Some(jwt_secret) = model.data().get("identity:jwtSecret") else {
             return Err(Error::internal_server_error_message("missing @identity.jwtSecret"));

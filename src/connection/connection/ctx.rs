@@ -12,23 +12,23 @@ pub struct Ctx {
 
 #[derive(Debug)]
 struct CtxInner {
-    namespace: &'static Namespace,
+    namespace: Namespace,
     connections: Arc<BTreeMap<Vec<String>, Arc<dyn Connection>>>,
 }
 
 impl Ctx {
 
-    pub fn from_namespace(namespace: &'static Namespace) -> Self {
+    pub fn from_namespace(namespace: &Namespace) -> Self {
         Self {
             inner: Arc::new(CtxInner {
-                namespace,
+                namespace: namespace.clone(),
                 connections: Arc::new(retrieve_connections(namespace)),
             })
         }
     }
 
-    pub fn namespace(&self) -> &'static Namespace {
-        self.inner.namespace
+    pub fn namespace(&self) -> &Namespace {
+        &self.inner.namespace
     }
 
     pub fn connection_for_model(&self, model: &Model) -> Option<Arc<dyn Connection>> {

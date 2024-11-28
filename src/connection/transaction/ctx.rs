@@ -68,7 +68,7 @@ impl Ctx {
         }
     }
 
-    pub fn namespace(&self) -> &'static Namespace {
+    pub fn namespace(&self) -> &Namespace {
         self.inner.connection_ctx.namespace()
     }
 
@@ -200,7 +200,7 @@ impl Ctx {
 
     // database methods
 
-    pub async fn find_unique<T: From<model::Object>>(&self, model: &'static Model, finder: &Value, request: Option<Request>, path: KeyPath) -> teo_result::Result<Option<T>> {
+    pub async fn find_unique<T: From<model::Object>>(&self, model: &Model, finder: &Value, request: Option<Request>, path: KeyPath) -> teo_result::Result<Option<T>> {
         match self.find_unique_internal(model, finder, false, CODE_NAME | CODE_AMOUNT | CODE_POSITION, request, path).await {
             Ok(result) => match result {
                 Some(o) => Ok(Some(o.into())),
@@ -210,7 +210,7 @@ impl Ctx {
         }
     }
 
-    pub async fn find_first<T: From<model::Object>>(&self, model: &'static Model, finder: &Value, request: Option<Request>, path: KeyPath) -> teo_result::Result<Option<T>> {
+    pub async fn find_first<T: From<model::Object>>(&self, model: &Model, finder: &Value, request: Option<Request>, path: KeyPath) -> teo_result::Result<Option<T>> {
         match self.find_first_internal(model, finder, false, CODE_NAME | CODE_AMOUNT | CODE_POSITION, request, path).await {
             Ok(result) => match result {
                 Some(o) => Ok(Some(o.into())),
@@ -220,19 +220,19 @@ impl Ctx {
         }
     }
 
-    pub async fn find_many<T: From<model::Object>>(&self, model: &'static Model, finder: &Value, request: Option<Request>, path: KeyPath) -> teo_result::Result<Vec<T>> {
+    pub async fn find_many<T: From<model::Object>>(&self, model: &Model, finder: &Value, request: Option<Request>, path: KeyPath) -> teo_result::Result<Vec<T>> {
         match self.find_many_internal(model, finder, false, CODE_NAME | CODE_AMOUNT | CODE_POSITION, request, path).await {
             Ok(results) => Ok(results.iter().map(|item| item.clone().into()).collect()),
             Err(err) => Err(err),
         }
     }
 
-    pub async fn find_unique_internal(&self, model: &'static Model, finder: &Value, ignore_select_and_include: bool, action: Action, request: Option<Request>, path: KeyPath) -> teo_result::Result<Option<model::Object>> {
+    pub async fn find_unique_internal(&self, model: &Model, finder: &Value, ignore_select_and_include: bool, action: Action, request: Option<Request>, path: KeyPath) -> teo_result::Result<Option<model::Object>> {
         let transaction = self.transaction_for_model(model).await;
         transaction.find_unique(model, finder, ignore_select_and_include, action, self.clone(), request, path).await
     }
 
-    pub async fn find_first_internal(&self, model: &'static Model, finder: &Value, ignore_select_and_include: bool, action: Action, request: Option<Request>, path: KeyPath) -> teo_result::Result<Option<model::Object>> {
+    pub async fn find_first_internal(&self, model: &Model, finder: &Value, ignore_select_and_include: bool, action: Action, request: Option<Request>, path: KeyPath) -> teo_result::Result<Option<model::Object>> {
         let transaction = self.transaction_for_model(model).await;
         let mut finder = finder.as_dictionary().clone().unwrap().clone();
         finder.insert("take".to_string(), Value::Int64(1));
@@ -245,12 +245,12 @@ impl Ctx {
         }
     }
 
-    pub async fn find_many_internal(&self, model: &'static Model, finder: &Value, ignore_select_and_include: bool, action: Action, request: Option<Request>, path: KeyPath) -> teo_result::Result<Vec<model::Object>> {
+    pub async fn find_many_internal(&self, model: &Model, finder: &Value, ignore_select_and_include: bool, action: Action, request: Option<Request>, path: KeyPath) -> teo_result::Result<Vec<model::Object>> {
         let transaction = self.transaction_for_model(model).await;
         transaction.find_many(model, finder, ignore_select_and_include, action, self.clone(), request, path).await
     }
 
-    pub async fn batch<F, Fut>(&self, model: &'static Model, finder: &Value, action: Action, request: Option<Request>, path: KeyPath, f: F) -> Result<()> where
+    pub async fn batch<F, Fut>(&self, model: &Model, finder: &Value, action: Action, request: Option<Request>, path: KeyPath, f: F) -> Result<()> where
         F: Fn(model::Object) -> Fut,
         Fut: Future<Output = Result<()>> {
         let batch_size: usize = 200;
@@ -270,33 +270,33 @@ impl Ctx {
         }
     }
 
-    pub async fn count(&self, model: &'static Model, finder: &Value, path: KeyPath) -> teo_result::Result<Value> {
+    pub async fn count(&self, model: &Model, finder: &Value, path: KeyPath) -> teo_result::Result<Value> {
         let transaction = self.transaction_for_model(model).await;
         transaction.count(model, finder, self.clone(), path).await
     }
 
-    pub async fn count_objects(&self, model: &'static Model, finder: &Value, path: KeyPath) -> teo_result::Result<usize> {
+    pub async fn count_objects(&self, model: &Model, finder: &Value, path: KeyPath) -> teo_result::Result<usize> {
         let transaction = self.transaction_for_model(model).await;
         transaction.count_objects(model, finder, self.clone(), path).await
     }
 
-    pub async fn count_fields<T, E>(&self, model: &'static Model, finder: &Value, path: KeyPath) -> teo_result::Result<T> where T: TryFrom<Value, Error=E>, teo_result::Error: From<E> {
+    pub async fn count_fields<T, E>(&self, model: &Model, finder: &Value, path: KeyPath) -> teo_result::Result<T> where T: TryFrom<Value, Error=E>, teo_result::Error: From<E> {
         let transaction = self.transaction_for_model(model).await;
         let value = transaction.count_fields(model, finder, self.clone(), path).await?;
         Ok(value.try_into()?)
     }
 
-    pub async fn aggregate(&self, model: &'static Model, finder: &Value, path: KeyPath) -> teo_result::Result<Value> {
+    pub async fn aggregate(&self, model: &Model, finder: &Value, path: KeyPath) -> teo_result::Result<Value> {
         let transaction = self.transaction_for_model(model).await;
         transaction.aggregate(model, finder, self.clone(), path).await
     }
 
-    pub async fn group_by(&self, model: &'static Model, finder: &Value, path: KeyPath) -> teo_result::Result<Vec<Value>> {
+    pub async fn group_by(&self, model: &Model, finder: &Value, path: KeyPath) -> teo_result::Result<Vec<Value>> {
         let transaction = self.transaction_for_model(model).await;
         transaction.group_by(model, finder, self.clone(), path).await
     }
 
-    pub async fn sql<T, E>(&self, model: &'static Model, sql: &str) -> Result<Vec<T>> where T: TryFrom<Value, Error=E>, Error: From<E> {
+    pub async fn sql<T, E>(&self, model: &Model, sql: &str) -> Result<Vec<T>> where T: TryFrom<Value, Error=E>, Error: From<E> {
         let transaction = self.transaction_for_model(model).await;
         let value = transaction.sql(model, sql, self.clone()).await?;
         let mut result: Vec<T> = vec![];
@@ -311,17 +311,17 @@ impl Ctx {
 
     // MARK: - Create an object
 
-    pub fn new_object(&self, model: &'static Model, action: Action, request: Option<Request>) -> Result<model::Object> {
+    pub fn new_object(&self, model: &Model, action: Action, request: Option<Request>) -> Result<model::Object> {
         Ok(model::Object::new(request, self.clone(), model, action))
     }
 
-    pub async fn new_object_with_teon_and_path<'a>(&self, model: &'static Model, initial: &Value, path: &KeyPath, action: Action, request: Option<Request>) -> Result<model::Object> {
+    pub async fn new_object_with_teon_and_path<'a>(&self, model: &Model, initial: &Value, path: &KeyPath, action: Action, request: Option<Request>) -> Result<model::Object> {
         let object = self.new_object(model, action, request)?;
         object.set_teon_with_path(initial, path).await?;
         Ok(object)
     }
 
-    pub async fn create_object(&self, model: &'static Model, initial: impl Borrow<Value>, request: Option<Request>) -> Result<model::Object> {
+    pub async fn create_object(&self, model: &Model, initial: impl Borrow<Value>, request: Option<Request>) -> Result<model::Object> {
         let object = self.new_object(model, CODE_NAME | CREATE | SINGLE | CODE_POSITION, request)?;
         object.set_teon(initial.borrow()).await?;
         Ok(object)

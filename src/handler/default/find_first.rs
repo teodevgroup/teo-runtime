@@ -4,11 +4,11 @@ use crate::request::Request;
 use crate::response::Response;
 use crate::action::action::*;
 
-pub async fn find_first(request: &Request) -> teo_result::Result<Response> {
-    let model = request.transaction_ctx().namespace().model_at_path(&request.handler_match().unwrap().path()).unwrap();
+pub async fn find_first(request: Request) -> teo_result::Result<Response> {
+    let model = request.transaction_ctx().namespace().model_at_path(&request.handler_match()?.path()).unwrap().clone();
     let action = FIND | SINGLE | ENTRY;
     let result = request.transaction_ctx().find_first_internal(
-        model,
+        &model,
         request.body_value()?,
         false,
         action,

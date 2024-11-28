@@ -42,12 +42,12 @@ pub struct Object {
 
 impl Object {
 
-    pub fn new(request: Option<Request>, transaction_ctx: transaction::Ctx, model: &'static Model, action: Action) -> Object {
+    pub fn new(request: Option<Request>, transaction_ctx: transaction::Ctx, model: &Model, action: Action) -> Object {
         Object {
             inner: Arc::new(ObjectInner {
                 request,
                 transaction_ctx,
-                model,
+                model: model.clone(),
                 action,
                 is_initialized: AtomicBool::new(false),
                 is_new: AtomicBool::new(true),
@@ -81,11 +81,11 @@ impl Object {
         self.inner.request.clone()
     }
 
-    pub fn model(&self) -> &'static Model {
-        self.inner.model
+    pub fn model(&self) -> &Model {
+        &self.inner.model
     }
 
-    pub fn namespace(&self) -> &'static Namespace {
+    pub fn namespace(&self) -> &Namespace {
         self.inner.transaction_ctx.namespace()
     }
 
@@ -1025,7 +1025,7 @@ impl Object {
         Value::Dictionary(identifier)
     }
 
-    async fn perform_relation_manipulations<F: Fn(&'static Relation) -> bool>(&self, f: F, path: &KeyPath, is_new: bool, is_modified: bool) -> Result<()> {
+    async fn perform_relation_manipulations<F: Fn(&Relation) -> bool>(&self, f: F, path: &KeyPath, is_new: bool, is_modified: bool) -> Result<()> {
         for (_relation_name, relation) in self.model().relations() {
             if f(relation) {
                 let many = relation.is_vec();
@@ -1082,7 +1082,7 @@ impl Object {
         Ok(())
     }
 
-    async fn create_join_object<'a>(&'a self, object: &'a Object, relation: &'static Relation, opposite_relation: &'static Relation, path: &'a KeyPath) -> Result<()> {
+    async fn create_join_object<'a>(&'a self, object: &'a Object, relation: &'a Relation, opposite_relation: &'a Relation, path: &'a KeyPath) -> Result<()> {
         let join_model = self.namespace().model_at_path(&relation.through_path().unwrap()).unwrap();
         let action = JOIN_CREATE | CREATE | SINGLE;
         let join_object = self.transaction_ctx().new_object(join_model, action, self.request())?;
@@ -1099,7 +1099,7 @@ impl Object {
         }
     }
 
-    async fn delete_join_object<'a>(&'a self, object: &'a Object, relation: &'static Relation, opposite_relation: &'static Relation, path: &'a KeyPath) -> Result<()> {
+    async fn delete_join_object<'a>(&'a self, object: &'a Object, relation: &'a Relation, opposite_relation: &'a Relation, path: &'a KeyPath) -> Result<()> {
         let join_model = self.namespace().model_at_path(&relation.through_path().unwrap()).unwrap();
         let action = JOIN_DELETE | DELETE | SINGLE;
         let local = relation.local().unwrap();
@@ -1124,25 +1124,25 @@ impl Object {
         }
     }
 
-    fn assign_linked_values_to_related_object(&self, object: &Object, opposite_relation: &'static Relation) {
+    fn assign_linked_values_to_related_object(&self, object: &Object, opposite_relation: &Relation) {
         for (field, reference) in opposite_relation.iter() {
             object.set_value_to_value_map(field, self.get_value_map_value(reference));
         }
     }
 
-    fn remove_linked_values_from_related_relation(&self, relation: &'static Relation) {
+    fn remove_linked_values_from_related_relation(&self, relation: &Relation) {
         for (field, _) in relation.iter() {
             self.set_value_to_value_map(field, Value::Null)
         }
     }
 
-    fn remove_linked_values_from_related_relation_on_related_object(&self, relation: &'static Relation, object: &Object) {
+    fn remove_linked_values_from_related_relation_on_related_object(&self, relation: &Relation, object: &Object) {
         for (_, reference) in relation.iter() {
             object.set_value_to_value_map(reference, Value::Null)
         }
     }
 
-    async fn link_and_save_relation_object(&self, relation: &'static Relation, object: &Object, path: &KeyPath) -> Result<()> {
+    async fn link_and_save_relation_object(&self, relation: &Relation, object: &Object, path: &KeyPath) -> Result<()> {
         let mut linked = false;
         let (_, opposite_relation) = self.namespace().opposite_relation(relation);
         if let Some(opposite_relation) = opposite_relation {
@@ -1162,7 +1162,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_create_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
+    async fn nested_create_relation_object(&self, relation: &Relation, value: &Value, path: &KeyPath) -> Result<()> {
         let action = NESTED | CREATE | SINGLE;
         let object = self.transaction_ctx().new_object(self.namespace().model_at_path(&relation.model_path()).unwrap(), action, self.request())?;
         object.set_teon_with_path(value.get("create").unwrap(), path).await?;
@@ -1172,7 +1172,7 @@ impl Object {
         self.link_and_save_relation_object(relation, &object, path).await
     }
 
-    async fn nested_set_many_relation_object_object(&self, relation: &'static Relation, objects: &Vec<Object>, path: &KeyPath) -> Result<()> {
+    async fn nested_set_many_relation_object_object(&self, relation: &Relation, objects: &Vec<Object>, path: &KeyPath) -> Result<()> {
         // disconnect previous
         let records = self.fetch_relation_objects(relation.name(), None).await?;
         for record in records.iter() {
@@ -1185,7 +1185,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_set_many_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
+    async fn nested_set_many_relation_object(&self, relation: &Relation, value: &Value, path: &KeyPath) -> Result<()> {
         // disconnect previous
         let records = self.fetch_relation_objects(relation.name(), None).await?;
         for record in records.iter() {
@@ -1199,7 +1199,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_set_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
+    async fn nested_set_relation_object(&self, relation: &Relation, value: &Value, path: &KeyPath) -> Result<()> {
         if !(relation.has_foreign_key() && relation.is_required()) {
             // disconnect old
             let disconnect_value = self.intrinsic_where_unique_for_relation(relation);
@@ -1217,7 +1217,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_connect_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
+    async fn nested_connect_relation_object(&self, relation: &Relation, value: &Value, path: &KeyPath) -> Result<()> {
         let action = NESTED | CONNECT | SINGLE;
         let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": value }), true, action, self.request(), path.clone()).await {
             Ok(object) => object,
@@ -1226,7 +1226,7 @@ impl Object {
         self.link_and_save_relation_object(relation, &object, path).await
     }
 
-    async fn nested_connect_or_create_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
+    async fn nested_connect_or_create_relation_object(&self, relation: &Relation, value: &Value, path: &KeyPath) -> Result<()> {
         let r#where = value.get("where").unwrap();
         let create = value.get("create").unwrap();
         let action = CONNECT_OR_CREATE | CONNECT | NESTED | SINGLE;
@@ -1239,25 +1239,25 @@ impl Object {
         self.link_and_save_relation_object(relation, &object, path).await
     }
 
-    fn intrinsic_where_unique_for_relation(&self, relation: &'static Relation) -> Value {
+    fn intrinsic_where_unique_for_relation(&self, relation: &Relation) -> Value {
         teon!({
             "where": Value::Dictionary(relation.iter().map(|(l, f)| (f.to_owned(), self.get_value(l).unwrap())).collect())
         })
     }
 
-    fn intrinsic_where_unique_for_opposite_relation(&self, relation: &'static Relation) -> Value {
+    fn intrinsic_where_unique_for_opposite_relation(&self, relation: &Relation) -> Value {
         teon!({
             "where": Value::Dictionary(relation.iter().map(|(l, f)| (l.to_owned(), self.get_value(f).unwrap())).collect())
         })
     }
 
-    fn intrinsic_where_unique_for_opposite_relation_with_prev_value(&self, relation: &'static Relation) -> Value {
+    fn intrinsic_where_unique_for_opposite_relation_with_prev_value(&self, relation: &Relation) -> Value {
         teon!({
             "where": Value::Dictionary(relation.iter().map(|(l, f)| (l.to_owned(), self.get_previous_value_or_current_value(f).unwrap())).collect())
         })
     }
 
-    async fn nested_disconnect_relation_object_object(&self, relation: &'static Relation, object: &Object, path: &KeyPath) -> Result<()> {
+    async fn nested_disconnect_relation_object_object(&self, relation: &Relation, object: &Object, path: &KeyPath) -> Result<()> {
         if !relation.is_vec() && relation.is_required() {
             return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "Cannot disconnect required relation."));
         }
@@ -1272,7 +1272,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_disconnect_relation_object_no_check(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
+    async fn nested_disconnect_relation_object_no_check(&self, relation: &Relation, value: &Value, path: &KeyPath) -> Result<()> {
         if relation.has_foreign_key() {
             self.remove_linked_values_from_related_relation(relation);
         } else {
@@ -1288,7 +1288,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_disconnect_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
+    async fn nested_disconnect_relation_object(&self, relation: &Relation, value: &Value, path: &KeyPath) -> Result<()> {
         if !relation.is_vec() && relation.is_required() {
             return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "Cannot disconnect required relation."));
         }
@@ -1296,7 +1296,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_upsert_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
+    async fn nested_upsert_relation_object(&self, relation: &Relation, value: &Value, path: &KeyPath) -> Result<()> {
         let mut r#where = self.intrinsic_where_unique_for_relation(relation);
         r#where.as_dictionary_mut().unwrap().extend(value.get("where").unwrap().as_dictionary().cloned().unwrap());
         let create = value.get("create").unwrap();
@@ -1317,7 +1317,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_many_disconnect_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
+    async fn nested_many_disconnect_relation_object(&self, relation: &Relation, value: &Value, path: &KeyPath) -> Result<()> {
         if relation.has_join_table() {
             let action = JOIN_DELETE | DELETE | SINGLE;
             let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": value }), true, action, self.request(), path.clone()).await {
@@ -1339,7 +1339,7 @@ impl Object {
         Ok(())
     }
 
-    async fn find_relation_objects_by_value(&self, relation: &'static Relation, value: &Value, path: &KeyPath, action: Action) -> Result<Vec<Object>> {
+    async fn find_relation_objects_by_value(&self, relation: &Relation, value: &Value, path: &KeyPath, action: Action) -> Result<Vec<Object>> {
         if relation.has_join_table() {
             let mut finder = IndexMap::new();
             let join_relation = self.namespace().through_relation(relation).1;
@@ -1373,7 +1373,7 @@ impl Object {
         }
     }
 
-    async fn find_relation_object_by_value(&self, relation: &'static Relation, value: &Value, path: &KeyPath, action: Action) -> Result<Object> {
+    async fn find_relation_object_by_value(&self, relation: &Relation, value: &Value, path: &KeyPath, action: Action) -> Result<Object> {
         if relation.has_join_table() {
             let mut finder = IndexMap::new();
             let join_relation = self.namespace().through_relation(relation).1;
@@ -1406,14 +1406,14 @@ impl Object {
         }
     }
 
-    async fn nested_many_update_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
+    async fn nested_many_update_relation_object(&self, relation: &Relation, value: &Value, path: &KeyPath) -> Result<()> {
         let object = self.find_relation_object_by_value(relation, value.get("where").unwrap(), path, NESTED | UPDATE | SINGLE).await?;
         object.set_teon_with_path(value.get("update").unwrap(), &(path + "update")).await?;
         object.save_with_session_and_path(path).await?;
         Ok(())
     }
 
-    async fn nested_many_update_many_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
+    async fn nested_many_update_many_relation_object(&self, relation: &Relation, value: &Value, path: &KeyPath) -> Result<()> {
         let objects = self.find_relation_objects_by_value(relation, value.get("where").unwrap(), path, NESTED | UPDATE | MANY).await?;
         let update = value.get("update").unwrap();
         for object in objects {
@@ -1423,7 +1423,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_update_relation_object<'a>(&'a self, relation: &'static Relation, value: &'a Value, path: &'a KeyPath) -> Result<()> {
+    async fn nested_update_relation_object<'a>(&'a self, relation: &Relation, value: &'a Value, path: &'a KeyPath) -> Result<()> {
         let r#where = value.get("where").unwrap();
         let action = NESTED | UPDATE | SINGLE;
         let object = match self.transaction_ctx().find_unique_internal(self.namespace().model_at_path(&relation.model_path()).unwrap(), &teon!({ "where": r#where }), true, action, self.request(), path.clone()).await {
@@ -1435,7 +1435,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_delete_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
+    async fn nested_delete_relation_object(&self, relation: &Relation, value: &Value, path: &KeyPath) -> Result<()> {
         if !relation.is_vec() && relation.is_required() {
             return Err(error_ext::unexpected_input_value_with_reason(path.clone(), "Cannot delete required relation."));
         }
@@ -1456,7 +1456,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_many_delete_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
+    async fn nested_many_delete_relation_object(&self, relation: &Relation, value: &Value, path: &KeyPath) -> Result<()> {
         let object = self.find_relation_object_by_value(relation, value, path, NESTED | DELETE | SINGLE).await?;
         if relation.has_join_table() {
             let opposite_relation = self.namespace().opposite_relation(relation).1.unwrap();
@@ -1466,7 +1466,7 @@ impl Object {
         Ok(())
     }
 
-    async fn nested_many_delete_many_relation_object(&self, relation: &'static Relation, value: &Value, path: &KeyPath) -> Result<()> {
+    async fn nested_many_delete_many_relation_object(&self, relation: &Relation, value: &Value, path: &KeyPath) -> Result<()> {
         let objects = self.find_relation_objects_by_value(relation, value, path, NESTED | DELETE | MANY).await?;
         for object in objects {
             object.delete_from_database(path).await?;
@@ -1478,7 +1478,7 @@ impl Object {
         Ok(())
     }
 
-    async fn disconnect_object_which_connects_to<'a>(&'a self, relation: &'static Relation, value: &'a Value, path: &KeyPath) -> Result<()> {
+    async fn disconnect_object_which_connects_to<'a>(&'a self, relation: &Relation, value: &'a Value, path: &KeyPath) -> Result<()> {
         if let Ok(that) = self.transaction_ctx().find_unique::<Object>(self.model(), &teon!({
             "where": {
                 relation.name(): {
@@ -1498,7 +1498,7 @@ impl Object {
         Ok(())
     }
 
-    async fn perform_relation_manipulation_one_inner(&self, relation: &'static Relation, action: Action, value: &Value, path: &KeyPath, is_new: bool, is_modified: bool) -> Result<()> {
+    async fn perform_relation_manipulation_one_inner(&self, relation: &Relation, action: Action, value: &Value, path: &KeyPath, is_new: bool, is_modified: bool) -> Result<()> {
         if !relation.is_vec() && !relation.has_foreign_key() && !is_new {
             match action {
                 NESTED_CREATE_ACTION | NESTED_CONNECT_ACTION | NESTED_CONNECT_OR_CREATE_ACTION => {
@@ -1538,7 +1538,7 @@ impl Object {
         }
     }
 
-    fn normalize_relation_one_value<'a>(&'a self, relation: &'static Relation, action: Action, value: &'a Value) -> Cow<Value> {
+    fn normalize_relation_one_value<'a>(&'a self, relation: &Relation, action: Action, value: &'a Value) -> Cow<Value> {
         match action {
             NESTED_CREATE_ACTION => Owned(Value::Dictionary(indexmap! {"create".to_owned() => value.clone()})),
             NESTED_UPDATE_ACTION => Owned({
@@ -1557,7 +1557,7 @@ impl Object {
         }
     }
 
-    async fn perform_relation_manipulation_one(&self, relation: &'static Relation, value: &Value, path: &KeyPath, is_new: bool, is_modified: bool) -> Result<()> {
+    async fn perform_relation_manipulation_one(&self, relation: &Relation, value: &Value, path: &KeyPath, is_new: bool, is_modified: bool) -> Result<()> {
         for (key, value) in value.as_dictionary().unwrap() {
             let key = key.as_str();
             let path = path + key;
@@ -1579,7 +1579,7 @@ impl Object {
         }
     }
 
-    async fn perform_relation_manipulation_many_inner(&self, relation: &'static Relation, action: Action, value: &Value, path: &KeyPath) -> Result<()> {
+    async fn perform_relation_manipulation_many_inner(&self, relation: &Relation, action: Action, value: &Value, path: &KeyPath) -> Result<()> {
         match action {
             NESTED_CREATE_ACTION => self.nested_create_relation_object(relation, value, &path).await,
             NESTED_CONNECT_ACTION => self.nested_connect_relation_object(relation, value, &path).await,
@@ -1595,7 +1595,7 @@ impl Object {
         }
     }
 
-    async fn perform_relation_manipulation_many(&self, relation: &'static Relation, value: &Value, path: &KeyPath, is_new: bool, is_modified: bool) -> Result<()> {
+    async fn perform_relation_manipulation_many(&self, relation: &Relation, value: &Value, path: &KeyPath, is_new: bool, is_modified: bool) -> Result<()> {
         for (key, value) in value.as_dictionary().unwrap() {
             let key = key.as_str();
             let path = path + key;
@@ -1797,7 +1797,7 @@ impl Object {
 pub struct ObjectInner {
     request: Option<Request>,
     transaction_ctx: transaction::Ctx,
-    model: &'static Model,
+    model: Model,
     action: Action,
     pub is_initialized: AtomicBool,
     pub is_new: AtomicBool,
@@ -1828,7 +1828,7 @@ impl Serialize for Object {
     }
 }
 
-fn check_user_json_keys<'a>(map: &IndexMap<String, Value>, allowed: &HashSet<&str>, model: &'static Model) -> Result<()> {
+fn check_user_json_keys<'a>(map: &IndexMap<String, Value>, allowed: &HashSet<&str>, model: &Model) -> Result<()> {
     if let Some(unallowed) = map.keys().find(|k| !allowed.contains(k.as_str())) {
         return Err(Error::new(format!("key '{}' is not allowed for {}", unallowed, model.name())));
     }

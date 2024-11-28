@@ -4,11 +4,11 @@ use crate::response::Response;
 use crate::action::action::*;
 use crate::request::Request;
 
-pub async fn find_unique(request: &Request) -> teo_result::Result<Response> {
-    let model = request.transaction_ctx().namespace().model_at_path(&request.handler_match().unwrap().path()).unwrap();
+pub async fn find_unique(request: Request) -> teo_result::Result<Response> {
+    let model = request.transaction_ctx().namespace().model_at_path(&request.handler_match()?.path()).unwrap().clone();
     let action = FIND | SINGLE | ENTRY;
     let result = request.transaction_ctx().find_unique_internal(
-        model,
+        &model,
         request.body_value()?,
         false,
         action,
