@@ -1,5 +1,4 @@
 use std::collections::BTreeMap;
-use std::ops::Deref;
 use std::sync::{Arc, Mutex};
 use educe::Educe;
 use maplit::btreemap;
@@ -358,17 +357,17 @@ impl Builder {
                         ValidatorResult::Validity(validity) => if validity.is_valid() {
                             Ok(ctx_value)
                         } else if let Some(reason) = validity.invalid_reason() {
-                            Err(Error::new(reason))
+                            Err(Error::new_with_code(reason, 400))
                         } else {
-                            Err(Error::new("value is invalid"))
+                            Err(Error::new_with_code("value is invalid", 400))
                         },
                         ValidatorResult::Result(result) => match result {
                             Ok(validity) => if validity.is_valid() {
                                 Ok(ctx_value)
                             } else if let Some(reason) = validity.invalid_reason() {
-                                Err(Error::new(reason))
+                                Err(Error::new_with_code(reason, 400))
                             } else {
-                                Err(Error::new("value is invalid"))
+                                Err(Error::new_with_code("value is invalid", 400))
                             },
                             Err(err) => Err(err),
                         }
@@ -419,15 +418,14 @@ impl Builder {
                     }
                     let key = ctx.path()[ctx.path().len() - 1].as_key().unwrap();
                     let previous_value = ctx.object().get_previous_value(key)?;
-                    let current_value = ctx.value().clone().clone();
-                    if previous_value == current_value {
+                    let current_value = ctx.value();
+                    if &previous_value == current_value {
                         return Ok(ctx.value().clone());
                     }
-                    let ctx_value = ctx.value().clone();
-                    let validate_result: ValidatorResult = compare.call(previous_value, current_value, ctx).await.into();
+                    let validate_result: ValidatorResult = compare.call(previous_value, current_value.clone(), ctx.clone()).await.into();
                     match validate_result {
                         ValidatorResult::Validity(validity) => if validity.is_valid() {
-                            Ok(ctx_value)
+                            Ok(current_value.clone())
                         } else if let Some(reason) = validity.invalid_reason() {
                             Err(Error::new(reason))
                         } else {
@@ -435,7 +433,7 @@ impl Builder {
                         },
                         ValidatorResult::Result(result) => match result {
                             Ok(validity) => if validity.is_valid() {
-                                Ok(ctx_value)
+                                Ok(current_value.clone())
                             } else if let Some(reason) = validity.invalid_reason() {
                                 Err(Error::new(reason))
                             } else {
