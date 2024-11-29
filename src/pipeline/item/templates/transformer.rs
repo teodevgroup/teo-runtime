@@ -29,6 +29,16 @@ pub trait Transformer<A, O: Into<Value>, R: Into<TransformerResult<O>>>: Send + 
     fn call(&self, ctx: Ctx) -> BoxFuture<'static, R>;
 }
 
+impl<O, F, R, Fut> Transformer<(), O, R> for F where
+    F: Fn() -> Fut + Sync + Send + Clone + 'static,
+    O: Into<Value> + Sync + Send,
+    R: Into<TransformerResult<O>> + Send + Sync,
+    Fut: Future<Output = R> + Send + 'static {
+    fn call(&self, _: Ctx) -> BoxFuture<'static, R> {
+        Box::pin(self())
+    }
+}
+
 impl<A0, O, F, R, Fut> Transformer<(A0,), O, R> for F where
     A0: TryFrom<Value, Error=Error> + Send + Sync,
     F: Fn(A0) -> Fut + Sync + Send + Clone + 'static,

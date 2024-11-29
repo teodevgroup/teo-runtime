@@ -1,6 +1,8 @@
 use std::sync::Arc;
 use crate::pipeline::item::Call;
 
+#[repr(transparent)]
+#[derive(Clone)]
 pub struct ItemImpl {
     pub item_call: Arc<dyn Call>,
 }
