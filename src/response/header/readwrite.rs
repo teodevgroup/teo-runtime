@@ -6,7 +6,7 @@ use serde::Serializer;
 
 #[derive(Clone)]
 pub struct HeaderMap {
-    inner: Arc<HeaderMapInner>
+    inner: Arc<Inner>
 }
 
 impl Debug for HeaderMap {
@@ -20,7 +20,7 @@ impl HeaderMap {
 
     pub fn new() -> Self {
         Self {
-            inner: Arc::new(HeaderMapInner::new())
+            inner: Arc::new(Inner::new())
         }
     }
 
@@ -45,13 +45,13 @@ impl HeaderMap {
     }
 }
 
-pub struct HeaderMapInner {
+struct Inner {
     pub fields: Mutex<BTreeMap<String, String>>,
 }
 
-impl HeaderMapInner {
+impl Inner {
 
-    pub fn new() -> HeaderMapInner {
+    pub fn new() -> Inner {
         Self {
             fields: Mutex::new(btreemap! {})
         }

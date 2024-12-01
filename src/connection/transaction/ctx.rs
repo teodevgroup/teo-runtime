@@ -18,11 +18,11 @@ use crate::request::Request;
 
 #[derive(Debug, Clone)]
 pub struct Ctx {
-    inner: Arc<CtxInner>
+    inner: Arc<Inner>
 }
 
 #[derive(Debug)]
-struct CtxInner {
+struct Inner {
     connection_ctx: connection::Ctx,
     is_transaction: AtomicBool,
     transactions: tokio::sync::Mutex<BTreeMap<Vec<String>, Arc<dyn Transaction>>>
@@ -32,7 +32,7 @@ impl Ctx {
 
     pub fn new(connection_ctx: connection::Ctx) -> Self {
         Self {
-            inner: Arc::new(CtxInner {
+            inner: Arc::new(Inner {
                 connection_ctx,
                 is_transaction: AtomicBool::new(false),
                 transactions: tokio::sync::Mutex::new(btreemap!{})
@@ -42,7 +42,7 @@ impl Ctx {
 
     pub fn transaction_copy(&self) -> Self {
         Self {
-            inner: Arc::new(CtxInner {
+            inner: Arc::new(Inner {
                 connection_ctx: self.inner.connection_ctx.clone(),
                 is_transaction: AtomicBool::new(true),
                 transactions: tokio::sync::Mutex::new(btreemap!{})
@@ -52,7 +52,7 @@ impl Ctx {
 
     pub fn no_transaction_copy(&self) -> Self {
         Self {
-            inner: Arc::new(CtxInner {
+            inner: Arc::new(Inner {
                 connection_ctx: self.inner.connection_ctx.clone(),
                 is_transaction: AtomicBool::new(false),
                 transactions: tokio::sync::Mutex::new(btreemap!{})

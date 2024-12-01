@@ -20,12 +20,12 @@ impl<F> Call for F where
 #[derive(Educe, Clone)]
 #[educe(Debug)]
 pub struct Decorator {
-    inner: Arc<DecoratorInner>
+    inner: Arc<Inner>
 }
 
 #[derive(Educe)]
 #[educe(Debug)]
-struct DecoratorInner {
+struct Inner {
     path: Vec<String>,
     #[educe(Debug(ignore))]
     pub(crate) call: Arc<dyn Call>,
@@ -35,7 +35,7 @@ impl Decorator {
 
     pub fn new<T>(path: Vec<String>, call: T) -> Self where T: Call + 'static {
         Self {
-            inner: Arc::new(DecoratorInner {
+            inner: Arc::new(Inner {
                 path,
                 call: Arc::new(call),
             }),

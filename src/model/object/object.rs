@@ -37,14 +37,14 @@ use crate::error_ext;
 
 #[derive(Clone)]
 pub struct Object {
-    pub inner: Arc<ObjectInner>
+    pub inner: Arc<Inner>
 }
 
 impl Object {
 
     pub fn new(request: Option<Request>, transaction_ctx: transaction::Ctx, model: &Model, action: Action) -> Object {
         Object {
-            inner: Arc::new(ObjectInner {
+            inner: Arc::new(Inner {
                 request,
                 transaction_ctx,
                 model: model.clone(),
@@ -1794,7 +1794,7 @@ impl Object {
 }
 
 #[derive(Debug)]
-pub struct ObjectInner {
+pub struct Inner {
     request: Option<Request>,
     transaction_ctx: transaction::Ctx,
     model: Model,
@@ -1894,7 +1894,7 @@ impl ErrorIfNotFound for Result<Option<Object>> {
     }
 }
 
-unsafe impl Send for ObjectInner {}
-unsafe impl Sync for ObjectInner {}
+unsafe impl Send for Inner {}
+unsafe impl Sync for Inner {}
 
 

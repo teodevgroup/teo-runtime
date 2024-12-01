@@ -14,11 +14,11 @@ use crate::value::Value;
 
 #[derive(Clone)]
 pub struct Ctx {
-    inner: Arc<CtxInner>,
+    inner: Arc<Inner>,
 }
 
 #[derive(Debug)]
-struct CtxInner {
+struct Inner {
     value: Value,
     object: model::Object,
     path: KeyPath,
@@ -31,7 +31,7 @@ impl Ctx {
 
     pub fn new(value: Value, object: model::Object, path: KeyPath, action: Action, transaction_ctx: transaction::Ctx, request: Option<request::Request>) -> Self {
         Self {
-            inner: Arc::new(CtxInner { value, object, path, action, transaction_ctx, request })
+            inner: Arc::new(Inner { value, object, path, action, transaction_ctx, request })
         }
     }
 
@@ -105,7 +105,7 @@ impl Ctx {
 
     pub fn alter_value(&self, value: Value) -> Self {
         Self {
-            inner: Arc::new(CtxInner {
+            inner: Arc::new(Inner {
                 value,
                 object: self.inner.object.clone(),
                 path: self.inner.path.clone(),

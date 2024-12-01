@@ -11,19 +11,19 @@ use crate::response::header::readwrite::HeaderMap;
 
 #[derive(Clone)]
 pub struct Response {
-    inner: Arc<Mutex<ResponseInner>>
+    inner: Arc<Mutex<Inner>>
 }
 
 impl Response {
 
     pub fn empty() -> Response {
         Self {
-            inner: Arc::new(Mutex::new(ResponseInner::new())),
+            inner: Arc::new(Mutex::new(Inner::new())),
         }
     }
 
     pub fn string(content: impl Into<String>, content_type: &str) -> Response {
-        let mut inner = ResponseInner::new();
+        let mut inner = Inner::new();
         inner.body = Body::string(content.into());
         inner.headers.set(CONTENT_TYPE.as_str(), content_type);
         Self {
@@ -32,7 +32,7 @@ impl Response {
     }
 
     pub fn teon(value: Value) -> Response {
-        let mut inner = ResponseInner::new();
+        let mut inner = Inner::new();
         inner.body = Body::teon(value);
         Self {
             inner: Arc::new(Mutex::new(inner))
@@ -104,14 +104,14 @@ impl Response {
     }
 }
 
-pub struct ResponseInner {
+pub struct Inner {
     code: u16,
     headers: HeaderMap,
     body: Body,
     cookies: Vec<Cookie<'static>>,
 }
 
-impl ResponseInner {
+impl Inner {
 
     fn new() -> Self {
         Self {

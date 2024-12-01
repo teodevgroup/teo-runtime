@@ -7,11 +7,11 @@ use crate::namespace::Namespace;
 
 #[derive(Debug, Clone)]
 pub struct Ctx {
-    inner: Arc<CtxInner>
+    inner: Arc<Inner>
 }
 
 #[derive(Debug)]
-struct CtxInner {
+struct Inner {
     namespace: Namespace,
     connections: Arc<BTreeMap<Vec<String>, Arc<dyn Connection>>>,
 }
@@ -20,7 +20,7 @@ impl Ctx {
 
     pub fn from_namespace(namespace: &Namespace) -> Self {
         Self {
-            inner: Arc::new(CtxInner {
+            inner: Arc::new(Inner {
                 namespace: namespace.clone(),
                 connections: Arc::new(retrieve_connections(namespace)),
             })

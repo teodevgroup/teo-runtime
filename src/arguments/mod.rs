@@ -7,9 +7,10 @@ use teo_result::Error;
 use teo_result::Result;
 use crate::value::Value;
 
+#[repr(transparent)]
 #[derive(Clone, PartialEq)]
 pub struct Arguments {
-    inner: Arc<ArgumentsInner>
+    inner: Arc<Inner>
 }
 
 impl Serialize for Arguments {
@@ -50,7 +51,7 @@ impl Arguments {
 
     pub(crate) fn new(map: BTreeMap<String, Value>) -> Self {
         Self {
-            inner: Arc::new(ArgumentsInner { map })
+            inner: Arc::new(Inner { map })
         }
     }
 
@@ -106,14 +107,15 @@ impl Default for Arguments {
 
     fn default() -> Self {
         Arguments {
-            inner: Arc::new(ArgumentsInner {
+            inner: Arc::new(Inner {
                 map: btreemap!{}
             })
         }
     }
 }
 
+#[repr(transparent)]
 #[derive(PartialEq)]
-struct ArgumentsInner {
+struct Inner {
     map: BTreeMap<String, Value>
 }

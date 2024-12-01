@@ -6,14 +6,14 @@ use crate::value::Value;
 
 #[derive(Debug, Clone)]
 pub struct Object {
-    inner: Arc<ObjectInner>
+    inner: Arc<Inner>
 }
 
 impl Object {
 
     pub fn new(struct_path: Vec<String>, fields: BTreeMap<String, Value>) -> Self {
         Self {
-            inner: Arc::new(ObjectInner {
+            inner: Arc::new(Inner {
                 struct_path,
                 fields: Mutex::new(fields),
             })
@@ -33,7 +33,7 @@ impl Serialize for Object {
 }
 
 #[derive(Debug)]
-struct ObjectInner {
+struct Inner {
     struct_path: Vec<String>,
     fields: Mutex<BTreeMap<String, Value>>
 }
