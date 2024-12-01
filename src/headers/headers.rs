@@ -1,6 +1,7 @@
 use std::fmt::{Debug, Display, Formatter};
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
+use std::vec::IntoIter;
 use hyper::header::HeaderValue;
 use hyper::HeaderMap;
 use hyper::http::HeaderName;
@@ -88,48 +89,21 @@ impl Headers {
     }
 }
 
-pub struct HeadersIter {
-    inner: HeaderMap<HeaderValue>,
-    index: usize,
-}
-
-impl Iterator for HeadersIter {
-    type Item = (String, String);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let keys = self.inner.keys().collect::<Vec<&HeaderName>>();
-        if self.index < keys.len() {
-            let key = keys[self.index];
-            let value = self.inner.get(key).unwrap();
-            self.index += 1;
-            Some((key.to_string(), value.to_str().unwrap().to_string()))
-        } else {
-            None
-        }
-    }
-}
-
 impl IntoIterator for Headers {
     type Item = (String, String);
-    type IntoIter = HeadersIter;
+    type IntoIter = IntoIter<(String, String)>;
 
     fn into_iter(self) -> Self::IntoIter {
-        HeadersIter {
-            inner: self.inner.lock().unwrap().map.clone(),
-            index: 0,
-        }
+        self.to_vec().into_iter()
     }
 }
 
 impl IntoIterator for &Headers {
     type Item = (String, String);
-    type IntoIter = HeadersIter;
+    type IntoIter = IntoIter<(String, String)>;
 
     fn into_iter(self) -> Self::IntoIter {
-        HeadersIter {
-            inner: self.inner.lock().unwrap().map.clone(),
-            index: 0,
-        }
+        self.to_vec().into_iter()
     }
 }
 
