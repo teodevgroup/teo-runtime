@@ -83,6 +83,14 @@ impl Headers {
         map.extend(guard.map.clone())
     }
 
+    pub fn cloned(&self) -> Self {
+        Self {
+            inner: Arc::new(Mutex::new(Inner {
+                map: self.inner.lock().unwrap().map.clone()
+            }))
+        }
+    }
+
     pub fn to_vec(&self) -> Vec<(String, String)> {
         let guard = self.inner.lock().unwrap();
         guard.map.iter().map(|(k, v)| (k.to_string(), v.to_str().unwrap().to_string())).collect()
