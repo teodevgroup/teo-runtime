@@ -88,13 +88,28 @@ impl Request {
     }
 
     #[inline(always)]
+    pub fn set_version(&self, version: Version) {
+        self.inner.version.set(version);
+    }
+
+    #[inline(always)]
     pub fn method(&self) -> &Method {
         self.inner.method.get().unwrap()
     }
 
     #[inline(always)]
+    pub fn set_method(&self, method: Method) {
+        self.inner.method.set(method);
+    }
+
+    #[inline(always)]
     pub fn uri(&self) -> &Uri {
         self.inner.uri.get().unwrap()
+    }
+
+    #[inline(always)]
+    pub fn set_uri(&self, uri: Uri) {
+        self.inner.uri.set(uri);
     }
 
     #[inline(always)]
