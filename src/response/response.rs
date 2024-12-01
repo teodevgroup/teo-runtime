@@ -1,17 +1,24 @@
 use std::fmt::{Debug, Formatter};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
-use cookie::Cookie;
 use hyper::header::CONTENT_TYPE;
 use crate::value::Value;
 use crate::teon;
 use teo_result::{Result, Error};
+use crate::cookies::Cookies;
 use crate::response::body::Body;
 use crate::response::header::readwrite::HeaderMap;
 
 #[derive(Clone)]
 pub struct Response {
     inner: Arc<Mutex<Inner>>
+}
+
+pub struct Inner {
+    code: u16,
+    headers: HeaderMap,
+    body: Body,
+    cookies: Cookies,
 }
 
 impl Response {
@@ -95,20 +102,9 @@ impl Response {
         self.inner.lock().unwrap().body.clone()
     }
 
-    pub fn add_cookie(&self, cookie: Cookie<'static>) {
-        self.inner.lock().unwrap().cookies.push(cookie);
-    }
-
-    pub fn cookies(&self) -> Vec<Cookie<'static>> {
+    pub fn cookies(&self) -> Cookies {
         self.inner.lock().unwrap().cookies.clone()
     }
-}
-
-pub struct Inner {
-    code: u16,
-    headers: HeaderMap,
-    body: Body,
-    cookies: Vec<Cookie<'static>>,
 }
 
 impl Inner {
@@ -118,7 +114,7 @@ impl Inner {
             code: 200,
             headers: HeaderMap::new(),
             body: Body::empty(),
-            cookies: vec![],
+            cookies: Cookies::new(),
         }
     }
 }

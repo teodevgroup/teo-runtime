@@ -3,7 +3,6 @@ use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 use hyper::{self, header::{HeaderMap, HeaderValue}, Method, Uri, Version};
 use teo_result::{Error, Result};
-use cookie::Cookie;
 use deferred_box::DeferredBox;
 use history_box::HistoryBox;
 use http_body_util::{BodyExt, Full};
@@ -14,7 +13,7 @@ use indexmap::IndexMap;
 use bytes::Bytes;
 use crate::connection::transaction;
 use crate::handler::r#match::HandlerMatch;
-use crate::request::cookies::Cookies;
+use crate::cookies::{Cookies, Cookie};
 use crate::request::extract::ExtractFromRequest;
 use crate::request::local_objects::LocalObjects;
 use crate::request::local_values::LocalValues;
@@ -199,7 +198,7 @@ impl Request {
     }
 
     fn parse_cookies(&self) -> Result<&Cookies> {
-        let mut cookies: Vec<Cookie<'static>> = Vec::new();
+        let mut cookies: Vec<Cookie> = Vec::new();
         for cookie_header_value in self.inner.hyper_request.headers().get_all("cookie") {
             let cookie_full_str = cookie_header_value.to_str().map_err(|_| Error::internal_server_error_message("cannot read request header value: cookie"))?;
             for cookie_str in cookie_full_str.split(';').map(|s| s.trim()) {
@@ -207,7 +206,7 @@ impl Request {
                     cookies.push(match Cookie::parse_encoded(cookie_str) {
                         Ok(cookie) => cookie,
                         Err(_) => return Err(Error::invalid_request_message(format!("invalid cookie format: `{}`", cookie_str))),
-                    }.into_owned());
+                    });
                 }
             }
         }

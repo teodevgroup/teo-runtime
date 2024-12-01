@@ -32,5 +32,6 @@ pub mod admin;
 pub mod app;
 pub mod cookies;
 pub mod message;
+pub mod headers;
 
 pub use value::Value;
