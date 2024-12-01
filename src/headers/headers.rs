@@ -68,6 +68,56 @@ impl Headers {
         let mut guard = self.inner.lock().unwrap();
         guard.map.clear();
     }
+
+    pub fn extend_to(&self, map: &mut HeaderMap<HeaderValue>) {
+        let guard = self.inner.lock().unwrap();
+        map.extend(guard.map.clone())
+    }
+}
+
+pub struct HeadersIter {
+    inner: HeaderMap<HeaderValue>,
+    index: usize,
+}
+
+impl Iterator for HeadersIter {
+    type Item = (String, String);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let keys = self.inner.keys().collect::<Vec<&HeaderName>>();
+        if self.index < keys.len() {
+            let key = keys[self.index];
+            let value = self.inner.get(key).unwrap();
+            self.index += 1;
+            Some((key.to_string(), value.to_str().unwrap().to_string()))
+        } else {
+            None
+        }
+    }
+}
+
+impl IntoIterator for Headers {
+    type Item = (String, String);
+    type IntoIter = HeadersIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        HeadersIter {
+            inner: self.inner.lock().unwrap().map.clone(),
+            index: 0,
+        }
+    }
+}
+
+impl IntoIterator for &Headers {
+    type Item = (String, String);
+    type IntoIter = HeadersIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        HeadersIter {
+            inner: self.inner.lock().unwrap().map.clone(),
+            index: 0,
+        }
+    }
 }
 
 impl From<HeaderMap<HeaderValue>> for Headers {

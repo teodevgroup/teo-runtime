@@ -52,7 +52,7 @@ impl Builder {
         handlers.insert(name.to_owned(), handler);
     }
 
-    pub fn define_handler<T, F>(&self, name: &str, body: F) where T: 'static, for<'a> F: 'static + HandlerCtxArgument<T> {
+    pub fn define_handler<T, F>(&self, name: &str, body: F) where T: 'static, F: 'static + HandlerCtxArgument<T> {
         let body = Arc::new(body);
         let handler = Handler {
             inner: Arc::new(handler::Inner {

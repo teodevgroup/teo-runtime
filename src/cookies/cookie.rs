@@ -3,11 +3,12 @@ use std::sync::{Arc, Mutex};
 use cookie::{Cookie as Inner, Expiration, SameSite};
 use cookie::time::Duration;
 use teo_result::Result;
+use crate::cookies::Cookies;
 
 #[repr(transparent)]
 #[derive(Clone)]
 pub struct Cookie {
-    inner: Arc<Mutex<Inner<'static>>>
+    pub inner: Arc<Mutex<Inner<'static>>>
 }
 
 impl Cookie {
@@ -139,7 +140,55 @@ impl Cookie {
     pub fn make_removal(&self) {
         self.inner.lock().unwrap().make_removal();
     }
+
+    pub fn encoded(&self) -> String {
+        self.inner.lock().unwrap().encoded().to_string()
+    }
 }
+
+pub struct CookiesIter {
+    pub inner: Vec<Cookie>,
+    pub index: usize,
+}
+
+impl Iterator for CookiesIter {
+    type Item = Cookie;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.inner.len() {
+            let cookie = self.inner[self.index].clone();
+            self.index += 1;
+            Some(cookie)
+        } else {
+            None
+        }
+    }
+}
+
+impl IntoIterator for Cookies {
+    type Item = Cookie;
+    type IntoIter = CookiesIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        CookiesIter {
+            inner: self.inner.lock().unwrap().list.clone(),
+            index: 0,
+        }
+    }
+}
+
+impl IntoIterator for &Cookies {
+    type Item = Cookie;
+    type IntoIter = CookiesIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        CookiesIter {
+            inner: self.inner.lock().unwrap().list.clone(),
+            index: 0,
+        }
+    }
+}
+
 
 impl Debug for Cookie {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

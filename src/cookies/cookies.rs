@@ -4,12 +4,12 @@ use crate::cookies::cookie::Cookie;
 #[derive(Clone)]
 #[repr(transparent)]
 pub struct Cookies {
-    inner: Arc<Mutex<Inner>>
+    pub inner: Arc<Mutex<Inner>>
 }
 
 #[repr(transparent)]
-struct Inner {
-    list: Vec<Cookie>
+pub struct Inner {
+    pub list: Vec<Cookie>
 }
 
 impl Cookies {
