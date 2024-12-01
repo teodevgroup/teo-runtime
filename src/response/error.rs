@@ -18,7 +18,7 @@ impl From<Error> for Response {
             teon_value["errors"] = errors;
         }
         let response = Response::teon(teon_value);
-        response.headers().set(CONTENT_TYPE.as_str(), APPLICATION_JSON.essence_str());
+        response.headers().set(CONTENT_TYPE.as_str(), APPLICATION_JSON.essence_str()).unwrap();
         response.set_code(code);
         response
     }

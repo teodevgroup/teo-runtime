@@ -21,10 +21,10 @@ pub(in crate::stdlib) fn load_cors_middleware(namespace: &namespace::Builder) {
                 } else {
                     Response::from(res_or_err.err().unwrap())
                 };
-                res.headers().set("Access-Control-Allow-Origin", origin);
-                res.headers().set("Access-Control-Allow-Methods", methods.join(", "));
-                res.headers().set("Access-Control-Allow-Headers", headers.join(", "));
-                res.headers().set("Access-Control-Max-Age", max_age.to_string());
+                res.headers().set("Access-Control-Allow-Origin", origin)?;
+                res.headers().set("Access-Control-Allow-Methods", methods.join(", "))?;
+                res.headers().set("Access-Control-Allow-Headers", headers.join(", "))?;
+                res.headers().set("Access-Control-Max-Age", max_age.to_string())?;
                 return Ok(res);
             }
         })

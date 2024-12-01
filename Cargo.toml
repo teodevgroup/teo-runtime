@@ -9,7 +9,7 @@ documentation = "https://docs.teodev.io"
 repository = "https://github.com/teodevgroup/teo-runtime"
 
 [dependencies]
-teo-result = { version = "0.3.5", features = ["cookie"], path = "../teo-result" }
+teo-result = { version = "0.3.5", features = ["cookie", "http"], path = "../teo-result" }
 teo-parser = { version = "0.3.0", path = "../teo-parser" }
 hyper = { version = "1.5.0", features = ["full"]}
 http-body-util = "0.1"

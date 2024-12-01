@@ -6,8 +6,8 @@ use crate::value::Value;
 use crate::teon;
 use teo_result::{Result, Error};
 use crate::cookies::Cookies;
+use crate::headers::headers::Headers;
 use crate::response::body::Body;
-use crate::response::header::readwrite::HeaderMap;
 
 #[derive(Clone)]
 pub struct Response {
@@ -16,7 +16,7 @@ pub struct Response {
 
 pub struct Inner {
     code: u16,
-    headers: HeaderMap,
+    headers: Headers,
     body: Body,
     cookies: Cookies,
 }
@@ -29,13 +29,13 @@ impl Response {
         }
     }
 
-    pub fn string(content: impl Into<String>, content_type: &str) -> Response {
+    pub fn string(content: impl Into<String>, content_type: &str) -> Result<Response> {
         let mut inner = Inner::new();
         inner.body = Body::string(content.into());
-        inner.headers.set(CONTENT_TYPE.as_str(), content_type);
-        Self {
+        inner.headers.set(CONTENT_TYPE.as_str(), content_type)?;
+        Ok(Self {
             inner: Arc::new(Mutex::new(inner)),
-        }
+        })
     }
 
     pub fn teon(value: Value) -> Response {
@@ -47,11 +47,11 @@ impl Response {
     }
 
     pub fn text(content: impl Into<String>) -> Result<Response> {
-        Ok(Self::string(content.into(), "text/plain"))
+        Ok(Self::string(content.into(), "text/plain")?)
     }
 
     pub fn html(content: impl Into<String>) -> Result<Response> {
-        Ok(Self::string(content.into(), "text/html"))
+        Ok(Self::string(content.into(), "text/html")?)
     }
 
     pub fn data(value: Value) -> Response {
@@ -79,11 +79,11 @@ impl Response {
         }
     }
 
-    pub fn redirect(path: impl Into<String>) -> Response {
+    pub fn redirect(path: impl Into<String>) -> Result<Response> {
         let res = Self::empty();
         res.set_code(301);
-        res.headers().set("location", path.into());
-        res
+        res.headers().set("location", path.into())?;
+        Ok(res)
     }
 
     pub fn set_code(&self, code: u16) {
@@ -94,7 +94,7 @@ impl Response {
         self.inner.lock().unwrap().code
     }
 
-    pub fn headers(&self) -> HeaderMap {
+    pub fn headers(&self) -> Headers {
         self.inner.lock().unwrap().headers.clone()
     }
 
@@ -112,7 +112,7 @@ impl Inner {
     fn new() -> Self {
         Self {
             code: 200,
-            headers: HeaderMap::new(),
+            headers: Headers::new(),
             body: Body::empty(),
             cookies: Cookies::new(),
         }

@@ -203,7 +203,7 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
             return Err(Error::internal_server_error_message("missing @identity.jwtSecret"));
         };
         let jwt_secret: String = jwt_secret.try_into()?;
-        let Some(authorization) = request.headers().get("authorization").map(|h| h.to_str().unwrap()) else {
+        let Some(authorization) = request.headers().get("authorization")? else {
             return Err(Error::unauthorized_message("missing authorization header value"));
         };
         if authorization.len() < 7 {
@@ -236,7 +236,7 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
         Ok(move |request: Request, next: Next| {
             let secret = secret.clone();
             async move {
-                if let Some(authorization) = request.headers().get("authorization").map(|h| h.to_str().unwrap()) {
+                if let Some(authorization) = request.headers().get("authorization")? {
                     if authorization.len() < 7 {
                         return Err(Error::unauthorized_message("invalid jwt token"));
                     }
