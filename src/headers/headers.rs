@@ -41,11 +41,19 @@ impl Headers {
         guard.map.contains_key(key.as_ref())
     }
 
-    pub fn set(&self, key: impl Into<String>, value: impl Into<String>) -> Result<()> {
+    pub fn insert(&self, key: impl Into<String>, value: impl Into<String>) -> Result<()> {
         let mut guard = self.inner.lock()?;
         let value_string = value.into();
         let header_name = HeaderName::from_str(key.into().as_str())?;
         guard.map.insert(header_name.to_owned(), HeaderValue::from_str(value_string.as_str())?);
+        Ok(())
+    }
+
+    pub fn append(&self, key: impl Into<String>, value: impl Into<String>) -> Result<()> {
+        let mut guard = self.inner.lock()?;
+        let value_string = value.into();
+        let header_name = HeaderName::from_str(key.into().as_str())?;
+        guard.map.append(header_name.to_owned(), HeaderValue::from_str(value_string.as_str())?);
         Ok(())
     }
 

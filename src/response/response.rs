@@ -32,7 +32,7 @@ impl Response {
     pub fn string(content: impl Into<String>, content_type: &str) -> Result<Response> {
         let mut inner = Inner::new();
         inner.body = Body::string(content.into());
-        inner.headers.set(CONTENT_TYPE.as_str(), content_type)?;
+        inner.headers.insert(CONTENT_TYPE.as_str(), content_type)?;
         Ok(Self {
             inner: Arc::new(Mutex::new(inner)),
         })
