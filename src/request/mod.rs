@@ -5,3 +5,4 @@ pub mod extract;
 
 pub use request::Request;
 pub use hyper::Method;
+pub use hyper::http::version::Version;

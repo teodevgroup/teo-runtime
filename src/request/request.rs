@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use std::fmt::{Debug, Formatter};
+use std::str::FromStr;
 use std::sync::Arc;
 use hyper::{self, Method, Uri, Version};
 use teo_result::{Error, Result};
@@ -110,6 +111,11 @@ impl Request {
     #[inline(always)]
     pub fn set_uri(&self, uri: Uri) {
         self.inner.uri.set(uri);
+    }
+
+    pub fn set_uri_string(&self, uri: &str) -> Result<()> {
+        self.inner.uri.set(Uri::from_str(uri)?);
+        Ok(())
     }
 
     #[inline(always)]
