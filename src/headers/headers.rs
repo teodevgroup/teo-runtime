@@ -81,6 +81,11 @@ impl Headers {
         let guard = self.inner.lock().unwrap();
         map.extend(guard.map.clone())
     }
+
+    pub fn to_vec(&self) -> Vec<(String, String)> {
+        let guard = self.inner.lock().unwrap();
+        guard.map.iter().map(|(k, v)| (k.to_string(), v.to_str().unwrap().to_string())).collect()
+    }
 }
 
 pub struct HeadersIter {

@@ -82,7 +82,7 @@ impl Response {
     pub fn redirect(path: impl Into<String>) -> Result<Response> {
         let res = Self::empty();
         res.set_code(301);
-        res.headers().set("location", path.into())?;
+        res.headers().insert("location", path.into())?;
         Ok(res)
     }
 
