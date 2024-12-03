@@ -60,6 +60,10 @@ impl LocalObjects {
         self.map_mut().remove(key);
     }
 
+    pub fn len(&self) -> usize {
+        self.map_immut().len()
+    }
+
     pub fn clear(&self) {
         self.map_mut().clear()
     }
