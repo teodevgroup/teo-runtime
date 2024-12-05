@@ -49,6 +49,10 @@ impl Cookies {
     pub fn clear(&self) {
         self.inner.lock().unwrap().list = vec![];
     }
+
+    pub fn len(&self) -> usize {
+        self.inner.lock().unwrap().list.len()
+    }
 }
 
 impl From<Vec<Cookie>> for Cookies {

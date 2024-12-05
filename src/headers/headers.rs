@@ -33,6 +33,11 @@ impl Headers {
         guard.map.keys().map(|k| k.to_string()).collect()
     }
 
+    pub fn values(&self) -> Vec<String> {
+        let guard = self.inner.lock().unwrap();
+        guard.map.values().map(|v| v.to_str().unwrap().to_string()).collect()
+    }
+
     pub fn len(&self) -> usize {
         self.inner.lock().unwrap().map.len()
     }

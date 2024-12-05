@@ -1,8 +1,8 @@
-use std::cell::Cell;
-use std::ptr::null_mut;
-use std::sync::{Arc, Mutex};
+use std::any::Any;
+use std::sync::Arc;
+use deferred_box::DeferredBox;
 use educe::Educe;
-use crate::app::cleanup::Cleanup;
+use teo_result::{Result, Error};
 use crate::app::entrance::Entrance;
 use crate::app::runtime_version::RuntimeVersion;
 
@@ -20,10 +20,7 @@ struct Inner {
     /// This is designed for Node.js and Python
     /// A place to store dynamic runtime classes
     #[educe(Debug(ignore))]
-    dynamic_classes_pointer: Cell<* mut ()>,
-    /// This is designed for Node.js and Python
-    #[educe(Debug(ignore))]
-    dynamic_classes_clean_up: Arc<Mutex<Option<Arc<dyn Cleanup>>>>,
+    dynamic_classes: DeferredBox<Arc<dyn Any>>,
 }
 
 impl AppData {
@@ -33,8 +30,7 @@ impl AppData {
             inner: Arc::new(Inner {
                 entrance,
                 runtime_version,
-                dynamic_classes_pointer: Cell::new(null_mut()),
-                dynamic_classes_clean_up: Arc::new(Mutex::new(None)),
+                dynamic_classes: DeferredBox::new(),
             })
         }
     }
@@ -47,21 +43,18 @@ impl AppData {
         &self.inner.runtime_version
     }
 
-
-    pub fn dynamic_classes_pointer(&self) -> * mut () {
-        self.inner.dynamic_classes_pointer.get()
+    pub fn dynamic_classes(&self) -> Result<&dyn Any> {
+        match self.inner.dynamic_classes.get() {
+            Some(dynamic_classes) => Ok(dynamic_classes.as_ref()),
+            None => Err(Error::new("Dynamic classes is accessed while not set")),
+        }
     }
 
-    pub fn set_dynamic_classes_pointer(&self, pointer: * mut ()) {
-        self.inner.dynamic_classes_pointer.set(pointer);
-    }
-
-    pub fn dynamic_classes_clean_up(&self) -> Option<Arc<dyn Cleanup>> {
-        self.inner.dynamic_classes_clean_up.lock().unwrap().clone()
-    }
-
-    pub fn set_dynamic_classes_clean_up(&self, clean_up: Arc<dyn Cleanup>) {
-        *self.inner.dynamic_classes_clean_up.lock().unwrap() = Some(clean_up);
+    pub fn set_dynamic_classes(&self, dynamic_classes: Arc<dyn Any>) -> Result<()> {
+        match self.inner.dynamic_classes.set(dynamic_classes) {
+            Ok(_) => Ok(()),
+            Err(_) => Err(Error::new("Dynamic classes have been set")),
+        }
     }
 }
 
