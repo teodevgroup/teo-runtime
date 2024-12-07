@@ -231,7 +231,7 @@ pub(super) fn load_identity_library(std_namespace: &namespace::Builder) {
         }
     });
 
-    identity_namespace.define_handler_middleware("identityFromJwt", |arguments: Arguments| async move {
+    identity_namespace.define_handler_middleware("identityFromJwt", |arguments: Arguments| {
         let secret: String = arguments.get("secret")?;
         Ok(move |request: Request, next: Next| {
             let secret = secret.clone();

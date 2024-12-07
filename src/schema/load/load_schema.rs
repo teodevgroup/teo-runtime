@@ -205,7 +205,7 @@ pub async fn load_schema(main_namespace_builder: &namespace::Builder, schema: &S
         }
 
         // load middlewares
-        load_use_middlewares(main_namespace_builder, schema, &mut diagnostics).await?;
+        load_use_middlewares(main_namespace_builder, schema, &mut diagnostics)?;
     }
 
     // load enums

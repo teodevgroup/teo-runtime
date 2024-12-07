@@ -460,29 +460,21 @@ impl Builder {
         middlewares.insert(name.to_owned(), middleware::Definition::new(next_path(self.path(), name), Arc::new(call), self.app_data().clone()));
     }
 
-    pub fn define_handler_middleware<C, CFut, F>(&self, name: &str, creator: C) where
-        C: Fn(Arguments) -> CFut + Send + Sync + Clone + 'static,
-        CFut: Future<Output = Result<F>> + Send + 'static,
+    pub fn define_handler_middleware<C, F>(&self, name: &str, creator: C) where
+        C: Fn(Arguments) -> Result<F> + 'static,
         F: MiddlewareImp + 'static {
         let mut middlewares = self.inner.handler_middlewares.lock().unwrap();
         middlewares.insert(name.to_owned(), middleware::Definition::new(next_path(self.path(), name), Arc::new(move |args| {
-            let creator = creator.clone();
-            async move {
-                Ok(Middleware::new(creator(args).await?))
-            }
+            Ok(Middleware::new(creator(args)?))
         }), self.app_data().clone()));
     }
 
-    pub fn define_request_middleware<C, CFut, F>(&self, name: &str, creator: C) where
-        C: Fn(Arguments) -> CFut + Send + Sync + Clone + 'static,
-        CFut: Future<Output = Result<F>> + Send + 'static,
+    pub fn define_request_middleware<C, F>(&self, name: &str, creator: C) where
+        C: Fn(Arguments) -> Result<F> + 'static,
         F: MiddlewareImp + 'static {
         let mut middlewares = self.inner.request_middlewares.lock().unwrap();
         middlewares.insert(name.to_owned(), middleware::Definition::new(next_path(self.path(), name), Arc::new(move |args| {
-            let creator = creator.clone();
-            async move {
-                Ok(Middleware::new(creator(args).await?))
-            }
+            Ok(Middleware::new(creator(args)?))
         }), self.app_data().clone()));
     }
 

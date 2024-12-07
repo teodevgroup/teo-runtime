@@ -2,7 +2,6 @@ use teo_parser::ast::schema::Schema;
 use teo_parser::traits::info_provider::InfoProvider;
 use teo_parser::traits::resolved::Resolve;
 use teo_result::Result;
-use async_recursion::async_recursion;
 use teo_parser::ast::arith_expr::ArithExpr;
 use teo_parser::ast::middleware::MiddlewareType;
 use teo_parser::diagnostics::diagnostics::Diagnostics;
@@ -12,7 +11,7 @@ use crate::middleware::middleware_imp::{combine_middleware, empty_middleware, Mi
 use crate::{middleware, namespace};
 use crate::schema::fetch::fetch_argument_list::{fetch_argument_list};
 
-pub(super) async fn load_use_middlewares(main_namespace: &namespace::Builder, schema: &Schema, diagnostics: &mut Diagnostics) -> Result<()> {
+pub(super) fn load_use_middlewares(main_namespace: &namespace::Builder, schema: &Schema, diagnostics: &mut Diagnostics) -> Result<()> {
     // load middleware blocks
     for path in &schema.references.use_middlewares_blocks {
         let use_middlewares_block = schema.find_top_by_path(&path).unwrap().as_use_middlewares_block().unwrap();
@@ -54,17 +53,16 @@ pub(super) async fn load_use_middlewares(main_namespace: &namespace::Builder, sc
     }
 
     // load middleware stack
-    load_middleware_stack(main_namespace, empty_middleware(), empty_middleware()).await?;
+    load_middleware_stack(main_namespace, empty_middleware(), empty_middleware())?;
     Ok(())
 }
 
-#[async_recursion]
-async fn load_middleware_stack(namespace: &namespace::Builder, parent_handler_stack: Middleware, parent_request_stack: Middleware) -> Result<()> {
+fn load_middleware_stack(namespace: &namespace::Builder, parent_handler_stack: Middleware, parent_request_stack: Middleware) -> Result<()> {
     if let Some(block) = namespace.handler_middlewares_block() {
         let mut middlewares = vec![];
         middlewares.push(parent_handler_stack);
         for r#use in block.uses() {
-            let middleware = r#use.creator().call(r#use.arguments().clone()).await?;
+            let middleware = r#use.creator().call(r#use.arguments().clone())?;
             middlewares.push(middleware);
         }
         middlewares.reverse();
@@ -76,7 +74,7 @@ async fn load_middleware_stack(namespace: &namespace::Builder, parent_handler_st
         let mut middlewares = vec![];
         middlewares.push(parent_request_stack);
         for r#use in block.uses() {
-            let middleware = r#use.creator().call(r#use.arguments().clone()).await?;
+            let middleware = r#use.creator().call(r#use.arguments().clone())?;
             middlewares.push(middleware);
         }
         middlewares.reverse();
@@ -85,7 +83,7 @@ async fn load_middleware_stack(namespace: &namespace::Builder, parent_handler_st
         namespace.set_request_middleware_stack(parent_request_stack);
     }
     for child_namespace in namespace.namespaces().values() {
-        load_middleware_stack(child_namespace, namespace.handler_middleware_stack(), namespace.request_middleware_stack()).await?;
+        load_middleware_stack(child_namespace, namespace.handler_middleware_stack(), namespace.request_middleware_stack())?;
     }
     Ok(())
 }

@@ -15,7 +15,7 @@ fn get_code(res_or_err: &Result<Response>) -> u16 {
 }
 
 pub(in crate::stdlib) fn load_log_request_middleware(namespace: &namespace::Builder) {
-    namespace.define_request_middleware("logRequest", |arguments: Arguments| async move {
+    namespace.define_request_middleware("logRequest", |arguments: Arguments| {
         Ok(|request: Request, next: Next| async move {
             let start = SystemTime::now();
             let res_or_err = next.call(request.clone()).await;

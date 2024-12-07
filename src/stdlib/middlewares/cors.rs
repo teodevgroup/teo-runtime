@@ -5,7 +5,7 @@ use crate::request::Request;
 use crate::response::Response;
 
 pub(in crate::stdlib) fn load_cors_middleware(namespace: &namespace::Builder) {
-    namespace.define_request_middleware("cors", |arguments: Arguments| async move {
+    namespace.define_request_middleware("cors", |arguments: Arguments| {
         let origin: String = arguments.get("origin")?;
         let methods: Vec<String> = arguments.get("methods")?;
         let headers: Vec<String> = arguments.get("headers")?;
