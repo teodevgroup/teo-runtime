@@ -4,7 +4,6 @@ use std::str::FromStr;
 use std::sync::Arc;
 use hyper::{self, Method, Uri, Version};
 use teo_result::{Error, Result};
-use deferred_box::DeferredBox;
 use history_box::HistoryBox;
 use http_body_util::Full;
 use hyper::body::Incoming;
@@ -30,9 +29,9 @@ struct Inner {
     method: HistoryBox<Method>,
     uri: HistoryBox<Uri>,
     version: HistoryBox<Version>,
-    headers: Headers,
+    headers: HistoryBox<Headers>,
     transaction_ctx: transaction::Ctx,
-    cookies: DeferredBox<Cookies>,
+    cookies: HistoryBox<Cookies>,
     handler_match: HistoryBox<HandlerMatch>,
     body_value: HistoryBox<Value>,
     local_values: LocalValues,
@@ -50,11 +49,11 @@ impl Request {
                 method: HistoryBox::new_with(parts.method),
                 uri: HistoryBox::new_with(parts.uri),
                 version: HistoryBox::new_with(parts.version),
-                headers: Headers::from(parts.headers),
+                headers: HistoryBox::new_with(Headers::from(parts.headers)),
                 incoming: RefCell::new(Some(incoming)),
                 incoming_bytes: RefCell::new(None),
                 transaction_ctx,
-                cookies: DeferredBox::new(),
+                cookies: HistoryBox::new(),
                 handler_match: HistoryBox::new(),
                 body_value: HistoryBox::new(),
                 local_values: LocalValues::new(),
@@ -70,11 +69,11 @@ impl Request {
                 method: HistoryBox::new_with(parts.method),
                 uri: HistoryBox::new_with(parts.uri),
                 version: HistoryBox::new_with(parts.version),
-                headers: Headers::from(parts.headers),
+                headers: HistoryBox::new_with(Headers::from(parts.headers)),
                 incoming: RefCell::new(None),
                 incoming_bytes: RefCell::new(Some(incoming)),
                 transaction_ctx,
-                cookies: DeferredBox::new(),
+                cookies: HistoryBox::new(),
                 handler_match: HistoryBox::new(),
                 body_value: HistoryBox::new(),
                 local_values: LocalValues::new(),
@@ -149,7 +148,7 @@ impl Request {
     }
 
     pub fn content_type(&self) -> Result<Option<String>> {
-        if let Some(value) = self.inner.headers.get(CONTENT_TYPE.as_str())? {
+        if let Some(value) = self.headers().get(CONTENT_TYPE.as_str())? {
             Ok(Some(value))
         } else {
             Ok(None)
@@ -157,7 +156,11 @@ impl Request {
     }
 
     pub fn headers(&self) -> Headers {
-        self.inner.headers.clone()
+        self.inner.headers.get().unwrap().clone()
+    }
+
+    pub fn set_headers(&self, headers: &Headers) {
+        self.inner.headers.set(headers.clone());
     }
 
     pub fn cookies(&self) -> Result<&Cookies> {
@@ -237,7 +240,7 @@ impl Request {
             }
         }
         let cookies = Cookies::from(cookies);
-        self.inner.cookies.set(cookies).unwrap();
+        self.inner.cookies.set(cookies);
         Ok(self.inner.cookies.get().unwrap())
     }
 }
