@@ -159,8 +159,8 @@ impl Request {
         self.inner.headers.get().unwrap().clone()
     }
 
-    pub fn set_headers(&self, headers: &Headers) {
-        self.inner.headers.set(headers.clone());
+    pub fn set_headers(&self, headers: Headers) {
+        self.inner.headers.set(headers);
     }
 
     pub fn cookies(&self) -> Result<&Cookies> {
@@ -169,6 +169,10 @@ impl Request {
         } else {
             Ok(self.inner.cookies.get().unwrap())
         }
+    }
+
+    pub fn set_cookies(&self, cookies: Cookies) {
+        self.inner.cookies.set(cookies);
     }
 
     pub fn handler_match(&self) -> Result<&HandlerMatch> {

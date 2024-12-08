@@ -98,8 +98,8 @@ impl Response {
         self.inner.lock().unwrap().headers.clone()
     }
 
-    pub fn set_headers(&self, headers: &Headers) {
-        self.inner.lock().unwrap().headers = headers.clone();
+    pub fn set_headers(&self, headers: Headers) {
+        self.inner.lock().unwrap().headers = headers;
     }
 
     pub fn body(&self) -> Body {
