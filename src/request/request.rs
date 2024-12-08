@@ -13,7 +13,7 @@ use indexmap::IndexMap;
 use bytes::Bytes;
 use crate::connection::transaction;
 use crate::handler::r#match::HandlerMatch;
-use crate::cookies::{Cookies, Cookie};
+use crate::cookies::Cookies;
 use crate::headers::headers::Headers;
 use crate::request::extract::ExtractFromRequest;
 use crate::request::local_objects::LocalObjects;
@@ -221,30 +221,19 @@ impl Request {
         self.inner.incoming_bytes.replace(None)
     }
 
-    pub fn clone_hyper_request(&self) -> hyper::Request<()> {
-        hyper::Request::builder()
+    pub fn clone_hyper_request_for_file_processing(&self) -> hyper::Request<()> {
+        let mut request = hyper::Request::builder()
             .method(self.inner.method.get().unwrap().clone())
             .uri(self.inner.uri.get().unwrap().clone())
             .version(self.inner.version.get().unwrap().clone())
             .body(())
-            .unwrap()
+            .unwrap();
+        self.headers().extend_to(request.headers_mut());
+        request
     }
 
     fn parse_cookies(&self) -> Result<&Cookies> {
-        let mut cookies: Vec<Cookie> = Vec::new();
-        for cookie_header_value in self.headers().get_all("cookie")? {
-            let cookie_full_str = cookie_header_value.as_str();
-            for cookie_str in cookie_full_str.split(';').map(|s| s.trim()) {
-                if !cookie_str.is_empty() {
-                    cookies.push(match Cookie::parse_encoded(cookie_str) {
-                        Ok(cookie) => cookie,
-                        Err(_) => return Err(Error::invalid_request_message(format!("invalid cookie format: `{}`", cookie_str))),
-                    });
-                }
-            }
-        }
-        let cookies = Cookies::from(cookies);
-        self.inner.cookies.set(cookies);
+        self.inner.cookies.set(Cookies::from_request_headers(&self.headers())?);
         Ok(self.inner.cookies.get().unwrap())
     }
 }

@@ -1,5 +1,7 @@
 use std::sync::{Arc, Mutex};
 use crate::cookies::cookie::Cookie;
+use crate::headers::Headers;
+use teo_result::{Result, Error};
 
 #[derive(Clone)]
 #[repr(transparent)]
@@ -20,6 +22,39 @@ impl Cookies {
                 list: Vec::new()
             }))
         }
+    }
+
+    pub fn from_response_headers(headers: &Headers) -> Result<Self> {
+        let mut cookies: Vec<Cookie> = Vec::new();
+        for cookie_header_value in headers.get_all("set-cookie")? {
+            let cookie_full_str = cookie_header_value.as_str();
+            for cookie_str in cookie_full_str.split(';').map(|s| s.trim()) {
+                if !cookie_str.is_empty() {
+                    cookies.push(match Cookie::parse_encoded(cookie_str) {
+                        Ok(cookie) => cookie,
+                        Err(_) => return Err(Error::invalid_request_message(format!("invalid cookie format: `{}`", cookie_str))),
+                    });
+                }
+            }
+        }
+        Ok(Cookies::from(cookies))
+
+    }
+
+    pub fn from_request_headers(headers: &Headers) -> Result<Self> {
+        let mut cookies: Vec<Cookie> = Vec::new();
+        for cookie_header_value in headers.get_all("cookie")? {
+            let cookie_full_str = cookie_header_value.as_str();
+            for cookie_str in cookie_full_str.split(';').map(|s| s.trim()) {
+                if !cookie_str.is_empty() {
+                    cookies.push(match Cookie::parse_encoded(cookie_str) {
+                        Ok(cookie) => cookie,
+                        Err(_) => return Err(Error::invalid_request_message(format!("invalid cookie format: `{}`", cookie_str))),
+                    });
+                }
+            }
+        }
+        Ok(Cookies::from(cookies))
     }
 
     pub fn entries(&self) -> Vec<Cookie> {
