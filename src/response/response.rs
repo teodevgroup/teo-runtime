@@ -98,12 +98,24 @@ impl Response {
         self.inner.lock().unwrap().headers.clone()
     }
 
+    pub fn set_headers(&self, headers: &Headers) {
+        self.inner.lock().unwrap().headers = headers.clone();
+    }
+
     pub fn body(&self) -> Body {
         self.inner.lock().unwrap().body.clone()
     }
 
+    pub fn set_body(&self, body: Body) {
+        self.inner.lock().unwrap().body = body;
+    }
+
     pub fn cookies(&self) -> Cookies {
         self.inner.lock().unwrap().cookies.clone()
+    }
+
+    pub fn set_cookies(&self, cookies: Cookies) {
+        self.inner.lock().unwrap().cookies = cookies;
     }
 }
 
