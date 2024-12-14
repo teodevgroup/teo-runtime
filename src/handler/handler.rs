@@ -49,6 +49,10 @@ impl Handler {
         &self.inner.namespace_path
     }
 
+    pub fn parent_path(&self) -> &Vec<String> {
+        &self.inner.namespace_path
+    }
+
     pub fn input_type(&self) -> &Type {
         &self.inner.input_type
     }
